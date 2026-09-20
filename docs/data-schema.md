@@ -27,6 +27,8 @@ erDiagram
     uuid kullanici_id FK
     string rol_alani
     string deneyim_seviyesi
+    text[] sektor_ilgi_alani
+    text[] araclar_teknolojiler
     boolean kanit_bekleyen
     int versiyon
     vector embedding
@@ -35,6 +37,7 @@ erDiagram
     uuid id PK
     uuid yetenek_karti_id FK
     string baslik
+    string aciklama
     string kanit_linki
     string kanit_turu
     date tarih
@@ -52,6 +55,7 @@ erDiagram
     uuid id PK
     uuid somut_cikti_id FK
     string referans_email
+    string token
     string durum
     string yanit_metni
   }
@@ -78,6 +82,7 @@ erDiagram
     float skor
     string gerekce_metni
     string durum
+    timestamp son_aktivite_tarihi
   }
   ISBIRLIGI {
     uuid id PK
@@ -107,5 +112,6 @@ erDiagram
 - **`ESLESME` → `ISBIRLIGI` ilişkisi isteğe bağlı (0 veya 1).** Her eşleşme iş birliğine dönüşmez — sadece kurumun "ilgileniyorum" dediği ve kabul edilen eşleşmeler.
 - **`CANLILIK_OLAYI` doğrudan `ESLESME`'ye bağlı, `ISBIRLIGI`'na değil.** Pasiflik takibi bir iş birliği resmen başlamadan da çalışabilmeli — örn. "eşleşme önerildi ama kimse tıklamadı" durumu.
 - **`kanit_bekleyen` (YETENEK_KARTI) ve `durum` (REFERANS_ISTEGI, ESLESME, ISBIRLIGI) alanları state machine mantığıyla çalışıyor.** Örn. `REFERANS_ISTEGI.durum`: `bekliyor` → `onaylandi` veya `yanit_yok` (zaman aşımı, ceza değil nötr durum).
-- **`embedding` (YETENEK_KARTI, IHTIYAC_KARTI), pgvector kolonu.** Kart onaylandığında/güncellendiğinde yeniden hesaplanır. Boyut, seçilen embedding modeline göre sabitlenir (bkz. `matching-algorithm.md`).
+- **`embedding` (YETENEK_KARTI, IHTIYAC_KARTI), pgvector kolonu.** Kart onaylandığında/güncellendiğinde yeniden hesaplanır. **Sağlayıcı: Voyage AI (voyage-4, 1024 boyut)** — Anthropic'in Claude ile kullanım için resmi önerisi; ilk 200M token ücretsiz. `EMBEDDING_DIM = 1024` olarak sabitlenir (bkz. `matching-algorithm.md`).
 - **`sehir_tercihi` ve `musaitlik_tercihi` (IHTIYAC_KARTI), nullable.** Eşleştirme'nin sert filtre adımı SQL üzerinden çalışabilsin diye — serbest metin `kisitlar` alanı bu amaçla sorgulanamaz.
+- **`sektor_ilgi_alani`, `araclar_teknolojiler` (YETENEK_KARTI), `aciklama` (SOMUT_CIKTI), `token` (REFERANS_ISTEGI).** Faz 1'de backend iskeletini yazarken Claude Code'un dokümanlar arası çapraz kontrolde yakaladığı eksiklerdi — diğer dosyalar (`agent-specs.md`, `matching-algorithm.md`, `api-contracts.md`) bu alanlara referans veriyordu ama ER diyagramında yoktu. Buradan eklendi.

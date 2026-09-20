@@ -21,7 +21,7 @@ flowchart TD
 | Backend | **FastAPI (Python)** | Orkestrasyon katmanıyla aynı dilde, async destekli; bu sınıf ürünlerde sektörün en yaygın kombinasyonu. |
 | Veritabanı | **PostgreSQL + pgvector** | Ayrı bir vektör veritabanı (Qdrant/Pinecone) bu veri hacminde (yüzlerce–birkaç bin kayıt) gereksiz altyapı yükü. Tek veritabanında hem ilişkisel veri hem embedding tutuluyor. |
 | Frontend | **Next.js + Tailwind + shadcn/ui** | Güncel, hızlı ve profesyonel görünümlü bir arayüz için sektör standardı — UI/UX değerlendirme kriterini doğrudan destekliyor. |
-| Embedding | **Çok dilli embedding API'si** (örn. OpenAI text-embedding-3-small veya Cohere multilingual-v3) | Türkçe'yi iyi destekliyor, host etmeye gerek yok — kendi model barındırmak bu sürede gereksiz risk. |
+| Embedding | **Voyage AI (voyage-4, 1024 boyut)** | Anthropic'in Claude ile kullanım için resmi önerdiği sağlayıcı — aynı ekosistem, ilk 200M token ücretsiz (hackathon için pratikte sıfır maliyet). |
 
 ## LLM Maliyet/Performans Stratejisi
 

@@ -32,7 +32,7 @@ Başarı kriteri: {basari_kriteri}
 
 ## 2. Embedding Üretimi
 
-- Temsil metni, çok dilli embedding API'sine gönderilir (bkz. `architecture.md` — OpenAI text-embedding-3-small veya Cohere multilingual-v3).
+- Temsil metni, Voyage AI'nin `voyage-4` modeline gönderilir (1024 boyut) — Anthropic'in Claude ile kullanım için resmi önerdiği sağlayıcı, ilk 200M token ücretsiz.
 - Sonuç vektör, kartın `embedding` kolonuna yazılır (pgvector).
 - **Ne zaman yeniden hesaplanır:** kart onaylandığında (ilk oluşturma) ve her güncellemede (`versiyon` arttığında).
 

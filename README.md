@@ -46,7 +46,7 @@ Eşleştirme algoritmasının detayı için bkz. [`docs/matching-algorithm.md`](
 - **Ajan orkestrasyonu:** LangGraph (supervisor pattern, insan-onaylı durak noktaları)
 - **Veritabanı:** PostgreSQL + pgvector
 - **Frontend:** Next.js, Tailwind, shadcn/ui
-- **Embedding:** Çok dilli embedding API'si (Türkçe destekli)
+- **Embedding:** Voyage AI (voyage-4, 1024 boyut) — Anthropic'in Claude ile kullanım için resmi önerdiği sağlayıcı
 - **LLM:** Katmanlı model stratejisi — yapılandırma/çıkarma görevleri için hafif model, gerekçeli akıl yürütme için güçlü model
 
 ## Proje Durumu
