@@ -8,10 +8,11 @@ type Durum = "kontrol_ediliyor" | "bagli" | "bagli_degil";
 
 const gorunum: Record<Durum, { nokta: string; metin: string }> = {
   kontrol_ediliyor: {
-    nokta: "bg-muted-foreground animate-pulse",
-    metin: "Backend kontrol ediliyor…",
+    nokta: "bg-muted-foreground motion-safe:animate-pulse",
+    metin: "Backend kontrol ediliyor",
   },
-  bagli: { nokta: "bg-emerald-500", metin: "Backend bağlı" },
+  // Bağlantı rengi (docs/design-language.md): bağlantı anlarına ayrılmış renk
+  bagli: { nokta: "bg-baglanti", metin: "Backend bağlı" },
   bagli_degil: { nokta: "bg-destructive", metin: "Backend'e ulaşılamıyor" },
 };
 
@@ -41,7 +42,7 @@ export function BackendDurumu() {
   const { nokta, metin } = gorunum[durum];
 
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
+    <div className="inline-flex w-fit items-center gap-2 rounded-sm border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
       <span
         aria-hidden="true"
         className={`size-2 shrink-0 rounded-full ${nokta}`}

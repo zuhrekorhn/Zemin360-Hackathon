@@ -1,15 +1,7 @@
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { BackendDurumu } from "@/components/backend-durumu";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 const ajanlar = [
   { ad: "Keşif", isi: "Genç yeteneği tanır, yetenek kartına dönüştürür" },
@@ -20,70 +12,121 @@ const ajanlar = [
   { ad: "Takip", isi: "İş birliğini milestone bazında şeffaf tutar" },
 ];
 
-const yollar = [
-  {
-    href: "/kesif",
-    baslik: "Genç olarak başla",
-    aciklama:
-      "Keşif Ajanı'yla kısa bir sohbet. Ne yaptığını, neyi somut olarak ortaya çıkardığını birlikte yapılandırılmış bir yetenek kartına dönüştürürsünüz. CV yüklemek yok.",
-  },
-  {
-    href: "/tanimlama",
-    baslik: "Kurum olarak başla",
-    aciklama:
-      "Tanımlama Ajanı'yla kısa bir sohbet. “Dijitalleşmek istiyoruz” gibi bir cümleyi, ölçülebilir bir başarı kriteri olan net bir ihtiyaç kartına çevirirsiniz.",
-  },
+// Doğrulama Ajanı'nın dört bileşenli rubriği (docs/agent-specs.md § 4).
+// Buradaki değerler örnek — gerçek veri Faz 2'de bağlanacak.
+const guvenGostergesi = [
+  { ad: "Kanıt orijinalliği", puan: 3 },
+  { ad: "Ölçülebilir sonuç", puan: 2 },
+  { ad: "Rol netliği", puan: 3 },
+  { ad: "Üçüncü taraf onayı", puan: 2 },
 ];
 
 export default function AnaSayfa() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-6 py-16 sm:py-24">
-      <header className="flex flex-col gap-5">
-        <span className="w-fit rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
-          Zemin360 Hackathon · GİRVAK
-        </span>
-
-        <h1 className="font-heading text-3xl leading-tight font-semibold text-balance sm:text-4xl">
-          Genç yetenekler ve kurumlar, gerekçesi belli eşleşmelerle buluşsun.
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-16 px-6 py-16 sm:py-24">
+      <header className="flex flex-col items-center gap-5 text-center">
+        <h1 className="font-heading text-3xl leading-[1.15] font-semibold text-balance text-secondary sm:text-[2.75rem]">
+          Bir kişinin ne yaptığını, gerçekten yaptığını gösterebilmek.
         </h1>
 
-        <p className="text-base text-pretty text-muted-foreground">
-          Bu platform, keşif–doğrulama–eşleşme–takip döngüsünün tamamını tek bir
-          paylaşılan veri katmanında birleştirir. Altı uzman yapay zeka ajanı
-          aynı profil–ihtiyaç grafiği üzerinde çalışır; her eşleşme önerisi
-          kara kutu bir skorla değil, neden eşleştiğini anlatan bir gerekçeyle
-          gelir.
+        <p className="max-w-xl text-base text-pretty text-muted-foreground">
+          Genç yetenekler ve kurumlar aynı veri katmanında buluşuyor. Sohbetle
+          başlıyor, kanıtla doğrulanıyor, gerekçesi açık bir eşleşmeyle
+          sonuçlanıyor.
         </p>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2">
-        {yollar.map((yol) => (
-          <Card key={yol.href} className="justify-between">
-            <CardHeader>
-              <CardTitle className="text-lg">{yol.baslik}</CardTitle>
-              <CardDescription className="text-pretty">
-                {yol.aciklama}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild size="lg" className="w-full">
-                <Link href={yol.href}>
-                  {yol.baslik}
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Sohbet paneli — yuvarlak ve sıcak (docs/design-language.md § Yerleşim) */}
+      <section aria-labelledby="ornek-akis" className="flex flex-col gap-6">
+        <h2 id="ornek-akis" className="sr-only">
+          Örnek akış
+        </h2>
+
+        <div className="flex flex-col gap-3 rounded-[1.75rem] bg-muted p-5 sm:p-6">
+          <p className="max-w-[85%] rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-sm text-pretty ring-1 ring-border">
+            <span className="mb-1 block font-medium text-accent">
+              Keşif Ajanı
+            </span>
+            Son bir yılda bitirdiğin, sonucunu görebildiğin bir iş var mı?
+            Okuldan ya da gönüllü bir işten de olabilir.
+          </p>
+
+          <p className="ml-auto max-w-[85%] rounded-3xl rounded-br-lg bg-secondary px-4 py-3 text-sm text-pretty text-secondary-foreground">
+            Mahalle kütüphanesine ödünç takip sistemi yazdım. 400 kitabı ve 120
+            üyeyi takip ediyor.
+          </p>
+        </div>
+
+        {/* Gerekçe kartı — hairline çizgili, az yuvarlak, resmi belge hissi.
+            Sayfadaki tek bilinçli hareket burada. */}
+        <article className="rounded-sm border border-border bg-card motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
+          <div className="border-b border-border px-5 py-4">
+            <h3 className="font-heading text-base font-semibold text-secondary">
+              Neden eşleşti
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Üye kayıtlarını elle tutmaktan kurtulmak isteyen bir kooperatifin
+              ihtiyacıyla
+            </p>
+          </div>
+
+          <ul className="flex flex-col gap-2.5 px-5 py-4 text-sm">
+            <li>Aynı problemi çözen, çalışan bir sistem kurmuş.</li>
+            <li>Sonucu sayıyla anlatmış: 400 kitap, 120 üye.</li>
+            <li>Kanıt linki açıldı, kütüphane sorumlusu referansı yanıtladı.</li>
+          </ul>
+
+          <dl className="grid grid-cols-2 gap-px border-t border-border bg-border sm:grid-cols-4">
+            {guvenGostergesi.map((bilesen) => (
+              <div key={bilesen.ad} className="bg-card px-5 py-3 sm:px-4">
+                <dt className="text-xs text-muted-foreground">{bilesen.ad}</dt>
+                <dd className="font-mono text-sm text-secondary">
+                  {bilesen.puan}/3
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </article>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-heading text-sm font-medium text-muted-foreground">
+      {/* İki giriş yolu — kart kalıbı yerine hairline ile ayrılmış iki sütun */}
+      <section className="grid gap-8 border-t border-border pt-10 sm:grid-cols-2 sm:gap-10 sm:divide-x sm:divide-border">
+        <div className="flex flex-col items-start gap-3 sm:pr-10">
+          <h2 className="font-heading text-xl font-semibold text-secondary">
+            Genç yetenek
+          </h2>
+          <p className="text-sm text-pretty text-muted-foreground">
+            Keşif Ajanı’yla kısa bir sohbet. Ne yaptığını ve neyi somut olarak
+            ortaya çıkardığını birlikte bir yetenek kartına dönüştürürsünüz. CV
+            yüklemek yok.
+          </p>
+          <Button asChild size="lg" className="mt-2">
+            <Link href="/kesif">Genç olarak başla</Link>
+          </Button>
+        </div>
+
+        <div className="flex flex-col items-start gap-3 border-t border-border pt-8 sm:border-t-0 sm:pt-0 sm:pl-10">
+          <h2 className="font-heading text-xl font-semibold text-secondary">
+            Kurum
+          </h2>
+          <p className="text-sm text-pretty text-muted-foreground">
+            Tanımlama Ajanı’yla kısa bir sohbet. “Dijitalleşmek istiyoruz” gibi
+            bir cümleyi, ölçülebilir başarı kriteri olan net bir ihtiyaç kartına
+            çevirirsiniz.
+          </p>
+          <Button asChild size="lg" variant="outline" className="mt-2">
+            <Link href="/tanimlama">Kurum olarak başla</Link>
+          </Button>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4 border-t border-border pt-10">
+        <h2 className="font-heading text-xl font-semibold text-secondary">
           Altı problem, altı ajan
         </h2>
-        <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+        <ul className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
           {ajanlar.map((ajan) => (
-            <li key={ajan.ad} className="flex flex-col">
+            <li key={ajan.ad} className="flex flex-col gap-0.5">
               <span className="text-sm font-medium">{ajan.ad} Ajanı</span>
               <span className="text-sm text-muted-foreground">{ajan.isi}</span>
             </li>
@@ -91,10 +134,11 @@ export default function AnaSayfa() {
         </ul>
       </section>
 
-      <footer className="mt-auto flex flex-col gap-4 border-t border-border pt-8">
+      <footer className="mt-auto flex flex-col gap-3 border-t border-border pt-8">
         <BackendDurumu />
         <p className="text-xs text-muted-foreground">
-          Faz 1 — iskelet. Ajan sohbetleri henüz bağlanmadı.
+          Zemin360 Hackathon · GİRVAK — Faz 1 iskeleti. Ajan sohbetleri henüz
+          bağlanmadı.
         </p>
       </footer>
     </main>
