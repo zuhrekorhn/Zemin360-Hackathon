@@ -38,6 +38,7 @@ Detaylı mimari ve teknoloji kararları için bkz. [`docs/architecture.md`](docs
 Veri şeması için bkz. [`docs/data-schema.md`](docs/data-schema.md).
 Uçtan uca akışlar için bkz. [`docs/sequence-diagrams.md`](docs/sequence-diagrams.md).
 API yüzeyi için bkz. [`docs/api-contracts.md`](docs/api-contracts.md).
+Eşleştirme algoritmasının detayı için bkz. [`docs/matching-algorithm.md`](docs/matching-algorithm.md).
 
 ## Teknoloji Yığını
 

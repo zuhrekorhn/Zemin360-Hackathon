@@ -29,6 +29,7 @@ erDiagram
     string deneyim_seviyesi
     boolean kanit_bekleyen
     int versiyon
+    vector embedding
   }
   SOMUT_CIKTI {
     uuid id PK
@@ -66,6 +67,9 @@ erDiagram
     string problem_tanimi
     string basari_kriteri
     string kisitlar
+    string sehir_tercihi
+    string musaitlik_tercihi
+    vector embedding
   }
   ESLESME {
     uuid id PK
@@ -103,3 +107,5 @@ erDiagram
 - **`ESLESME` → `ISBIRLIGI` ilişkisi isteğe bağlı (0 veya 1).** Her eşleşme iş birliğine dönüşmez — sadece kurumun "ilgileniyorum" dediği ve kabul edilen eşleşmeler.
 - **`CANLILIK_OLAYI` doğrudan `ESLESME`'ye bağlı, `ISBIRLIGI`'na değil.** Pasiflik takibi bir iş birliği resmen başlamadan da çalışabilmeli — örn. "eşleşme önerildi ama kimse tıklamadı" durumu.
 - **`kanit_bekleyen` (YETENEK_KARTI) ve `durum` (REFERANS_ISTEGI, ESLESME, ISBIRLIGI) alanları state machine mantığıyla çalışıyor.** Örn. `REFERANS_ISTEGI.durum`: `bekliyor` → `onaylandi` veya `yanit_yok` (zaman aşımı, ceza değil nötr durum).
+- **`embedding` (YETENEK_KARTI, IHTIYAC_KARTI), pgvector kolonu.** Kart onaylandığında/güncellendiğinde yeniden hesaplanır. Boyut, seçilen embedding modeline göre sabitlenir (bkz. `matching-algorithm.md`).
+- **`sehir_tercihi` ve `musaitlik_tercihi` (IHTIYAC_KARTI), nullable.** Eşleştirme'nin sert filtre adımı SQL üzerinden çalışabilsin diye — serbest metin `kisitlar` alanı bu amaçla sorgulanamaz.
