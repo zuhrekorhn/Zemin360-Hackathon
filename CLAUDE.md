@@ -18,6 +18,7 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 | Eşleştirme Ajanı'nın tam formülü ve embedding stratejisi | `docs/matching-algorithm.md` |
 | Uçtan uca akışlar (happy path, doğrulama timeout dalı) | `docs/sequence-diagrams.md` |
 | Tüm endpoint listesi | `docs/api-contracts.md` |
+| Renk paleti, tipografi, yerleşim ilkeleri (her frontend işinde kullan) | `docs/design-language.md` |
 | Faz planı ve mevcut durum | `docs/roadmap.md` |
 
 **Kural:** Bu dosyalarda yazan bir tasarım kararıyla çelişen bir yaklaşım önereceksen (örn. farklı bir kütüphane, farklı bir veri modeli), önce sor — sessizce değiştirme. Sebebi belgelenmiş kararlar var, gerekçesiz sapma kafa karışıklığı yaratır.
