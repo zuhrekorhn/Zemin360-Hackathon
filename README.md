@@ -95,6 +95,36 @@ alembic check                                 # modeller ile migration arasında
 
 **Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (LangGraph ajan kodu — Faz 1'de dolacak) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
 
+## Frontend'i Çalıştırma
+
+Gereksinimler: Node.js 20.19+ (Next.js 16 en az 20.9 istiyor; shadcn CLI ve ESLint 20.19+ bekliyor).
+
+```bash
+cd frontend
+npm install
+cp .env.local.example .env.local   # Windows PowerShell: Copy-Item .env.local.example .env.local
+npm run dev
+```
+
+Arayüz: <http://localhost:3000>
+
+`.env.local` içindeki `NEXT_PUBLIC_API_URL`, backend'in adresidir (varsayılan `http://localhost:8000`). Ana sayfanın altındaki gösterge bu adrese `/health` isteği atar — **yeşilse** iki taraf konuşuyor, **kırmızıysa** backend kapalı ya da CORS ayarı eksik demektir. Backend'i de çalıştırmayı unutma.
+
+**Yararlı komutlar** (`frontend/` içinde):
+
+```bash
+npm run dev       # geliştirme sunucusu
+npm run build     # üretim derlemesi + tip kontrolü
+npm run lint      # ESLint
+npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
+```
+
+**Klasör yapısı:** `src/app/` (App Router sayfaları) · `src/components/ui/` (shadcn/ui bileşenleri — elle düzenlenebilir) · `src/components/` (kendi bileşenlerimiz) · `src/lib/api.ts` (backend fetch sarmalayıcısı).
+
+**Notlar:**
+- shadcn/ui, **Radix** tabanlı kurulumla (`nova` preset, Lucide ikonları) eklendi — `components.json` bunu kaydeder. Şu an sadece `button`, `input`, `card` kurulu.
+- `/kesif` ve `/tanimlama` sayfaları henüz boş iskelet; ana sayfadaki yönlendirmeler kırık link olmasın diye duruyor. Ajan sohbet arayüzleri Faz 1'de buraya gelecek.
+
 ## Proje Durumu
 
 🟡 **Tasarım aşaması** — mimari, veri şeması ve API sözleşmeleri tamamlandı; geliştirme Faz 1'de başlıyor.

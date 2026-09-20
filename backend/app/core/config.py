@@ -9,6 +9,12 @@ class Settings(BaseSettings):
 
     database_url: str
     app_env: str = "development"
+    # Frontend origin'leri, virgülle ayrılmış (CORS). Varsayılan: Next.js dev sunucusu.
+    cors_origins: str = "http://localhost:3000"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @field_validator("database_url")
     @classmethod
