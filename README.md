@@ -49,6 +49,52 @@ Eşleştirme algoritmasının detayı için bkz. [`docs/matching-algorithm.md`](
 - **Embedding:** Voyage AI (voyage-4, 1024 boyut) — Anthropic'in Claude ile kullanım için resmi önerdiği sağlayıcı
 - **LLM:** Katmanlı model stratejisi — yapılandırma/çıkarma görevleri için hafif model, gerekçeli akıl yürütme için güçlü model
 
+## Backend'i Çalıştırma
+
+Gereksinimler: Python 3.11+ ve **pgvector eklentisi kurulu** bir PostgreSQL (13+).
+
+**1. Veritabanı.** pgvector'lu hazır bir Postgres'i Docker ile ayağa kaldırabilirsin:
+
+```bash
+docker run -d --name zemin360-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=zemin360 \
+  -p 5432:5432 pgvector/pgvector:pg16
+```
+
+Kendi Postgres'ini kullanıyorsan `zemin360` veritabanını oluştur ve pgvector'ü kur (migration `CREATE EXTENSION vector` komutunu kendisi çalıştırır, ama eklenti dosyaları sunucuda kurulu olmalı).
+
+**2. Bağımlılıklar ve ortam.**
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate          # Windows  (macOS/Linux: source .venv/bin/activate)
+pip install -e ".[dev]"
+cp .env.example .env            # Windows PowerShell: Copy-Item .env.example .env
+```
+
+`.env` içindeki `DATABASE_URL`'i kendi bağlantına göre düzenle (async sürücü: `postgresql+asyncpg://...`). Gerçek `.env` commit edilmez.
+
+**3. Migration ve sunucu.**
+
+```bash
+alembic upgrade head            # 11 tabloyu + pgvector eklentisini oluşturur
+uvicorn app.main:app --reload
+```
+
+- Sağlık kontrolü: <http://localhost:8000/health> → `{"status": "ok"}`
+- Etkileşimli API dokümanı: <http://localhost:8000/docs>
+
+**Yararlı komutlar** (`backend/` içinde):
+
+```bash
+pytest                                        # testler (DB gerektirmez)
+ruff check . && ruff format .                 # lint + format
+alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni migration
+alembic check                                 # modeller ile migration arasında fark var mı?
+```
+
+**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (LangGraph ajan kodu — Faz 1'de dolacak) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
+
 ## Proje Durumu
 
 🟡 **Tasarım aşaması** — mimari, veri şeması ve API sözleşmeleri tamamlandı; geliştirme Faz 1'de başlıyor.
