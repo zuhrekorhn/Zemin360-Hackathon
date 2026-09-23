@@ -35,8 +35,16 @@ export async function apiIstek<T>(
   }
 
   if (!yanit.ok) {
+    // FastAPI hatayı {"detail": "..."} olarak döner; varsa onu göster.
+    let ayrinti: string | undefined;
+    try {
+      const govde = (await yanit.json()) as { detail?: unknown };
+      if (typeof govde.detail === "string") ayrinti = govde.detail;
+    } catch {
+      // gövde JSON değil — durum koduyla yetin
+    }
     throw new ApiHatasi(
-      `İstek başarısız: ${yanit.status} ${yanit.statusText}`,
+      ayrinti ?? `İstek başarısız: ${yanit.status} ${yanit.statusText}`,
       yanit.status,
     );
   }
@@ -49,6 +57,94 @@ export type SaglikYaniti = { status: string };
 /** GET /health — backend ayakta mı? */
 export function saglikKontrol(): Promise<SaglikYaniti> {
   return apiIstek<SaglikYaniti>("/health", { cache: "no-store" });
+}
+
+/* --- Keşif Ajanı (docs/api-contracts.md § Keşif) --------------------------
+   Tipler backend'deki app/schemas/kesif.py ile birebir eşleşir. */
+
+export type SomutCiktiTaslagi = {
+  baslik: string;
+  aciklama: string | null;
+  kanit_linki: string | null;
+};
+
+export type KartTaslagi = {
+  rol_alani: string | null;
+  deneyim_seviyesi: string | null;
+  sektor_ilgi_alani: string[];
+  araclar_teknolojiler: string[];
+  somut_ciktilar: SomutCiktiTaslagi[];
+};
+
+export type SohbetYaniti = {
+  oturum_id: string;
+  /** Taslak hazırsa soru gelmez; beklenen şey onaydır. */
+  soru: string | null;
+  taslak: KartTaslagi;
+  taslak_hazir: boolean;
+};
+
+export type KullaniciGirdisi = {
+  ad: string;
+  email: string;
+  sehir?: string | null;
+  musaitlik?: string | null;
+};
+
+export type SomutCiktiYaniti = {
+  id: string;
+  baslik: string;
+  aciklama: string | null;
+  kanit_linki: string | null;
+};
+
+/** Kartın dışarıya açılan hali — e-posta/iletişim alanı taşımaz
+ *  (docs/agent-specs.md § 1.5). */
+export type YetenekKartiYaniti = {
+  id: string;
+  rol_alani: string;
+  deneyim_seviyesi: string;
+  sektor_ilgi_alani: string[];
+  araclar_teknolojiler: string[];
+  kanit_bekleyen: boolean;
+  versiyon: number;
+  embedding_var: boolean;
+  somut_ciktilar: SomutCiktiYaniti[];
+};
+
+/** POST /kesif/sohbet/baslat — yeni oturum açar, açılış sorusunu döner. */
+export function sohbetBaslat(): Promise<SohbetYaniti> {
+  return apiIstek<SohbetYaniti>("/kesif/sohbet/baslat", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+/** POST /kesif/sohbet/cevap — cevabı işler, sıradaki soruyu ya da taslağı döner. */
+export function sohbetCevap(
+  oturumId: string,
+  cevap: string,
+): Promise<SohbetYaniti> {
+  return apiIstek<SohbetYaniti>("/kesif/sohbet/cevap", {
+    method: "POST",
+    body: JSON.stringify({ oturum_id: oturumId, cevap }),
+  });
+}
+
+/** POST /kesif/kart/onayla — taslağı YETENEK_KARTI'na yazar. */
+export function kartOnayla(
+  oturumId: string,
+  kullanici: KullaniciGirdisi,
+  duzeltilmisTaslak?: KartTaslagi,
+): Promise<YetenekKartiYaniti> {
+  return apiIstek<YetenekKartiYaniti>("/kesif/kart/onayla", {
+    method: "POST",
+    body: JSON.stringify({
+      oturum_id: oturumId,
+      kullanici,
+      duzeltilmis_taslak: duzeltilmisTaslak ?? null,
+    }),
+  });
 }
 
 export { API_URL };
