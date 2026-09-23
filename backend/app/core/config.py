@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     # Keşif/Tanımlama ajanlarının LLM'i (docs/architecture.md § Teknoloji Kararları)
     google_api_key: str = ""
     gemini_model: str = "gemini-3.6-flash"
+    # Ücretsiz katman kotası model başına ayrı işliyor; ana modelin günlük
+    # kotası dolunca ajan buna düşer (bkz. app/agents/kesif.py).
+    gemini_yedek_model: str = "gemini-3.1-flash-lite"
 
     # Embedding sağlayıcısı (docs/matching-algorithm.md § 2)
     voyage_api_key: str = ""

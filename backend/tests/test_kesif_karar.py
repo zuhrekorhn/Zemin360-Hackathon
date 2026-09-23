@@ -6,15 +6,19 @@ verdiğinden bağımsız olarak tutmaları gerekiyor.
 
 import asyncio
 
+from langchain_google_genai.chat_models import GoogleRateLimitError
+
 from app.agents.kesif import (
     FALLBACK_SORULARI,
     MAKS_TAKIP_TURU,
     SomutCiktiTaslak,
     TaslakCikarimi,
     _birlestir,
+    _cikarim_zinciri,
     _karar,
     bos_taslak,
 )
+from app.core.config import get_settings
 
 
 def karar(durum: dict) -> dict:
@@ -108,3 +112,25 @@ def test_bos_taslak_tum_zorunlu_alanlari_icerir():
         "araclar_teknolojiler",
         "somut_ciktilar",
     }
+
+
+def test_kota_dolunca_ayni_sema_ile_yedek_modele_dusuyor(monkeypatch):
+    """Ücretsiz katman kotası model başına ayrı; ana model dolunca yedeğe düşmeli."""
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-anahtari")
+    get_settings.cache_clear()
+    _cikarim_zinciri.cache_clear()
+    try:
+        zincir = _cikarim_zinciri()
+        ayarlar = get_settings()
+
+        assert zincir.exceptions_to_handle == (GoogleRateLimitError,)
+        assert zincir.runnable.first.model.endswith(ayarlar.gemini_model)
+        # Model adı sağlayıcıya göre "models/" önekiyle gelebiliyor.
+        yedekler = [f.first.model for f in zincir.fallbacks]
+        assert len(yedekler) == 1
+        assert yedekler[0].endswith(ayarlar.gemini_yedek_model)
+        # Yedek de aynı yapılandırılmış şemayı kullanmalı, yoksa çıkarım bozulur.
+        assert zincir.fallbacks[0].last == zincir.runnable.last
+    finally:
+        get_settings.cache_clear()
+        _cikarim_zinciri.cache_clear()

@@ -18,7 +18,9 @@ from functools import lru_cache
 from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
+from langchain_core.runnables import Runnable
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai.chat_models import GoogleRateLimitError
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
@@ -107,16 +109,30 @@ class KesifDurumu(TypedDict, total=False):
     cikti_yok_dedi: bool
 
 
-@lru_cache
-def _llm() -> ChatGoogleGenerativeAI:
+def _llm(model_adi: str) -> ChatGoogleGenerativeAI:
     ayarlar = get_settings()
     if not ayarlar.google_api_key:
         raise RuntimeError("GOOGLE_API_KEY tanımlı değil (.env)")
     return ChatGoogleGenerativeAI(
-        model=ayarlar.gemini_model,
+        model=model_adi,
         google_api_key=ayarlar.google_api_key,
         temperature=0,
     )
+
+
+@lru_cache
+def _cikarim_zinciri() -> Runnable:
+    """Aynı prompt ve şemayla çalışan iki modelden oluşan zincir.
+
+    Gemini ücretsiz katmanında günlük kota model başına ayrı işliyor; ana
+    modelin kotası dolunca (429/RESOURCE_EXHAUSTED) aynı çağrı yedek modele
+    düşer. Yedeğin de kotası dolarsa hata `_cikar`'a kadar çıkar ve kullanıcı
+    429 görür — sohbet checkpointer'da durduğu için kaybolmaz.
+    """
+    ayarlar = get_settings()
+    ana = _llm(ayarlar.gemini_model).with_structured_output(TaslakCikarimi)
+    yedek = _llm(ayarlar.gemini_yedek_model).with_structured_output(TaslakCikarimi)
+    return ana.with_fallbacks([yedek], exceptions_to_handle=(GoogleRateLimitError,))
 
 
 def bos_taslak() -> dict[str, Any]:
@@ -181,7 +197,7 @@ class HizSinirHatasi(RuntimeError):
 
 async def _cikar(durum: KesifDurumu) -> KesifDurumu:
     """Konuşmanın tamamını yapılandırılmış alanlara döker (function calling)."""
-    zincir = _llm().with_structured_output(TaslakCikarimi)
+    zincir = _cikarim_zinciri()
     try:
         cikarim: TaslakCikarimi = await zincir.ainvoke(
             [SystemMessage(content=SISTEM_TALIMATI), *durum["mesajlar"]]
