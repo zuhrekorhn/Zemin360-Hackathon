@@ -12,9 +12,26 @@ class Settings(BaseSettings):
     # Frontend origin'leri, virgülle ayrılmış (CORS). Varsayılan: Next.js dev sunucusu.
     cors_origins: str = "http://localhost:3000"
 
+    # Keşif/Tanımlama ajanlarının LLM'i (docs/architecture.md § Teknoloji Kararları)
+    google_api_key: str = ""
+    gemini_model: str = "gemini-3.6-flash"
+
+    # Embedding sağlayıcısı (docs/matching-algorithm.md § 2)
+    voyage_api_key: str = ""
+    voyage_model: str = "voyage-4"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def checkpointer_url(self) -> str:
+        """LangGraph checkpointer'ın bağlantı adresi — aynı veritabanı, psycopg sürücüsüyle.
+
+        langgraph-checkpoint-postgres asyncpg'yi desteklemiyor; uygulama verisi
+        (app/db/session.py) asyncpg üzerinden okunmaya devam ediyor.
+        """
+        return self.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
 
     @field_validator("database_url")
     @classmethod

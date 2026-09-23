@@ -62,6 +62,26 @@ docker run -d --name zemin360-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=ze
 
 Kendi Postgres'ini kullanıyorsan `zemin360` veritabanını oluştur ve pgvector'ü kur (migration `CREATE EXTENSION vector` komutunu kendisi çalıştırır, ama eklenti dosyaları sunucuda kurulu olmalı).
 
+<details>
+<summary>Windows'a doğrudan kurulu Postgres'te pgvector (Docker kullanmıyorsan)</summary>
+
+pgvector Windows için hazır ikili dağıtmıyor; Visual Studio derleyicisi ve Windows SDK ile kaynaktan derlemek gerekiyor:
+
+```bash
+git clone --branch v0.8.1 https://github.com/pgvector/pgvector.git
+```
+
+EDB'nin Windows derlemesinde `postgres.lib`, pgvector'ün ihtiyaç duyduğu `float_to_shortest_decimal_*` sembollerini dışarı açmıyor; bu yüzden bağlama adımı hata verir. Çözüm: aynı sürümün kaynağından (`postgresql-17.x/src/common/`) `f2s.c`, `ryu_common.h`, `d2s_intrinsics.h`, `digit_table.h` dosyalarını pgvector'ün `src/` klasörüne kopyalayıp `Makefile.win` içindeki `OBJS` listesine `src\f2s.obj` eklemek. Sonra VS geliştirici komut isteminde:
+
+```
+set PGROOT=C:\Program Files\PostgreSQL\17
+nmake /F Makefile.win
+nmake /F Makefile.win install      # yönetici gerekir
+```
+
+Bu kurulum **Faz 1 geliştirme makinesinde böyle yapıldı**; Docker kullanabiliyorsan yukarıdaki yol daha kısa.
+</details>
+
 **2. Bağımlılıklar ve ortam.**
 
 ```bash
@@ -74,12 +94,23 @@ cp .env.example .env            # Windows PowerShell: Copy-Item .env.example .en
 
 `.env` içindeki `DATABASE_URL`'i kendi bağlantına göre düzenle (async sürücü: `postgresql+asyncpg://...`). Gerçek `.env` commit edilmez.
 
+**API anahtarları.** Keşif Ajanı iki dış servise gidiyor, ikisinin anahtarı da `.env`'de olmalı — yoksa sohbet ve kart onayı çalışmaz:
+
+| Değişken | Ne için | Nereden |
+|---|---|---|
+| `GOOGLE_API_KEY` | Sohbet ve alan çıkarımı (Gemini 2.5 Flash, ücretsiz katman) | <https://aistudio.google.com/apikey> |
+| `VOYAGE_API_KEY` | Kart onaylanınca embedding üretimi (voyage-4) | <https://dashboard.voyageai.com> |
+
+Gemini'nin ücretsiz katmanında **model başına günde 20 istek** sınırı var (dakikalık sınır da ayrıca işliyor). Kota dolunca sohbet uç noktası `429` döner; sohbet checkpointer'da durduğu için kota yenilendiğinde aynı `oturum_id` ile kaldığın yerden devam edebilirsin. Bir sohbet yaklaşık 3-5 istek harcıyor, yani günde birkaç tam denemeye yetiyor. Sınıra takılırsan `.env`'e başka bir model yazabilirsin (`GEMINI_MODEL=gemini-3.1-flash-lite` gibi) — her modelin kotası ayrı.
+
 **3. Migration ve sunucu.**
 
 ```bash
 alembic upgrade head            # 11 tabloyu + pgvector eklentisini oluşturur
-uvicorn app.main:app --reload
+python run.py --reload          # http://localhost:8000
 ```
+
+`run.py` yerine `uvicorn app.main:app` da çalışır — ama **Windows'ta `--reload` olmadan çalışmaz**: LangGraph'ın checkpointer'ı psycopg kullanıyor, psycopg de Windows'un varsayılan ProactorEventLoop'uyla uyumsuz. `run.py` döngüyü doğru olanla sabitliyor, sebebini de dosyanın başında anlatıyor.
 
 - Sağlık kontrolü: <http://localhost:8000/health> → `{"status": "ok"}`
 - Etkileşimli API dokümanı: <http://localhost:8000/docs>
@@ -87,13 +118,14 @@ uvicorn app.main:app --reload
 **Yararlı komutlar** (`backend/` içinde):
 
 ```bash
-pytest                                        # testler (DB gerektirmez)
+pytest                                        # testler (DB ve API anahtarı gerektirmez)
+python scripts/kesif_e2e.py                   # Keşif Ajanı uçtan uca (sunucu + gerçek API'ler)
 ruff check . && ruff format .                 # lint + format
 alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni migration
 alembic check                                 # modeller ile migration arasında fark var mı?
 ```
 
-**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (LangGraph ajan kodu — Faz 1'de dolacak) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
+**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (LangGraph ajan kodu — `kesif.py` çalışıyor) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
 
 ## Frontend'i Çalıştırma
 

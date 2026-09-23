@@ -1,0 +1,110 @@
+"""Keşif Ajanı'nın karar mantığı — LLM çağrısı olmadan.
+
+Buradaki sınırlar docs/agent-specs.md § 1'den geliyor; LLM'in ne cevap
+verdiğinden bağımsız olarak tutmaları gerekiyor.
+"""
+
+import asyncio
+
+from app.agents.kesif import (
+    FALLBACK_SORULARI,
+    MAKS_TAKIP_TURU,
+    SomutCiktiTaslak,
+    TaslakCikarimi,
+    _birlestir,
+    _karar,
+    bos_taslak,
+)
+
+
+def karar(durum: dict) -> dict:
+    return asyncio.run(_karar(durum))
+
+
+def dolu_taslak(**degisiklikler) -> dict:
+    taslak = {
+        "rol_alani": "backend geliştirici",
+        "deneyim_seviyesi": "orta",
+        "sektor_ilgi_alani": ["eğitim"],
+        "araclar_teknolojiler": ["Python"],
+        "somut_ciktilar": [{"baslik": "Kütüphane sistemi", "aciklama": None, "kanit_linki": None}],
+    }
+    taslak.update(degisiklikler)
+    return taslak
+
+
+def test_bos_cikarim_mevcut_taslagi_silmez():
+    """LLM bir turda alanı boş döndürürse önceki cevap kaybolmamalı."""
+    onceki = dolu_taslak()
+    sonraki = _birlestir(onceki, TaslakCikarimi())
+    assert sonraki == onceki
+
+
+def test_yeni_degerler_listeye_eklenir_tekrarlanmaz():
+    taslak = _birlestir(
+        dolu_taslak(),
+        TaslakCikarimi(
+            araclar_teknolojiler=["Python", "Docker"], sektor_ilgi_alani=["sivil toplum"]
+        ),
+    )
+    assert taslak["araclar_teknolojiler"] == ["Python", "Docker"]
+    assert taslak["sektor_ilgi_alani"] == ["eğitim", "sivil toplum"]
+
+
+def test_ayni_cikti_iki_kez_eklenmez():
+    taslak = _birlestir(
+        dolu_taslak(),
+        TaslakCikarimi(somut_ciktilar=[SomutCiktiTaslak(baslik="kütüphane sistemi")]),
+    )
+    assert len(taslak["somut_ciktilar"]) == 1
+
+
+def test_eksik_alan_takip_sorusu_getirir():
+    sonuc = karar({"taslak": dolu_taslak(rol_alani=None), "takip_turu": 0, "fallback_indeksi": 0})
+    assert sonuc["sonraki_soru"]
+    assert sonuc["taslak_hazir"] is False
+
+
+def test_takip_turu_sinirinda_taslak_hazirlanir():
+    """2 turdan sonra eksik alan kalsa bile sohbet uzatılmaz (spec: en fazla 2 tur)."""
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(rol_alani=None),
+            "takip_turu": MAKS_TAKIP_TURU,
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["taslak_hazir"] is True
+    assert sonuc["taslak"]["rol_alani"] == "belirtilmedi"
+
+
+def test_cikti_yoksa_once_fallback_sorulur():
+    sonuc = karar(
+        {"taslak": dolu_taslak(somut_ciktilar=[]), "takip_turu": 0, "fallback_indeksi": 0}
+    )
+    assert sonuc["sonraki_soru"] == FALLBACK_SORULARI[0]
+    assert sonuc["fallback_indeksi"] == 1
+
+
+def test_fallback_bitince_kart_potansiyel_olur():
+    """agent-specs.md § 1.4 — çıktısı olmayan kart yine de oluşur."""
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(somut_ciktilar=[]),
+            "takip_turu": 0,
+            "fallback_indeksi": len(FALLBACK_SORULARI),
+        }
+    )
+    assert sonuc["taslak_hazir"] is True
+    assert sonuc["taslak"]["deneyim_seviyesi"] == "potansiyel"
+    assert sonuc["sonraki_soru"] is None
+
+
+def test_bos_taslak_tum_zorunlu_alanlari_icerir():
+    assert set(bos_taslak()) >= {
+        "rol_alani",
+        "deneyim_seviyesi",
+        "sektor_ilgi_alani",
+        "araclar_teknolojiler",
+        "somut_ciktilar",
+    }
