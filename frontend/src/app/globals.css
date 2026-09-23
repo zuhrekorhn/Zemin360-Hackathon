@@ -4,14 +4,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Palet: docs/design-language.md § Renk Paleti — 6 rengin tek kaynağı.
+   Her biri bir utility üretir (bg-zemin, text-ana, bg-vurgu, text-baglanti,
+   text-metin, border-kenar). shadcn değişkenleri aşağıda (:root) bunlara bağlı. */
+@theme {
+  --color-zemin: #f3f4ee; /* Sayfa arka planı */
+  --color-ana: #1e3a2f; /* Başlıklar, koyu yüzeyler */
+  --color-vurgu: #b8823c; /* Butonlar, önemli aksiyonlar (CTA) */
+  --color-baglanti: #4a7a6d; /* Eşleşme/bağlantı anları, linkler */
+  --color-metin: #16211b; /* Gövde metni */
+  --color-kenar: #d8d6c9; /* Hairline çizgiler, kenarlıklar */
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
   --font-heading: var(--font-fraunces);
-  --color-baglanti: var(--baglanti);
-  --color-baglanti-foreground: var(--baglanti-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -50,45 +60,43 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Palet: docs/design-language.md § Renk Paleti.
-   Belgede tanımlı 6 renk aynen kullanılıyor. Kart yüzeyi, muted tonlar ve
-   destructive belgede yok — paletten türetildi (kâğıt hissi için kırık beyaz,
-   toprak tonunda kırmızı). */
+/* shadcn/ui değişkenleri → palet. shadcn bileşenleri (bg-primary, border-input…)
+   bu isimleri kullanır; böylece varsayılan renkleri değil paleti giyerler.
+   Kart yüzeyi, muted tonlar ve destructive belgede yok — paletten türetildi
+   (kâğıt hissi için kırık beyaz, toprak tonunda kırmızı). */
 :root {
-  --background: #f3f4ee; /* Zemin */
-  --foreground: #16211b; /* Metin */
+  --background: var(--color-zemin);
+  --foreground: var(--color-metin);
   --card: #fbfbf6;
-  --card-foreground: #16211b;
+  --card-foreground: var(--color-metin);
   --popover: #fbfbf6;
-  --popover-foreground: #16211b;
-  --primary: #b8823c; /* Vurgu (CTA) */
-  --primary-foreground: #16211b; /* Altın üstünde koyu metin — beyazın kontrastı yetersiz */
-  --secondary: #1e3a2f; /* Ana (koyu) — koyu yüzeyler */
-  --secondary-foreground: #f3f4ee;
+  --popover-foreground: var(--color-metin);
+  --primary: var(--color-vurgu);
+  --primary-foreground: var(--color-metin); /* Altın üstünde koyu metin — beyazın kontrastı yetersiz */
+  --secondary: var(--color-ana);
+  --secondary-foreground: var(--color-zemin);
   --muted: #e9eae1;
   --muted-foreground: #55655b;
-  --accent: #4a7a6d; /* Bağlantı rengi */
-  --accent-foreground: #f3f4ee;
-  --baglanti: #4a7a6d;
-  --baglanti-foreground: #f3f4ee;
+  --accent: var(--color-baglanti);
+  --accent-foreground: var(--color-zemin);
   --destructive: #9b3b2e;
-  --border: #d8d6c9; /* Çizgi/kenar */
-  --input: #d8d6c9;
-  --ring: #4a7a6d;
-  --chart-1: #1e3a2f;
-  --chart-2: #4a7a6d;
-  --chart-3: #b8823c;
+  --border: var(--color-kenar);
+  --input: var(--color-kenar);
+  --ring: var(--color-baglanti);
+  --chart-1: var(--color-ana);
+  --chart-2: var(--color-baglanti);
+  --chart-3: var(--color-vurgu);
   --chart-4: #55655b;
-  --chart-5: #d8d6c9;
+  --chart-5: var(--color-kenar);
   --radius: 0.625rem;
   --sidebar: #eceddf;
-  --sidebar-foreground: #16211b;
-  --sidebar-primary: #1e3a2f;
-  --sidebar-primary-foreground: #f3f4ee;
+  --sidebar-foreground: var(--color-metin);
+  --sidebar-primary: var(--color-ana);
+  --sidebar-primary-foreground: var(--color-zemin);
   --sidebar-accent: #e9eae1;
-  --sidebar-accent-foreground: #1e3a2f;
-  --sidebar-border: #d8d6c9;
-  --sidebar-ring: #4a7a6d;
+  --sidebar-accent-foreground: var(--color-ana);
+  --sidebar-border: var(--color-kenar);
+  --sidebar-ring: var(--color-baglanti);
 }
 
 /* Koyu tema design-language.md'de tanımlı değil; paletten türetilmiş bir
@@ -110,8 +118,7 @@
   --muted-foreground: #a9b5ac;
   --accent: #6e9c8e;
   --accent-foreground: #16211b;
-  --baglanti: #6e9c8e;
-  --baglanti-foreground: #16211b;
+  --color-baglanti: #6e9c8e;
   --destructive: #c4614f;
   --border: #f3f4ee1a;
   --input: #f3f4ee26;
