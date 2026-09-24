@@ -20,6 +20,7 @@ import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import Protocol
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -141,6 +142,31 @@ def siralayip_ele(adaylar: Sequence[Aday]) -> list[Aday]:
         aday for aday in adaylar if benzerlik_yeterli_mi(aday.benzerlik) and aday.skor >= SKOR_ESIGI
     ]
     return sorted(uygunlar, key=lambda aday: aday.skor, reverse=True)[:TOP_N]
+
+
+class EslesmeGorunumu(Protocol):
+    """Temizlik kararı için bir eşleşmenin gereken yüzü."""
+
+    yetenek_karti_id: uuid.UUID
+    durum: str
+
+
+def temizlenecekler(
+    mevcutlar: Sequence[EslesmeGorunumu], secilenler: Sequence[uuid.UUID]
+) -> list[EslesmeGorunumu]:
+    """Yeniden hesapta artık uygun olmayan eşleşmelerden silinecekler.
+
+    Yalnızca `onerildi` durumundakiler silinir: kurum bir kayda dokunduysa
+    (ilgileniyor, kabul, red) o artık bir öneri değil, verilmiş bir karardır —
+    kural değişti diye kurumun geçmişini silmek olmaz. Bunlar listede kalır,
+    skorları tazelenmez.
+    """
+    kalanlar = set(secilenler)
+    return [
+        eslesme
+        for eslesme in mevcutlar
+        if eslesme.yetenek_karti_id not in kalanlar and eslesme.durum == DURUM_ONERILDI
+    ]
 
 
 def kart_dogrulanmis_mi(kart: YetenekKarti) -> bool:

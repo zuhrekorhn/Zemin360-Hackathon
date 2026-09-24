@@ -343,10 +343,23 @@ export type IlgileniyorumYaniti = {
   isbirligi_durum: string;
 };
 
-/** GET /eslestirme/oneriler/{kurum_id} — hesaplanmamışsa pipeline'ı tetikler. */
+/** GET /eslestirme/oneriler/{kurum_id} — hesaplanmış listeyi okur.
+ *  Kayıt varsa yeniden hesaplamaz; tazelemek için `eslestirmeCalistir`. */
 export function eslestirmeOnerileri(kurumId: string): Promise<Oneriler> {
   return apiIstek<Oneriler>(`/eslestirme/oneriler/${kurumId}`, {
     cache: "no-store",
+  });
+}
+
+/**
+ * POST /eslestirme/calistir — pipeline'ı yeniden çalıştırır: skorlar tazelenir,
+ * eksik gerekçeler üretilir, artık uygun olmayan öneriler listeden düşer.
+ * Kurumun karar verdiği eşleşmelere dokunulmaz.
+ */
+export function eslestirmeCalistir(kurumId: string): Promise<Oneriler> {
+  return apiIstek<Oneriler>("/eslestirme/calistir", {
+    method: "POST",
+    body: JSON.stringify({ kurum_id: kurumId }),
   });
 }
 

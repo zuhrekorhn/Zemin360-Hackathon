@@ -3,18 +3,24 @@
 Formül ve eşikler docs/matching-algorithm.md § 4-5'ten geliyor.
 """
 
+import uuid
 from dataclasses import dataclass
 
 import pytest
 
 from app.agents.eslestirme import (
     BENZERLIK_ALT_SINIRI,
+    DURUM_ILGILENILIYOR,
+    DURUM_KABUL_EDILDI,
+    DURUM_ONERILDI,
+    DURUM_REDDEDILDI,
     SKOR_ESIGI,
     TOP_N,
     benzerlik_yeterli_mi,
     dogrulama_bonusu,
     siralayip_ele,
     skor_hesapla,
+    temizlenecekler,
 )
 
 
@@ -103,3 +109,38 @@ def test_alaka_alt_siniri_esikten_bagimsiz_bir_kural():
     assert benzerlik_yeterli_mi(BENZERLIK_ALT_SINIRI - 0.01) is False
     # Gözlenen alakasız küme 0.27-0.36 bandındaydı; sınır onun üstünde kalmalı.
     assert BENZERLIK_ALT_SINIRI > 0.36
+
+
+@dataclass
+class SahteEslesme:
+    """temizlenecekler()'in gördüğü kadarıyla bir eşleşme kaydı."""
+
+    yetenek_karti_id: uuid.UUID
+    durum: str
+
+
+def test_artik_secilmeyen_oneri_listeden_cikar():
+    """Kural değişince eski öneri listede kalmamalı."""
+    eskimis = SahteEslesme(uuid.uuid4(), DURUM_ONERILDI)
+    assert temizlenecekler([eskimis], secilenler=[]) == [eskimis]
+
+
+def test_hala_secilen_oneri_korunur():
+    kart_id = uuid.uuid4()
+    duran = SahteEslesme(kart_id, DURUM_ONERILDI)
+    assert temizlenecekler([duran], secilenler=[kart_id]) == []
+
+
+@pytest.mark.parametrize("durum", [DURUM_ILGILENILIYOR, DURUM_KABUL_EDILDI, DURUM_REDDEDILDI])
+def test_kurumun_verdigi_karar_silinmez(durum):
+    """Karar verilmiş kayıt artık öneri değil; kural değişse de duruyor."""
+    karar = SahteEslesme(uuid.uuid4(), durum)
+    assert temizlenecekler([karar], secilenler=[]) == []
+
+
+def test_temizlik_yalnizca_eskiyenleri_secer():
+    kalan_id = uuid.uuid4()
+    kalan = SahteEslesme(kalan_id, DURUM_ONERILDI)
+    eskimis = SahteEslesme(uuid.uuid4(), DURUM_ONERILDI)
+    kabul = SahteEslesme(uuid.uuid4(), DURUM_KABUL_EDILDI)
+    assert temizlenecekler([kalan, eskimis, kabul], secilenler=[kalan_id]) == [eskimis]

@@ -15,6 +15,7 @@ import {
   type IlgileniyorumYaniti,
   type Oneri,
   type Oneriler,
+  eslestirmeCalistir,
   eslestirmeOnerileri,
   ilgileniyorum,
 } from "@/lib/api";
@@ -48,11 +49,21 @@ export default function OnerilerSayfasi() {
   >({});
   const okundu = useRef(false);
 
-  const onerileriGetir = useCallback(async (kimlik: string) => {
+  /**
+   * `tazele` false: hesaplanmış listeyi okur (sayfa açılışı).
+   * `tazele` true: pipeline'ı yeniden çalıştırır — skorlar güncellenir,
+   * eksik gerekçeler üretilir, eskiyen öneriler düşer. Dil modeli çağrısı
+   * burada olabilir, o yüzden açılışta değil yalnızca istenince.
+   */
+  const onerileriGetir = useCallback(async (kimlik: string, tazele = false) => {
     setHata(null);
     setYukleniyor(true);
     try {
-      setVeri(await eslestirmeOnerileri(kimlik));
+      setVeri(
+        await (tazele
+          ? eslestirmeCalistir(kimlik)
+          : eslestirmeOnerileri(kimlik)),
+      );
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
     } finally {
@@ -156,7 +167,7 @@ export default function OnerilerSayfasi() {
             variant="outline"
             size="lg"
             disabled={yukleniyor}
-            onClick={() => void onerileriGetir(kurumId)}
+            onClick={() => void onerileriGetir(kurumId, true)}
           >
             Yeniden hesapla
           </Button>

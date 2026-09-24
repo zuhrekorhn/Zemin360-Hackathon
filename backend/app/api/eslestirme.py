@@ -27,6 +27,7 @@ from app.agents.eslestirme import (
     gerekce_uret,
     ihtiyac_kartini_getir,
     siralayip_ele,
+    temizlenecekler,
 )
 from app.api.yetenek_kartlari import kart_yaniti
 from app.core.llm import HizSinirHatasi
@@ -121,7 +122,14 @@ async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> Oneri
         )
 
     secilenler = siralayip_ele(await adaylari_getir(oturum, ihtiyac))
-    mevcutlar = {e.yetenek_karti_id: e for e in await _eslesmeleri_oku(oturum, ihtiyac.id)}
+    eskiler = await _eslesmeleri_oku(oturum, ihtiyac.id)
+    mevcutlar = {e.yetenek_karti_id: e for e in eskiler}
+
+    # Kural ya da kart değişmiş olabilir: artık seçilmeyen öneriler listede
+    # kalmasın. Kurumun karar verdiği kayıtlara dokunulmuyor.
+    for eskimis in temizlenecekler(eskiler, [aday.yetenek_karti.id for aday in secilenler]):
+        mevcutlar.pop(eskimis.yetenek_karti_id, None)
+        await oturum.delete(eskimis)
 
     for aday in secilenler:
         eslesme = mevcutlar.get(aday.yetenek_karti.id)
