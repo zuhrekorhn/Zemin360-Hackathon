@@ -25,9 +25,11 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 
 ## Şu An Neredeyiz
 
-Faz 0 ve Faz 1 tamamlandı, **Faz 2 sürüyor**: Keşif, Tanımlama ve Eşleştirme ajanları çalışıyor. Eşleştirme şimdilik yalnızca backend ve yalnızca kurum tarafı (öneri + "ilgileniyorum"); Genç'in bildirim/arayüz tarafı bilinçli olarak Faz 3+'a bırakıldı. Sırada Doğrulama Ajanı. Detaylı takvim: `docs/roadmap.md`.
+Faz 0 ve Faz 1 tamamlandı, **Faz 2 sürüyor**: Keşif, Tanımlama, Eşleştirme ve Doğrulama ajanları çalışıyor. Eşleştirme ve Doğrulama şimdilik yalnızca backend; Eşleştirme'de sadece kurum tarafı var (öneri + "ilgileniyorum"), Genç'in bildirimi Faz 3+. Sırada Canlılık ve Takip ajanları. Detaylı takvim: `docs/roadmap.md`.
 
-**Her ajan sohbet ajanı değil:** Keşif ve Tanımlama çok turlu konuşur ve aynı motoru paylaşır; Eşleştirme tek seferlik bir hesaptır (SQL → pgvector → skor → tek LLM çağrısı), `sohbet_motoru.py`'yi kullanmaz. LLM sağlayıcısı ve yedek model zinciri ikisinde de ortak: `app/core/llm.py`.
+**Zamanlayıcı yok, bilinçli:** cron/kuyruk altyapısı kurmuyoruz. Eşleştirme "arka plan işi" bir endpoint olarak duruyor; Doğrulama'nın 7 günlük zaman aşımı da okuma anında hesaplanıyor. Yeni bir periyodik iş gerekirse aynı deseni izle.
+
+**Her ajan sohbet ajanı değil:** Keşif ve Tanımlama çok turlu konuşur ve aynı motoru paylaşır; Eşleştirme ve Doğrulama tek seferlik hesaplardır (SQL → pgvector → skor → tek LLM çağrısı), `sohbet_motoru.py`'yi kullanmaz. LLM sağlayıcısı ve yedek model zinciri ikisinde de ortak: `app/core/llm.py`.
 
 İki sohbet ajanı **aynı motoru** paylaşıyor (`app/agents/sohbet_motoru.py`); yeni bir sohbet ajanı gerekirse grafik iskeletini kopyalama, bir `AjanTanimi` yaz. Ajana özel olan şey soru seti, çıkarım şeması ve varsa ek dalıdır.
 

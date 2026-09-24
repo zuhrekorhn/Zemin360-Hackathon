@@ -8,6 +8,7 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from app.agents.kesif import grafik_derle as kesif_grafigi_derle
 from app.agents.tanimlama import grafik_derle as tanimlama_grafigi_derle
 from app.api import (
+    dogrulama,
     eslestirme,
     health,
     ihtiyac_kartlari,
@@ -56,3 +57,4 @@ app.include_router(yetenek_kartlari.router)
 app.include_router(tanimlama.router)
 app.include_router(ihtiyac_kartlari.router)
 app.include_router(eslestirme.router)
+app.include_router(dogrulama.router)

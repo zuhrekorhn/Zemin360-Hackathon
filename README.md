@@ -127,9 +127,9 @@ alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni mi
 alembic check                                 # modeller ile migration arasında fark var mı?
 ```
 
-**Ajan uç noktaları:** Keşif `/kesif/sohbet/baslat|cevap`, `/kesif/kart/onayla`, `GET /yetenek-kartlari/{id}` · Tanımlama `/tanimlama/sohbet/baslat|cevap`, `/tanimlama/kart/onayla`, `GET /ihtiyac-kartlari/{id}` · Eşleştirme `POST /eslestirme/calistir`, `GET /eslestirme/oneriler/{kurum_id}`, `POST /eslestirme/ilgileniyorum`. Tam liste: [`docs/api-contracts.md`](docs/api-contracts.md).
+**Ajan uç noktaları:** Doğrulama `POST /dogrulama/kanit-ekle`, `POST /dogrulama/referans-yaniti` (girişsiz, token ile), `POST /dogrulama/itiraz`, `GET /dogrulama/kanit/{somut_cikti_id}` · Keşif `/kesif/sohbet/baslat|cevap`, `/kesif/kart/onayla`, `GET /yetenek-kartlari/{id}` · Tanımlama `/tanimlama/sohbet/baslat|cevap`, `/tanimlama/kart/onayla`, `GET /ihtiyac-kartlari/{id}` · Eşleştirme `POST /eslestirme/calistir`, `GET /eslestirme/oneriler/{kurum_id}`, `POST /eslestirme/ilgileniyorum`. Tam liste: [`docs/api-contracts.md`](docs/api-contracts.md).
 
-**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak sohbet motoru + `kesif.py`, `tanimlama.py`, `eslestirme.py`) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
+**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak sohbet motoru + `kesif.py`, `tanimlama.py`, `eslestirme.py`, `dogrulama.py`) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
 
 ## Frontend'i Çalıştırma
 
@@ -171,13 +171,16 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 | **Keşif** | Çalışıyor — sohbet → yetenek kartı taslağı → onay → kayıt + embedding |
 | **Tanımlama** | Çalışıyor — sokratik sohbet → ihtiyaç kartı taslağı → onay → kayıt + embedding |
 | **Eşleştirme** | Çalışıyor (backend) — sert filtre → pgvector benzerliği → skor → gerekçe → iş birliği |
-| Doğrulama, Canlılık, Takip | Faz 2-3 |
+| **Doğrulama** | Çalışıyor (backend) — kanıt kontrolü + rubrik → referans akışı → itiraz |
+| Canlılık, Takip | Faz 3 |
+
+**Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında dönüyor, referans kişiye elle iletilir. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
 
 **Eşleştirme kapsamı:** şu an yalnızca kurum tarafı var (öneri listesi + "ilgileniyorum" → `ISBIRLIGI`). Genç'in eşleşme bildirimini görmesi ve arayüzü bilinçli olarak ertelendi (Faz 3+). Skor formülünün ESCO taksonomi bileşeni de MVP dışında (bkz. `docs/matching-algorithm.md`).
 
 İki sohbet ajanı aynı motoru paylaşıyor (`backend/app/agents/sohbet_motoru.py`): grafik iskeleti, taslak birleştirme ve yedek modele düşen LLM zinciri orada; soru seti, çıkarım şeması ve ajana özel dallar ajan dosyasında.
 
-Sırada: Doğrulama Ajanı (kanıt + referans akışı) ve Eşleştirme'nin arayüzü.
+Sırada: Canlılık ve Takip ajanları, bir de Eşleştirme/Doğrulama'nın arayüzü.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım

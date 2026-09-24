@@ -223,16 +223,14 @@ async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str:
 
 
 async def ihtiyac_kartini_getir(oturum: AsyncSession, kurum_id: uuid.UUID) -> IhtiyacKarti | None:
-    """Kurumun ihtiyaç kartı.
+    """Kurumun en son oluşturduğu ihtiyaç kartı.
 
-    Kurum başına birden fazla kart olabilir. Şemada oluşturulma tarihi alanı
-    yok (docs/data-schema.md), yani "en yenisi" veriden türetilemiyor — bu
-    yüzden id sırası kullanılıyor: deterministik ama kronolojik DEĞİL. Kurum
-    birden fazla kart oluşturmaya başlayınca şemaya tarih alanı eklenmeli.
+    Sıralama `olusturma_tarihi`'ne göre: id bir UUID v4, zaman bilgisi
+    taşımıyor (docs/data-schema.md § Tasarım Kararları).
     """
     return await oturum.scalar(
         select(IhtiyacKarti)
         .where(IhtiyacKarti.kurum_id == kurum_id)
-        .order_by(IhtiyacKarti.id.desc())
+        .order_by(IhtiyacKarti.olusturma_tarihi.desc())
         .limit(1)
     )

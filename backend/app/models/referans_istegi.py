@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import secrets
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, Text, text
+from sqlalchemy import DateTime, ForeignKey, String, Text, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,5 +31,10 @@ class ReferansIstegi(UUIDPrimaryKeyMixin, Base):
         String, default="bekliyor", server_default=text("'bekliyor'")
     )
     yanit_metni: Mapped[str | None] = mapped_column(Text)
+    # Zaman aşımı (5-7 gün) bu tarihten hesaplanır — ayrı bir zamanlayıcı yok,
+    # okuma anında değerlendirilir (app/agents/dogrulama.py)
+    olusturma_tarihi: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     somut_cikti: Mapped[SomutCikti] = relationship(back_populates="referans_istekleri")

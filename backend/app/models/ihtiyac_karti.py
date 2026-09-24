@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -28,6 +29,11 @@ class IhtiyacKarti(UUIDPrimaryKeyMixin, Base):
     sehir_tercihi: Mapped[str | None] = mapped_column(String)
     musaitlik_tercihi: Mapped[str | None] = mapped_column(String)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM))
+    # Eşleştirme "kurumun en son kartı"nı bundan bulur; UUID kronolojik değil
+    # (docs/data-schema.md § Tasarım Kararları)
+    olusturma_tarihi: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     kurum: Mapped[Kurum] = relationship(back_populates="ihtiyac_kartlari")
     eslesmeler: Mapped[list[Eslesme]] = relationship(
