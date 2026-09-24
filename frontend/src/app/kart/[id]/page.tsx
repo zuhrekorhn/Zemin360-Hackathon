@@ -165,6 +165,7 @@ export default function KartSayfasi() {
                   <CiktiOzeti cikti={cikti} />
                   <KanitBolumu
                     somutCiktiId={cikti.id}
+                    mevcutLink={cikti.kanit_linki}
                     durum={kanitlar[cikti.id]}
                     onDurum={kanidiGuncelle}
                     onHata={setHata}

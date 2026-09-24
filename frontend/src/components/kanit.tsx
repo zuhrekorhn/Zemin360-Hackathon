@@ -29,16 +29,19 @@ const REFERANS_DURUMLARI: Record<string, string> = {
 
 export function KanitBolumu({
   somutCiktiId,
+  mevcutLink,
   durum,
   onDurum,
   onHata,
 }: {
   somutCiktiId: string;
+  /** Sohbette verilmiş link — form onunla açılır, kullanıcı tekrar yazmasın. */
+  mevcutLink: string | null;
   durum: KanitDurumu | undefined;
   onDurum: (durum: KanitDurumu) => void;
   onHata: (hata: Hata | null) => void;
 }) {
-  const [link, setLink] = useState("");
+  const [link, setLink] = useState(mevcutLink ?? "");
   const [tur, setTur] = useState("");
   const [referansEmail, setReferansEmail] = useState("");
   const [aciklama, setAciklama] = useState("");
@@ -46,13 +49,19 @@ export function KanitBolumu({
   const [itirazAcik, setItirazAcik] = useState(false);
 
   const puanlanmis = Boolean(durum?.guven_skoru);
+  // Sohbetten gelen link duruyor ve henüz değerlendirilmemişse kullanıcıdan
+  // istenen şey yeni bir kanıt değil, "şunu bir bak" demesi.
+  const degerlendirmeyiBekliyor =
+    !puanlanmis && Boolean(mevcutLink) && link.trim() === mevcutLink;
 
   async function calistir(is: () => Promise<KanitDurumu>) {
     onHata(null);
     setBekleniyor(true);
     try {
-      onDurum(await is());
-      setLink("");
+      const yeni = await is();
+      onDurum(yeni);
+      // Link alanı boşaltılmıyor: kayıtlı kanıt neyse form onu gösteriyor.
+      setLink(yeni.kanit_linki ?? "");
       setTur("");
       setReferansEmail("");
       setAciklama("");
@@ -93,7 +102,11 @@ export function KanitBolumu({
         }}
       >
         <h4 className="font-heading text-sm font-semibold text-ana">
-          {puanlanmis ? "Kanıtı güncelle" : "Kanıt ekle"}
+          {puanlanmis
+            ? "Kanıtı güncelle"
+            : degerlendirmeyiBekliyor
+              ? "Bu kanıt henüz değerlendirilmedi"
+              : "Kanıt ekle"}
         </h4>
 
         <FormAlani etiket="Kanıt linki" htmlFor={`link-${somutCiktiId}`}>
@@ -142,10 +155,16 @@ export function KanitBolumu({
             size="lg"
             disabled={bekleniyor || (!link.trim() && !referansEmail.trim())}
           >
-            {bekleniyor ? "Değerlendiriliyor…" : "Kaydet ve değerlendir"}
+            {bekleniyor
+              ? "Değerlendiriliyor…"
+              : degerlendirmeyiBekliyor
+                ? "Bu kanıtı değerlendir"
+                : "Kaydet ve değerlendir"}
           </Button>
           <span className="text-xs text-muted-foreground">
-            Kanıt linki açılıp okunur, sonra dört başlıkta puanlanır.
+            {degerlendirmeyiBekliyor
+              ? "Sohbette verdiğin link hazır; istersen değiştirebilirsin."
+              : "Kanıt linki açılıp okunur, sonra dört başlıkta puanlanır."}
           </span>
         </div>
       </form>
