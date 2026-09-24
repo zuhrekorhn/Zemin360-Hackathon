@@ -78,3 +78,28 @@ def test_yeni_deger_eskisinin_uzerine_yazar():
     assert taslak["basari_kriteri"] == "Ortalama yanıt süresi 4 saatin altına insin"
     # Dokunulmayan alan yerinde kalmalı
     assert taslak["problem_tanimi"] == dolu_taslak()["problem_tanimi"]
+
+
+# --- Rol tarifi problem değildir -------------------------------------------
+# Gerçek turda "3 yıl deneyimli full stack developer arıyoruz" doğrudan
+# problem_tanimi'na yazılmıştı. Kural artık prompt'ta yazılı.
+
+
+def test_rol_tarifi_problem_sayilmiyor():
+    from app.agents.tanimlama import SISTEM_TALIMATI
+
+    assert "ROL TARİFİ PROBLEM DEĞİLDİR" in SISTEM_TALIMATI
+    assert "iş ilanı" in SISTEM_TALIMATI
+
+
+def test_yedek_soru_hangi_sorunu_cozecegini_soruyor():
+    from app.agents.tanimlama import YEDEK_SORULAR
+
+    assert "hangi sorunu çözecek" in YEDEK_SORULAR["problem_tanimi"]
+
+
+def test_basari_kriteri_sorusu_degismedi():
+    """Bu soru sahada iyi çalışıyor; dokunulmadı."""
+    from app.agents.tanimlama import YEDEK_SORULAR
+
+    assert "Sayıyla ifade edebilir" in YEDEK_SORULAR["basari_kriteri"]

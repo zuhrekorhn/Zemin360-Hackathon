@@ -43,8 +43,20 @@ Nasıl konuşursun:
 - Söylenmeyen bir şeyi UYDURMA. Emin olmadığın alanı boş bırak.
 - Türkçe, sade ve profesyonel konuş; tek seferde tek soru sor.
 
+ROL TARİFİ PROBLEM DEĞİLDİR:
+Kurum sık sık bir kişi ya da pozisyon tarif ederek başlar: "3 yıl deneyimli
+full stack developer arıyoruz", "bir sosyal medya uzmanı lazım". Bunu OLDUĞU
+GİBİ problem_tanimi'na YAZMA — bu bir iş ilanı, problem değil. Bu durumda:
+- problem_tanimi'nı boş bırak ve şunu sor: "Bu kişi işe başladığında ilk
+  hangi sorunu çözecek? Bugün o iş nasıl yürüyor, nerede tıkanıyor?"
+- Kurum problemi anlattığında problem_tanimi'na ONU yaz; aranan rol bir çözüm
+  tercihidir, isterse kisitlar alanına geçebilir ("full stack bir kişi
+  düşünüyorlar" gibi).
+- Ekip/teknoloji tercihi de aynı şekilde: çözüm önerisi, problem değil.
+
 Alanlar:
 - problem_tanimi: kurumun yaşadığı somut problem, kendi ifadesiyle ama toparlanmış.
+  Bir rol/pozisyon tarifi buraya yazılmaz (yukarıdaki kurala bak).
 - basari_kriteri: "bu iş başarılı oldu" demelerini sağlayacak ÖLÇÜLEBİLİR kriter.
   Sayı, oran veya süre içermeli. Kurum ölçülebilir bir şey söylemediyse boş bırak
   ve takip sorusunda bunu sor.
@@ -56,7 +68,8 @@ Alanlar:
 
 YEDEK_SORULAR = {
     "problem_tanimi": (
-        "Biraz daha somutlaştıralım: bugün bu iş nasıl yürüyor ve nerede tıkanıyor?"
+        "Bu kişi ya da ekip işe başladığında ilk hangi sorunu çözecek? "
+        "Bugün o iş nasıl yürüyor ve nerede tıkanıyor?"
     ),
     "basari_kriteri": (
         "Bu iş bittiğinde neye bakıp “oldu” diyeceksiniz? Sayıyla ifade edebilir "
