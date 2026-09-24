@@ -8,8 +8,10 @@ from dataclasses import dataclass
 import pytest
 
 from app.agents.eslestirme import (
+    BENZERLIK_ALT_SINIRI,
     SKOR_ESIGI,
     TOP_N,
+    benzerlik_yeterli_mi,
     dogrulama_bonusu,
     siralayip_ele,
     skor_hesapla,
@@ -70,3 +72,34 @@ def test_en_fazla_bes_sonuc_doner():
 
 def test_bos_havuz_bos_liste_dondurur():
     assert siralayip_ele([]) == []
+
+
+def test_alakasiz_aday_ne_kadar_dogrulanmis_olursa_olsun_elenir():
+    """Güven bonusu alakayı yaratmaz (docs/matching-algorithm.md § 5).
+
+    Gerçek veride görülen durum: 0.34 benzerlikli, tam doğrulanmış bir kart
+    0.75*0.34 + 0.25*0.75 = 0.44 ile eşiği geçiyordu — konuyla ilgisi yokken.
+    """
+    alakasiz = SahteAday("alakasiz", benzerlik=0.34, dogrulama_bonus=0.75)
+    assert alakasiz.skor >= SKOR_ESIGI  # eski davranışta listeye giriyordu
+    assert siralayip_ele([alakasiz]) == []
+
+
+def test_alt_sinirin_ustundeki_aday_kalir():
+    sinirda = SahteAday("sinirda", benzerlik=BENZERLIK_ALT_SINIRI, dogrulama_bonus=0.5)
+    assert siralayip_ele([sinirda]) == [sinirda]
+
+
+def test_alaka_elemesi_bonustan_bagimsiz():
+    """Aynı benzerlikteki iki aday, bonusları farklı olsa da aynı kararı alır."""
+    ham = SahteAday("ham", benzerlik=0.30)
+    dogrulanmis = SahteAday("dogrulanmis", benzerlik=0.30, dogrulama_bonus=1.0)
+    assert siralayip_ele([ham, dogrulanmis]) == []
+
+
+def test_alaka_alt_siniri_esikten_bagimsiz_bir_kural():
+    """İki sınır farklı şeyleri ölçüyor; biri diğerinin yerine geçmemeli."""
+    assert benzerlik_yeterli_mi(BENZERLIK_ALT_SINIRI) is True
+    assert benzerlik_yeterli_mi(BENZERLIK_ALT_SINIRI - 0.01) is False
+    # Gözlenen alakasız küme 0.27-0.36 bandındaydı; sınır onun üstünde kalmalı.
+    assert BENZERLIK_ALT_SINIRI > 0.36

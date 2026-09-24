@@ -39,6 +39,11 @@ BENZERLIK_AGIRLIGI = 0.75
 DOGRULAMA_AGIRLIGI = 0.25
 TOP_N = 5
 SKOR_ESIGI = 0.40
+# Konu alakası için ayrı bir alt sınır (docs/matching-algorithm.md § 5).
+# Doğrulama bonusu sıralamayı etkiler, alakayı YARATMAZ: iyi doğrulanmış bir
+# kart tek başına +0.19 getirdiği için 0.34 benzerlikli alakasız bir aday
+# toplam eşiği geçebiliyordu. Bu sınır skordan ÖNCE uygulanır.
+BENZERLIK_ALT_SINIRI = 0.45
 # Güven skorunun dört bileşeni de 0-3 → en yüksek toplam 12 (agent-specs.md § 4)
 GUVEN_TAM_PUAN = 12
 
@@ -117,9 +122,24 @@ def skor_hesapla(benzerlik: float, dogrulama_bonus: float) -> float:
     return BENZERLIK_AGIRLIGI * benzerlik + DOGRULAMA_AGIRLIGI * dogrulama_bonus
 
 
+def benzerlik_yeterli_mi(benzerlik: float) -> bool:
+    """Aday konu olarak yeterince yakın mı? Skordan bağımsız bir ön koşul.
+
+    Doğrulama bonusu bu kararın dışında tutuluyor — güven, alakalı adaylar
+    arasında sıralamayı değiştirir; alakasız bir adayı alakalı yapmaz.
+    """
+    return benzerlik >= BENZERLIK_ALT_SINIRI
+
+
 def siralayip_ele(adaylar: Sequence[Aday]) -> list[Aday]:
-    """Skora göre sıralar, eşik altını atar, ilk TOP_N'i döner."""
-    uygunlar = [aday for aday in adaylar if aday.skor >= SKOR_ESIGI]
+    """Alakasızları eler, skora göre sıralar, eşik altını atar, TOP_N'i döner.
+
+    Alaka elemesi skor hesabından önce: bir aday konuyla ilgisizse ne kadar
+    iyi doğrulanmış olduğu bu kararı değiştirmemeli.
+    """
+    uygunlar = [
+        aday for aday in adaylar if benzerlik_yeterli_mi(aday.benzerlik) and aday.skor >= SKOR_ESIGI
+    ]
     return sorted(uygunlar, key=lambda aday: aday.skor, reverse=True)[:TOP_N]
 
 
@@ -145,6 +165,10 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
         .join(Kullanici, Kullanici.id == YetenekKarti.kullanici_id)
         .options(selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru))
         .where(YetenekKarti.embedding.isnot(None))
+        # Alaka alt sınırı SQL'de de uygulanıyor: havuz embedding hesabından
+        # sonra ama Python'a taşınmadan daralsın. Kural yine de saf
+        # `siralayip_ele` tarafında duruyor (tek doğruluk kaynağı orası).
+        .where(uzaklik <= 1.0 - BENZERLIK_ALT_SINIRI)
     )
     if ihtiyac.sehir_tercihi:
         sorgu = sorgu.where(Kullanici.sehir == ihtiyac.sehir_tercihi)

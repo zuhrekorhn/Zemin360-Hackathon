@@ -62,6 +62,25 @@ skor = 0.75 * cosine_similarity(yetenek.embedding, ihtiyac.embedding)
 
 Mutlak bir eşik yerine (havuz küçükken saçmalar) **Top-N** yaklaşımı: en yüksek skorlu **5 sonuç** gösterilir. Ek güvenlik: skor %40'ın altındaysa hiç gösterilmez (tamamen alakasız sonuçları filtrelemek için).
 
+### Benzerlik alt sınırı: 0.45 (skordan önce uygulanır)
+
+Skor eşiği tek başına yetmiyor. Formül gereği tam doğrulanmış bir kart, benzerliği sıfır olsa bile `0.25 × 1.0 = 0.25` taşıyor; 0.34 benzerlikli alakasız bir aday `0.75 × 0.34 + 0.25 × 0.75 ≈ 0.44` ile %40 eşiğini geçiyordu. Sonuç: konuyla ilgisi olmayan bir kart öneri listesine giriyor, üstüne LLM ona bir gerekçe yazmaya çalışıyordu.
+
+**Kural:** doğrulama bonusu **alakalı adaylar arasında sıralamayı** etkiler; alakasız bir adayı alakalı yapmaz. Bu yüzden `benzerlik < 0.45` olan adaylar **skor hesaplanmadan** elenir (`BENZERLIK_ALT_SINIRI`, `app/agents/eslestirme.py`). İki sınır farklı şeyleri ölçüyor ve biri diğerinin yerine geçmiyor: 0.45 "bu aday konuyla ilgili mi", %40 "ilgili adaylar arasında gösterilmeye değer mi".
+
+Değer mevcut kartların ham benzerlikleriyle kalibre edildi (Voyage `voyage-4`, Türkçe metin):
+
+| Çift | Benzerlik |
+|---|---|
+| Destek bileti ihtiyacı ↔ bilet sınıflandırma botu (gerçekten alakalı) | 0.662 |
+| Aynı ihtiyaç ↔ kütüphane takip sistemi | 0.340 / 0.336 |
+| Aynı ihtiyaç ↔ veri analisti kartı | 0.342 |
+| Zeytin budama takibi ↔ tüm kartlar (kasten alakasız) | 0.275 – 0.354 |
+
+Alakasız küme 0.27–0.36 bandında toplanıyor, gerçek eşleşme 0.66'da duruyor. 0.45, gürültü bandının ~0.09 üstünde ve gerçek eşleşmenin ~0.21 altında — iki tarafa da pay bırakıyor. Kısmen alakalı adaylar (aynı beceri, farklı alan) bu bandın neresine düşer, havuz büyüyünce yeniden bakılmalı; dört kartlık bir örneklemle kalibre edildiğini unutma.
+
+Alt sınır ayrıca SQL sorgusunda da uygulanıyor (havuz Python'a taşınmadan daralsın diye), ama kuralın tek doğruluk kaynağı `siralayip_ele`.
+
 **Cold start:** havuzda az kart varken bu doğal bir sınırlama — arayüzde gizlenmez, açıkça belirtilir: *"Şu an sınırlı sayıda eşleşme var."*
 
 ## 6. Gerekçe Üretimi (LLM)
