@@ -17,6 +17,7 @@ from app.api import (
     yetenek_kartlari,
 )
 from app.core.config import get_settings
+from app.core.hatalar import hata_isleyicilerini_kur
 
 
 @asynccontextmanager
@@ -50,6 +51,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Yakalanmayan hatalar da CORS başlığıyla ve JSON gövdeyle dönsün
+# (ayrıntı için app/core/hatalar.py).
+hata_isleyicilerini_kur(app)
 
 app.include_router(health.router)
 app.include_router(kesif.router)
