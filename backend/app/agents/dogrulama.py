@@ -27,7 +27,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
 
-from app.core.llm import HizSinirHatasi, kota_hatasi_mi, model, yedekli_zincir
+from app.core.llm import llm_hatasini_cevir, model, yedekli_zincir
 
 # Referans yanıtı için tanınan süre (docs/agent-specs.md § 4.2: 5-7 gün).
 # Üst sınır seçildi: erken "yanıt yok" demek referans kişiyi cezalandırır.
@@ -272,9 +272,8 @@ async def rubrik_puanla(
             }
         )
     except Exception as hata:
-        if kota_hatasi_mi(hata):
-            raise HizSinirHatasi(str(hata)) from hata
-        raise
+        cevrilmis = llm_hatasini_cevir(hata)
+        raise cevrilmis from hata
 
     # Link hiç açılmıyorsa orijinallik puanı 0'ı aşamaz — bu ölçülebilir bir
     # olgu, LLM'in takdirine bırakılmıyor.

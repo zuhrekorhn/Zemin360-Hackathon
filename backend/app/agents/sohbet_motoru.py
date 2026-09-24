@@ -28,7 +28,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
 
-from app.core.llm import HizSinirHatasi, kota_hatasi_mi, model, yedekli_zincir
+from app.core.llm import HizSinirHatasi, llm_hatasini_cevir, model, yedekli_zincir
 
 __all__ = ["HizSinirHatasi"]
 
@@ -156,11 +156,11 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
                 [SystemMessage(content=tanim.sistem_talimati), *durum["mesajlar"]]
             )
         except Exception as hata:
-            # Ücretsiz katmanda günlük/dakikalık kota dolabiliyor. Bunu 500
-            # olarak değil, ne olduğunu söyleyen ayrı bir hata olarak taşı.
-            if kota_hatasi_mi(hata):
-                raise HizSinirHatasi(str(hata)) from hata
-            raise
+            # Ücretsiz katmanda kota dolabiliyor, sağlayıcı da anlık 5xx
+            # verebiliyor. İkisini de 500 olarak değil, ne olduğunu söyleyen
+            # ayrı hatalar olarak taşı.
+            cevrilmis = llm_hatasini_cevir(hata)
+            raise cevrilmis from hata
 
         return {
             "taslak": birlestir(tanim, durum.get("taslak") or bos_taslak(tanim), cikarim),

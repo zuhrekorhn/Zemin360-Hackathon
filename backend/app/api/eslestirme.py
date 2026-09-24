@@ -30,7 +30,7 @@ from app.agents.eslestirme import (
     temizlenecekler,
 )
 from app.api.yetenek_kartlari import kart_yaniti
-from app.core.llm import HizSinirHatasi
+from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_session
 from app.models.eslesme import Eslesme
 from app.models.isbirligi import Isbirligi
@@ -156,15 +156,15 @@ async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> Oneri
 
 
 async def _gerekce(ihtiyac, aday: Aday) -> str | None:
-    """Gerekçeyi üretir; LLM kotası dolduysa eşleşmeyi gerekçesiz bırakır.
+    """Gerekçeyi üretir; LLM erişilemezse eşleşmeyi gerekçesiz bırakır.
 
-    Skor ve sıralama LLM'den bağımsız — kota yüzünden tüm öneri listesini
-    kaybetmek mantıksız olurdu. Gerekçe NULL kalır, sonraki çalıştırmada
-    yeniden denenir.
+    Skor ve sıralama LLM'den bağımsız — kota ya da sağlayıcı arızası yüzünden
+    tüm öneri listesini kaybetmek mantıksız olurdu. Gerekçe NULL kalır,
+    sonraki çalıştırmada yeniden denenir (arayüz bunu açıkça söylüyor).
     """
     try:
         return await gerekce_uret(ihtiyac, aday)
-    except HizSinirHatasi:
+    except (HizSinirHatasi, ModelMesgulHatasi):
         return None
 
 

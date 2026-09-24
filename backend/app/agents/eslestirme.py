@@ -29,7 +29,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.llm import HizSinirHatasi, kota_hatasi_mi, model, yedekli_zincir
+from app.core.llm import llm_hatasini_cevir, model, yedekli_zincir
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
@@ -265,9 +265,8 @@ async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str:
             }
         )
     except Exception as hata:
-        if kota_hatasi_mi(hata):
-            raise HizSinirHatasi(str(hata)) from hata
-        raise
+        cevrilmis = llm_hatasini_cevir(hata)
+        raise cevrilmis from hata
 
     return metin.strip()
 
