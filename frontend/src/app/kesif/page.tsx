@@ -22,6 +22,7 @@ import {
   sohbetBaslat,
   sohbetCevap,
 } from "@/lib/api";
+import { kimlikYaz } from "@/lib/yerel";
 
 /**
  * Keşif Ajanı sohbeti (docs/agent-specs.md § 1).
@@ -193,6 +194,9 @@ export default function KesifSayfasi() {
             setBekleniyor(true);
             try {
               const kayitli = await kartOnayla(oturumId, kullanici);
+              // Kanıt ekleme ekranı kart kimliğiyle açılıyor; giriş akışı
+              // olmadığı için kimlik tarayıcıda hatırlanıyor.
+              kimlikYaz("kart", kayitli.id);
               setKart(kayitli);
               setAsama("kaydedildi");
             } catch (sebep) {
@@ -422,6 +426,10 @@ function KayitliKart({ kart }: { kart: YetenekKartiYaniti }) {
         kart no: <span className="break-all">{kart.id}</span> · sürüm{" "}
         {kart.versiyon}
       </p>
+
+      <Button asChild size="lg" className="mt-1 w-fit">
+        <Link href={`/kart/${kart.id}`}>Kanıt ekle ve doğrulat</Link>
+      </Button>
     </section>
   );
 }

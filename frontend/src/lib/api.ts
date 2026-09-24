@@ -114,6 +114,13 @@ export type YetenekKartiYaniti = {
   somut_ciktilar: SomutCiktiYaniti[];
 };
 
+/** GET /yetenek-kartlari/{id} — kartın dışarıya açılan hali. */
+export function yetenekKartiGetir(kartId: string): Promise<YetenekKartiYaniti> {
+  return apiIstek<YetenekKartiYaniti>(`/yetenek-kartlari/${kartId}`, {
+    cache: "no-store",
+  });
+}
+
 /** POST /kesif/sohbet/baslat — yeni oturum açar, açılış sorusunu döner. */
 export function sohbetBaslat(): Promise<SohbetYaniti> {
   return apiIstek<SohbetYaniti>("/kesif/sohbet/baslat", {
