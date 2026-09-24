@@ -5,14 +5,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
-from app.agents.kesif import grafik_derle
-from app.api import health, kesif, yetenek_kartlari
+from app.agents.kesif import grafik_derle as kesif_grafigi_derle
+from app.agents.tanimlama import grafik_derle as tanimlama_grafigi_derle
+from app.api import health, ihtiyac_kartlari, kesif, tanimlama, yetenek_kartlari
 from app.core.config import get_settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Keşif grafiğini uygulama ömrü boyunca tek bir checkpointer'la paylaştırır.
+    """İki sohbet grafiğini uygulama ömrü boyunca tek checkpointer'la paylaştırır.
 
     Checkpointer kendi tablolarını (checkpoints, checkpoint_writes…) `setup()`
     ile oluşturur; bunlar LangGraph'a ait olduğu için Alembic'e girmiyor.
@@ -20,7 +21,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     ayarlar = get_settings()
     async with AsyncPostgresSaver.from_conn_string(ayarlar.checkpointer_url) as checkpointer:
         await checkpointer.setup()
-        app.state.kesif_grafigi = grafik_derle(checkpointer)
+        app.state.kesif_grafigi = kesif_grafigi_derle(checkpointer)
+        app.state.tanimlama_grafigi = tanimlama_grafigi_derle(checkpointer)
         yield
 
 
@@ -44,3 +46,5 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(kesif.router)
 app.include_router(yetenek_kartlari.router)
+app.include_router(tanimlama.router)
+app.include_router(ihtiyac_kartlari.router)

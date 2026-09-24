@@ -7,8 +7,11 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | **Keşif** | `/kesif/sohbet/baslat` | POST | Yeni sohbet oturumu açar |
 | | `/kesif/sohbet/cevap` | POST | Kullanıcı cevabını işler, sıradaki soruyu döner |
 | | `/kesif/kart/onayla` | POST | Taslağı `YETENEK_KARTI`'na yazar |
+| | `/yetenek-kartlari/{id}` | GET | İletişim bilgisi döndürmez (agent-specs.md § 1.5) |
 | **Tanımlama** | `/tanimlama/sohbet/baslat` | POST | Keşif ile aynı motoru kullanır, farklı soru seti |
+| | `/tanimlama/sohbet/cevap` | POST | Kullanıcı (kurum) cevabını işler, sıradaki soruyu döner |
 | | `/tanimlama/kart/onayla` | POST | Taslağı `IHTIYAC_KARTI`'na yazar |
+| | `/ihtiyac-kartlari/{id}` | GET | Eşleştirme Ajanı'nın da okuyacağı kart görünümü |
 | **Doğrulama** | `/dogrulama/kanit-ekle` | POST | `SOMUT_CIKTI` + ön rubrik skoru |
 | | `/dogrulama/referans-yaniti` | POST | Token bazlı, girişsiz — referans kişi için auth gerektirmez |
 | | `/dogrulama/itiraz` | POST | Yeniden değerlendirme tetikler |

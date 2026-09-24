@@ -3,6 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import {
+  CevapAlani,
+  FormAlani,
+  HataKutusu,
+  type Mesaj,
+  Sohbet,
+  type SohbetHatasi,
+} from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,8 +34,6 @@ import {
  * taslak ve kayıtlı kart hairline çizgili ve az yuvarlak — "resmi belge".
  */
 
-type Mesaj = { kim: "ajan" | "kullanici"; metin: string };
-
 type Asama = "baslatiliyor" | "sohbet" | "taslak" | "kaydedildi";
 
 const MUSAITLIK_SECENEKLERI = [
@@ -47,9 +53,7 @@ export default function KesifSayfasi() {
 
   const [girdi, setGirdi] = useState("");
   const [bekleniyor, setBekleniyor] = useState(false);
-  const [hata, setHata] = useState<{ metin: string; kota: boolean } | null>(
-    null,
-  );
+  const [hata, setHata] = useState<SohbetHatasi | null>(null);
   // 429 sonrası "Tekrar dene" aynı cevabı yeniden göndersin diye tutuluyor;
   // sohbet backend'de checkpointer'da durduğu için oturum_id değişmez.
   const bekleyenCevap = useRef<string | null>(null);
@@ -139,11 +143,6 @@ export default function KesifSayfasi() {
     void cevapGonder(cevap);
   }
 
-  function formGonder(olay: React.FormEvent) {
-    olay.preventDefault();
-    gonder();
-  }
-
   function tekrarDene() {
     if (bekleyenCevap.current) {
       void cevapGonder(bekleyenCevap.current);
@@ -166,6 +165,7 @@ export default function KesifSayfasi() {
 
       {asama === "sohbet" || asama === "baslatiliyor" ? (
         <Sohbet
+          ajanAdi="Keşif Ajanı"
           mesajlar={mesajlar}
           bekleniyor={bekleniyor}
           sonMesajRef={sonMesaj}
@@ -175,35 +175,12 @@ export default function KesifSayfasi() {
       {hata ? <HataKutusu hata={hata} tekrarDene={tekrarDene} /> : null}
 
       {asama === "sohbet" ? (
-        <form onSubmit={formGonder} className="flex flex-col gap-3">
-          <label htmlFor="cevap" className="sr-only">
-            Cevabın
-          </label>
-          <textarea
-            id="cevap"
-            value={girdi}
-            onChange={(olay) => setGirdi(olay.target.value)}
-            onKeyDown={(olay) => {
-              // Enter gönderir, Shift+Enter satır atlar.
-              if (olay.key === "Enter" && !olay.shiftKey) {
-                olay.preventDefault();
-                gonder();
-              }
-            }}
-            rows={3}
-            disabled={bekleniyor}
-            placeholder="Yazmaya başla…"
-            className="w-full resize-y rounded-2xl border border-kenar bg-card px-4 py-3 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30 disabled:opacity-60"
-          />
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-muted-foreground">
-              Enter gönderir, Shift+Enter satır atlar.
-            </span>
-            <Button type="submit" size="lg" disabled={bekleniyor || !girdi.trim()}>
-              Gönder
-            </Button>
-          </div>
-        </form>
+        <CevapAlani
+          girdi={girdi}
+          setGirdi={setGirdi}
+          bekleniyor={bekleniyor}
+          gonder={gonder}
+        />
       ) : null}
 
       {asama === "taslak" && taslak ? (
@@ -235,82 +212,6 @@ export default function KesifSayfasi() {
         </Button>
       </footer>
     </main>
-  );
-}
-
-/* --- Sohbet --------------------------------------------------------------- */
-
-function Sohbet({
-  mesajlar,
-  bekleniyor,
-  sonMesajRef,
-}: {
-  mesajlar: Mesaj[];
-  bekleniyor: boolean;
-  sonMesajRef: React.RefObject<HTMLDivElement | null>;
-}) {
-  return (
-    <section
-      aria-label="Sohbet"
-      aria-live="polite"
-      className="flex flex-col gap-3 rounded-[1.75rem] bg-muted p-4 sm:p-6"
-    >
-      {mesajlar.map((mesaj, sira) => (
-        <p
-          key={`${mesaj.kim}-${sira}`}
-          className={
-            mesaj.kim === "ajan"
-              ? "max-w-[85%] rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-sm text-pretty break-words ring-1 ring-kenar"
-              : "ml-auto max-w-[85%] rounded-3xl rounded-br-lg bg-ana px-4 py-3 text-sm text-pretty break-words text-zemin"
-          }
-        >
-          {mesaj.kim === "ajan" ? (
-            <span className="mb-1 block font-medium text-baglanti">
-              Keşif Ajanı
-            </span>
-          ) : null}
-          {mesaj.metin}
-        </p>
-      ))}
-
-      {bekleniyor ? (
-        <p className="flex max-w-[85%] items-center gap-2 rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-kenar">
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
-          />
-          Ajan düşünüyor…
-        </p>
-      ) : null}
-
-      <div ref={sonMesajRef} />
-    </section>
-  );
-}
-
-function HataKutusu({
-  hata,
-  tekrarDene,
-}: {
-  hata: { metin: string; kota: boolean };
-  tekrarDene: () => void;
-}) {
-  return (
-    <div
-      role="status"
-      className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p className="text-sm text-pretty">{hata.metin}</p>
-      <Button
-        type="button"
-        variant="outline"
-        size="lg"
-        onClick={tekrarDene}
-        className="w-fit shrink-0"
-      >
-        Tekrar dene
-      </Button>
-    </div>
   );
 }
 
@@ -388,7 +289,7 @@ function TaslakBolumu({
               />
             </FormAlani>
 
-            <FormAlani etiket="Şehir" htmlFor="sehir" istege_bagli>
+            <FormAlani etiket="Şehir" htmlFor="sehir" istegeBagli>
               <Input
                 id="sehir"
                 value={sehir}
@@ -397,7 +298,7 @@ function TaslakBolumu({
               />
             </FormAlani>
 
-            <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istege_bagli>
+            <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istegeBagli>
               <select
                 id="musaitlik"
                 value={musaitlik}
@@ -413,37 +314,16 @@ function TaslakBolumu({
             </FormAlani>
           </div>
 
-          <Button type="submit" size="lg" disabled={bekleniyor} className="w-fit">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={bekleniyor}
+            className="w-fit"
+          >
             {bekleniyor ? "Kaydediliyor…" : "Kartı onayla"}
           </Button>
         </form>
       </section>
-    </div>
-  );
-}
-
-function FormAlani({
-  etiket,
-  htmlFor,
-  istege_bagli = false,
-  children,
-}: {
-  etiket: string;
-  htmlFor: string;
-  istege_bagli?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-medium">
-        {etiket}
-        {istege_bagli ? (
-          <span className="ml-1 font-normal text-muted-foreground">
-            (isteğe bağlı)
-          </span>
-        ) : null}
-      </label>
-      {children}
     </div>
   );
 }

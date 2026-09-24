@@ -147,4 +147,82 @@ export function kartOnayla(
   });
 }
 
+/* --- Tanımlama Ajanı (docs/api-contracts.md § Tanımlama) ------------------
+   Tipler backend'deki app/schemas/tanimlama.py ile birebir eşleşir. */
+
+export type IhtiyacTaslagi = {
+  problem_tanimi: string | null;
+  basari_kriteri: string | null;
+  kisitlar: string | null;
+  sehir_tercihi: string | null;
+  musaitlik_tercihi: string | null;
+};
+
+export type TanimlamaSohbetYaniti = {
+  oturum_id: string;
+  soru: string | null;
+  taslak: IhtiyacTaslagi;
+  taslak_hazir: boolean;
+};
+
+export type KurumGirdisi = {
+  ad: string;
+  sektor?: string | null;
+  sehir?: string | null;
+  iletisim_email: string;
+};
+
+/** Kartla gösterilen kurum bilgisi — iletişim e-postası taşımaz. */
+export type KurumYaniti = {
+  ad: string;
+  sektor: string | null;
+  sehir: string | null;
+};
+
+export type IhtiyacKartiYaniti = {
+  id: string;
+  problem_tanimi: string;
+  basari_kriteri: string | null;
+  kisitlar: string | null;
+  sehir_tercihi: string | null;
+  musaitlik_tercihi: string | null;
+  embedding_var: boolean;
+  kurum: KurumYaniti;
+};
+
+/** POST /tanimlama/sohbet/baslat */
+export function tanimlamaBaslat(): Promise<TanimlamaSohbetYaniti> {
+  return apiIstek<TanimlamaSohbetYaniti>("/tanimlama/sohbet/baslat", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+/** POST /tanimlama/sohbet/cevap */
+export function tanimlamaCevap(
+  oturumId: string,
+  cevap: string,
+): Promise<TanimlamaSohbetYaniti> {
+  return apiIstek<TanimlamaSohbetYaniti>("/tanimlama/sohbet/cevap", {
+    method: "POST",
+    body: JSON.stringify({ oturum_id: oturumId, cevap }),
+  });
+}
+
+/** POST /tanimlama/kart/onayla — taslağı IHTIYAC_KARTI'na yazar. */
+export function ihtiyacKartiOnayla(
+  oturumId: string,
+  kurum: KurumGirdisi,
+  duzeltilmisTaslak?: IhtiyacTaslagi,
+): Promise<IhtiyacKartiYaniti> {
+  return apiIstek<IhtiyacKartiYaniti>("/tanimlama/kart/onayla", {
+    method: "POST",
+    body: JSON.stringify({
+      oturum_id: oturumId,
+      kurum,
+      duzeltilmis_taslak: duzeltilmisTaslak ?? null,
+    }),
+  });
+}
+
 export { API_URL };

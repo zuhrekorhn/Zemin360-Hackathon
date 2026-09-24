@@ -94,14 +94,14 @@ cp .env.example .env            # Windows PowerShell: Copy-Item .env.example .en
 
 `.env` içindeki `DATABASE_URL`'i kendi bağlantına göre düzenle (async sürücü: `postgresql+asyncpg://...`). Gerçek `.env` commit edilmez.
 
-**API anahtarları.** Keşif Ajanı iki dış servise gidiyor, ikisinin anahtarı da `.env`'de olmalı — yoksa sohbet ve kart onayı çalışmaz:
+**API anahtarları.** Sohbet ajanları (Keşif ve Tanımlama) iki dış servise gidiyor, ikisinin anahtarı da `.env`'de olmalı — yoksa sohbet ve kart onayı çalışmaz:
 
 | Değişken | Ne için | Nereden |
 |---|---|---|
-| `GOOGLE_API_KEY` | Sohbet ve alan çıkarımı (Gemini 2.5 Flash, ücretsiz katman) | <https://aistudio.google.com/apikey> |
+| `GOOGLE_API_KEY` | Sohbet ve alan çıkarımı (Gemini 3.6 Flash, ücretsiz katman) | <https://aistudio.google.com/apikey> |
 | `VOYAGE_API_KEY` | Kart onaylanınca embedding üretimi (voyage-4) | <https://dashboard.voyageai.com> |
 
-Gemini'nin ücretsiz katmanında **model başına günde 20 istek** sınırı var (dakikalık sınır da ayrıca işliyor). Kota dolunca sohbet uç noktası `429` döner; sohbet checkpointer'da durduğu için kota yenilendiğinde aynı `oturum_id` ile kaldığın yerden devam edebilirsin. Bir sohbet yaklaşık 3-5 istek harcıyor, yani günde birkaç tam denemeye yetiyor. Sınıra takılırsan `.env`'e başka bir model yazabilirsin (`GEMINI_MODEL=gemini-3.1-flash-lite` gibi) — her modelin kotası ayrı.
+Gemini'nin ücretsiz katmanında **model başına günde 20 istek** sınırı var (dakikalık sınır da ayrıca işliyor). Kota dolunca sohbet uç noktası `429` döner; sohbet checkpointer'da durduğu için kota yenilendiğinde aynı `oturum_id` ile kaldığın yerden devam edebilirsin. Bir sohbet yaklaşık 3-5 istek harcıyor, yani günde birkaç tam denemeye yetiyor. Kota model başına ayrı olduğu için ajan, ana modelin kotası dolduğunda otomatik olarak yedek modele (`GEMINI_YEDEK_MODEL`, varsayılan `gemini-3.1-flash-lite`) düşer; ikisi de dolarsa `429` görürsün.
 
 **3. Migration ve sunucu.**
 
@@ -120,12 +120,15 @@ python run.py --reload          # http://localhost:8000
 ```bash
 pytest                                        # testler (DB ve API anahtarı gerektirmez)
 python scripts/kesif_e2e.py                   # Keşif Ajanı uçtan uca (sunucu + gerçek API'ler)
+python scripts/kesif_e2e.py b                 # sadece "hiç projem yok" senaryosu (kota tasarrufu)
 ruff check . && ruff format .                 # lint + format
 alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni migration
 alembic check                                 # modeller ile migration arasında fark var mı?
 ```
 
-**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (LangGraph ajan kodu — `kesif.py` çalışıyor) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
+**Ajan uç noktaları:** Keşif `/kesif/sohbet/baslat|cevap`, `/kesif/kart/onayla`, `GET /yetenek-kartlari/{id}` · Tanımlama `/tanimlama/sohbet/baslat|cevap`, `/tanimlama/kart/onayla`, `GET /ihtiyac-kartlari/{id}`. Tam liste: [`docs/api-contracts.md`](docs/api-contracts.md).
+
+**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak motor + `kesif.py`, `tanimlama.py`) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
 
 ## Frontend'i Çalıştırma
 
@@ -156,11 +159,21 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 **Notlar:**
 - **Tema** [`docs/design-language.md`](docs/design-language.md)'den geliyor: palet `src/app/globals.css` içindeki CSS değişkenlerinde, fontlar (Fraunces + IBM Plex Sans) `src/app/layout.tsx` içinde tanımlı. Renk veya font değiştireceksen önce o belgeye bak.
 - shadcn/ui, **Radix** tabanlı kurulumla (`nova` preset, Lucide ikonları) eklendi — `components.json` bunu kaydeder. Şu an sadece `button`, `input`, `card` kurulu. Yeni bileşenler shadcn'in varsayılan renkleriyle değil, paletteki değişkenlerle gelir.
-- `/kesif` ve `/tanimlama` sayfaları henüz boş iskelet; ana sayfadaki yönlendirmeler kırık link olmasın diye duruyor. Ajan sohbet arayüzleri Faz 1'de buraya gelecek.
+- `/kesif` ve `/tanimlama` sayfaları çalışan sohbet arayüzleri: sohbet → taslak → onay formu → kaydedilen kart. Ortak görsel parçalar `src/components/sohbet.tsx` içinde.
 
 ## Proje Durumu
 
-🟡 **Tasarım aşaması** — mimari, veri şeması ve API sözleşmeleri tamamlandı; geliştirme Faz 1'de başlıyor.
+🟢 **Faz 1 tamamlandı** — altı ajandan ikisi çalışıyor:
+
+| Ajan | Durum |
+|---|---|
+| **Keşif** | Çalışıyor — sohbet → yetenek kartı taslağı → onay → kayıt + embedding |
+| **Tanımlama** | Çalışıyor — sokratik sohbet → ihtiyaç kartı taslağı → onay → kayıt + embedding |
+| Doğrulama, Eşleştirme, Canlılık, Takip | Faz 2-3 |
+
+İki sohbet ajanı aynı motoru paylaşıyor (`backend/app/agents/sohbet_motoru.py`): grafik iskeleti, taslak birleştirme ve yedek modele düşen LLM zinciri orada; soru seti, çıkarım şeması ve ajana özel dallar ajan dosyasında.
+
+Sırada **Faz 2**: Eşleştirme (pgvector benzerliği + gerekçe üretimi) ve Doğrulama (kanıt + referans akışı).
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım

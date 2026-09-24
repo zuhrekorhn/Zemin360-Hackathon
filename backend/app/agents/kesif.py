@@ -1,5 +1,8 @@
 """Keşif Ajanı — gençle sohbet eder, konuşmayı yetenek kartı taslağına çevirir.
 
+Grafik iskeleti, taslak birleştirme ve LLM zinciri ortak motorda
+(app/agents/sohbet_motoru.py). Burada kalan her şey Keşif'e özel.
+
 docs/agent-specs.md § 1. Sınırlar oradan geliyor:
   - Boş alan kalırsa EN FAZLA 2 tur takip sorusu (madde 2).
   - "Hiç projem yok" → fallback soru zinciri, hâlâ yoksa deneyim_seviyesi
@@ -15,18 +18,20 @@ değerlendirilmez.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Annotated, Any, Literal, TypedDict
+from typing import Any, Literal
 
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_google_genai.chat_models import GoogleRateLimitError
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
 
-from app.core.config import get_settings
+from app.agents import sohbet_motoru as motor
+from app.agents.sohbet_motoru import (  # noqa: F401 — dışarıya tek kapı burası
+    MAKS_TAKIP_TURU,
+    HizSinirHatasi,
+    SohbetDurumu,
+    kullanici_mesaji,
+)
 
 ACILIS_SORUSU = (
     "Merhaba! Seni tanımak istiyorum. Son bir yılda bitirdiğin, sonucunu "
@@ -45,8 +50,6 @@ FALLBACK_SORULARI = (
 
 ZORUNLU_ALANLAR = ("rol_alani", "deneyim_seviyesi", "sektor_ilgi_alani", "araclar_teknolojiler")
 
-MAKS_TAKIP_TURU = 2
-
 SISTEM_TALIMATI = """Sen Zemin360'ın Keşif Ajanı'sın. Genç bir kullanıcıyla sohbet ediyorsun.
 
 Görevin: konuşmadan yetenek kartı alanlarını çıkarmak.
@@ -64,6 +67,13 @@ Alanlar:
 - araclar_teknolojiler: kullandığı araç/teknoloji/yöntemler (yazılım olmak zorunda değil).
 - somut_ciktilar: bitirdiği, sonucu olan işler. Kanıt linkini söylediyse ekle.
 """
+
+YEDEK_SORULAR = {
+    "rol_alani": "Kendini hangi alanda görüyorsun? Kısaca nasıl tanımlarsın?",
+    "deneyim_seviyesi": "Bu alanda ne kadar zamandır uğraşıyorsun?",
+    "sektor_ilgi_alani": "Hangi sektörlerde çalışmak ilgini çeker?",
+    "araclar_teknolojiler": "Hangi araçları ya da yöntemleri kullanıyorsun?",
+}
 
 
 class SomutCiktiTaslak(BaseModel):
@@ -97,200 +107,80 @@ class TaslakCikarimi(BaseModel):
     )
 
 
-class KesifDurumu(TypedDict, total=False):
-    mesajlar: Annotated[list[AnyMessage], add_messages]
-    taslak: dict[str, Any]
-    takip_turu: int
+class KesifDurumu(SohbetDurumu, total=False):
+    """Ortak duruma Keşif'in fallback zinciri için iki alan ekler."""
+
     fallback_indeksi: int
-    sonraki_soru: str | None
-    taslak_hazir: bool
-    # Son turun çıkarımından karar düğümüne taşınan iki bilgi
-    son_takip_sorusu: str | None
     cikti_yok_dedi: bool
 
 
-def _llm(model_adi: str) -> ChatGoogleGenerativeAI:
-    ayarlar = get_settings()
-    if not ayarlar.google_api_key:
-        raise RuntimeError("GOOGLE_API_KEY tanımlı değil (.env)")
-    return ChatGoogleGenerativeAI(
-        model=model_adi,
-        google_api_key=ayarlar.google_api_key,
-        temperature=0,
-    )
+def _fallback_dali(durum: dict[str, Any]) -> dict[str, Any] | None:
+    """Somut çıktı yoksa fallback zinciri (okul ödevi → gönüllü iş).
 
-
-@lru_cache
-def _cikarim_zinciri() -> Runnable:
-    """Aynı prompt ve şemayla çalışan iki modelden oluşan zincir.
-
-    Gemini ücretsiz katmanında günlük kota model başına ayrı işliyor; ana
-    modelin kotası dolunca (429/RESOURCE_EXHAUSTED) aynı çağrı yedek modele
-    düşer. Yedeğin de kotası dolarsa hata `_cikar`'a kadar çıkar ve kullanıcı
-    429 görür — sohbet checkpointer'da durduğu için kaybolmaz.
+    Zincir bitmişse None döner ve taslak kapanır.
     """
-    ayarlar = get_settings()
-    ana = _llm(ayarlar.gemini_model).with_structured_output(TaslakCikarimi)
-    yedek = _llm(ayarlar.gemini_yedek_model).with_structured_output(TaslakCikarimi)
-    return ana.with_fallbacks([yedek], exceptions_to_handle=(GoogleRateLimitError,))
+    fallback_indeksi = durum.get("fallback_indeksi", 0)
+    if durum["taslak"].get("somut_ciktilar") or fallback_indeksi >= len(FALLBACK_SORULARI):
+        return None
 
-
-def bos_taslak() -> dict[str, Any]:
+    soru = FALLBACK_SORULARI[fallback_indeksi]
     return {
-        "rol_alani": None,
-        "deneyim_seviyesi": None,
-        "sektor_ilgi_alani": [],
-        "araclar_teknolojiler": [],
-        "somut_ciktilar": [],
-    }
-
-
-def _eksik_alanlar(taslak: dict[str, Any]) -> list[str]:
-    return [alan for alan in ZORUNLU_ALANLAR if not taslak.get(alan)]
-
-
-def _birlestir(taslak: dict[str, Any], cikarim: TaslakCikarimi) -> dict[str, Any]:
-    """Yeni çıkarımı mevcut taslağa ekler — boş gelen alan eskisini silmez."""
-    yeni = dict(taslak)
-
-    for alan in ("rol_alani", "deneyim_seviyesi"):
-        deger = getattr(cikarim, alan)
-        if deger:
-            yeni[alan] = deger
-
-    for alan in ("sektor_ilgi_alani", "araclar_teknolojiler"):
-        mevcut = list(yeni.get(alan) or [])
-        for deger in getattr(cikarim, alan):
-            if deger and deger not in mevcut:
-                mevcut.append(deger)
-        yeni[alan] = mevcut
-
-    ciktilar = list(yeni.get("somut_ciktilar") or [])
-    mevcut_basliklar = {c["baslik"].casefold() for c in ciktilar}
-    for cikti in cikarim.somut_ciktilar:
-        if cikti.baslik.casefold() not in mevcut_basliklar:
-            ciktilar.append(cikti.model_dump())
-            mevcut_basliklar.add(cikti.baslik.casefold())
-    yeni["somut_ciktilar"] = ciktilar
-
-    return yeni
-
-
-# --- Grafik düğümleri ------------------------------------------------------
-
-
-async def _acilis(durum: KesifDurumu) -> KesifDurumu:
-    """Sohbeti açar. LLM çağrısı yok — açılış sorusu sabit."""
-    return {
-        "mesajlar": [AIMessage(content=ACILIS_SORUSU)],
-        "taslak": bos_taslak(),
-        "takip_turu": 0,
-        "fallback_indeksi": 0,
-        "sonraki_soru": ACILIS_SORUSU,
+        "mesajlar": [AIMessage(content=soru)],
+        "fallback_indeksi": fallback_indeksi + 1,
+        "sonraki_soru": soru,
         "taslak_hazir": False,
     }
 
 
-class HizSinirHatasi(RuntimeError):
-    """LLM sağlayıcısı kotayı doldurdu (Gemini ücretsiz katman)."""
+def _tamamla(taslak: dict[str, Any]) -> dict[str, Any]:
+    """Çıktısı olmayan kart "potansiyel" etiketiyle çıkar — Doğrulama Ajanı'nı
+    atlayıp doğrudan Eşleştirme'ye gider (agent-specs.md § 1.4)."""
+    son = dict(taslak)
+    if not son.get("somut_ciktilar"):
+        son["deneyim_seviyesi"] = "potansiyel"
+    return motor.zorunlu_alanlari_doldur(
+        son, ZORUNLU_ALANLAR, metin_alanlari=("rol_alani", "deneyim_seviyesi")
+    )
 
 
-async def _cikar(durum: KesifDurumu) -> KesifDurumu:
-    """Konuşmanın tamamını yapılandırılmış alanlara döker (function calling)."""
-    zincir = _cikarim_zinciri()
-    try:
-        cikarim: TaslakCikarimi = await zincir.ainvoke(
-            [SystemMessage(content=SISTEM_TALIMATI), *durum["mesajlar"]]
-        )
-    except Exception as hata:
-        # Ücretsiz katmanda günlük/dakikalık kota dolabiliyor. Bunu 500 olarak
-        # değil, ne olduğunu söyleyen ayrı bir hata olarak yukarı taşı.
-        metin = str(hata)
-        if "RESOURCE_EXHAUSTED" in metin or "429" in metin:
-            raise HizSinirHatasi(metin) from hata
-        raise
-
-    taslak = _birlestir(durum.get("taslak") or bos_taslak(), cikarim)
-    return {
-        "taslak": taslak,
-        "son_takip_sorusu": cikarim.takip_sorusu,
-        "cikti_yok_dedi": cikarim.somut_cikti_yok_dedi,
-    }
+KESIF = motor.AjanTanimi(
+    ad="kesif",
+    acilis_sorusu=ACILIS_SORUSU,
+    sistem_talimati=SISTEM_TALIMATI,
+    cikarim_semasi=TaslakCikarimi,
+    skaler_alanlar=("rol_alani", "deneyim_seviyesi"),
+    liste_alanlari=("sektor_ilgi_alani", "araclar_teknolojiler"),
+    nesne_listeleri=(("somut_ciktilar", "baslik"),),
+    zorunlu_alanlar=ZORUNLU_ALANLAR,
+    yedek_sorular=YEDEK_SORULAR,
+    ek_dal=_fallback_dali,
+    ek_cikarim_alanlari=lambda cikarim: {"cikti_yok_dedi": cikarim.somut_cikti_yok_dedi},
+    tamamla=_tamamla,
+)
 
 
-async def _karar(durum: KesifDurumu) -> KesifDurumu:
-    """Takip sorusu mu, fallback sorusu mu, yoksa taslak mı — tek karar noktası."""
-    taslak = durum["taslak"]
-    eksikler = _eksik_alanlar(taslak)
-    takip_turu = durum.get("takip_turu", 0)
-    fallback_indeksi = durum.get("fallback_indeksi", 0)
-
-    # 1) Zorunlu alan eksikse, 2 turu aşmadan takip sorusu sor.
-    if eksikler and takip_turu < MAKS_TAKIP_TURU:
-        soru = durum.get("son_takip_sorusu") or _yedek_soru(eksikler)
-        return {
-            "mesajlar": [AIMessage(content=soru)],
-            "takip_turu": takip_turu + 1,
-            "sonraki_soru": soru,
-            "taslak_hazir": False,
-        }
-
-    # 2) Somut çıktı yoksa fallback zinciri (okul ödevi → gönüllü iş).
-    if not taslak.get("somut_ciktilar") and fallback_indeksi < len(FALLBACK_SORULARI):
-        soru = FALLBACK_SORULARI[fallback_indeksi]
-        return {
-            "mesajlar": [AIMessage(content=soru)],
-            "fallback_indeksi": fallback_indeksi + 1,
-            "sonraki_soru": soru,
-            "taslak_hazir": False,
-        }
-
-    # 3) Taslak hazır. Çıktısı olmayan kart "potansiyel" etiketiyle çıkar —
-    #    Doğrulama Ajanı'nı atlayıp doğrudan Eşleştirme'ye gider.
-    son_taslak = dict(taslak)
-    if not son_taslak.get("somut_ciktilar"):
-        son_taslak["deneyim_seviyesi"] = "potansiyel"
-    for alan in ZORUNLU_ALANLAR:
-        if not son_taslak.get(alan):
-            son_taslak[alan] = "belirtilmedi" if alan in ("rol_alani", "deneyim_seviyesi") else []
-
-    return {
-        "taslak": son_taslak,
-        "sonraki_soru": None,
-        "taslak_hazir": True,
-    }
+@lru_cache
+def _cikarim_zinciri() -> Runnable:
+    return motor.cikarim_zinciri(TaslakCikarimi)
 
 
-def _yedek_soru(eksikler: list[str]) -> str:
-    """LLM takip sorusu üretmediyse kullanılan sabit metinler."""
-    metinler = {
-        "rol_alani": "Kendini hangi alanda görüyorsun? Kısaca nasıl tanımlarsın?",
-        "deneyim_seviyesi": "Bu alanda ne kadar zamandır uğraşıyorsun?",
-        "sektor_ilgi_alani": "Hangi sektörlerde çalışmak ilgini çeker?",
-        "araclar_teknolojiler": "Hangi araçları ya da yöntemleri kullanıyorsun?",
-    }
-    return metinler[eksikler[0]]
+def bos_taslak() -> dict[str, Any]:
+    return motor.bos_taslak(KESIF)
 
 
-def _baslangic_yonu(durum: KesifDurumu) -> Literal["acilis", "cikar"]:
-    """İlk çağrıda açılış sorusu, sonrakilerde çıkarım."""
-    return "cikar" if durum.get("mesajlar") and durum.get("taslak") is not None else "acilis"
+def _birlestir(taslak: dict[str, Any], cikarim: TaslakCikarimi) -> dict[str, Any]:
+    return motor.birlestir(KESIF, taslak, cikarim)
+
+
+async def _karar(durum: dict[str, Any]) -> dict[str, Any]:
+    return await motor.karar(KESIF, durum)
 
 
 def grafik_derle(checkpointer: BaseCheckpointSaver):
-    """Keşif grafiğini derler. Checkpointer uygulama ömrü boyunca paylaşılır."""
-    grafik = StateGraph(KesifDurumu)
-    grafik.add_node("acilis", _acilis)
-    grafik.add_node("cikar", _cikar)
-    grafik.add_node("karar", _karar)
-
-    grafik.add_conditional_edges(START, _baslangic_yonu, {"acilis": "acilis", "cikar": "cikar"})
-    grafik.add_edge("acilis", END)
-    grafik.add_edge("cikar", "karar")
-    grafik.add_edge("karar", END)
-
-    return grafik.compile(checkpointer=checkpointer)
-
-
-def kullanici_mesaji(metin: str) -> HumanMessage:
-    return HumanMessage(content=metin)
+    return motor.grafik_derle(
+        KESIF,
+        KesifDurumu,
+        checkpointer,
+        _cikarim_zinciri,
+        ek_baslangic={"fallback_indeksi": 0},
+    )

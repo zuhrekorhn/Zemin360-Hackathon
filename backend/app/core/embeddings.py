@@ -64,6 +64,21 @@ async def embedding_uret(metin: str, girdi_turu: GirdiTuru = "document") -> list
     return vektor
 
 
+def ihtiyac_temsil_metni(*, problem_tanimi: str, basari_kriteri: str | None) -> str:
+    """İhtiyaç kartını embedding'e verilecek düz metne çevirir.
+
+    Şablon docs/matching-algorithm.md § 1'den birebir alındı — kısıtlar ve
+    tercih alanları bilinçli olarak DIŞARIDA: onlar sert filtre adımında
+    SQL ile çalışıyor, benzerlik metnini bulandırmamalı.
+    """
+    return "\n".join(
+        [
+            f"Problem: {problem_tanimi}",
+            f"Başarı kriteri: {basari_kriteri or ''}",
+        ]
+    )
+
+
 def yetenek_temsil_metni(
     *,
     rol_alani: str,

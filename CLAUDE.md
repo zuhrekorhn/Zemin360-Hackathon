@@ -25,7 +25,9 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 
 ## Şu An Neredeyiz
 
-Faz 0 (mimari + tasarım) tamamlandı. Faz 1'deyiz: backend iskeleti, frontend iskeleti, Keşif + Tanımlama ajanının ilk çalışan versiyonu. Detaylı takvim: `docs/roadmap.md`.
+Faz 0 (mimari + tasarım) ve Faz 1 tamamlandı: backend ve frontend iskeleti ayakta, **Keşif ve Tanımlama ajanları uçtan uca çalışıyor** — sohbet, taslak onayı, kart kaydı ve Voyage embedding'i dahil. Sırada Faz 2: Eşleştirme + Doğrulama ajanları. Detaylı takvim: `docs/roadmap.md`.
+
+İki sohbet ajanı **aynı motoru** paylaşıyor (`app/agents/sohbet_motoru.py`); yeni bir sohbet ajanı gerekirse grafik iskeletini kopyalama, bir `AjanTanimi` yaz. Ajana özel olan şey soru seti, çıkarım şeması ve varsa ek dalıdır.
 
 ## Teknoloji Yığını (hızlı referans)
 

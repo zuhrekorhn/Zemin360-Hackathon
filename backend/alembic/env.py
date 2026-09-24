@@ -18,6 +18,23 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
+# LangGraph checkpointer kendi tablolarını `setup()` ile yönetiyor (bkz.
+# app/main.py). Autogenerate onları "fazlalık" sanıp DROP etmesin — bu
+# yürüyen sohbetleri siler.
+LANGGRAPH_TABLOLARI = {
+    "checkpoints",
+    "checkpoint_writes",
+    "checkpoint_blobs",
+    "checkpoint_migrations",
+}
+
+
+def include_object(object, name, type_, reflected, compare_to):
+    if type_ == "table" and name in LANGGRAPH_TABLOLARI:
+        return False
+    return True
+
+
 def run_migrations_offline() -> None:
     """DB'ye bağlanmadan SQL üretir: alembic upgrade head --sql"""
     context.configure(
@@ -26,13 +43,19 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
+        include_object=include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        compare_type=True,
+        include_object=include_object,
+    )
     with context.begin_transaction():
         context.run_migrations()
 

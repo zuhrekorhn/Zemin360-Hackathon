@@ -6,6 +6,10 @@ import uuid
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
+
+__all__ = ["SohbetBaslatIstegi", "SohbetCevapIstegi"]
+
 
 class SomutCiktiTaslagi(BaseModel):
     baslik: str
@@ -29,15 +33,6 @@ class SohbetYaniti(BaseModel):
     soru: str | None = None
     taslak: KartTaslagi
     taslak_hazir: bool
-
-
-class SohbetBaslatIstegi(BaseModel):
-    """Şimdilik gövde boş — oturum sunucuda açılır. Auth Faz 3'te gelecek."""
-
-
-class SohbetCevapIstegi(BaseModel):
-    oturum_id: uuid.UUID
-    cevap: str = Field(min_length=1)
 
 
 class KullaniciGirdisi(BaseModel):
