@@ -83,8 +83,12 @@ async def referans_yaniti(
     )
     if referans is None:
         raise HTTPException(status_code=404, detail="Referans isteği bulunamadı")
-    if referans.durum == DURUM_YANITLANDI:
-        raise HTTPException(status_code=409, detail="Bu referans zaten yanıtlanmış")
+
+    # Zaman aşımı burada da uygulanıyor: GET "yanıtlanamaz" derken POST'un
+    # yanıtı kabul etmesi, iki uç noktanın farklı kural işletmesi olurdu.
+    if _zaman_asimini_isle(referans):
+        await oturum.commit()
+    _yanitlanabilirligi_dogrula(referans)
 
     referans.durum = DURUM_YANITLANDI
     referans.yanit_metni = istek.yorum
@@ -132,8 +136,7 @@ async def referans_istegi_goruntule(
     if referans is None:
         raise HTTPException(status_code=404, detail="Bu referans linki geçersiz")
 
-    if zaman_asimina_ugradi_mi(referans.olusturma_tarihi, referans.durum):
-        referans.durum = DURUM_YANIT_YOK
+    if _zaman_asimini_isle(referans):
         await oturum.commit()
 
     return referans_gorunumu(referans)
@@ -173,6 +176,28 @@ async def itiraz(
 
 
 # --- Ortak parçalar --------------------------------------------------------
+
+
+def _zaman_asimini_isle(referans: ReferansIstegi) -> bool:
+    """Süresi dolmuşsa durumu `yanit_yok` yapar; kaydedilecek değişiklik varsa True.
+
+    Zamanlayıcı yok (bilinçli): geçiş, kayda her dokunulduğunda hesaplanıyor.
+    """
+    if zaman_asimina_ugradi_mi(referans.olusturma_tarihi, referans.durum):
+        referans.durum = DURUM_YANIT_YOK
+        return True
+    return False
+
+
+def _yanitlanabilirligi_dogrula(referans: ReferansIstegi) -> None:
+    """Yanıt kabul edilebilir mi? GET ve POST aynı kuralı işletsin diye ortak."""
+    if referans.durum == DURUM_YANITLANDI:
+        raise HTTPException(status_code=409, detail="Bu referans zaten yanıtlanmış")
+    if referans.durum == DURUM_YANIT_YOK:
+        raise HTTPException(
+            status_code=409,
+            detail="Bu referans isteğinin süresi doldu, yanıt alınamıyor.",
+        )
 
 
 def referans_gorunumu(referans: ReferansIstegi) -> ReferansIstegiYaniti:

@@ -115,6 +115,26 @@ def test_suresi_gecmis_link_okuma_aninda_kapanir():
     assert govde["yanitlanabilir"] is False
 
 
+def test_suresi_gecmis_linke_yanit_verilemez():
+    """GET "yanıtlanamaz" derken POST kabul etmemeli: aynı kural, iki uç nokta."""
+    eski = SahteReferans(olusturma_tarihi=dt.datetime.now(dt.UTC) - dt.timedelta(days=30))
+    yanit = istemci(eski).post(
+        "/dogrulama/referans-yaniti",
+        json={"token": "token-123", "puan": 5, "yorum": "harika"},
+    )
+    assert yanit.status_code == 409
+    assert "süresi doldu" in yanit.json()["detail"]
+    assert eski.durum == DURUM_YANIT_YOK
+
+
+def test_yanitlanmis_linke_tekrar_yanit_verilemez():
+    yanit = istemci(SahteReferans(durum=DURUM_YANITLANDI)).post(
+        "/dogrulama/referans-yaniti",
+        json={"token": "token-123", "puan": 5},
+    )
+    assert yanit.status_code == 409
+
+
 def test_gecersiz_token_404_doner():
     yanit = istemci(None).get("/dogrulama/referans/olmayan-token")
     assert yanit.status_code == 404
