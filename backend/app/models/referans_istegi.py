@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text, func, text
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, Text, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 class ReferansIstegi(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "referans_istegi"
+    __table_args__ = (CheckConstraint("puan BETWEEN 1 AND 5", name="puan_araligi"),)
 
     somut_cikti_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("somut_cikti.id", ondelete="CASCADE"), index=True
@@ -32,6 +33,10 @@ class ReferansIstegi(UUIDPrimaryKeyMixin, Base):
         String, default="bekliyor", server_default=text("'bekliyor'")
     )
     yanit_metni: Mapped[str | None] = mapped_column(Text)
+    # Referansın 1-5 puanı. Kayıtlı tutuluyor çünkü birden fazla referans
+    # yanıtlayınca GUVEN_SKORU.ucuncu_taraf_onayi hepsinden hesaplanıyor
+    # (docs/data-schema.md § Tasarım Kararları) — son yanıt öncekini ezemez.
+    puan: Mapped[int | None] = mapped_column(Integer)
     # Zaman aşımı (5-7 gün) bu tarihten hesaplanır — ayrı bir zamanlayıcı yok,
     # okuma anında değerlendirilir (app/agents/dogrulama.py)
     olusturma_tarihi: Mapped[datetime] = mapped_column(

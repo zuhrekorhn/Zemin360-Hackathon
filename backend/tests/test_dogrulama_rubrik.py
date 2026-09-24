@@ -17,6 +17,7 @@ from app.agents.dogrulama import (
     link_ozetini_cikar,
     linki_normalize_et,
     referans_puanina_cevir,
+    ucuncu_taraf_onayi_hesapla,
     zaman_asimina_ugradi_mi,
 )
 from app.models.referans_istegi import ReferansIstegi
@@ -46,6 +47,30 @@ def test_skala_disi_puan_reddedilir():
         referans_puanina_cevir(0)
     with pytest.raises(ValueError):
         referans_puanina_cevir(6)
+
+
+def test_tek_referans_kendi_puanini_verir():
+    assert ucuncu_taraf_onayi_hesapla([4]) == referans_puanina_cevir(4)
+
+
+def test_cok_referansta_ortalama_alinir():
+    """Son yanıt öncekini ezmemeli; hepsi hesaba girer."""
+    # 5 -> 3, 2 -> 1 : ortalama 2.0
+    assert ucuncu_taraf_onayi_hesapla([5, 2]) == 2
+
+
+def test_zayif_referans_puani_asagi_ceker():
+    """En yükseği almak 'olumlu diyeni bulana kadar sor'u ödüllendirirdi."""
+    assert ucuncu_taraf_onayi_hesapla([5, 5, 1]) < ucuncu_taraf_onayi_hesapla([5, 5])
+
+
+def test_ortalama_asagi_yuvarlanir():
+    # 5 -> 3, 4 -> 2 : ortalama 2.5, aşağı yuvarlanır
+    assert ucuncu_taraf_onayi_hesapla([5, 4]) == 2
+
+
+def test_yanitlamis_referans_yoksa_sifir():
+    assert ucuncu_taraf_onayi_hesapla([]) == 0
 
 
 def test_sure_dolmadan_zaman_asimi_yok():
@@ -113,6 +138,34 @@ def test_link_ozeti_baslik_ve_metayi_alir():
         "</head><body>çok uzun içerik</body></html>"
     )
     assert link_ozetini_cikar(html) == "Kütüphane Takip — 400 kitap takibi"
+
+
+def test_uzun_head_icindeki_title_okunur():
+    """GitHub gibi siteler <title>'ı sayfanın epey içine koyuyor."""
+    html = "<html><head>" + '<link rel="x">' * 3000 + "<title>pgvector</title></head>"
+    assert link_ozetini_cikar(html) == "pgvector"
+
+
+def test_open_graph_etiketleri_okunur():
+    """og:* etiketleri name= değil property= kullanıyor."""
+    html = (
+        '<html><head><meta property="og:title" content="pgvector/pgvector">'
+        '<meta property="og:description" content="Vector similarity search"></head>'
+    )
+    assert link_ozetini_cikar(html) == "pgvector/pgvector — Vector similarity search"
+
+
+def test_content_once_yazilmis_meta_da_okunur():
+    html = '<html><head><meta content="Ters sıra" property="og:title"></head>'
+    assert link_ozetini_cikar(html) == "Ters sıra"
+
+
+def test_title_varken_og_title_kullanilmaz():
+    html = (
+        "<html><head><title>Gerçek başlık</title>"
+        '<meta property="og:title" content="Sosyal başlık"></head>'
+    )
+    assert link_ozetini_cikar(html).startswith("Gerçek başlık")
 
 
 def test_bos_sayfa_ozeti_bos_dizge_dondurmez():

@@ -21,8 +21,8 @@ from app.agents.dogrulama import (
     DURUM_YANITLANDI,
     LinkKontrolu,
     linki_kontrol_et,
-    referans_puanina_cevir,
     rubrik_puanla,
+    ucuncu_taraf_onayi_hesapla,
     zaman_asimina_ugradi_mi,
 )
 from app.core.llm import HizSinirHatasi
@@ -86,6 +86,7 @@ async def referans_yaniti(
 
     referans.durum = DURUM_YANITLANDI
     referans.yanit_metni = istek.yorum
+    referans.puan = istek.puan
 
     cikti = await _ciktiyi_getir(oturum, referans.somut_cikti_id)
     if cikti.guven_skoru is None:
@@ -98,7 +99,10 @@ async def referans_yaniti(
             ucuncu_taraf_onayi=0,
             gerekce_metni=None,
         )
-    cikti.guven_skoru.ucuncu_taraf_onayi = referans_puanina_cevir(istek.puan)
+    # Birden fazla referans yanıtlamış olabilir; son gelen öncekini ezmesin.
+    cikti.guven_skoru.ucuncu_taraf_onayi = ucuncu_taraf_onayi_hesapla(
+        [r.puan for r in cikti.referans_istekleri if r.puan is not None]
+    )
 
     await oturum.commit()
     return await _durum_yaniti(oturum, cikti.id, None)
@@ -239,6 +243,7 @@ async def _durum_yaniti(
                 id=referans.id,
                 referans_email=referans.referans_email,
                 durum=referans.durum,
+                puan=referans.puan,
                 yanit_metni=referans.yanit_metni,
                 olusturma_tarihi=referans.olusturma_tarihi,
                 yanit_linki=YANIT_YOLU.format(token=referans.token),

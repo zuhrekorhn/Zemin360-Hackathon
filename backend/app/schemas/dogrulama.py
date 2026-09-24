@@ -35,6 +35,7 @@ class ReferansDurumuYaniti(BaseModel):
     id: uuid.UUID
     referans_email: str
     durum: str
+    puan: int | None
     yanit_metni: str | None
     olusturma_tarihi: dt.datetime
     # SMTP kurmuyoruz (MVP kararı): link yanıtta gösteriliyor ki referans

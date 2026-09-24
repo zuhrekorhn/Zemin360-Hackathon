@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 
@@ -43,8 +44,10 @@ DURUM_YANIT_YOK = "yanit_yok"
 REFERANS_PUAN_ESLEMESI = {1: 0, 2: 1, 3: 1, 4: 2, 5: 3}
 
 LINK_TIMEOUT_SANIYE = 8
-# Sayfanın tamamı çekilmiyor; başlık/meta için ilk parça yeterli (basit tut).
-INDIRILEN_BAYT = 20_000
+# Sayfanın tamamı çekilmiyor: <head> bitene kadar okunuyor. Sabit bir ilk
+# parça yetmiyordu — GitHub gibi siteler <title>'ı 20 KB'ın ötesine atıyor.
+# Üst sınır, <head>'i hiç kapatmayan sayfalarda okumayı durdurmak için.
+INDIRILEN_BAYT = 300_000
 
 RUBRIK_TALIMATI = """Sen Zemin360'ın Doğrulama Ajanı'sın. Bir gencin "şunu yaptım"
 iddiasını, verdiği kanıtla birlikte puanlıyorsun.
@@ -124,6 +127,23 @@ def referans_puanina_cevir(skala_1_5: int) -> int:
     return REFERANS_PUAN_ESLEMESI[skala_1_5]
 
 
+def ucuncu_taraf_onayi_hesapla(puanlar: Sequence[int]) -> int:
+    """Yanıtlamış tüm referanslardan tek bir 0-3 puanı üretir.
+
+    Ortalama alınıyor, en yüksek değil: en yüksek, "olumlu diyen birini
+    bulana kadar referans sor" davranışını ödüllendirirdi. Ortalama, zayıf
+    bir referansın puanı aşağı çekmesine izin verir — göstergenin işi
+    sinyal taşımak, parlatmak değil.
+
+    Aşağı yuvarlanıyor; yukarı yuvarlamak tek coşkulu bir referansla puanı
+    şişirirdi.
+    """
+    if not puanlar:
+        return 0
+    cevrilmis = [referans_puanina_cevir(p) for p in puanlar]
+    return int(sum(cevrilmis) / len(cevrilmis))
+
+
 def zaman_asimina_ugradi_mi(
     olusturma_tarihi: dt.datetime, durum: str, simdi: dt.datetime | None = None
 ) -> bool:
@@ -152,14 +172,35 @@ def linki_normalize_et(kanit_linki: str) -> str:
     return f"https://{link.lstrip('/')}"
 
 
-def link_ozetini_cikar(html: str) -> str:
-    """Sayfadan başlık ve meta açıklamasını alır (tam içerik çekilmiyor)."""
-    baslik = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
-    meta = re.search(
-        r'<meta[^>]+name=["\']description["\'][^>]+content=["\'](.*?)["\']', html, re.S | re.I
+def _meta_icerigi(html: str, anahtar: str) -> str | None:
+    """`name=` veya `property=` ile verilmiş bir meta etiketinin içeriği.
+
+    Open Graph etiketleri (og:title, og:description) `property=` kullanıyor;
+    sıra da sabit değil, `content=` önce gelebiliyor.
+    """
+    kaliplar = (
+        rf'<meta[^>]+(?:name|property)=["\']{anahtar}["\'][^>]*?content=["\'](.*?)["\']',
+        rf'<meta[^>]+content=["\'](.*?)["\'][^>]*?(?:name|property)=["\']{anahtar}["\']',
     )
-    parcalar = [p.group(1).strip() for p in (baslik, meta) if p]
-    ozet = " — ".join(" ".join(parca.split()) for parca in parcalar)
+    for kalip in kaliplar:
+        eslesme = re.search(kalip, html, re.S | re.I)
+        if eslesme and eslesme.group(1).strip():
+            return eslesme.group(1)
+    return None
+
+
+def link_ozetini_cikar(html: str) -> str:
+    """Sayfadan başlık ve açıklamayı alır (tam içerik çekilmiyor).
+
+    Başlık için <title>, yoksa og:title; açıklama için meta description,
+    yoksa og:description.
+    """
+    baslik_etiketi = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
+    baslik = baslik_etiketi.group(1) if baslik_etiketi else _meta_icerigi(html, "og:title")
+    aciklama = _meta_icerigi(html, "description") or _meta_icerigi(html, "og:description")
+
+    parcalar = [" ".join(p.split()) for p in (baslik, aciklama) if p and p.strip()]
+    ozet = " — ".join(parcalar)
     return ozet[:400] or "(başlık/açıklama okunamadı)"
 
 
@@ -174,17 +215,32 @@ async def linki_kontrol_et(kanit_linki: str | None) -> LinkKontrolu:
     adres = linki_normalize_et(kanit_linki)
     try:
         async with httpx.AsyncClient(timeout=LINK_TIMEOUT_SANIYE, follow_redirects=True) as istemci:
-            yanit = await istemci.get(adres)
-            govde = yanit.text[:INDIRILEN_BAYT] if yanit.is_success else ""
+            async with istemci.stream("GET", adres) as yanit:
+                if not yanit.is_success:
+                    return LinkKontrolu(
+                        False, yanit.status_code, "(sayfa açılmadı)", f"HTTP {yanit.status_code}"
+                    )
+                govde = await _basligi_oku(yanit)
     except httpx.HTTPError as hata:
         return LinkKontrolu(False, None, "(sayfa açılmadı)", f"erişilemedi: {type(hata).__name__}")
 
-    if not yanit.is_success:
-        return LinkKontrolu(
-            False, yanit.status_code, "(sayfa açılmadı)", f"HTTP {yanit.status_code}"
-        )
-
     return LinkKontrolu(True, yanit.status_code, link_ozetini_cikar(govde), "açılıyor")
+
+
+async def _basligi_oku(yanit: httpx.Response) -> str:
+    """Sayfayı `</head>` görülene ya da üst sınıra kadar okur.
+
+    İndirmeyi erken kesiyoruz: ihtiyacımız olan her şey <head> içinde ve
+    büyük sayfaların gövdesini çekmenin anlamı yok.
+    """
+    parcalar: list[str] = []
+    uzunluk = 0
+    async for parca in yanit.aiter_text():
+        parcalar.append(parca)
+        uzunluk += len(parca)
+        if "</head>" in parca.lower() or uzunluk >= INDIRILEN_BAYT:
+            break
+    return "".join(parcalar)
 
 
 @lru_cache
