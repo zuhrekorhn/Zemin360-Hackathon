@@ -226,15 +226,64 @@ export function KanitBolumu({
 }
 
 /**
+ * Referans kişiye iletilecek link — tam adres.
+ *
+ * Göreli bir yol ("/referans?token=…") kopyalanıp e-postayla gönderilince
+ * çalışmıyor; referans kişi bu sayfayı bizim sitemizde açacak. Bu yüzden
+ * adres origin'le birlikte gösteriliyor ve kopyalanabiliyor.
+ */
+function YanitLinki({ adres }: { adres: string }) {
+  const [kopyalandi, setKopyalandi] = useState(false);
+
+  async function kopyala() {
+    try {
+      await navigator.clipboard.writeText(adres);
+      setKopyalandi(true);
+      window.setTimeout(() => setKopyalandi(false), 2000);
+    } catch {
+      // Pano izni yoksa link zaten ekranda; elle seçilip kopyalanabilir.
+      setKopyalandi(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-xs text-muted-foreground">
+        Yanıt linki — e-posta göndermiyoruz, referans kişiye kendin ilet:
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <a
+          className="text-xs break-all text-baglanti underline underline-offset-4"
+          href={adres}
+        >
+          {adres}
+        </a>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void kopyala()}
+        >
+          {kopyalandi ? "Kopyalandı" : "Kopyala"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Backend girişsiz yanıt uç noktasının yolunu döndürüyor; referans kişiye
- * gösterilecek olan ise onu saran sayfa. Token'ı o yoldan çıkarıyoruz.
+ * gösterilecek olan ise onu saran sayfanın TAM adresi.
  */
 function yanitSayfasiLinki(yanitLinki: string | null): string | null {
   if (!yanitLinki) return null;
   const token = new URLSearchParams(yanitLinki.split("?")[1] ?? "").get(
     "token",
   );
-  return token ? `/referans?token=${encodeURIComponent(token)}` : null;
+  if (!token) return null;
+  // Bileşen yalnızca veri geldikten sonra çiziliyor, yani tarayıcıdayız.
+  const koken = typeof window === "undefined" ? "" : window.location.origin;
+  return `${koken}/referans?token=${encodeURIComponent(token)}`;
 }
 
 function ReferansSatiri({ referans }: { referans: ReferansDurumu }) {
@@ -257,15 +306,7 @@ function ReferansSatiri({ referans }: { referans: ReferansDurumu }) {
       ) : null}
 
       {referans.durum === "bekliyor" && yanitSayfasi ? (
-        <p className="text-xs break-all text-muted-foreground">
-          Yanıt linki (e-posta göndermiyoruz, referans kişiye kendin ilet):{" "}
-          <a
-            className="text-baglanti underline underline-offset-4"
-            href={yanitSayfasi}
-          >
-            {yanitSayfasi}
-          </a>
-        </p>
+        <YanitLinki adres={yanitSayfasi} />
       ) : null}
     </div>
   );
