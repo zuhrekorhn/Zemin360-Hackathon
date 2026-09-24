@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
+from app.api.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.api.ihtiyac_kartlari import kart_yaniti
 from app.core.embeddings import embedding_uret, ihtiyac_temsil_metni
 from app.core.sehir import sehir_kanonik
@@ -81,6 +82,7 @@ async def sohbet_cevap(istek: SohbetCevapIstegi, request: Request) -> TanimlamaS
 async def kart_onayla(
     istek: IhtiyacKartiOnaylaIstegi,
     request: Request,
+    arka_plan: BackgroundTasks,
     oturum: AsyncSession = Depends(get_session),
 ) -> IhtiyacKartiYaniti:
     """Onaylanan taslağı IHTIYAC_KARTI'na yazar, ardından embedding'ini hesaplar."""
@@ -116,6 +118,10 @@ async def kart_onayla(
         girdi_turu="document",
     )
     await oturum.commit()
+
+    # Eşleştirme yanıt gönderildikten sonra başlıyor: kurum öneriler sayfasına
+    # geldiğinde hesap çoğunlukla hazır olur.
+    arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kurum.id)
 
     return await kart_yaniti(oturum, kart.id)
 

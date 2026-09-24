@@ -9,7 +9,9 @@ doğrudan da çağrılabiliyor.
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -31,7 +33,7 @@ from app.agents.eslestirme import (
 )
 from app.api.yetenek_kartlari import kart_yaniti
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
-from app.db.session import get_session
+from app.db.session import get_session, get_sessionmaker
 from app.models.eslesme import Eslesme
 from app.models.isbirligi import Isbirligi
 from app.schemas.eslestirme import (
@@ -41,6 +43,8 @@ from app.schemas.eslestirme import (
     OnerilerYaniti,
     OneriYaniti,
 )
+
+logger = logging.getLogger("zemin360.eslestirme")
 
 router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
@@ -109,6 +113,27 @@ async def ilgileniyorum(
     )
 
 
+async def eslestirmeyi_arka_planda_calistir(kurum_id: uuid.UUID) -> None:
+    """İhtiyaç kartı onaylanınca eşleştirmeyi yanıt gönderildikten sonra başlatır.
+
+    Kurum öneriler sayfasına geldiğinde hesap çoğunlukla bitmiş oluyor; bitmemişse
+    `GET /oneriler` zaten kendi başına hesaplıyor, yani bu bir hızlandırma —
+    doğruluğun ona bağlı olduğu bir adım değil.
+
+    Zamanlayıcı kurmuyoruz (bkz. CLAUDE.md): bu da bir isteğin tetiklediği iş,
+    periyodik bir görev değil. Kendi oturumunu açıyor, çünkü isteğin oturumu
+    yanıtla birlikte kapanıyor. Hata olursa yutuluyor: kullanıcı kartını zaten
+    onayladı, arka plandaki hesap yüzünden bir şey kaybetmemeli.
+    """
+    async with get_sessionmaker()() as oturum:
+        try:
+            await _pipeline_calistir(oturum, kurum_id)
+        except HTTPException as hata:
+            logger.info("Arka plan eşleştirme atlandı (%s): %s", kurum_id, hata.detail)
+        except Exception:
+            logger.exception("Arka plan eşleştirme başarısız (%s)", kurum_id)
+
+
 # --- Pipeline --------------------------------------------------------------
 
 
@@ -131,6 +156,8 @@ async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> Oneri
         mevcutlar.pop(eskimis.yetenek_karti_id, None)
         await oturum.delete(eskimis)
 
+    gerekce_bekleyenler: list[tuple[Eslesme, Aday]] = []
+
     for aday in secilenler:
         eslesme = mevcutlar.get(aday.yetenek_karti.id)
         if eslesme is None:
@@ -148,7 +175,16 @@ async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> Oneri
             eslesme.skor = aday.skor
 
         if eslesme.gerekce_metni is None:
-            eslesme.gerekce_metni = await _gerekce(ihtiyac, aday)
+            gerekce_bekleyenler.append((eslesme, aday))
+
+    # Gerekçeler birbirinden bağımsız: sırayla beklemek Top-5'te kullanıcıyı
+    # beş çağrı boyunca bekletiyordu. Hepsi aynı anda gidiyor.
+    if gerekce_bekleyenler:
+        metinler = await asyncio.gather(
+            *(_gerekce(ihtiyac, aday) for _, aday in gerekce_bekleyenler)
+        )
+        for (eslesme, _), metin in zip(gerekce_bekleyenler, metinler, strict=True):
+            eslesme.gerekce_metni = metin
 
     await oturum.commit()
 
