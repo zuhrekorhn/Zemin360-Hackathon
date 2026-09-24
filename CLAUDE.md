@@ -25,7 +25,11 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 
 ## Şu An Neredeyiz
 
-Faz 0 ve Faz 1 tamamlandı, **Faz 2 sürüyor**: Keşif, Tanımlama, Eşleştirme ve Doğrulama ajanları çalışıyor. Eşleştirme ve Doğrulama şimdilik yalnızca backend; Eşleştirme'de sadece kurum tarafı var (öneri + "ilgileniyorum"), Genç'in bildirimi Faz 3+. Sırada Canlılık ve Takip ajanları. Detaylı takvim: `docs/roadmap.md`.
+Faz 0 ve Faz 1 tamamlandı, **Faz 2 sürüyor**: Keşif, Tanımlama, Eşleştirme ve Doğrulama ajanları çalışıyor ve dördünün de arayüzü bağlı (`/kesif`, `/tanimlama`, `/kurum/oneriler`, `/kart/{id}`, `/referans`). Eşleştirme'de sadece kurum tarafı var (öneri + "ilgileniyorum"), Genç'in bildirimi Faz 3+. Giriş/kayıt akışı da Faz 3: kimlikler şimdilik tarayıcıda tutuluyor. Sırada Canlılık ve Takip ajanları. Detaylı takvim: `docs/roadmap.md`.
+
+**Eşleştirmede iki ayrı sınır var, karıştırma:** benzerlik alt sınırı (0.45) "bu aday konuyla ilgili mi" sorusunu skordan ÖNCE yanıtlar; skor eşiği (%40) "ilgili adaylar arasında gösterilmeye değer mi" sorusunu sonra. Doğrulama bonusu sıralamayı etkiler, alakayı yaratmaz (`docs/matching-algorithm.md` § 5).
+
+**Hatalar kullanıcıya doğru cümleyi söylemeli:** yakalanmayan istisnalar `app/core/hatalar.py`'deki global işleyiciden CORS başlığıyla ve `{"detail": ...}` gövdesiyle dönüyor — aksi halde tarayıcı her hatayı "backend'e ulaşılamadı" sanıyor. LLM tarafında kota 429, sağlayıcı arızası 503; ikisi de önce yedek modele düşürülür.
 
 **Zamanlayıcı yok, bilinçli:** cron/kuyruk altyapısı kurmuyoruz. Eşleştirme "arka plan işi" bir endpoint olarak duruyor; Doğrulama'nın 7 günlük zaman aşımı da okuma anında hesaplanıyor. Yeni bir periyodik iş gerekirse aynı deseni izle.
 

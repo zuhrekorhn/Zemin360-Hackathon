@@ -161,22 +161,27 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 - **Tema** [`docs/design-language.md`](docs/design-language.md)'den geliyor: palet `src/app/globals.css` içindeki CSS değişkenlerinde, fontlar (Fraunces + IBM Plex Sans) `src/app/layout.tsx` içinde tanımlı. Renk veya font değiştireceksen önce o belgeye bak.
 - shadcn/ui, **Radix** tabanlı kurulumla (`nova` preset, Lucide ikonları) eklendi — `components.json` bunu kaydeder. Şu an sadece `button`, `input`, `card` kurulu. Yeni bileşenler shadcn'in varsayılan renkleriyle değil, paletteki değişkenlerle gelir.
 - `/kesif` ve `/tanimlama` sayfaları çalışan sohbet arayüzleri: sohbet → taslak → onay formu → kaydedilen kart. Ortak görsel parçalar `src/components/sohbet.tsx` içinde.
+- `/kart/{id}` yetenek kartı ve Doğrulama ekranı: çıktı başına dört bileşenli güven göstergesi, kanıt ekleme, referans isteği ve itiraz (`src/components/kanit.tsx`).
+- `/kurum/oneriler` eşleştirme önerileri: skor, gerekçe ve "İlgileniyorum". Eşik ve "az sonuç" uyarısı backend yanıtından geliyor, arayüzde sabit değil.
+- `/referans?token=…` referans kişinin girişsiz yanıt sayfası: iddia formun üstünde gösterilir, harcanmış ya da süresi geçmiş link form açmaz.
+- Kart ve gerekçe görünümünün paylaşılan parçaları `src/components/kart.tsx` içinde; ana sayfadaki örnek blok da bunları kullanıyor (statik veriyle, backend kapalıyken de çizilsin diye).
+- Giriş/kayıt akışı Faz 3'te: kart ve kurum kimliği şimdilik tarayıcıda (`src/lib/yerel.ts`) hatırlanıyor, sunucuda hiçbir yetki taşımıyor.
 
 ## Proje Durumu
 
-🟢 **Faz 2 sürüyor** — altı ajandan üçü çalışıyor:
+🟢 **Faz 2 sürüyor** — altı ajandan dördü çalışıyor, dördünün de arayüzü bağlı:
 
 | Ajan | Durum |
 |---|---|
 | **Keşif** | Çalışıyor — sohbet → yetenek kartı taslağı → onay → kayıt + embedding |
 | **Tanımlama** | Çalışıyor — sokratik sohbet → ihtiyaç kartı taslağı → onay → kayıt + embedding |
-| **Eşleştirme** | Çalışıyor (backend) — sert filtre → pgvector benzerliği → skor → gerekçe → iş birliği |
-| **Doğrulama** | Çalışıyor (backend) — kanıt kontrolü + rubrik → referans akışı → itiraz |
+| **Eşleştirme** | Çalışıyor — sert filtre → benzerlik alt sınırı → pgvector skoru → gerekçe → iş birliği. Arayüz: `/kurum/oneriler` |
+| **Doğrulama** | Çalışıyor — kanıt kontrolü + rubrik → referans akışı → itiraz. Arayüz: `/kart/{id}` ve `/referans` |
 | Canlılık, Takip | Faz 3 |
 
-**Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında dönüyor, referans kişiye elle iletilir. **Bilinen MVP sınırlaması:** token API yanıtında göründüğü için iddia sahibi kendi referansını doldurabilir; üçüncü taraf onayı bu haliyle güvenlik sağlamıyor, yalnızca akışı gösteriyor. Gerçek kullanımda token yalnızca referans kişiye e-postayla gitmeli. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
+**Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında ve kart ekranında tam adres olarak gösteriliyor, referans kişiye elle iletilir. **Bilinen MVP sınırlaması:** token API yanıtında göründüğü için iddia sahibi kendi referansını doldurabilir; üçüncü taraf onayı bu haliyle güvenlik sağlamıyor, yalnızca akışı gösteriyor. Gerçek kullanımda token yalnızca referans kişiye e-postayla gitmeli. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
 
-**Eşleştirme kapsamı:** şu an yalnızca kurum tarafı var (öneri listesi + "ilgileniyorum" → `ISBIRLIGI`). Genç'in eşleşme bildirimini görmesi ve arayüzü bilinçli olarak ertelendi (Faz 3+). Skor formülünün ESCO taksonomi bileşeni de MVP dışında (bkz. `docs/matching-algorithm.md`).
+**Eşleştirme kapsamı:** şu an yalnızca kurum tarafı var (öneri listesi + "ilgileniyorum" → `ISBIRLIGI`). Öneri listesi iki sınırla eleniyor ve ikisi farklı şeyi ölçüyor: benzerlik alt sınırı 0.45 ("bu aday konuyla ilgili mi", skordan önce) ve skor eşiği %40 ("ilgili adaylar arasında gösterilmeye değer mi"). Gerekçe LLM'den gelmiyorsa öneri gerekçesiz gösterilir, skor yine de geçerlidir. Genç'in eşleşme bildirimini görmesi ve arayüzü bilinçli olarak ertelendi (Faz 3+). Skor formülünün ESCO taksonomi bileşeni de MVP dışında (bkz. `docs/matching-algorithm.md`).
 
 İki sohbet ajanı aynı motoru paylaşıyor (`backend/app/agents/sohbet_motoru.py`): grafik iskeleti, taslak birleştirme ve yedek modele düşen LLM zinciri orada; soru seti, çıkarım şeması ve ajana özel dallar ajan dosyasında.
 
