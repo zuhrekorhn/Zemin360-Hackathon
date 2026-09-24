@@ -16,6 +16,7 @@ docs/agent-specs.md § 4. Sınırlar oradan:
 from __future__ import annotations
 
 import datetime as dt
+import math
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -135,13 +136,15 @@ def ucuncu_taraf_onayi_hesapla(puanlar: Sequence[int]) -> int:
     bir referansın puanı aşağı çekmesine izin verir — göstergenin işi
     sinyal taşımak, parlatmak değil.
 
-    Aşağı yuvarlanıyor; yukarı yuvarlamak tek coşkulu bir referansla puanı
-    şişirirdi.
+    Ortalama normal (0.5 yukarı) yuvarlanıyor: aşağı yuvarlamak iki güçlü
+    referansı (5+4 → 2.5 → 2) tek bir 5'ten (3) daha düşük gösteriyordu.
+    Referans eklemek puanı düşürmemeli. Python'ın round()'u 2.5'i 2'ye
+    çevirdiği için (bankacı yuvarlaması) elle +0.5 uygulanıyor.
     """
     if not puanlar:
         return 0
     cevrilmis = [referans_puanina_cevir(p) for p in puanlar]
-    return int(sum(cevrilmis) / len(cevrilmis))
+    return math.floor(sum(cevrilmis) / len(cevrilmis) + 0.5)
 
 
 def zaman_asimina_ugradi_mi(

@@ -64,9 +64,18 @@ def test_zayif_referans_puani_asagi_ceker():
     assert ucuncu_taraf_onayi_hesapla([5, 5, 1]) < ucuncu_taraf_onayi_hesapla([5, 5])
 
 
-def test_ortalama_asagi_yuvarlanir():
-    # 5 -> 3, 4 -> 2 : ortalama 2.5, aşağı yuvarlanır
-    assert ucuncu_taraf_onayi_hesapla([5, 4]) == 2
+def test_ortalama_normal_yuvarlanir():
+    # 5 -> 3, 4 -> 2 : ortalama 2.5, yukarı yuvarlanır (bankacı yuvarlaması değil)
+    assert ucuncu_taraf_onayi_hesapla([5, 4]) == 3
+    # 3 -> 1, 4 -> 2 : ortalama 1.5 -> 2
+    assert ucuncu_taraf_onayi_hesapla([3, 4]) == 2
+    # 2 -> 1, 3 -> 1 : ortalama 1.0, olduğu gibi kalır
+    assert ucuncu_taraf_onayi_hesapla([2, 3]) == 1
+
+
+def test_ikinci_guclu_referans_puani_dusurmez():
+    """Referans eklemek cezalandırmamalı: 5+4, tek 5'in altına inmemeli."""
+    assert ucuncu_taraf_onayi_hesapla([5, 4]) >= ucuncu_taraf_onayi_hesapla([5])
 
 
 def test_yanitlamis_referans_yoksa_sifir():
