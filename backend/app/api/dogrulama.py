@@ -168,7 +168,9 @@ async def itiraz(
         cikti.kanit_linki = istek.yeni_kanit_linki
 
     kontrol = await linki_kontrol_et(cikti.kanit_linki)
-    await _rubrigi_yaz(cikti, kontrol)
+    # İtiraz notu rubriğe kullanıcının BEYANI olarak giriyor; kanıt yerine
+    # geçmiyor (kuralı prompt'ta yazılı).
+    await _rubrigi_yaz(cikti, kontrol, itiraz_notu=istek.aciklama)
     await _kanit_bekleyen_guncelle(oturum, cikti.yetenek_karti_id)
     await oturum.commit()
 
@@ -227,7 +229,9 @@ async def _ciktiyi_getir(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> Som
     return cikti
 
 
-async def _rubrigi_yaz(cikti: SomutCikti, kontrol: LinkKontrolu) -> None:
+async def _rubrigi_yaz(
+    cikti: SomutCikti, kontrol: LinkKontrolu, itiraz_notu: str | None = None
+) -> None:
     """Ön rubriği üretip kaydeder; üçüncü taraf onayı korunur.
 
     LLM kotası dolarsa 429 döner — burada sessizce puansız devam etmek
@@ -239,6 +243,7 @@ async def _rubrigi_yaz(cikti: SomutCikti, kontrol: LinkKontrolu) -> None:
             aciklama=cikti.aciklama,
             kanit_linki=cikti.kanit_linki,
             kontrol=kontrol,
+            itiraz_notu=itiraz_notu,
         )
     except HizSinirHatasi as hata:
         raise HTTPException(

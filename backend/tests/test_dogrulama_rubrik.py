@@ -179,3 +179,29 @@ def test_title_varken_og_title_kullanilmaz():
 
 def test_bos_sayfa_ozeti_bos_dizge_dondurmez():
     assert "okunamadı" in link_ozetini_cikar("<html><body>x</body></html>")
+
+
+# --- İtiraz notu ----------------------------------------------------------
+# Not rubriğe giriyor ama "doğrulanmış bilgi" olarak değil; kuralların
+# prompt'ta yazılı olduğunu burada sabitliyoruz (LLM'e gitmeden).
+
+from app.agents.dogrulama import RUBRIK_SABLONU, RUBRIK_TALIMATI  # noqa: E402
+
+
+def test_itiraz_notu_sablonda_yer_aliyor():
+    """Daha önce forma yazılan açıklama hiçbir yere gitmiyordu."""
+    assert "{itiraz_notu}" in str(RUBRIK_SABLONU)
+
+
+def test_itiraz_notu_beyan_olarak_isaretleniyor():
+    assert "DOĞRULANMIŞ BİLGİ DEĞİL" in RUBRIK_TALIMATI
+    assert "beyan" in RUBRIK_TALIMATI
+
+
+def test_itiraz_notu_tek_basina_tam_puan_vermiyor():
+    assert "tam puana (3) tek başına yetmez" in RUBRIK_TALIMATI
+
+
+def test_itiraz_notunun_tonu_olcut_degil():
+    """'Ne kadar ısrarlı yazılmış' bir kriter olamaz (önyargı riski)."""
+    assert "tonuna" in RUBRIK_TALIMATI

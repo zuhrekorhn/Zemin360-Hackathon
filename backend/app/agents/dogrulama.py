@@ -79,8 +79,21 @@ rol_netligi:
   2 = rol yazılmış ama ekip içindeki payı belirsiz
   3 = kişinin ne yaptığı açık ve spesifik ("backend'i ben yazdım")
 
+İTİRAZ NOTU (varsa):
+Kullanıcı önceki puana itiraz ettiyse notu sana iletiliyor. Bu not
+DOĞRULANMIŞ BİLGİ DEĞİL, kullanıcının kendi beyanıdır:
+- Notun işaret ettiği yeri kanıtta ve açıklamada TEKRAR kontrol et; gözden
+  kaçırdığın bir şey varsa puanı düzelt.
+- Notun kendisi kanıt yerine geçmez. "Backend'i ben yazdım" demesi tek başına
+  rol_netligi 3 ettirmez; tam puan ancak kanıtta ya da açıklamada karşılığı
+  görülüyorsa verilir.
+- Yalnızca beyan olarak kalan bir not en fazla bir basamak yukarı taşır,
+  tam puana (3) tek başına yetmez.
+- Notun tonuna, ısrarına ya da uzunluğuna bakma.
+
 gerekce_metni: 2 cümle. Hangi bileşene neden o puanı verdiğini, kanıttaki
-somut şeylere atıfla açıkla. Genel geçer laf etme.
+somut şeylere atıfla açıkla. Genel geçer laf etme. İtiraz notunu dikkate
+aldıysan bunu söyle.
 """
 
 RUBRIK_SABLONU = ChatPromptTemplate.from_messages(
@@ -95,6 +108,8 @@ RUBRIK_SABLONU = ChatPromptTemplate.from_messages(
             "Link: {kanit_linki}\n"
             "Link durumu: {link_durumu}\n"
             "Linkten okunan başlık/açıklama: {link_ozeti}\n\n"
+            "KULLANICININ İTİRAZ NOTU (beyan, doğrulanmamış)\n"
+            "{itiraz_notu}\n\n"
             "Bu iddiayı puanla.",
         ),
     ]
@@ -254,7 +269,12 @@ def _rubrik_zinciri() -> Runnable:
 
 
 async def rubrik_puanla(
-    *, baslik: str, aciklama: str | None, kanit_linki: str | None, kontrol: LinkKontrolu
+    *,
+    baslik: str,
+    aciklama: str | None,
+    kanit_linki: str | None,
+    kontrol: LinkKontrolu,
+    itiraz_notu: str | None = None,
 ) -> RubrikPuani:
     """Ön rubrik puanı (docs/agent-specs.md § 4.3).
 
@@ -269,6 +289,7 @@ async def rubrik_puanla(
                 "kanit_linki": kanit_linki or "(yok)",
                 "link_durumu": kontrol.aciklama,
                 "link_ozeti": kontrol.ozet,
+                "itiraz_notu": itiraz_notu or "(itiraz yok)",
             }
         )
     except Exception as hata:
