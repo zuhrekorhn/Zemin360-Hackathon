@@ -155,3 +155,55 @@ def test_hatali_istek_yedek_modeli_bosuna_yormaz(monkeypatch):
     finally:
         get_settings.cache_clear()
         _cikarim_zinciri.cache_clear()
+
+
+# --- Aynı işi anlatan çıktılar --------------------------------------------
+
+
+def test_ayni_is_farkli_yazimla_iki_kayit_acmaz():
+    """Gerçek turda görülen vaka: "Team To Do" ve "Team ToDo" iki satır olmuştu."""
+    taslak = dolu_taslak(
+        somut_ciktilar=[
+            {"baslik": "Team To Do Web Uygulaması", "aciklama": None, "kanit_linki": None}
+        ]
+    )
+    sonuc = _birlestir(
+        taslak,
+        TaslakCikarimi(
+            somut_ciktilar=[
+                SomutCiktiTaslak(
+                    baslik="Team ToDo Web Uygulaması",
+                    kanit_linki="github.com/ornek/teamtodo",
+                )
+            ]
+        ),
+    )
+    assert len(sonuc["somut_ciktilar"]) == 1
+
+
+def test_ikinci_anlatimdaki_link_bos_alani_doldurur():
+    taslak = dolu_taslak(
+        somut_ciktilar=[
+            {"baslik": "Team To Do", "aciklama": "Ekip için görev takibi", "kanit_linki": None}
+        ]
+    )
+    sonuc = _birlestir(
+        taslak,
+        TaslakCikarimi(
+            somut_ciktilar=[SomutCiktiTaslak(baslik="team todo", kanit_linki="github.com/ornek/x")]
+        ),
+    )
+    cikti = sonuc["somut_ciktilar"][0]
+    assert cikti["kanit_linki"] == "github.com/ornek/x"
+    # İlk anlatılan açıklama korunur, üzerine yazılmaz
+    assert cikti["aciklama"] == "Ekip için görev takibi"
+
+
+def test_gercekten_farkli_isler_ayri_kalir():
+    taslak = dolu_taslak(
+        somut_ciktilar=[{"baslik": "Team To Do", "aciklama": None, "kanit_linki": None}]
+    )
+    sonuc = _birlestir(
+        taslak, TaslakCikarimi(somut_ciktilar=[SomutCiktiTaslak(baslik="Kütüphane takip sistemi")])
+    )
+    assert len(sonuc["somut_ciktilar"]) == 2

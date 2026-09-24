@@ -29,6 +29,7 @@ from langgraph.graph.message import add_messages
 from pydantic import BaseModel
 
 from app.core.llm import HizSinirHatasi, llm_hatasini_cevir, model, yedekli_zincir
+from app.core.metin import sade_anahtar
 
 __all__ = ["HizSinirHatasi"]
 
@@ -101,6 +102,35 @@ def eksik_alanlar(tanim: AjanTanimi, taslak: dict[str, Any]) -> list[str]:
     return [alan for alan in tanim.zorunlu_alanlar if not taslak.get(alan)]
 
 
+def _nesneleri_birlestir(
+    nesneler: list[dict[str, Any]], gelenler: Sequence[Any], anahtar: str
+) -> list[dict[str, Any]]:
+    """Aynı işi anlatan kayıtları tek kayıtta toplar.
+
+    Kullanıcı projeden ikinci kez bahsettiğinde ("Team To Do" / "Team ToDo")
+    ajan yeni bir çıktı açıyordu; biri linksiz, diğeri linkli iki satır
+    çıkıyordu. Başlık noktalama ve büyük/küçük harf farkından arındırılıp
+    karşılaştırılıyor, eşleşen kayıtların BOŞ alanları yeni bilgiyle
+    dolduruluyor — dolu bir alan ezilmiyor, ilk anlatılan korunuyor.
+    """
+    dizin = {sade_anahtar(nesne[anahtar]): sira for sira, nesne in enumerate(nesneler)}
+
+    for gelen in gelenler:
+        veri = gelen.model_dump()
+        gelen_anahtar = sade_anahtar(veri[anahtar])
+        sira = dizin.get(gelen_anahtar)
+        if sira is None:
+            dizin[gelen_anahtar] = len(nesneler)
+            nesneler.append(veri)
+            continue
+        mevcut = nesneler[sira]
+        for alan_adi, deger in veri.items():
+            if deger and not mevcut.get(alan_adi):
+                mevcut[alan_adi] = deger
+
+    return nesneler
+
+
 def birlestir(tanim: AjanTanimi, taslak: dict[str, Any], cikarim: BaseModel) -> dict[str, Any]:
     """Yeni çıkarımı mevcut taslağa ekler — boş gelen alan eskisini silmez."""
     yeni = dict(taslak)
@@ -118,14 +148,9 @@ def birlestir(tanim: AjanTanimi, taslak: dict[str, Any], cikarim: BaseModel) -> 
         yeni[alan] = mevcut
 
     for alan, anahtar in tanim.nesne_listeleri:
-        nesneler = list(yeni.get(alan) or [])
-        gorulen = {n[anahtar].casefold() for n in nesneler}
-        for nesne in getattr(cikarim, alan, []) or []:
-            deger = getattr(nesne, anahtar)
-            if deger.casefold() not in gorulen:
-                nesneler.append(nesne.model_dump())
-                gorulen.add(deger.casefold())
-        yeni[alan] = nesneler
+        yeni[alan] = _nesneleri_birlestir(
+            list(yeni.get(alan) or []), getattr(cikarim, alan, []) or [], anahtar
+        )
 
     return yeni
 

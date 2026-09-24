@@ -21,7 +21,7 @@ geçiyor. İkisi birlikte olmazsa eski kayıtlar yeni yazımla eşleşmez.
 
 from __future__ import annotations
 
-import unicodedata
+from app.core.metin import turkce_kucult
 
 # Kullanıcı "fark etmez / uzaktan" dediğinde saklanan değer.
 # Genç için "her şehirden çalışırım", kurum için "şehir filtresi uygulama".
@@ -111,16 +111,6 @@ SEHIRLER: tuple[str, ...] = (
     "Yozgat",
     "Zonguldak",
 )
-
-# Türkçe'de büyük/küçük eşleniği ASCII'den farklı olan iki harf.
-_BUYUK_ESLEME = str.maketrans({"I": "ı", "İ": "i"})
-_BIRLESEN_NOKTA = "̇"
-
-
-def turkce_kucult(metin: str) -> str:
-    """Türkçe'ye duyarlı küçültme: I→ı, İ→i, sonra normal küçültme."""
-    hazir = unicodedata.normalize("NFC", metin).translate(_BUYUK_ESLEME)
-    return hazir.lower().replace(_BIRLESEN_NOKTA, "")
 
 
 def sehir_anahtari(sehir: str) -> str:

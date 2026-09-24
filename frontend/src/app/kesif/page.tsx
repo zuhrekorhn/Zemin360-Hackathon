@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import {
   ApiHatasi,
   type KartTaslagi,
+  type SomutCiktiTaslagi,
   type KullaniciGirdisi,
   type YetenekKartiYaniti,
   kartOnayla,
@@ -186,12 +187,16 @@ export default function KesifSayfasi() {
         <TaslakBolumu
           taslak={taslak}
           bekleniyor={bekleniyor}
-          onOnayla={async (kullanici) => {
+          onOnayla={async (kullanici, duzeltilmisTaslak) => {
             if (!oturumId) return;
             setHata(null);
             setBekleniyor(true);
             try {
-              const kayitli = await kartOnayla(oturumId, kullanici);
+              const kayitli = await kartOnayla(
+                oturumId,
+                kullanici,
+                duzeltilmisTaslak,
+              );
               // Kanıt ekleme ekranı kart kimliğiyle açılıyor; giriş akışı
               // olmadığı için kimlik tarayıcıda hatırlanıyor.
               kimlikYaz("kart", kayitli.id);
@@ -226,8 +231,14 @@ function TaslakBolumu({
 }: {
   taslak: KartTaslagi;
   bekleniyor: boolean;
-  onOnayla: (kullanici: KullaniciGirdisi) => void;
+  onOnayla: (
+    kullanici: KullaniciGirdisi,
+    duzeltilmisTaslak: KartTaslagi,
+  ) => void;
 }) {
+  // Sohbetten çıkan taslak üzerinde kullanıcı son sözü söylesin: ajan aynı işi
+  // iki kez yazmış ya da bir şeyi yanlış anlamış olabilir.
+  const [ciktilar, setCiktilar] = useState(taslak.somut_ciktilar);
   const [ad, setAd] = useState("");
   const [email, setEmail] = useState("");
   const [sehir, setSehir] = useState("");
@@ -242,7 +253,20 @@ function TaslakBolumu({
         <p className="text-sm text-pretty text-muted-foreground">
           Sohbetten çıkan kart bu. Gözden geçir, doğruysa aşağıdan onayla.
         </p>
-        <TaslakKarti taslak={taslak} />
+        <TaslakKarti
+          taslak={{ ...taslak, somut_ciktilar: ciktilar }}
+          duzenlenebilir
+          onCiktiDegis={(sira, alan, deger) =>
+            setCiktilar((oncekiler) =>
+              oncekiler.map((cikti, i) =>
+                i === sira ? { ...cikti, [alan]: deger || null } : cikti,
+              ),
+            )
+          }
+          onCiktiSil={(sira) =>
+            setCiktilar((oncekiler) => oncekiler.filter((_, i) => i !== sira))
+          }
+        />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -261,12 +285,15 @@ function TaslakBolumu({
           onSubmit={(olay) => {
             olay.preventDefault();
             if (bekleniyor) return;
-            onOnayla({
-              ad: ad.trim(),
-              email: email.trim(),
-              sehir: sehir.trim() || null,
-              musaitlik: musaitlik || null,
-            });
+            onOnayla(
+              {
+                ad: ad.trim(),
+                email: email.trim(),
+                sehir: sehir || null,
+                musaitlik: musaitlik || null,
+              },
+              { ...taslak, somut_ciktilar: ciktilar },
+            );
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">
@@ -340,7 +367,22 @@ function TaslakBolumu({
 
 /* --- Kart gösterimleri ---------------------------------------------------- */
 
-function TaslakKarti({ taslak }: { taslak: KartTaslagi }) {
+function TaslakKarti({
+  taslak,
+  duzenlenebilir = false,
+  onCiktiDegis,
+  onCiktiSil,
+}: {
+  taslak: KartTaslagi;
+  /** Onaydan önce kullanıcı çıktıları düzeltebilsin diye. */
+  duzenlenebilir?: boolean;
+  onCiktiDegis?: (
+    sira: number,
+    alan: keyof SomutCiktiTaslagi,
+    deger: string,
+  ) => void;
+  onCiktiSil?: (sira: number) => void;
+}) {
   return (
     <article className="rounded-sm border border-kenar bg-card">
       <dl className="grid gap-px bg-kenar sm:grid-cols-2">
@@ -368,23 +410,80 @@ function TaslakKarti({ taslak }: { taslak: KartTaslagi }) {
           </p>
         ) : (
           <ul className="mt-2 flex flex-col gap-3">
-            {taslak.somut_ciktilar.map((cikti) => (
-              <li key={cikti.baslik} className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium break-words">
-                  {cikti.baslik}
-                </span>
-                {cikti.aciklama ? (
-                  <span className="text-sm text-pretty text-muted-foreground">
-                    {cikti.aciklama}
+            {taslak.somut_ciktilar.map((cikti, sira) =>
+              duzenlenebilir && onCiktiDegis && onCiktiSil ? (
+                <li
+                  key={sira}
+                  className="flex flex-col gap-2 rounded-sm border border-kenar px-3 py-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <label
+                      htmlFor={`cikti-baslik-${sira}`}
+                      className="text-xs text-muted-foreground"
+                    >
+                      Başlık
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCiktiSil(sira)}
+                    >
+                      Çıkar
+                    </Button>
+                  </div>
+                  <Input
+                    id={`cikti-baslik-${sira}`}
+                    value={cikti.baslik}
+                    onChange={(olay) =>
+                      onCiktiDegis(sira, "baslik", olay.target.value)
+                    }
+                  />
+                  <label
+                    htmlFor={`cikti-aciklama-${sira}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Açıklama
+                  </label>
+                  <Input
+                    id={`cikti-aciklama-${sira}`}
+                    value={cikti.aciklama ?? ""}
+                    onChange={(olay) =>
+                      onCiktiDegis(sira, "aciklama", olay.target.value)
+                    }
+                  />
+                  <label
+                    htmlFor={`cikti-link-${sira}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Kanıt linki
+                  </label>
+                  <Input
+                    id={`cikti-link-${sira}`}
+                    value={cikti.kanit_linki ?? ""}
+                    onChange={(olay) =>
+                      onCiktiDegis(sira, "kanit_linki", olay.target.value)
+                    }
+                  />
+                </li>
+              ) : (
+                <li key={sira} className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium break-words">
+                    {cikti.baslik}
                   </span>
-                ) : null}
-                {cikti.kanit_linki ? (
-                  <span className="font-mono text-xs break-all text-baglanti">
-                    {cikti.kanit_linki}
-                  </span>
-                ) : null}
-              </li>
-            ))}
+                  {cikti.aciklama ? (
+                    <span className="text-sm text-pretty text-muted-foreground">
+                      {cikti.aciklama}
+                    </span>
+                  ) : null}
+                  {cikti.kanit_linki ? (
+                    <span className="font-mono text-xs break-all text-baglanti">
+                      {cikti.kanit_linki}
+                    </span>
+                  ) : null}
+                </li>
+              ),
+            )}
           </ul>
         )}
       </div>
