@@ -25,12 +25,13 @@ from typing import Protocol
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.calisma_modeli import sehir_eslesmeli_mi
 from app.core.llm import llm_hatasini_cevir, model, yedekli_zincir
-from app.core.sehir import UZAKTAN, sehir_filtresi_gerekli_mi, sehir_kanonik
+from app.core.sehir import sehir_kanonik
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
@@ -197,13 +198,22 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
         # `siralayip_ele` tarafında duruyor (tek doğruluk kaynağı orası).
         .where(uzaklik <= 1.0 - BENZERLIK_ALT_SINIRI)
     )
+    # Konum ve çalışma modeli ayrı filtreler:
+    #  - İhtiyaç "uzaktan" ise şehrin hükmü yok, modeli kabul etmesi yeter.
+    #  - "İş yerinde" / "hibrit" ise hem şehir eşleşmeli hem model kabul edilmeli.
     # Şehir karşılaştırması kanonik yazım üzerinden (app/core/sehir.py):
     # kayıtlar da aynı fonksiyondan geçtiği için düz eşitlik güvenli.
-    # "Uzaktan" diyen genç her şehir tercihine uyar — uzaktan çalışabilen
-    # birini şehir yüzünden elemek, filtrenin amacına ters.
-    if sehir_filtresi_gerekli_mi(ihtiyac.sehir_tercihi):
-        istenen = sehir_kanonik(ihtiyac.sehir_tercihi)
-        sorgu = sorgu.where(Kullanici.sehir.in_([istenen, UZAKTAN]))
+    if ihtiyac.sehir_tercihi and sehir_eslesmeli_mi(ihtiyac.calisma_modeli):
+        sorgu = sorgu.where(Kullanici.sehir == sehir_kanonik(ihtiyac.sehir_tercihi))
+    if ihtiyac.calisma_modeli:
+        # Modelini hiç belirtmemiş kart elenmiyor: bilinmeyeni "hayır" saymak,
+        # şehir yazımında düştüğümüz sessiz eleme hatasının aynısı olurdu.
+        sorgu = sorgu.where(
+            or_(
+                func.cardinality(Kullanici.calisma_modelleri) == 0,
+                Kullanici.calisma_modelleri.any(ihtiyac.calisma_modeli),
+            )
+        )
     if ihtiyac.musaitlik_tercihi:
         sorgu = sorgu.where(Kullanici.musaitlik == ihtiyac.musaitlik_tercihi)
 

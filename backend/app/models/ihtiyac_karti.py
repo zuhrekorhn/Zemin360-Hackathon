@@ -27,6 +27,8 @@ class IhtiyacKarti(UUIDPrimaryKeyMixin, Base):
     kisitlar: Mapped[str | None] = mapped_column(Text)
     # Nullable: Eşleştirme'nin sert filtresi SQL'den çalışsın diye ayrı alanlar (data-schema.md)
     sehir_tercihi: Mapped[str | None] = mapped_column(String)
+    # Tek seçim: iş nerede yapılacak (is_yerinde | hibrit | uzaktan).
+    calisma_modeli: Mapped[str | None] = mapped_column(String)
     musaitlik_tercihi: Mapped[str | None] = mapped_column(String)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM))
     # Eşleştirme "kurumun en son kartı"nı bundan bulur; UUID kronolojik değil

@@ -16,8 +16,11 @@ class IhtiyacTaslagi(BaseModel):
     problem_tanimi: str | None = None
     basari_kriteri: str | None = None
     kisitlar: str | None = None
-    # Eşleştirme'nin sert filtresi bu iki alandan çalışıyor (data-schema.md)
+    # Eşleştirme'nin sert filtreleri bu alanlardan çalışıyor (data-schema.md)
     sehir_tercihi: str | None = None
+    # Tek seçim: is_yerinde | hibrit | uzaktan. "Uzaktan" seçilirse şehir
+    # filtresi uygulanmaz.
+    calisma_modeli: str | None = None
     musaitlik_tercihi: str | None = None
 
 
@@ -75,6 +78,7 @@ class IhtiyacKartiYaniti(BaseModel):
     basari_kriteri: str | None
     kisitlar: str | None
     sehir_tercihi: str | None
+    calisma_modeli: str | None
     musaitlik_tercihi: str | None
     embedding_var: bool
     kurum: KurumYaniti

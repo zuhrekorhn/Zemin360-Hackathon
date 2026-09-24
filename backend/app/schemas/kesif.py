@@ -45,7 +45,12 @@ class KullaniciGirdisi(BaseModel):
 
     ad: str
     email: EmailStr
-    sehir: str | None = None
+    # Şehir artık zorunlu: eşleştirmenin sert filtresi buna bakıyor ve
+    # "belirtilmedi" bir yer değil (bkz. app/core/sehir.py).
+    sehir: str
+    # Kabul ettiği çalışma modelleri (is_yerinde | hibrit | uzaktan).
+    # Müsaitlikten ayrı: o çalışma tipi, bu çalışma yeri.
+    calisma_modelleri: list[str] = Field(default_factory=list)
     musaitlik: str | None = None
 
 

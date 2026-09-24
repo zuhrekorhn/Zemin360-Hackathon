@@ -14,7 +14,7 @@ spec'te böyle bir dal tanımlanmamış. Tek dal: eksik alan takibi (2 tur).
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Any
+from typing import Any, Literal
 
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.base import BaseCheckpointSaver
@@ -61,7 +61,11 @@ Alanlar:
   Sayı, oran veya süre içermeli. Kurum ölçülebilir bir şey söylemediyse boş bırak
   ve takip sorusunda bunu sor.
 - kisitlar: bütçe, süre, mevzuat, ekip gibi serbest metin kısıtlar.
-- sehir_tercihi: yalnızca belirli bir şehir şartı varsa (yoksa boş).
+- sehir_tercihi: işin yapılacağı şehir, yalnızca bir şehir şartı varsa (yoksa boş).
+- calisma_modeli: işin nerede yapılacağı — "is_yerinde", "hibrit" veya
+  "uzaktan" değerlerinden biri. Kurum "ofiste olsun", "haftada iki gün gelsin",
+  "uzaktan da olur" gibi bir şey söylediyse doldur; söylemediyse boş bırak.
+  Bu, müsaitlikten (tam/yarı zamanlı) FARKLI bir şey — karıştırma.
 - musaitlik_tercihi: tam zamanlı / yarı zamanlı / proje bazlı / staj gibi bir
   beklenti söylendiyse (yoksa boş).
 """
@@ -92,6 +96,10 @@ class IhtiyacCikarimi(BaseModel):
     kisitlar: str | None = Field(
         default=None, description="Bütçe, süre, mevzuat, ekip gibi kısıtlar"
     )
+    calisma_modeli: Literal["is_yerinde", "hibrit", "uzaktan"] | None = Field(
+        default=None,
+        description="İşin nerede yapılacağı; müsaitlikle (çalışma tipi) karıştırma",
+    )
     sehir_tercihi: str | None = Field(
         default=None, description="Sadece belirli bir şehir şartı varsa"
     )
@@ -121,6 +129,7 @@ TANIMLAMA = motor.AjanTanimi(
         "basari_kriteri",
         "kisitlar",
         "sehir_tercihi",
+        "calisma_modeli",
         "musaitlik_tercihi",
     ),
     zorunlu_alanlar=ZORUNLU_ALANLAR,

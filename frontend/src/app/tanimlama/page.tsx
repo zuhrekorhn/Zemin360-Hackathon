@@ -23,6 +23,8 @@ import {
   tanimlamaCevap,
 } from "@/lib/api";
 import {
+  CALISMA_MODELI_ETIKETLERI,
+  CALISMA_MODELLERI,
   MUSAITLIK_ETIKETLERI,
   SEHIR_SECENEKLERI,
   etiketle,
@@ -236,6 +238,10 @@ function TaslakBolumu({
   const [aranilanSehir, setAranilanSehir] = useState(
     taslak.sehir_tercihi ?? "",
   );
+  // Tek seçim: iş nerede yapılacak. "Uzaktan" ise şehir filtresi uygulanmaz.
+  const [calismaModeli, setCalismaModeli] = useState(
+    taslak.calisma_modeli ?? "",
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -272,7 +278,11 @@ function TaslakBolumu({
                 sehir: sehir || null,
                 iletisim_email: email.trim(),
               },
-              { ...taslak, sehir_tercihi: aranilanSehir || null },
+              {
+                ...taslak,
+                sehir_tercihi: aranilanSehir || null,
+                calisma_modeli: calismaModeli || null,
+              },
             );
           }}
         >
@@ -348,11 +358,31 @@ function TaslakBolumu({
             </FormAlani>
           </div>
 
+          <FormAlani
+            etiket="Çalışma modeli"
+            htmlFor="calisma-modeli"
+            istegeBagli
+          >
+            <select
+              id="calisma-modeli"
+              value={calismaModeli}
+              onChange={(olay) => setCalismaModeli(olay.target.value)}
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+            >
+              <option value="">Belirtmek istemiyorum</option>
+              {CALISMA_MODELLERI.map((model) => (
+                <option key={model.deger} value={model.deger}>
+                  {model.etiket}
+                </option>
+              ))}
+            </select>
+          </FormAlani>
+
           <p className="text-xs text-pretty text-muted-foreground">
             <span className="font-medium">Kurumun şehri</span> sizin
             bulunduğunuz yer; <span className="font-medium">aranan şehir</span>{" "}
-            gencin nerede olmasını istediğiniz. “Uzaktan / fark etmez”
-            seçerseniz şehir filtresi hiç uygulanmaz.
+            gencin nerede olmasını istediğiniz. Çalışma modeli “Uzaktan” ise
+            şehir filtresi hiç uygulanmaz.
           </p>
 
           <Button
@@ -413,6 +443,12 @@ function TaslakKarti({
           <dt className="text-xs text-muted-foreground">Aranan şehir</dt>
           <dd className="text-sm break-words">
             {sehirEtiketi(taslak.sehir_tercihi)}
+          </dd>
+        </div>
+        <div className="bg-card px-4 py-3">
+          <dt className="text-xs text-muted-foreground">Çalışma modeli</dt>
+          <dd className="text-sm break-words">
+            {etiketle(CALISMA_MODELI_ETIKETLERI, taslak.calisma_modeli)}
           </dd>
         </div>
         <div className="bg-card px-4 py-3">

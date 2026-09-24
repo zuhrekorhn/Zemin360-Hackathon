@@ -7,7 +7,19 @@
  * değerleri üretsin diye buradan geliyor.
  */
 
-export const UZAKTAN = "uzaktan";
+/**
+ * Çalışma modeli — konumdan AYRI bir alan (LinkedIn/Kariyer.net deseni).
+ * Müsaitlik ise çalışma tipi (tam/yarı zamanlı); ikisi karıştırılmamalı.
+ */
+export const CALISMA_MODELI_ETIKETLERI: Record<string, string> = {
+  is_yerinde: "İş yerinde",
+  hibrit: "Hibrit",
+  uzaktan: "Uzaktan",
+};
+
+export const CALISMA_MODELLERI = Object.entries(CALISMA_MODELI_ETIKETLERI).map(
+  ([deger, etiket]) => ({ deger, etiket }),
+);
 
 export const SEHIRLER = [
   "Adana",
@@ -93,10 +105,9 @@ export const SEHIRLER = [
   "Zonguldak",
 ] as const;
 
-/** Açılır listede gösterilen seçenekler — "fark etmez" en başta. */
+/** Açılır liste: yalnızca iller. "Uzaktan" burada değil, çalışma modelinde. */
 export const SEHIR_SECENEKLERI = [
-  { deger: "", etiket: "Belirtmek istemiyorum" },
-  { deger: UZAKTAN, etiket: "Uzaktan / fark etmez" },
+  { deger: "", etiket: "Seçiniz" },
   ...SEHIRLER.map((sehir) => ({ deger: sehir, etiket: sehir })),
 ];
 
@@ -142,8 +153,7 @@ export function etiketle(
   return sozluk[deger] ?? deger;
 }
 
-/** Şehir alanı "uzaktan" ise ekranda kod değil cümle görünsün. */
+/** Şehir zaten kanonik yazımda saklanıyor; boşsa tire. */
 export function sehirEtiketi(sehir: string | null | undefined): string {
-  if (!sehir) return "—";
-  return sehir === UZAKTAN ? "Uzaktan / fark etmez" : sehir;
+  return sehir || "—";
 }

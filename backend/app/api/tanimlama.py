@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.api.ihtiyac_kartlari import kart_yaniti
+from app.core import calisma_modeli
 from app.core.embeddings import embedding_uret, ihtiyac_temsil_metni
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
@@ -105,6 +106,9 @@ async def kart_onayla(
         basari_kriteri=taslak.basari_kriteri,
         kisitlar=taslak.kisitlar,
         sehir_tercihi=sehir_kanonik(taslak.sehir_tercihi),
+        calisma_modeli=(
+            taslak.calisma_modeli if calisma_modeli.gecerli_mi(taslak.calisma_modeli) else None
+        ),
         musaitlik_tercihi=taslak.musaitlik_tercihi,
     )
     oturum.add(kart)

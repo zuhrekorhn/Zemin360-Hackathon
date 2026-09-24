@@ -5,13 +5,9 @@ hesaplanmadan eliyor. Testler gerçek veritabanında görülen vakayı
 (`'istanbul'` ile `'İstanbul'`) sabitliyor.
 """
 
-import pytest
-
 from app.core.sehir import (
     SEHIRLER,
-    UZAKTAN,
     sehir_anahtari,
-    sehir_filtresi_gerekli_mi,
     sehir_kanonik,
     sehirler_esit_mi,
     turkce_kucult,
@@ -70,24 +66,10 @@ def test_bos_deger_none_olur():
     assert sehir_kanonik("   ") is None
 
 
-@pytest.mark.parametrize("girdi", ["uzaktan", "Uzaktan", "fark etmez", "remote", "Her yerden"])
-def test_uzaktan_esanlamlilari_tek_degere_iniyor(girdi):
-    """Sohbetten serbest metin de gelebiliyor (Tanımlama tercihi konuşmadan çıkarıyor)."""
-    assert sehir_kanonik(girdi) == UZAKTAN
-
-
-def test_uzaktan_secilince_sehir_filtresi_uygulanmaz():
-    assert sehir_filtresi_gerekli_mi(UZAKTAN) is False
-    assert sehir_filtresi_gerekli_mi("fark etmez") is False
-
-
-def test_sehir_belirtilmezse_filtre_uygulanmaz():
-    assert sehir_filtresi_gerekli_mi(None) is False
-    assert sehir_filtresi_gerekli_mi("") is False
-
-
-def test_gercek_sehir_filtre_gerektirir():
-    assert sehir_filtresi_gerekli_mi("İstanbul") is True
+def test_uzaktan_bir_sehir_degil():
+    """Konum ve çalışma modeli ayrı alanlar (bkz. app/core/calisma_modeli.py)."""
+    assert sehir_kanonik("uzaktan") == "uzaktan"  # il listesinde yok, metin olarak kalır
+    assert "uzaktan" not in [sehir_anahtari(s) for s in SEHIRLER]
 
 
 def test_anahtar_bosluklari_sadelestirir():

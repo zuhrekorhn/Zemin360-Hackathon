@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.kesif import HizSinirHatasi, kullanici_mesaji
 from app.api.yetenek_kartlari import kart_yaniti
+from app.core import calisma_modeli
 from app.core.embeddings import embedding_uret, yetenek_temsil_metni
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
@@ -144,6 +145,7 @@ async def _kullaniciyi_bul_veya_olustur(oturum: AsyncSession, istek: KartOnaylaI
             ad=girdi.ad,
             email=str(girdi.email),
             sehir=sehir_kanonik(girdi.sehir),
+            calisma_modelleri=calisma_modeli.temizle(girdi.calisma_modelleri),
             musaitlik=girdi.musaitlik,
         )
         oturum.add(kullanici)

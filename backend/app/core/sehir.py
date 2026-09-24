@@ -17,15 +17,14 @@ artık kalan birleşen noktanın (U+0307) temizliği.
 
 Kayıt anında değer kanonik yazıma çevriliyor; karşılaştırma da aynı fonksiyondan
 geçiyor. İkisi birlikte olmazsa eski kayıtlar yeni yazımla eşleşmez.
+
+Burada YALNIZCA konum var. "Uzaktan" bir şehir değil, bir çalışma modeli —
+`app/core/calisma_modeli.py` içinde duruyor.
 """
 
 from __future__ import annotations
 
 from app.core.metin import turkce_kucult
-
-# Kullanıcı "fark etmez / uzaktan" dediğinde saklanan değer.
-# Genç için "her şehirden çalışırım", kurum için "şehir filtresi uygulama".
-UZAKTAN = "uzaktan"
 
 # 81 il, kanonik yazımıyla.
 SEHIRLER: tuple[str, ...] = (
@@ -152,23 +151,6 @@ def _ascii_anahtari(sehir: str) -> str:
 _ANAHTARLAR = {sehir_anahtari(sehir): sehir for sehir in SEHIRLER}
 _ASCII_ANAHTARLAR = {_ascii_anahtari(sehir): sehir for sehir in SEHIRLER}
 
-# Sohbetten gelen serbest metin de aynı kovaya düşsün: Tanımlama Ajanı
-# şehir tercihini konuşmadan çıkarıyor, kullanıcı "uzaktan" demiş olabilir.
-_UZAKTAN_ESANLAMLILARI = frozenset(
-    {
-        "uzaktan",
-        "uzak",
-        "remote",
-        "fark etmez",
-        "farketmez",
-        "farketmiyor",
-        "fark etmiyor",
-        "her yerden",
-        "online",
-        "hibrit degil",
-    }
-)
-
 
 def sehir_kanonik(sehir: str | None) -> str | None:
     """Girilen şehri kanonik yazıma çevirir.
@@ -183,8 +165,6 @@ def sehir_kanonik(sehir: str | None) -> str | None:
     if not kirpik:
         return None
     anahtar = sehir_anahtari(kirpik)
-    if anahtar in _UZAKTAN_ESANLAMLILARI:
-        return UZAKTAN
     if anahtar in _ANAHTARLAR:
         return _ANAHTARLAR[anahtar]
     return _ASCII_ANAHTARLAR.get(_ascii_anahtari(kirpik), kirpik)
@@ -195,9 +175,3 @@ def sehirler_esit_mi(birinci: str | None, ikinci: str | None) -> bool:
     if birinci is None or ikinci is None:
         return False
     return sehir_anahtari(birinci) == sehir_anahtari(ikinci)
-
-
-def sehir_filtresi_gerekli_mi(sehir_tercihi: str | None) -> bool:
-    """Kurum "uzaktan / fark etmez" dediyse şehir filtresi uygulanmaz."""
-    kanonik = sehir_kanonik(sehir_tercihi)
-    return kanonik is not None and kanonik != UZAKTAN

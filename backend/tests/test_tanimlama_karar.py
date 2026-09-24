@@ -32,6 +32,7 @@ def test_bos_taslak_ihtiyac_alanlarini_icerir():
         "basari_kriteri",
         "kisitlar",
         "sehir_tercihi",
+        "calisma_modeli",
         "musaitlik_tercihi",
     }
 
@@ -103,3 +104,11 @@ def test_basari_kriteri_sorusu_degismedi():
     from app.agents.tanimlama import YEDEK_SORULAR
 
     assert "Sayıyla ifade edebilir" in YEDEK_SORULAR["basari_kriteri"]
+
+
+def test_calisma_modeli_musaitlikten_ayri_soruluyor():
+    """İkisi farklı şey: biri işin nerede, diğeri ne kadar süreyle yapıldığı."""
+    from app.agents.tanimlama import SISTEM_TALIMATI
+
+    assert "calisma_modeli" in SISTEM_TALIMATI
+    assert "müsaitlikten (tam/yarı zamanlı) FARKLI" in SISTEM_TALIMATI

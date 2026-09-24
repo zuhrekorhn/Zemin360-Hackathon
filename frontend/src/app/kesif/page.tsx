@@ -24,6 +24,7 @@ import {
   sohbetCevap,
 } from "@/lib/api";
 import {
+  CALISMA_MODELLERI,
   DENEYIM_ETIKETLERI,
   MUSAITLIK_SECENEKLERI,
   SEHIR_SECENEKLERI,
@@ -242,6 +243,8 @@ function TaslakBolumu({
   const [ad, setAd] = useState("");
   const [email, setEmail] = useState("");
   const [sehir, setSehir] = useState("");
+  // Kabul ettiği çalışma modelleri — çoklu. Konumdan ayrı bir şey.
+  const [calismaModelleri, setCalismaModelleri] = useState<string[]>([]);
   const [musaitlik, setMusaitlik] = useState("");
 
   return (
@@ -289,7 +292,8 @@ function TaslakBolumu({
               {
                 ad: ad.trim(),
                 email: email.trim(),
-                sehir: sehir || null,
+                sehir,
+                calisma_modelleri: calismaModelleri,
                 musaitlik: musaitlik || null,
               },
               { ...taslak, somut_ciktilar: ciktilar },
@@ -318,12 +322,13 @@ function TaslakBolumu({
               />
             </FormAlani>
 
-            <FormAlani etiket="Şehir" htmlFor="sehir" istegeBagli>
+            <FormAlani etiket="Şehir" htmlFor="sehir">
               {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
                   bozuyordu (bkz. backend/app/core/sehir.py). */}
               <select
                 id="sehir"
                 value={sehir}
+                required
                 onChange={(olay) => setSehir(olay.target.value)}
                 className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
               >
@@ -334,6 +339,47 @@ function TaslakBolumu({
                 ))}
               </select>
             </FormAlani>
+
+            <fieldset className="flex flex-col gap-1.5 sm:col-span-2">
+              <legend className="text-sm font-medium">
+                Çalışma modeli
+                <span className="ml-1 font-normal text-muted-foreground">
+                  (kabul ettiklerini işaretle)
+                </span>
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {CALISMA_MODELLERI.map((model) => {
+                  const secili = calismaModelleri.includes(model.deger);
+                  return (
+                    <label
+                      key={model.deger}
+                      className={
+                        secili
+                          ? "flex cursor-pointer items-center gap-2 rounded-sm border border-baglanti bg-muted px-3 py-2 text-sm"
+                          : "flex cursor-pointer items-center gap-2 rounded-sm border border-kenar bg-card px-3 py-2 text-sm"
+                      }
+                    >
+                      <input
+                        type="checkbox"
+                        checked={secili}
+                        onChange={() =>
+                          setCalismaModelleri((oncekiler) =>
+                            secili
+                              ? oncekiler.filter((m) => m !== model.deger)
+                              : [...oncekiler, model.deger],
+                          )
+                        }
+                        className="accent-baglanti"
+                      />
+                      {model.etiket}
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Nerede çalışacağın. Müsaitlik ayrı bir şey: ne kadar süreyle.
+              </p>
+            </fieldset>
 
             <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istegeBagli>
               <select

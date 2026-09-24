@@ -87,7 +87,10 @@ export type SohbetYaniti = {
 export type KullaniciGirdisi = {
   ad: string;
   email: string;
-  sehir?: string | null;
+  /** Zorunlu: eşleştirmenin sert filtresi buna bakıyor. */
+  sehir: string;
+  /** Kabul ettiği çalışma modelleri — çoklu seçim. */
+  calisma_modelleri: string[];
   musaitlik?: string | null;
 };
 
@@ -164,6 +167,8 @@ export type IhtiyacTaslagi = {
   basari_kriteri: string | null;
   kisitlar: string | null;
   sehir_tercihi: string | null;
+  /** Tek seçim: is_yerinde | hibrit | uzaktan. */
+  calisma_modeli: string | null;
   musaitlik_tercihi: string | null;
 };
 
@@ -196,6 +201,7 @@ export type IhtiyacKartiYaniti = {
   basari_kriteri: string | null;
   kisitlar: string | null;
   sehir_tercihi: string | null;
+  calisma_modeli: string | null;
   musaitlik_tercihi: string | null;
   embedding_var: boolean;
   kurum: KurumYaniti;
