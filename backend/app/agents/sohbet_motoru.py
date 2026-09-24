@@ -36,6 +36,11 @@ __all__ = ["HizSinirHatasi"]
 # Eksik alan için en fazla kaç tur takip sorusu sorulur (agent-specs.md § 1.2;
 # Tanımlama da aynı sınırı kullanır).
 MAKS_TAKIP_TURU = 2
+# Zorunlu alanlar için ayrı ve daha yüksek bir tavan: eksik alanla kart
+# kapatmak, sohbeti bir tur uzatmaktan kötü (boş "sektör ilgisi" eşleştirmede
+# doğrudan skora yansıyor). Yine de sonsuz döngü olmasın diye bir sınır var;
+# tavana gelinirse alanlar yer tutucuyla doldurulup kart kapanıyor.
+MAKS_ZORUNLU_TURU = 6
 
 
 class SohbetDurumu(TypedDict, total=False):
@@ -64,6 +69,12 @@ class AjanTanimi:
     # (alan adı, tekilleştirme anahtarı) — örn. ("somut_ciktilar", "baslik")
     nesne_listeleri: tuple[tuple[str, str], ...] = ()
     zorunlu_alanlar: tuple[str, ...] = ()
+    # Zorunlu alan eksikken kaç tur soru sorulabilir (ajana göre değişir).
+    maks_zorunlu_turu: int = MAKS_ZORUNLU_TURU
+    # Ajana özel eksikler: (anahtar, soru) listesi. Zorunlu alanlar
+    # tamamlandıktan SONRA sorulur — örn. Keşif'te her çıktının sayısal
+    # sonucu ve kullanıcının kendi payı.
+    ek_eksikler: Callable[[dict[str, Any]], list[tuple[str, str]]] | None = None
     # LLM takip sorusu üretmezse kullanılan sabit metinler
     yedek_sorular: Mapping[str, str] = field(default_factory=dict)
     # Takip soruları bittikten sonra çalışan, ajana özel dal. Bir durum
@@ -196,29 +207,42 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
     return cikar
 
 
+def _soru_durumu(soru: str, takip_turu: int) -> dict[str, Any]:
+    return {
+        "mesajlar": [AIMessage(content=soru)],
+        "takip_turu": takip_turu + 1,
+        "sonraki_soru": soru,
+        "taslak_hazir": False,
+    }
+
+
 async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
     """Takip sorusu mu, ajana özel dal mı, yoksa taslak mı — tek karar noktası."""
     taslak = durum["taslak"]
     eksikler = eksik_alanlar(tanim, taslak)
     takip_turu = durum.get("takip_turu", 0)
 
-    # 1) Zorunlu alan eksikse, 2 turu aşmadan takip sorusu sor.
-    if eksikler and takip_turu < MAKS_TAKIP_TURU:
+    # 1) Zorunlu alan eksikse sormaya devam et. Kartı eksik kapatmak son
+    #    çare; tavan yalnızca sonsuz döngüyü engelliyor.
+    if eksikler and takip_turu < tanim.maks_zorunlu_turu:
         soru = durum.get("son_takip_sorusu") or tanim.yedek_sorular[eksikler[0]]
-        return {
-            "mesajlar": [AIMessage(content=soru)],
-            "takip_turu": takip_turu + 1,
-            "sonraki_soru": soru,
-            "taslak_hazir": False,
-        }
+        return _soru_durumu(soru, takip_turu)
 
-    # 2) Ajana özel dal (Keşif'te "hiç projem yok" zinciri; Tanımlama'da yok).
+    # 2) Ajana özel eksikler (Keşif'te çıktı başına ölçülebilir sonuç ve rol).
+    #    Zorunlu alanlardan sonra ve daha kısa bir tavanla soruluyor: bunlar
+    #    kartı güçlendirir ama olmadan da kart kurulabilir.
+    if tanim.ek_eksikler is not None and takip_turu < MAKS_TAKIP_TURU:
+        ekler = tanim.ek_eksikler(taslak)
+        if ekler:
+            return _soru_durumu(ekler[0][1], takip_turu)
+
+    # 3) Ajana özel dal (Keşif'te "hiç projem yok" zinciri; Tanımlama'da yok).
     if tanim.ek_dal is not None:
         ek = tanim.ek_dal(durum)
         if ek is not None:
             return ek
 
-    # 3) Taslak hazır.
+    # 4) Taslak hazır.
     son_taslak = tanim.tamamla(taslak) if tanim.tamamla else dict(taslak)
     return {"taslak": son_taslak, "sonraki_soru": None, "taslak_hazir": True}
 

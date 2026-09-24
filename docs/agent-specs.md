@@ -10,7 +10,7 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 
 **Nasıl sağlayacak:**
 1. Açık uçlu sorularla başlar, LLM function-calling ile cevabı JSON alanlarına döker.
-2. Boş alan kalırsa en fazla 2 tur takip sorusu sorar.
+2. Boş alan kalırsa takip sorusu sorar. **Zorunlu alanlar** (rol, deneyim, sektör ilgisi, araçlar) için sormaya devam eder — en fazla 6 tur, o da yalnızca sonsuz döngüye karşı; tavana gelinirse alanlar "belirtilmedi" ile doldurulur. Sebebi sahada görüldü: 2 turluk sınır dolduğunda kart `sektor_ilgi_alani` boş kaydedilmişti ve o alan embedding metnine girdiği için eşleştirme skorunu doğrudan düşürüyor. **Zorunlu olmayan ayrıntılar** (çıktı başına ölçülebilir sonuç ve kişinin kendi payı) eski sınırda kalır: en fazla 2 tur, kullanıcı bilmiyorsa ısrar edilmez. Tanımlama Ajanı 2 turda kapanmaya devam eder.
 3. Kart taslağını kullanıcıya gösterir, **onaylatır** (insan onayı zorunlu).
 4. **Edge case — "hiç projem yok":** somut çıktı alanı zorunlu değildir. Fallback soru zinciri ("okulda bir ödev, gönüllü bir iş var mı?") kullanılır; hâlâ yoksa kart `deneyim_seviyesi: "potansiyel"` etiketiyle oluşturulur ve Doğrulama Ajanı'nı atlayarak doğrudan Eşleştirme'ye gider.
 5. **Gizlilik:** iletişim bilgisi varsayılan olarak kuruma gösterilmez; sadece kart görünür, iki taraf da onaylayınca açılır.

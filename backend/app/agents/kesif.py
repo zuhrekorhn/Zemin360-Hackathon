@@ -66,6 +66,14 @@ Alanlar:
 - sektor_ilgi_alani: ilgilendiği sektörler.
 - araclar_teknolojiler: kullandığı araç/teknoloji/yöntemler (yazılım olmak zorunda değil).
 - somut_ciktilar: bitirdiği, sonucu olan işler. Kanıt linkini söylediyse ekle.
+  Her çıktı için iki şeyi de öğrenmeye çalış, ama tek seferde tek soru sor:
+  * olculebilir_sonuc: sayıyla anlatılabilen bir sonuç ("kaç kişi kullandı?",
+    "ne kadar zaman kazandırdı?", "kaç kayıt işliyor?").
+  * kendi_rolu: ekip işiyse kullanıcının kendi payı ("hangi kısmını sen yaptın?").
+  Kullanıcı bilmiyorsa ya da yoksa ISRAR ETME, boş bırak. Sayı UYDURMA.
+
+Aynı işten ikinci kez bahsedilirse YENİ bir çıktı açma; aynı başlıkla yeniden
+döndür, eksik alanları doldur.
 """
 
 YEDEK_SORULAR = {
@@ -77,10 +85,32 @@ YEDEK_SORULAR = {
 
 
 class SomutCiktiTaslak(BaseModel):
+    """Bir somut çıktı.
+
+    `olculebilir_sonuc` ve `kendi_rolu` Doğrulama Ajanı'nın rubriğiyle birebir
+    hizalı (agent-specs.md § 4: "ölçülebilir sonuç" ve "rol netliği"). Keşif
+    bunları sormazsa rubrik puanlayacak bir şey bulamıyor — gerçek bir kart
+    bu yüzden 0/3 ve 1/3 almıştı.
+    """
+
     baslik: str = Field(description="Kısa başlık, örn. 'Mahalle kütüphanesi ödünç takip sistemi'")
     aciklama: str | None = Field(
         default=None,
         description="Ne yaptığı ve ortaya ne çıktığı, kullanıcının anlattığı kadarıyla",
+    )
+    olculebilir_sonuc: str | None = Field(
+        default=None,
+        description=(
+            "Sayı, oran ya da süre içeren sonuç — kullanıcı söylediyse. "
+            "Örn. '400 kitap ve 120 üye takip ediliyor'. Uydurma."
+        ),
+    )
+    kendi_rolu: str | None = Field(
+        default=None,
+        description=(
+            "Kullanıcının bu işteki kendi payı, kendi ifadesiyle. "
+            "Örn. 'backend'i ben yazdım, tasarımı arkadaşım yaptı'. Uydurma."
+        ),
     )
     kanit_linki: str | None = Field(default=None, description="Kullanıcı bir link verdiyse")
 
@@ -132,11 +162,57 @@ def _fallback_dali(durum: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
+    """Çıktı başına eksik olan ölçüt/rol bilgisi için takip soruları.
+
+    Zorunlu alan değiller: kullanıcı bilmiyorsa kart yine kurulur. Ama
+    sorulmazsa Doğrulama Ajanı'nın iki bileşeni kesin düşük kalıyor.
+    """
+    eksikler: list[tuple[str, str]] = []
+    for cikti in taslak.get("somut_ciktilar") or []:
+        baslik = cikti.get("baslik") or "bu iş"
+        if not cikti.get("olculebilir_sonuc"):
+            eksikler.append(
+                (
+                    f"olcut:{baslik}",
+                    f"“{baslik}” için sonucu sayıyla anlatabilir misin? "
+                    "Kaç kişi kullandı, ne kadar zaman kazandırdı gibi.",
+                )
+            )
+        if not cikti.get("kendi_rolu"):
+            eksikler.append(
+                (
+                    f"rol:{baslik}",
+                    f"“{baslik}” işinde senin payın neydi? Tek başına mıydın, "
+                    "ekipçe miydi — hangi kısmı sen yaptın?",
+                )
+            )
+    return eksikler
+
+
+def _cikti_aciklamasi(cikti: dict[str, Any]) -> str | None:
+    """Açıklama, ölçüt ve rol bilgisini tek metinde toplar.
+
+    Doğrulama Ajanı yalnızca `aciklama`'yı okuyor; bilgiyi ayrı alanlarda
+    bırakmak rubriğe ulaşmasını engellerdi.
+    """
+    parcalar = [
+        cikti.get("aciklama"),
+        cikti.get("olculebilir_sonuc"),
+        cikti.get("kendi_rolu"),
+    ]
+    metin = " ".join(p.strip() for p in parcalar if p and p.strip())
+    return metin or None
+
+
 def _tamamla(taslak: dict[str, Any]) -> dict[str, Any]:
     """Çıktısı olmayan kart "potansiyel" etiketiyle çıkar — Doğrulama Ajanı'nı
     atlayıp doğrudan Eşleştirme'ye gider (agent-specs.md § 1.4)."""
     son = dict(taslak)
-    if not son.get("somut_ciktilar"):
+    son["somut_ciktilar"] = [
+        {**cikti, "aciklama": _cikti_aciklamasi(cikti)} for cikti in son.get("somut_ciktilar") or []
+    ]
+    if not son["somut_ciktilar"]:
         son["deneyim_seviyesi"] = "potansiyel"
     return motor.zorunlu_alanlari_doldur(
         son, ZORUNLU_ALANLAR, metin_alanlari=("rol_alani", "deneyim_seviyesi")
@@ -153,6 +229,7 @@ KESIF = motor.AjanTanimi(
     nesne_listeleri=(("somut_ciktilar", "baslik"),),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
     yedek_sorular=YEDEK_SORULAR,
+    ek_eksikler=_cikti_eksikleri,
     ek_dal=_fallback_dali,
     ek_cikarim_alanlari=lambda cikarim: {"cikti_yok_dedi": cikarim.somut_cikti_yok_dedi},
     tamamla=_tamamla,

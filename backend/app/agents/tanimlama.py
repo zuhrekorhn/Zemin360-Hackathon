@@ -111,6 +111,10 @@ TANIMLAMA = motor.AjanTanimi(
         "musaitlik_tercihi",
     ),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
+    # Tanımlama iki turda kapanmaya devam ediyor: kurumun problemi iki soruda
+    # netleşmiyorsa daha fazla sormak yerine taslağı göstermek daha iyi,
+    # kurum kartı elle düzeltebiliyor. (Keşif'te tavan daha yüksek.)
+    maks_zorunlu_turu=motor.MAKS_TAKIP_TURU,
     yedek_sorular=YEDEK_SORULAR,
     tamamla=lambda taslak: motor.zorunlu_alanlari_doldur(
         taslak, ZORUNLU_ALANLAR, metin_alanlari=ZORUNLU_ALANLAR

@@ -12,6 +12,7 @@ from langchain_google_genai.chat_models import (
     GoogleRateLimitError,
 )
 
+from app.agents import sohbet_motoru as motor
 from app.agents.kesif import (
     FALLBACK_SORULARI,
     MAKS_TAKIP_TURU,
@@ -73,8 +74,12 @@ def test_eksik_alan_takip_sorusu_getirir():
     assert sonuc["taslak_hazir"] is False
 
 
-def test_takip_turu_sinirinda_taslak_hazirlanir():
-    """2 turdan sonra eksik alan kalsa bile sohbet uzatılmaz (spec: en fazla 2 tur)."""
+def test_zorunlu_alan_icin_iki_turdan_sonra_da_sorulur():
+    """Eksik zorunlu alanla kart kapatmak sohbeti uzatmaktan kötü.
+
+    Gerçek turda "sektör ilgisi" boş kalmıştı: tur hakkı bitmiş, kart eksik
+    kaydedilmişti. Boş alan eşleştirmede doğrudan skora yansıyor.
+    """
     sonuc = karar(
         {
             "taslak": dolu_taslak(rol_alani=None),
@@ -82,8 +87,93 @@ def test_takip_turu_sinirinda_taslak_hazirlanir():
             "fallback_indeksi": 0,
         }
     )
+    assert sonuc["taslak_hazir"] is False
+    assert sonuc["sonraki_soru"]
+
+
+def test_zorunlu_tavaninda_kart_yine_de_kapanir():
+    """Sonsuz döngü olmasın: tavanda alanlar yer tutucuyla dolup kart çıkar."""
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(rol_alani=None),
+            "takip_turu": motor.MAKS_ZORUNLU_TURU,
+            "fallback_indeksi": 0,
+        }
+    )
     assert sonuc["taslak_hazir"] is True
     assert sonuc["taslak"]["rol_alani"] == "belirtilmedi"
+
+
+def test_cikti_olcutu_eksikse_sorulur():
+    """Rubrik "ölçülebilir sonuç" puanlıyor; Keşif bunu sormalı."""
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(
+                somut_ciktilar=[{"baslik": "Kütüphane sistemi", "kendi_rolu": "hepsini ben yaptım"}]
+            ),
+            "takip_turu": 0,
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["taslak_hazir"] is False
+    assert "sayıyla" in sonuc["sonraki_soru"]
+
+
+def test_cikti_rolu_eksikse_sorulur():
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(
+                somut_ciktilar=[{"baslik": "Kütüphane sistemi", "olculebilir_sonuc": "400 kitap"}]
+            ),
+            "takip_turu": 0,
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["taslak_hazir"] is False
+    assert "payın" in sonuc["sonraki_soru"]
+
+
+def test_cikti_detaylari_tamsa_kart_kapanir():
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(
+                somut_ciktilar=[
+                    {
+                        "baslik": "Kütüphane sistemi",
+                        "aciklama": "Ödünç takibi",
+                        "olculebilir_sonuc": "400 kitap, 120 üye",
+                        "kendi_rolu": "backend'i ben yazdım",
+                    }
+                ]
+            ),
+            "takip_turu": 0,
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["taslak_hazir"] is True
+
+
+def test_olcut_ve_rol_aciklamaya_giriyor():
+    """Doğrulama Ajanı yalnızca açıklamayı okuyor; bilgi oraya taşınmalı."""
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(
+                somut_ciktilar=[
+                    {
+                        "baslik": "Kütüphane sistemi",
+                        "aciklama": "Ödünç takip sistemi yazdım.",
+                        "olculebilir_sonuc": "400 kitap ve 120 üye takip ediliyor.",
+                        "kendi_rolu": "Backend'i ben yazdım.",
+                    }
+                ]
+            ),
+            "takip_turu": 0,
+            "fallback_indeksi": 0,
+        }
+    )
+    aciklama = sonuc["taslak"]["somut_ciktilar"][0]["aciklama"]
+    assert "400 kitap" in aciklama
+    assert "Backend'i ben yazdım" in aciklama
 
 
 def test_cikti_yoksa_once_fallback_sorulur():
