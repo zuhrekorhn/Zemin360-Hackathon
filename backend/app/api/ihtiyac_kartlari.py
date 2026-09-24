@@ -37,7 +37,12 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> IhtiyacKartiY
         sehir_tercihi=kart.sehir_tercihi,
         musaitlik_tercihi=kart.musaitlik_tercihi,
         embedding_var=kart.embedding is not None,
-        kurum=KurumYaniti(ad=kart.kurum.ad, sektor=kart.kurum.sektor, sehir=kart.kurum.sehir),
+        kurum=KurumYaniti(
+            id=kart.kurum.id,
+            ad=kart.kurum.ad,
+            sektor=kart.kurum.sektor,
+            sehir=kart.kurum.sehir,
+        ),
     )
 
 

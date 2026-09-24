@@ -30,6 +30,8 @@ class GuvenSkoruYaniti(BaseModel):
     ucuncu_taraf_onayi: int
     gerekce_metni: str | None
 
+    model_config = {"from_attributes": True}
+
 
 class ReferansDurumuYaniti(BaseModel):
     id: uuid.UUID

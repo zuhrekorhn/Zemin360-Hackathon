@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.session import get_session
+from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import YetenekKartiYaniti
 
@@ -30,7 +31,7 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiY
     """
     kart = await oturum.scalar(
         select(YetenekKarti)
-        .options(selectinload(YetenekKarti.somut_ciktilar))
+        .options(selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru))
         .where(YetenekKarti.id == kart_id)
     )
     if kart is None:

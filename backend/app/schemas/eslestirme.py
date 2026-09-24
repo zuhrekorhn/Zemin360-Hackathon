@@ -33,6 +33,9 @@ class OnerilerYaniti(BaseModel):
     # Havuz küçükken sonuç azlığı gizlenmez, açıkça söylenir
     # (docs/matching-algorithm.md § 5, cold start).
     az_sonuc_uyarisi: bool
+    # Liste boş kaldığında arayüz "neden boş"u söyleyebilsin diye eşik
+    # yanıtta dönüyor; istemci tarafında sabit tutulursa ikisi ayrışır.
+    skor_esigi: float
 
 
 class IlgileniyorumIstegi(BaseModel):

@@ -48,8 +48,15 @@ class IhtiyacKartiOnaylaIstegi(BaseModel):
 
 
 class KurumYaniti(BaseModel):
-    """Kartla birlikte gösterilen kurum bilgisi — iletişim e-postası YOK."""
+    """Kartla birlikte gösterilen kurum bilgisi — iletişim e-postası YOK.
 
+    `id` gerekli: Eşleştirme önerileri kurum kimliğiyle okunuyor
+    (`GET /eslestirme/oneriler/{kurum_id}`), kartı onaylayan arayüzün bu
+    kimliği öğrenebileceği başka bir yer yoktu. Kimlik iletişim bilgisi
+    değil — gizlilik kuralı (agent-specs.md § 1.5) etkilenmiyor.
+    """
+
+    id: uuid.UUID
     ad: str
     sektor: str | None
     sehir: str | None

@@ -20,6 +20,7 @@ from sqlalchemy.orm import selectinload
 from app.agents.eslestirme import (
     DURUM_KABUL_EDILDI,
     DURUM_ONERILDI,
+    SKOR_ESIGI,
     TOP_N,
     Aday,
     adaylari_getir,
@@ -186,4 +187,5 @@ async def _yanit_kur(
         oneriler=oneriler,
         # Cold start: havuz küçükken bunu arayüzde gizleme (matching-algorithm.md § 5)
         az_sonuc_uyarisi=len(oneriler) < TOP_N,
+        skor_esigi=SKOR_ESIGI,
     )

@@ -6,6 +6,7 @@ import uuid
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.schemas.dogrulama import GuvenSkoruYaniti
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
 
 __all__ = ["SohbetBaslatIstegi", "SohbetCevapIstegi"]
@@ -56,10 +57,20 @@ class KartOnaylaIstegi(BaseModel):
 
 
 class SomutCiktiYaniti(BaseModel):
+    """Kartla birlikte gösterilen çıktı.
+
+    `guven_skoru` Doğrulama Ajanı'nın dört bileşenli rubriği; hiç kanıt
+    eklenmemişse None kalır ("doğrulanmamış", ceza değil). Kart görünümüne
+    buradan giriyor ki arayüz çıktı başına ayrıca /dogrulama/kanit/{id}
+    çağırmak zorunda kalmasın — Eşleştirme önerileri de aynı görünümü
+    kullandığı için skorun yanında rubrik bedavaya geliyor.
+    """
+
     id: uuid.UUID
     baslik: str
     aciklama: str | None
     kanit_linki: str | None
+    guven_skoru: GuvenSkoruYaniti | None = None
 
     model_config = {"from_attributes": True}
 
