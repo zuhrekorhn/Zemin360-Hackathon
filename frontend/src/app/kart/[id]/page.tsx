@@ -15,6 +15,7 @@ import {
   yetenekKartiGetir,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
 /**
  * Yetenek kartı + Doğrulama Ajanı ekranı (docs/agent-specs.md § 1 ve § 4).
@@ -127,7 +128,7 @@ export default function KartSayfasi() {
         <>
           <BelgeKarti
             baslik={kart.rol_alani}
-            altbaslik={`Deneyim: ${kart.deneyim_seviyesi}`}
+            altbaslik={`Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
             rozet={
               kart.kanit_bekleyen ? (
                 <span className="rounded-sm border border-kenar px-2.5 py-1 text-xs text-muted-foreground">

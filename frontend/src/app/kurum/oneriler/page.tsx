@@ -20,6 +20,7 @@ import {
   ilgileniyorum,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
 import { kimlikOku } from "@/lib/yerel";
 
 /**
@@ -254,7 +255,7 @@ function OneriKarti({
   return (
     <BelgeKarti
       baslik={kart.rol_alani}
-      altbaslik={`Deneyim: ${kart.deneyim_seviyesi}`}
+      altbaslik={`Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
       rozet={<SkorRozeti skor={oneri.skor} />}
     >
       <section className="flex flex-col gap-1.5">

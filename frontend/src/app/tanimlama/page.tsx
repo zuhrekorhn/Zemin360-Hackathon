@@ -22,6 +22,12 @@ import {
   tanimlamaBaslat,
   tanimlamaCevap,
 } from "@/lib/api";
+import {
+  MUSAITLIK_ETIKETLERI,
+  SEHIR_SECENEKLERI,
+  etiketle,
+  sehirEtiketi,
+} from "@/lib/sabitler";
 import { kimlikYaz } from "@/lib/yerel";
 
 /**
@@ -288,12 +294,20 @@ function TaslakBolumu({
             </FormAlani>
 
             <FormAlani etiket="Şehir" htmlFor="sehir" istegeBagli>
-              <Input
+              {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
+                  bozuyordu (bkz. backend/app/core/sehir.py). */}
+              <select
                 id="sehir"
                 value={sehir}
                 onChange={(olay) => setSehir(olay.target.value)}
-                autoComplete="address-level2"
-              />
+                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+              >
+                {SEHIR_SECENEKLERI.map((secenek) => (
+                  <option key={secenek.deger} value={secenek.deger}>
+                    {secenek.etiket}
+                  </option>
+                ))}
+              </select>
             </FormAlani>
           </div>
 
@@ -353,12 +367,14 @@ function TaslakKarti({
       <dl className="grid gap-px bg-kenar sm:grid-cols-2">
         <div className="bg-card px-4 py-3">
           <dt className="text-xs text-muted-foreground">Şehir tercihi</dt>
-          <dd className="text-sm break-words">{taslak.sehir_tercihi || "—"}</dd>
+          <dd className="text-sm break-words">
+            {sehirEtiketi(taslak.sehir_tercihi)}
+          </dd>
         </div>
         <div className="bg-card px-4 py-3">
           <dt className="text-xs text-muted-foreground">Müsaitlik tercihi</dt>
           <dd className="text-sm break-words">
-            {taslak.musaitlik_tercihi || "—"}
+            {etiketle(MUSAITLIK_ETIKETLERI, taslak.musaitlik_tercihi)}
           </dd>
         </div>
       </dl>

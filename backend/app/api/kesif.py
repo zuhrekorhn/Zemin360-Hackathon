@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.kesif import HizSinirHatasi, kullanici_mesaji
 from app.api.yetenek_kartlari import kart_yaniti
 from app.core.embeddings import embedding_uret, yetenek_temsil_metni
+from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
@@ -142,7 +143,7 @@ async def _kullaniciyi_bul_veya_olustur(oturum: AsyncSession, istek: KartOnaylaI
         kullanici = Kullanici(
             ad=girdi.ad,
             email=str(girdi.email),
-            sehir=girdi.sehir,
+            sehir=sehir_kanonik(girdi.sehir),
             musaitlik=girdi.musaitlik,
         )
         oturum.add(kullanici)

@@ -22,6 +22,12 @@ import {
   sohbetBaslat,
   sohbetCevap,
 } from "@/lib/api";
+import {
+  DENEYIM_ETIKETLERI,
+  MUSAITLIK_SECENEKLERI,
+  SEHIR_SECENEKLERI,
+  etiketle,
+} from "@/lib/sabitler";
 import { kimlikYaz } from "@/lib/yerel";
 
 /**
@@ -36,14 +42,6 @@ import { kimlikYaz } from "@/lib/yerel";
  */
 
 type Asama = "baslatiliyor" | "sohbet" | "taslak" | "kaydedildi";
-
-const MUSAITLIK_SECENEKLERI = [
-  { deger: "", etiket: "Belirtmek istemiyorum" },
-  { deger: "tam_zamanli", etiket: "Tam zamanlı" },
-  { deger: "yarim_zamanli", etiket: "Yarı zamanlı" },
-  { deger: "proje_bazli", etiket: "Proje bazlı" },
-  { deger: "staj", etiket: "Staj" },
-];
 
 export default function KesifSayfasi() {
   const [asama, setAsama] = useState<Asama>("baslatiliyor");
@@ -294,12 +292,20 @@ function TaslakBolumu({
             </FormAlani>
 
             <FormAlani etiket="Şehir" htmlFor="sehir" istegeBagli>
-              <Input
+              {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
+                  bozuyordu (bkz. backend/app/core/sehir.py). */}
+              <select
                 id="sehir"
                 value={sehir}
                 onChange={(olay) => setSehir(olay.target.value)}
-                autoComplete="address-level2"
-              />
+                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+              >
+                {SEHIR_SECENEKLERI.map((secenek) => (
+                  <option key={secenek.deger} value={secenek.deger}>
+                    {secenek.etiket}
+                  </option>
+                ))}
+              </select>
             </FormAlani>
 
             <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istegeBagli>
@@ -339,7 +345,10 @@ function TaslakKarti({ taslak }: { taslak: KartTaslagi }) {
     <article className="rounded-sm border border-kenar bg-card">
       <dl className="grid gap-px bg-kenar sm:grid-cols-2">
         <KartSatiri etiket="Rol / alan" deger={taslak.rol_alani} />
-        <KartSatiri etiket="Deneyim" deger={taslak.deneyim_seviyesi} />
+        <KartSatiri
+          etiket="Deneyim"
+          deger={etiketle(DENEYIM_ETIKETLERI, taslak.deneyim_seviyesi)}
+        />
         <KartSatiri
           etiket="Sektör ilgisi"
           deger={taslak.sektor_ilgi_alani.join(", ")}

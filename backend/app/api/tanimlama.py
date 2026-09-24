@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.ihtiyac_kartlari import kart_yaniti
 from app.core.embeddings import embedding_uret, ihtiyac_temsil_metni
+from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kurum import Kurum
@@ -101,7 +102,7 @@ async def kart_onayla(
         problem_tanimi=taslak.problem_tanimi,
         basari_kriteri=taslak.basari_kriteri,
         kisitlar=taslak.kisitlar,
-        sehir_tercihi=taslak.sehir_tercihi,
+        sehir_tercihi=sehir_kanonik(taslak.sehir_tercihi),
         musaitlik_tercihi=taslak.musaitlik_tercihi,
     )
     oturum.add(kart)
@@ -128,7 +129,7 @@ async def _kurumu_bul_veya_olustur(oturum: AsyncSession, istek: IhtiyacKartiOnay
         kurum = Kurum(
             ad=girdi.ad,
             sektor=girdi.sektor,
-            sehir=girdi.sehir,
+            sehir=sehir_kanonik(girdi.sehir),
             iletisim_email=str(girdi.iletisim_email),
         )
         oturum.add(kurum)
