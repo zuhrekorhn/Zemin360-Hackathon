@@ -10,13 +10,27 @@ geçerli: yoğunluk model başına oluştuğu için yedek model çoğu zaman bo�
 
 from __future__ import annotations
 
+import logging
+import time
+import uuid
 from collections.abc import Callable
+from typing import Any
 
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.runnables import Runnable
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai.chat_models import GoogleAPIError, GoogleRateLimitError
 
 from app.core.config import get_settings
+
+logger = logging.getLogger("zemin360.llm")
+
+# Sağlayıcı SDK'sının kendi tekrarları. Varsayılan 6 ve üstel bekleme ile
+# 503'te dakikalara çıkabiliyor — yedek modele geçmeden önce boşuna beklemek
+# oluyor. Asıl tekrar stratejimiz yedek MODEL (aynı modeli tekrar denemek
+# yoğunluk anında zaten işe yaramıyor), o yüzden burada tek bir hızlı tekrar
+# bırakıyoruz. Kütüphane 1'i "hiç tekrar yok" sayıyor, 2 = bir tekrar.
+MAKS_TEKRAR = 2
 
 
 class HizSinirHatasi(RuntimeError):
@@ -57,6 +71,64 @@ def llm_hatasini_cevir(hata: Exception) -> Exception:
     return hata
 
 
+class SureOlcer(BaseCallbackHandler):
+    """Her LLM çağrısının süresini ve kaçıncı deneme olduğunu log'a yazar.
+
+    Yavaşlığın nerede olduğunu görmek için: tek bir istek içinde ana model
+    denenip yedeğe düşüldüyse iki satır çıkar, ikisinin de süresi ayrı ayrı
+    görünür. Sağlayıcı SDK'sının kendi içindeki HTTP tekrarları buraya
+    yansımıyor — onları `MAKS_TEKRAR` sınırlıyor.
+    """
+
+    def __init__(self) -> None:
+        self._baslangiclar: dict[uuid.UUID, float] = {}
+        self._deneme: dict[uuid.UUID, int] = {}
+
+    def _kok(self, parent_run_id: uuid.UUID | None, run_id: uuid.UUID) -> uuid.UUID:
+        return parent_run_id or run_id
+
+    def on_llm_start(
+        self,
+        serialized: dict[str, Any],
+        prompts: list[str],
+        *,
+        run_id: uuid.UUID,
+        parent_run_id: uuid.UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        self._baslangiclar[run_id] = time.perf_counter()
+        kok = self._kok(parent_run_id, run_id)
+        self._deneme[kok] = self._deneme.get(kok, 0) + 1
+
+    def _bitir(self, run_id: uuid.UUID, parent_run_id: uuid.UUID | None) -> tuple[float, int]:
+        baslangic = self._baslangiclar.pop(run_id, None)
+        sure = time.perf_counter() - baslangic if baslangic else 0.0
+        kok = self._kok(parent_run_id, run_id)
+        return sure, self._deneme.get(kok, 1)
+
+    def on_llm_end(
+        self,
+        response: Any,
+        *,
+        run_id: uuid.UUID,
+        parent_run_id: uuid.UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        sure, deneme = self._bitir(run_id, parent_run_id)
+        logger.info("LLM yanıtladı: %.2f sn, deneme %d", sure, deneme)
+
+    def on_llm_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: uuid.UUID,
+        parent_run_id: uuid.UUID | None = None,
+        **kwargs: Any,
+    ) -> None:
+        sure, deneme = self._bitir(run_id, parent_run_id)
+        logger.warning("LLM hatası: %.2f sn, deneme %d — %s", sure, deneme, error)
+
+
 def model(model_adi: str) -> ChatGoogleGenerativeAI:
     ayarlar = get_settings()
     if not ayarlar.google_api_key:
@@ -65,6 +137,8 @@ def model(model_adi: str) -> ChatGoogleGenerativeAI:
         model=model_adi,
         google_api_key=ayarlar.google_api_key,
         temperature=0,
+        max_retries=MAKS_TEKRAR,
+        callbacks=[SureOlcer()],
     )
 
 

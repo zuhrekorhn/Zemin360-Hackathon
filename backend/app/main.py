@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -18,6 +19,12 @@ from app.api import (
 )
 from app.core.config import get_settings
 from app.core.hatalar import hata_isleyicilerini_kur
+
+
+# LLM süreleri ve hata ayrıntıları sunucu günlüğüne düşsün (app/core/llm.py,
+# app/core/hatalar.py). uvicorn kendi yapılandırmasını sonra kuruyor ama kök
+# handler'ı bozmuyor, satırlar görünmeye devam ediyor.
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s — %(message)s")
 
 
 @asynccontextmanager
