@@ -174,7 +174,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 | **Doğrulama** | Çalışıyor (backend) — kanıt kontrolü + rubrik → referans akışı → itiraz |
 | Canlılık, Takip | Faz 3 |
 
-**Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında dönüyor, referans kişiye elle iletilir. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
+**Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında dönüyor, referans kişiye elle iletilir. **Bilinen MVP sınırlaması:** token API yanıtında göründüğü için iddia sahibi kendi referansını doldurabilir; üçüncü taraf onayı bu haliyle güvenlik sağlamıyor, yalnızca akışı gösteriyor. Gerçek kullanımda token yalnızca referans kişiye e-postayla gitmeli. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
 
 **Eşleştirme kapsamı:** şu an yalnızca kurum tarafı var (öneri listesi + "ilgileniyorum" → `ISBIRLIGI`). Genç'in eşleşme bildirimini görmesi ve arayüzü bilinçli olarak ertelendi (Faz 3+). Skor formülünün ESCO taksonomi bileşeni de MVP dışında (bkz. `docs/matching-algorithm.md`).
 

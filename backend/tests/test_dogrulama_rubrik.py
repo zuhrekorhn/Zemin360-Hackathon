@@ -10,11 +10,12 @@ from pydantic import ValidationError
 
 from app.agents.dogrulama import (
     DURUM_BEKLIYOR,
-    DURUM_ONAYLANDI,
     DURUM_YANIT_YOK,
+    DURUM_YANITLANDI,
     REFERANS_TIMEOUT_GUN,
     RubrikPuani,
     link_ozetini_cikar,
+    linki_normalize_et,
     referans_puanina_cevir,
     zaman_asimina_ugradi_mi,
 )
@@ -60,7 +61,7 @@ def test_sure_dolunca_zaman_asimi():
 def test_yanitlanmis_referans_zaman_asimina_ugramaz():
     """Referans cevapladıysa süre dolsa bile durumu değişmemeli."""
     eski = dt.datetime.now(dt.UTC) - dt.timedelta(days=90)
-    assert zaman_asimina_ugradi_mi(eski, DURUM_ONAYLANDI) is False
+    assert zaman_asimina_ugradi_mi(eski, DURUM_YANITLANDI) is False
     assert zaman_asimina_ugradi_mi(eski, DURUM_YANIT_YOK) is False
 
 
@@ -89,6 +90,20 @@ def test_token_tek_kullanimlik_olsun_diye_benzersiz():
 
 def test_yeni_referans_istegi_bekliyor_durumunda_baslar():
     assert DURUM_KOLONU.default.arg == DURUM_BEKLIYOR
+
+
+def test_semasiz_linke_https_eklenir():
+    """Kullanıcı sohbette linki çoğu zaman şemasız yazıyor."""
+    assert linki_normalize_et("github.com/ornek/kutuphane") == "https://github.com/ornek/kutuphane"
+
+
+def test_mevcut_sema_korunur():
+    assert linki_normalize_et("http://ornek.com") == "http://ornek.com"
+    assert linki_normalize_et("https://ornek.com") == "https://ornek.com"
+
+
+def test_bosluklar_ve_bastaki_egik_cizgi_temizlenir():
+    assert linki_normalize_et("  //ornek.com/yol  ") == "https://ornek.com/yol"
 
 
 def test_link_ozeti_baslik_ve_metayi_alir():

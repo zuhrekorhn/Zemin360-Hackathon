@@ -26,7 +26,8 @@ class ReferansIstegi(UUIDPrimaryKeyMixin, Base):
     token: Mapped[str] = mapped_column(
         String, unique=True, default=lambda: secrets.token_urlsafe(32)
     )
-    # State machine: bekliyor -> onaylandi | yanit_yok (zaman aşımı, ceza değil nötr durum)
+    # State machine: bekliyor -> yanitlandi | yanit_yok (zaman aşımı, ceza değil
+    # nötr durum). "yanitlandi" yanıtın geldiğini söyler, olumlu olduğunu değil.
     durum: Mapped[str] = mapped_column(
         String, default="bekliyor", server_default=text("'bekliyor'")
     )

@@ -17,8 +17,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.dogrulama import (
-    DURUM_ONAYLANDI,
     DURUM_YANIT_YOK,
+    DURUM_YANITLANDI,
     LinkKontrolu,
     linki_kontrol_et,
     referans_puanina_cevir,
@@ -81,10 +81,10 @@ async def referans_yaniti(
     )
     if referans is None:
         raise HTTPException(status_code=404, detail="Referans isteği bulunamadı")
-    if referans.durum == DURUM_ONAYLANDI:
+    if referans.durum == DURUM_YANITLANDI:
         raise HTTPException(status_code=409, detail="Bu referans zaten yanıtlanmış")
 
-    referans.durum = DURUM_ONAYLANDI
+    referans.durum = DURUM_YANITLANDI
     referans.yanit_metni = istek.yorum
 
     cikti = await _ciktiyi_getir(oturum, referans.somut_cikti_id)

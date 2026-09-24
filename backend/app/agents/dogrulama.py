@@ -32,7 +32,9 @@ from app.core.llm import HizSinirHatasi, kota_hatasi_mi, model, yedekli_zincir
 REFERANS_TIMEOUT_GUN = 7
 
 DURUM_BEKLIYOR = "bekliyor"
-DURUM_ONAYLANDI = "onaylandi"
+# "onaylandi" değil: referans olumsuz de yanıtlayabilir, durum yalnızca
+# yanıtın geldiğini söyler. Değerlendirme ucuncu_taraf_onayi puanında.
+DURUM_YANITLANDI = "yanitlandi"
 DURUM_YANIT_YOK = "yanit_yok"
 
 # 1-5 referans skalasını rubriğin 0-3 aralığına indirger.
@@ -138,6 +140,18 @@ def zaman_asimina_ugradi_mi(
     return an - olusturma_tarihi >= dt.timedelta(days=REFERANS_TIMEOUT_GUN)
 
 
+def linki_normalize_et(kanit_linki: str) -> str:
+    """Şeması olmayan linke https:// ekler.
+
+    Kullanıcılar sohbette linki çoğu zaman "github.com/..." diye yazıyor;
+    şemasız adres httpx'e verilemez ve kanıt haksız yere "açılmıyor" sayılır.
+    """
+    link = kanit_linki.strip()
+    if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", link):
+        return link
+    return f"https://{link.lstrip('/')}"
+
+
 def link_ozetini_cikar(html: str) -> str:
     """Sayfadan başlık ve meta açıklamasını alır (tam içerik çekilmiyor)."""
     baslik = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
@@ -157,9 +171,10 @@ async def linki_kontrol_et(kanit_linki: str | None) -> LinkKontrolu:
     if not kanit_linki:
         return LinkKontrolu(False, None, "(kanıt linki verilmedi)", "kanıt linki yok")
 
+    adres = linki_normalize_et(kanit_linki)
     try:
         async with httpx.AsyncClient(timeout=LINK_TIMEOUT_SANIYE, follow_redirects=True) as istemci:
-            yanit = await istemci.get(kanit_linki)
+            yanit = await istemci.get(adres)
             govde = yanit.text[:INDIRILEN_BAYT] if yanit.is_success else ""
     except httpx.HTTPError as hata:
         return LinkKontrolu(False, None, "(sayfa açılmadı)", f"erişilemedi: {type(hata).__name__}")

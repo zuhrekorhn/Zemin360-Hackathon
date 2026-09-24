@@ -15,6 +15,7 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | **Doğrulama** | `/dogrulama/kanit-ekle` | POST | `SOMUT_CIKTI` + ön rubrik skoru |
 | | `/dogrulama/referans-yaniti` | POST | Token bazlı, girişsiz — referans kişi için auth gerektirmez |
 | | `/dogrulama/itiraz` | POST | Yeniden değerlendirme tetikler |
+| | `/dogrulama/kanit/{somut_cikti_id}` | GET | Kanıtın güncel durumu: rubrik puanı + referans istekleri. Zaman aşımı (`bekliyor` → `yanit_yok`) bu okuma anında hesaplanır — ayrı bir zamanlayıcı yok |
 | **Eşleştirme** | `/eslestirme/calistir` | Arka plan iş (cron/kuyruk) | Kullanıcı isteğine bağlı değil |
 | | `/eslestirme/oneriler/{kurum_id}` | GET | Sıralı liste + gerekçe |
 | | `/eslestirme/ilgileniyorum` | POST | `ESLESME.durum`'u günceller, `ISBIRLIGI` oluşturabilir |
