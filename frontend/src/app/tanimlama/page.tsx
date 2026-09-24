@@ -22,6 +22,7 @@ import {
   tanimlamaBaslat,
   tanimlamaCevap,
 } from "@/lib/api";
+import { kimlikYaz } from "@/lib/yerel";
 
 /**
  * Tanımlama Ajanı sohbeti (docs/agent-specs.md § 2).
@@ -179,6 +180,9 @@ export default function TanimlamaSayfasi() {
             setBekleniyor(true);
             try {
               const kayitli = await ihtiyacKartiOnayla(oturumId, kurum);
+              // Öneri ekranı kurum kimliğiyle çalışıyor; giriş akışı
+              // olmadığı için kimlik tarayıcıda hatırlanıyor.
+              kimlikYaz("kurum", kayitli.kurum.id);
               setKart(kayitli);
               setAsama("kaydedildi");
             } catch (sebep) {
@@ -377,6 +381,12 @@ function KayitliKart({ kart }: { kart: IhtiyacKartiYaniti }) {
       <p className="font-mono text-xs text-muted-foreground">
         kart no: <span className="break-all">{kart.id}</span>
       </p>
+
+      <Button asChild size="lg" className="mt-1 w-fit">
+        <Link href={`/kurum/oneriler?kurum=${kart.kurum.id}`}>
+          Eşleştirme önerilerini gör
+        </Link>
+      </Button>
     </section>
   );
 }

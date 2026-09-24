@@ -96,6 +96,8 @@ export type SomutCiktiYaniti = {
   baslik: string;
   aciklama: string | null;
   kanit_linki: string | null;
+  /** Doğrulama rubriği; hiç kanıt eklenmemişse null ("doğrulanmamış"). */
+  guven_skoru: GuvenSkoru | null;
 };
 
 /** Kartın dışarıya açılan hali — e-posta/iletişim alanı taşımaz
@@ -172,8 +174,10 @@ export type KurumGirdisi = {
   iletisim_email: string;
 };
 
-/** Kartla gösterilen kurum bilgisi — iletişim e-postası taşımaz. */
+/** Kartla gösterilen kurum bilgisi — iletişim e-postası taşımaz.
+ *  `id` öneri uç noktası için gerekli (`/eslestirme/oneriler/{kurum_id}`). */
 export type KurumYaniti = {
+  id: string;
   ad: string;
   sektor: string | null;
   sehir: string | null;
@@ -222,6 +226,135 @@ export function ihtiyacKartiOnayla(
       kurum,
       duzeltilmis_taslak: duzeltilmisTaslak ?? null,
     }),
+  });
+}
+
+/* --- Doğrulama Ajanı (docs/api-contracts.md § Doğrulama) -----------------
+   Tipler backend'deki app/schemas/dogrulama.py ile birebir eşleşir. */
+
+/** Dört bileşenli güven göstergesi. Tek sayıya indirgenmez
+ *  (docs/agent-specs.md § 4) — arayüz de dördünü ayrı gösterir. */
+export type GuvenSkoru = {
+  kanit_orijinalligi: number;
+  sonuc_olculebilirligi: number;
+  rol_netligi: number;
+  ucuncu_taraf_onayi: number;
+  gerekce_metni: string | null;
+};
+
+export type ReferansDurumu = {
+  id: string;
+  referans_email: string;
+  /** "bekliyor" | "yanitlandi" | "yanit_yok" — yanıt geldi demek, olumlu demek değil. */
+  durum: string;
+  puan: number | null;
+  yanit_metni: string | null;
+  olusturma_tarihi: string;
+  /** SMTP yok (MVP): link burada dönüyor, iddia sahibi elle iletiyor. */
+  yanit_linki: string | null;
+};
+
+export type KanitDurumu = {
+  somut_cikti_id: string;
+  baslik: string;
+  kanit_linki: string | null;
+  link_erisilebilir: boolean | null;
+  guven_skoru: GuvenSkoru | null;
+  referanslar: ReferansDurumu[];
+};
+
+export type KanitEkleGirdisi = {
+  somut_cikti_id: string;
+  kanit_linki?: string | null;
+  kanit_turu?: string | null;
+  referans_email?: string | null;
+};
+
+/** POST /dogrulama/kanit-ekle — kanıtı kaydeder, ön rubriği üretir. */
+export function kanitEkle(girdi: KanitEkleGirdisi): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>("/dogrulama/kanit-ekle", {
+    method: "POST",
+    body: JSON.stringify(girdi),
+  });
+}
+
+/** GET /dogrulama/kanit/{id} — zaman aşımı bu okuma anında hesaplanır. */
+export function kanitDurumu(somutCiktiId: string): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>(`/dogrulama/kanit/${somutCiktiId}`, {
+    cache: "no-store",
+  });
+}
+
+/** POST /dogrulama/itiraz — rubriği yeniden hesaplatır. */
+export function itirazEt(
+  somutCiktiId: string,
+  yeniKanitLinki?: string | null,
+  aciklama?: string | null,
+): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>("/dogrulama/itiraz", {
+    method: "POST",
+    body: JSON.stringify({
+      somut_cikti_id: somutCiktiId,
+      yeni_kanit_linki: yeniKanitLinki ?? null,
+      aciklama: aciklama ?? null,
+    }),
+  });
+}
+
+/** POST /dogrulama/referans-yaniti — girişsiz, token bazlı. */
+export function referansYanitla(
+  token: string,
+  puan: number,
+  yorum?: string | null,
+): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>("/dogrulama/referans-yaniti", {
+    method: "POST",
+    body: JSON.stringify({ token, puan, yorum: yorum ?? null }),
+  });
+}
+
+/* --- Eşleştirme Ajanı (docs/api-contracts.md § Eşleştirme) ----------------
+   Tipler backend'deki app/schemas/eslestirme.py ile birebir eşleşir. */
+
+export type Oneri = {
+  eslesme_id: string;
+  /** 0-1 arası; docs/matching-algorithm.md § 4 formülü. */
+  skor: number;
+  /** "onerildi" | "ilgileniliyor" | "kabul_edildi" | "reddedildi" */
+  durum: string;
+  /** LLM kotası dolduysa null kalır — skor yine de geçerli. */
+  gerekce_metni: string | null;
+  yetenek_karti: YetenekKartiYaniti;
+};
+
+export type Oneriler = {
+  ihtiyac_karti_id: string;
+  oneriler: Oneri[];
+  /** Havuz küçükken gizlenmez, açıkça söylenir (matching-algorithm.md § 5). */
+  az_sonuc_uyarisi: boolean;
+  /** Eşik backend'den gelir; arayüzde sabitlenmez. */
+  skor_esigi: number;
+};
+
+export type IlgileniyorumYaniti = {
+  eslesme_id: string;
+  durum: string;
+  isbirligi_id: string;
+  isbirligi_durum: string;
+};
+
+/** GET /eslestirme/oneriler/{kurum_id} — hesaplanmamışsa pipeline'ı tetikler. */
+export function eslestirmeOnerileri(kurumId: string): Promise<Oneriler> {
+  return apiIstek<Oneriler>(`/eslestirme/oneriler/${kurumId}`, {
+    cache: "no-store",
+  });
+}
+
+/** POST /eslestirme/ilgileniyorum — eşleşmeyi kabul eder, iş birliğini açar. */
+export function ilgileniyorum(eslesmeId: string): Promise<IlgileniyorumYaniti> {
+  return apiIstek<IlgileniyorumYaniti>("/eslestirme/ilgileniyorum", {
+    method: "POST",
+    body: JSON.stringify({ eslesme_id: eslesmeId }),
   });
 }
 

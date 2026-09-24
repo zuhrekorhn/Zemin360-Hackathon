@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { BackendDurumu } from "@/components/backend-durumu";
+import { BelgeKarti, GuvenGostergesi } from "@/components/kart";
 import { Button } from "@/components/ui/button";
 
 const ajanlar = [
@@ -12,13 +13,21 @@ const ajanlar = [
   { ad: "Takip", isi: "İş birliğini milestone bazında şeffaf tutar" },
 ];
 
-// Doğrulama Ajanı'nın dört bileşenli rubriği (docs/agent-specs.md § 4).
-// Buradaki değerler örnek — gerçek veri Faz 2'de bağlanacak.
-const guvenGostergesi = [
-  { ad: "Kanıt orijinalliği", puan: 3 },
-  { ad: "Ölçülebilir sonuç", puan: 2 },
-  { ad: "Rol netliği", puan: 3 },
-  { ad: "Üçüncü taraf onayı", puan: 2 },
+// Vitrindeki örnek: gerçek ekranlarla AYNI bileşenler, ama sabit veriyle.
+// Ana sayfa backend kapalıyken de eksiksiz görünmeli — burası ürünün ne
+// yaptığını anlatan yer, canlı veriye bağlamanın bir faydası yok.
+const ORNEK_GUVEN_SKORU = {
+  kanit_orijinalligi: 3,
+  sonuc_olculebilirligi: 2,
+  rol_netligi: 3,
+  ucuncu_taraf_onayi: 2,
+  gerekce_metni: null,
+};
+
+const ORNEK_GEREKCE = [
+  "Aynı problemi çözen, çalışan bir sistem kurmuş.",
+  "Sonucu sayıyla anlatmış: 400 kitap, 120 üye.",
+  "Kanıt linki açıldı, kütüphane sorumlusu referansı yanıtladı.",
 ];
 
 export default function AnaSayfa() {
@@ -57,36 +66,22 @@ export default function AnaSayfa() {
           </p>
         </div>
 
-        {/* Gerekçe kartı — hairline çizgili, az yuvarlak, resmi belge hissi.
+        {/* Gerekçe kartı — öneri ekranındaki bileşenin ta kendisi
+            (docs/design-language.md: hairline çizgi, resmi belge hissi).
             Sayfadaki tek bilinçli hareket burada. */}
-        <article className="rounded-sm border border-kenar bg-card motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
-          <div className="border-b border-kenar px-5 py-4">
-            <h3 className="font-heading text-base font-semibold text-ana">
-              Neden eşleşti
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Üye kayıtlarını elle tutmaktan kurtulmak isteyen bir kooperatifin
-              ihtiyacıyla
-            </p>
-          </div>
-
-          <ul className="flex flex-col gap-2.5 px-5 py-4 text-sm">
-            <li>Aynı problemi çözen, çalışan bir sistem kurmuş.</li>
-            <li>Sonucu sayıyla anlatmış: 400 kitap, 120 üye.</li>
-            <li>Kanıt linki açıldı, kütüphane sorumlusu referansı yanıtladı.</li>
-          </ul>
-
-          <dl className="grid grid-cols-2 gap-px border-t border-kenar bg-kenar sm:grid-cols-4">
-            {guvenGostergesi.map((bilesen) => (
-              <div key={bilesen.ad} className="bg-card px-5 py-3 sm:px-4">
-                <dt className="text-xs text-muted-foreground">{bilesen.ad}</dt>
-                <dd className="font-mono text-sm text-ana">
-                  {bilesen.puan}/3
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </article>
+        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
+          <BelgeKarti
+            baslik="Neden eşleşti"
+            altbaslik="Üye kayıtlarını elle tutmaktan kurtulmak isteyen bir kooperatifin ihtiyacıyla"
+            etek={<GuvenGostergesi skor={ORNEK_GUVEN_SKORU} />}
+          >
+            <ul className="flex flex-col gap-2.5">
+              {ORNEK_GEREKCE.map((satir) => (
+                <li key={satir}>{satir}</li>
+              ))}
+            </ul>
+          </BelgeKarti>
+        </div>
       </section>
 
       {/* İki giriş yolu — kart kalıbı yerine hairline ile ayrılmış iki sütun */}
@@ -106,9 +101,7 @@ export default function AnaSayfa() {
         </div>
 
         <div className="flex flex-col items-start gap-3 border-t border-kenar pt-8 sm:border-t-0 sm:pt-0 sm:pl-10">
-          <h2 className="font-heading text-xl font-semibold text-ana">
-            Kurum
-          </h2>
+          <h2 className="font-heading text-xl font-semibold text-ana">Kurum</h2>
           <p className="text-sm text-pretty text-muted-foreground">
             Tanımlama Ajanı’yla kısa bir sohbet. “Dijitalleşmek istiyoruz” gibi
             bir cümleyi, ölçülebilir başarı kriteri olan net bir ihtiyaç kartına
@@ -137,8 +130,8 @@ export default function AnaSayfa() {
       <footer className="mt-auto flex flex-col gap-3 border-t border-kenar pt-8">
         <BackendDurumu />
         <p className="text-xs text-muted-foreground">
-          Zemin360 Hackathon · GİRVAK — Faz 1 iskeleti. Ajan sohbetleri henüz
-          bağlanmadı.
+          Zemin360 Hackathon · GİRVAK — Faz 2. Yukarıdaki örnek sabit; Keşif,
+          Tanımlama, Eşleştirme ve Doğrulama ekranları gerçek veriyle çalışıyor.
         </p>
       </footer>
     </main>
