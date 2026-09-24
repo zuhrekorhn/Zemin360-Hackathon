@@ -1,12 +1,17 @@
 "use client";
 
-import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
-import { type KanitDurumu, referansYanitla } from "@/lib/api";
-import { type Hata, hatayaCevir } from "@/lib/hata";
+import {
+  type KanitDurumu,
+  type ReferansIstegiBilgisi,
+  referansIstegiGetir,
+  referansYanitla,
+} from "@/lib/api";
+import { type Hata, hatayaCevir, tekrarDenenebilirMi } from "@/lib/hata";
 
 /**
  * Referans kişinin yanıt sayfası (docs/sequence-diagrams.md § Akış 2).
@@ -14,9 +19,8 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
  * Giriş yok, kimlik yerine tek kullanımlık token — referans kişiyi üye olmaya
  * zorlamak yanıt oranını düşürür (docs/api-contracts.md § Mimari Notlar).
  *
- * Bu sayfa iddia sahibinin kartını göstermiyor: referans kişi neyi
- * onayladığını çıktının başlığından görüyor, puanını da kartın geri kalanından
- * etkilenmeden veriyor.
+ * İddia formdan ÖNCE gösteriliyor: neyi onayladığını bilmeden puan vermek
+ * anlamsız olurdu. Harcanmış ya da geçersiz bir link form açmıyor.
  */
 
 const SECENEKLER = [
@@ -26,6 +30,13 @@ const SECENEKLER = [
   { puan: 4, etiket: "4 — Anlatıldığı gibi yaptı" },
   { puan: 5, etiket: "5 — Anlatılandan da fazlasını yaptı" },
 ];
+
+const KAPALI_MESAJLARI: Record<string, string> = {
+  yanitlandi:
+    "Bu referans isteği zaten yanıtlanmış. Link tek kullanımlık; yeniden yanıt vermeniz gerekmiyor.",
+  yanit_yok:
+    "Bu referans isteğinin süresi doldu (7 gün). Yanıt gelmemesi kimse için olumsuz bir işaret değil — iddia yalnızca üçüncü taraf onayı olmadan değerlendirildi.",
+};
 
 export default function ReferansSayfasi() {
   return (
@@ -38,11 +49,41 @@ export default function ReferansSayfasi() {
 function ReferansFormu() {
   const token = useSearchParams().get("token");
 
+  const [bilgi, setBilgi] = useState<ReferansIstegiBilgisi | null>(null);
+  const [yukleniyor, setYukleniyor] = useState(true);
   const [puan, setPuan] = useState<number | null>(null);
   const [yorum, setYorum] = useState("");
   const [bekleniyor, setBekleniyor] = useState(false);
   const [hata, setHata] = useState<Hata | null>(null);
+  // Kalıcı hatalarda (404/409) "Tekrar dene" göstermiyoruz.
+  const [tekrarDenenir, setTekrarDenenir] = useState(true);
   const [sonuc, setSonuc] = useState<KanitDurumu | null>(null);
+  const okundu = useRef(false);
+
+  const bilgiyiGetir = useCallback(async (kimlik: string) => {
+    setHata(null);
+    setYukleniyor(true);
+    try {
+      setBilgi(await referansIstegiGetir(kimlik));
+    } catch (sebep) {
+      setHata(hatayaCevir(sebep));
+      setTekrarDenenir(tekrarDenenebilirMi(sebep));
+    } finally {
+      setYukleniyor(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (okundu.current) return;
+    okundu.current = true;
+
+    async function baslat() {
+      if (token) await bilgiyiGetir(token);
+      else setYukleniyor(false);
+    }
+
+    void baslat();
+  }, [token, bilgiyiGetir]);
 
   async function gonder() {
     if (!token || puan === null) return;
@@ -52,6 +93,9 @@ function ReferansFormu() {
       setSonuc(await referansYanitla(token, puan, yorum.trim() || null));
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
+      setTekrarDenenir(tekrarDenenebilirMi(sebep));
+      // 409: bu arada başka bir sekmede yanıtlanmış olabilir — durumu tazele.
+      if (!tekrarDenenebilirMi(sebep)) void bilgiyiGetir(token);
     } finally {
       setBekleniyor(false);
     }
@@ -71,16 +115,42 @@ function ReferansFormu() {
       </header>
 
       {hata ? (
-        <HataKutusu hata={hata} tekrarDene={() => void gonder()} />
+        <HataKutusu
+          hata={hata}
+          tekrarDene={
+            tekrarDenenir && token ? () => void bilgiyiGetir(token) : undefined
+          }
+        />
       ) : null}
 
-      {!token ? (
-        <p className="rounded-sm border border-kenar bg-card px-5 py-4 text-sm text-pretty">
-          Bu adreste referans kodu yok. Size iletilen linki olduğu gibi açın.
+      {yukleniyor ? (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span
+            aria-hidden="true"
+            className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
+          />
+          İstek okunuyor…
         </p>
-      ) : sonuc ? (
-        <Tesekkur sonuc={sonuc} />
-      ) : (
+      ) : null}
+
+      {!yukleniyor && !token ? (
+        <Bilgilendirme metin="Bu adreste referans kodu yok. Size iletilen linki olduğu gibi açın." />
+      ) : null}
+
+      {bilgi ? <Iddia bilgi={bilgi} /> : null}
+
+      {sonuc ? <Tesekkur sonuc={sonuc} /> : null}
+
+      {bilgi && !sonuc && !bilgi.yanitlanabilir ? (
+        <Bilgilendirme
+          metin={
+            KAPALI_MESAJLARI[bilgi.durum] ??
+            "Bu referans isteği artık yanıtlanamıyor."
+          }
+        />
+      ) : null}
+
+      {bilgi && !sonuc && bilgi.yanitlanabilir ? (
         <form
           className="flex flex-col gap-6"
           onSubmit={(olay) => {
@@ -93,9 +163,9 @@ function ReferansFormu() {
               Anlatılan iş, sizin gördüğünüz kadarıyla doğru mu?
             </legend>
             <p className="text-sm text-muted-foreground">
-              Yanıtınız bir puana değil, dört başlıktan yalnızca birine etki
-              eder. Olumsuz yanıt da işimize yarar — amacımız kimseyi
-              cezalandırmak değil, iddiayı yerine oturtmak.
+              Yanıtınız dört başlıktan yalnızca birine etki eder. Olumsuz yanıt
+              da işimize yarar — amacımız kimseyi cezalandırmak değil, iddiayı
+              yerine oturtmak.
             </p>
 
             {SECENEKLER.map((secenek) => (
@@ -148,8 +218,36 @@ function ReferansFormu() {
             </span>
           </div>
         </form>
-      )}
+      ) : null}
     </main>
+  );
+}
+
+/** Referans kişinin yanıt verirken baktığı iddia. */
+function Iddia({ bilgi }: { bilgi: ReferansIstegiBilgisi }) {
+  return (
+    <article className="rounded-sm border border-kenar bg-card">
+      <div className="border-b border-kenar px-5 py-4">
+        <p className="text-xs text-muted-foreground">İddia sahibi</p>
+        <p className="text-sm">{bilgi.iddia_sahibi_adi}</p>
+      </div>
+      <div className="flex flex-col gap-1 px-5 py-4">
+        <h2 className="font-heading text-base font-semibold text-ana">
+          {bilgi.baslik}
+        </h2>
+        {bilgi.aciklama ? (
+          <p className="text-sm text-pretty">{bilgi.aciklama}</p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function Bilgilendirme({ metin }: { metin: string }) {
+  return (
+    <p className="rounded-sm border border-kenar bg-card px-5 py-4 text-sm text-pretty">
+      {metin}
+    </p>
   );
 }
 

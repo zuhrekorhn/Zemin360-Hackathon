@@ -54,6 +54,30 @@ class KanitDurumuYaniti(BaseModel):
     referanslar: list[ReferansDurumuYaniti]
 
 
+class ReferansIstegiYaniti(BaseModel):
+    """Referans kişinin yanıt vermeden ÖNCE gördüğü bilgi.
+
+    Neyi onayladığını bilmeden puan vermek anlamsız; iddianın başlığı ve
+    açıklaması bu yüzden burada.
+
+    `iddia_sahibi_adi` DÖNÜYOR, iletişim bilgisi DÖNMÜYOR: referans kişi kimin
+    için konuştuğunu bilmeli, yoksa yanıtı bir şey ifade etmez — zaten iddia
+    sahibi onu bizzat referans gösterdi, taraflar birbirini tanıyor. E-posta,
+    telefon ve kartın geri kalanı burada yok; bu uç nokta girişsiz çalıştığı
+    için yalnızca yanıt vermeye yetecek kadarını açıyor (agent-specs.md § 1.5
+    aynı çizgide: kart görünür, iletişim iki taraf da onaylayınca açılır).
+    """
+
+    somut_cikti_id: uuid.UUID
+    baslik: str
+    aciklama: str | None
+    iddia_sahibi_adi: str
+    # "bekliyor" | "yanitlandi" | "yanit_yok"
+    durum: str
+    # Arayüz formu gösterip göstermeyeceğine buna bakarak karar verir.
+    yanitlanabilir: bool
+
+
 class ReferansYanitiIstegi(BaseModel):
     """Girişsiz uç nokta: kimlik yerine tek kullanımlık token.
 

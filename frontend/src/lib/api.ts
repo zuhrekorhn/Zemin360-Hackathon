@@ -277,6 +277,26 @@ export type KanitEkleGirdisi = {
   referans_email?: string | null;
 };
 
+/** Referans kişinin yanıt vermeden önce gördüğü bilgi — iletişim bilgisi yok. */
+export type ReferansIstegiBilgisi = {
+  somut_cikti_id: string;
+  baslik: string;
+  aciklama: string | null;
+  iddia_sahibi_adi: string;
+  durum: string;
+  yanitlanabilir: boolean;
+};
+
+/** GET /dogrulama/referans/{token} — girişsiz; zaman aşımı okuma anında işler. */
+export function referansIstegiGetir(
+  token: string,
+): Promise<ReferansIstegiBilgisi> {
+  return apiIstek<ReferansIstegiBilgisi>(
+    `/dogrulama/referans/${encodeURIComponent(token)}`,
+    { cache: "no-store" },
+  );
+}
+
 /** POST /dogrulama/kanit-ekle — kanıtı kaydeder, ön rubriği üretir. */
 export function kanitEkle(girdi: KanitEkleGirdisi): Promise<KanitDurumu> {
   return apiIstek<KanitDurumu>("/dogrulama/kanit-ekle", {

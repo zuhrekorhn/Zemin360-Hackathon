@@ -64,12 +64,16 @@ export function Sohbet({
   );
 }
 
+/**
+ * `tekrarDene` verilmezse buton çizilmez: 404/409 gibi hatalarda aynı isteği
+ * tekrarlamak sonucu değiştirmiyor, buton boş bir umut oluyor.
+ */
 export function HataKutusu({
   hata,
   tekrarDene,
 }: {
   hata: SohbetHatasi;
-  tekrarDene: () => void;
+  tekrarDene?: () => void;
 }) {
   return (
     <div
@@ -77,15 +81,17 @@ export function HataKutusu({
       className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
     >
       <p className="text-sm text-pretty">{hata.metin}</p>
-      <Button
-        type="button"
-        variant="outline"
-        size="lg"
-        onClick={tekrarDene}
-        className="w-fit shrink-0"
-      >
-        Tekrar dene
-      </Button>
+      {tekrarDene ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          onClick={tekrarDene}
+          className="w-fit shrink-0"
+        >
+          Tekrar dene
+        </Button>
+      ) : null}
     </div>
   );
 }

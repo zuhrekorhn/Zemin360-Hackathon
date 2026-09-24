@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.dogrulama import (
+    DURUM_BEKLIYOR,
     DURUM_YANIT_YOK,
     DURUM_YANITLANDI,
     LinkKontrolu,
@@ -37,6 +38,7 @@ from app.schemas.dogrulama import (
     KanitDurumuYaniti,
     KanitEkleIstegi,
     ReferansDurumuYaniti,
+    ReferansIstegiYaniti,
     ReferansYanitiIstegi,
 )
 
@@ -108,6 +110,35 @@ async def referans_yaniti(
     return await _durum_yaniti(oturum, cikti.id, None)
 
 
+@router.get("/referans/{token}", response_model=ReferansIstegiYaniti)
+async def referans_istegi_goruntule(
+    token: str, oturum: AsyncSession = Depends(get_session)
+) -> ReferansIstegiYaniti:
+    """Referans kişinin yanıt sayfası için: neyi onaylıyor?
+
+    Girişsiz, token bazlı (yanıt uç noktasıyla aynı gerekçe). Zaman aşımı
+    burada da okuma anında hesaplanıyor — süresi geçmiş bir linke form
+    gösterip sonra reddetmek olmaz.
+    """
+    referans = await oturum.scalar(
+        select(ReferansIstegi)
+        .options(
+            selectinload(ReferansIstegi.somut_cikti)
+            .selectinload(SomutCikti.yetenek_karti)
+            .selectinload(YetenekKarti.kullanici)
+        )
+        .where(ReferansIstegi.token == token)
+    )
+    if referans is None:
+        raise HTTPException(status_code=404, detail="Bu referans linki geçersiz")
+
+    if zaman_asimina_ugradi_mi(referans.olusturma_tarihi, referans.durum):
+        referans.durum = DURUM_YANIT_YOK
+        await oturum.commit()
+
+    return referans_gorunumu(referans)
+
+
 @router.get("/kanit/{somut_cikti_id}", response_model=KanitDurumuYaniti)
 async def kanit_durumu(
     somut_cikti_id: uuid.UUID, oturum: AsyncSession = Depends(get_session)
@@ -142,6 +173,19 @@ async def itiraz(
 
 
 # --- Ortak parçalar --------------------------------------------------------
+
+
+def referans_gorunumu(referans: ReferansIstegi) -> ReferansIstegiYaniti:
+    """Referans isteğini, girişsiz sayfaya açılabilecek alanlara indirger."""
+    cikti = referans.somut_cikti
+    return ReferansIstegiYaniti(
+        somut_cikti_id=cikti.id,
+        baslik=cikti.baslik,
+        aciklama=cikti.aciklama,
+        iddia_sahibi_adi=cikti.yetenek_karti.kullanici.ad,
+        durum=referans.durum,
+        yanitlanabilir=referans.durum == DURUM_BEKLIYOR,
+    )
 
 
 async def _ciktiyi_getir(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> SomutCikti:

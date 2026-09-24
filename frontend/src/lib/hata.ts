@@ -4,6 +4,19 @@ import { ApiHatasi } from "@/lib/api";
 export type Hata = { metin: string; kota: boolean };
 
 /**
+ * Aynı isteği tekrarlamak sonucu değiştirir mi?
+ *
+ * 404 (yok) ve 409 (durum uygun değil) kalıcı: tekrar denemek aynı yanıtı
+ * getirir. Ağ hatası, 429 ve 5xx geçici.
+ */
+export function tekrarDenenebilirMi(sebep: unknown): boolean {
+  if (sebep instanceof ApiHatasi && sebep.durumKodu !== undefined) {
+    return sebep.durumKodu !== 404 && sebep.durumKodu !== 409;
+  }
+  return true;
+}
+
+/**
  * Hatayı kullanıcıya söylenebilir bir cümleye çevirir.
  *
  * 429 ayrı tutuluyor: Gemini'nin günlük kotası dolduğunda kullanıcı bir şeyi
