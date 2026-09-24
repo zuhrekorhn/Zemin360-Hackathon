@@ -28,7 +28,9 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
     )
     skor: Mapped[float] = mapped_column(Float)
     gerekce_metni: Mapped[str | None] = mapped_column(Text)
-    # State machine (değer kümesi Faz 2'de Eşleştirme Ajanı ile netleşecek)
+    # State machine: onerildi → ilgileniliyor → kabul_edildi | reddedildi
+    # (değer kümesi docs/data-schema.md § Tasarım Kararları'nda;
+    #  sabitler app/agents/eslestirme.py içinde DURUM_* olarak)
     durum: Mapped[str] = mapped_column(String)
     # Canlılık Ajanı bu alanı tarar (agent-specs.md)
     son_aktivite_tarihi: Mapped[datetime] = mapped_column(

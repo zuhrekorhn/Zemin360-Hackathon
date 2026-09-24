@@ -23,14 +23,14 @@ from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import Runnable
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_google_genai.chat_models import GoogleRateLimitError
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
 
-from app.core.config import get_settings
+from app.core.llm import HizSinirHatasi, kota_hatasi_mi, model, yedekli_zincir
+
+__all__ = ["HizSinirHatasi"]
 
 # Eksik alan için en fazla kaç tur takip sorusu sorulur (agent-specs.md § 1.2;
 # Tanımlama da aynı sınırı kullanır).
@@ -75,21 +75,6 @@ class AjanTanimi:
     tamamla: Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
 
-class HizSinirHatasi(RuntimeError):
-    """LLM sağlayıcısı kotayı doldurdu (Gemini ücretsiz katman)."""
-
-
-def _llm(model_adi: str) -> ChatGoogleGenerativeAI:
-    ayarlar = get_settings()
-    if not ayarlar.google_api_key:
-        raise RuntimeError("GOOGLE_API_KEY tanımlı değil (.env)")
-    return ChatGoogleGenerativeAI(
-        model=model_adi,
-        google_api_key=ayarlar.google_api_key,
-        temperature=0,
-    )
-
-
 def cikarim_zinciri(sema: type[BaseModel]) -> Runnable:
     """Aynı prompt ve şemayla çalışan iki modelden oluşan zincir.
 
@@ -100,10 +85,7 @@ def cikarim_zinciri(sema: type[BaseModel]) -> Runnable:
 
     Önbellek ajanın kendi sarmalayıcısında (her ajan kendi zincirini tutar).
     """
-    ayarlar = get_settings()
-    ana = _llm(ayarlar.gemini_model).with_structured_output(sema)
-    yedek = _llm(ayarlar.gemini_yedek_model).with_structured_output(sema)
-    return ana.with_fallbacks([yedek], exceptions_to_handle=(GoogleRateLimitError,))
+    return yedekli_zincir(lambda model_adi: model(model_adi).with_structured_output(sema))
 
 
 def bos_taslak(tanim: AjanTanimi) -> dict[str, Any]:
@@ -176,9 +158,8 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
         except Exception as hata:
             # Ücretsiz katmanda günlük/dakikalık kota dolabiliyor. Bunu 500
             # olarak değil, ne olduğunu söyleyen ayrı bir hata olarak taşı.
-            metin = str(hata)
-            if "RESOURCE_EXHAUSTED" in metin or "429" in metin:
-                raise HizSinirHatasi(metin) from hata
+            if kota_hatasi_mi(hata):
+                raise HizSinirHatasi(str(hata)) from hata
             raise
 
         return {

@@ -121,14 +121,15 @@ python run.py --reload          # http://localhost:8000
 pytest                                        # testler (DB ve API anahtarı gerektirmez)
 python scripts/kesif_e2e.py                   # Keşif Ajanı uçtan uca (sunucu + gerçek API'ler)
 python scripts/kesif_e2e.py b                 # sadece "hiç projem yok" senaryosu (kota tasarrufu)
+python scripts/eslestirme_e2e.py <kurum_id> --tohum   # Eşleştirme pipeline'i uçtan uca
 ruff check . && ruff format .                 # lint + format
 alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni migration
 alembic check                                 # modeller ile migration arasında fark var mı?
 ```
 
-**Ajan uç noktaları:** Keşif `/kesif/sohbet/baslat|cevap`, `/kesif/kart/onayla`, `GET /yetenek-kartlari/{id}` · Tanımlama `/tanimlama/sohbet/baslat|cevap`, `/tanimlama/kart/onayla`, `GET /ihtiyac-kartlari/{id}`. Tam liste: [`docs/api-contracts.md`](docs/api-contracts.md).
+**Ajan uç noktaları:** Keşif `/kesif/sohbet/baslat|cevap`, `/kesif/kart/onayla`, `GET /yetenek-kartlari/{id}` · Tanımlama `/tanimlama/sohbet/baslat|cevap`, `/tanimlama/kart/onayla`, `GET /ihtiyac-kartlari/{id}` · Eşleştirme `POST /eslestirme/calistir`, `GET /eslestirme/oneriler/{kurum_id}`, `POST /eslestirme/ilgileniyorum`. Tam liste: [`docs/api-contracts.md`](docs/api-contracts.md).
 
-**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak motor + `kesif.py`, `tanimlama.py`) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
+**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak sohbet motoru + `kesif.py`, `tanimlama.py`, `eslestirme.py`) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
 
 ## Frontend'i Çalıştırma
 
@@ -163,17 +164,20 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 
 ## Proje Durumu
 
-🟢 **Faz 1 tamamlandı** — altı ajandan ikisi çalışıyor:
+🟢 **Faz 2 sürüyor** — altı ajandan üçü çalışıyor:
 
 | Ajan | Durum |
 |---|---|
 | **Keşif** | Çalışıyor — sohbet → yetenek kartı taslağı → onay → kayıt + embedding |
 | **Tanımlama** | Çalışıyor — sokratik sohbet → ihtiyaç kartı taslağı → onay → kayıt + embedding |
-| Doğrulama, Eşleştirme, Canlılık, Takip | Faz 2-3 |
+| **Eşleştirme** | Çalışıyor (backend) — sert filtre → pgvector benzerliği → skor → gerekçe → iş birliği |
+| Doğrulama, Canlılık, Takip | Faz 2-3 |
+
+**Eşleştirme kapsamı:** şu an yalnızca kurum tarafı var (öneri listesi + "ilgileniyorum" → `ISBIRLIGI`). Genç'in eşleşme bildirimini görmesi ve arayüzü bilinçli olarak ertelendi (Faz 3+). Skor formülünün ESCO taksonomi bileşeni de MVP dışında (bkz. `docs/matching-algorithm.md`).
 
 İki sohbet ajanı aynı motoru paylaşıyor (`backend/app/agents/sohbet_motoru.py`): grafik iskeleti, taslak birleştirme ve yedek modele düşen LLM zinciri orada; soru seti, çıkarım şeması ve ajana özel dallar ajan dosyasında.
 
-Sırada **Faz 2**: Eşleştirme (pgvector benzerliği + gerekçe üretimi) ve Doğrulama (kanıt + referans akışı).
+Sırada: Doğrulama Ajanı (kanıt + referans akışı) ve Eşleştirme'nin arayüzü.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım

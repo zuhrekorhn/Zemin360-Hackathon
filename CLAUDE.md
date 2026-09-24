@@ -25,7 +25,9 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 
 ## Şu An Neredeyiz
 
-Faz 0 (mimari + tasarım) ve Faz 1 tamamlandı: backend ve frontend iskeleti ayakta, **Keşif ve Tanımlama ajanları uçtan uca çalışıyor** — sohbet, taslak onayı, kart kaydı ve Voyage embedding'i dahil. Sırada Faz 2: Eşleştirme + Doğrulama ajanları. Detaylı takvim: `docs/roadmap.md`.
+Faz 0 ve Faz 1 tamamlandı, **Faz 2 sürüyor**: Keşif, Tanımlama ve Eşleştirme ajanları çalışıyor. Eşleştirme şimdilik yalnızca backend ve yalnızca kurum tarafı (öneri + "ilgileniyorum"); Genç'in bildirim/arayüz tarafı bilinçli olarak Faz 3+'a bırakıldı. Sırada Doğrulama Ajanı. Detaylı takvim: `docs/roadmap.md`.
+
+**Her ajan sohbet ajanı değil:** Keşif ve Tanımlama çok turlu konuşur ve aynı motoru paylaşır; Eşleştirme tek seferlik bir hesaptır (SQL → pgvector → skor → tek LLM çağrısı), `sohbet_motoru.py`'yi kullanmaz. LLM sağlayıcısı ve yedek model zinciri ikisinde de ortak: `app/core/llm.py`.
 
 İki sohbet ajanı **aynı motoru** paylaşıyor (`app/agents/sohbet_motoru.py`); yeni bir sohbet ajanı gerekirse grafik iskeletini kopyalama, bir `AjanTanimi` yaz. Ajana özel olan şey soru seti, çıkarım şeması ve varsa ek dalıdır.
 
