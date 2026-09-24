@@ -180,12 +180,16 @@ export default function TanimlamaSayfasi() {
         <TaslakBolumu
           taslak={taslak}
           bekleniyor={bekleniyor}
-          onOnayla={async (kurum) => {
+          onOnayla={async (kurum, duzeltilmisTaslak) => {
             if (!oturumId) return;
             setHata(null);
             setBekleniyor(true);
             try {
-              const kayitli = await ihtiyacKartiOnayla(oturumId, kurum);
+              const kayitli = await ihtiyacKartiOnayla(
+                oturumId,
+                kurum,
+                duzeltilmisTaslak,
+              );
               // Öneri ekranı kurum kimliğiyle çalışıyor; giriş akışı
               // olmadığı için kimlik tarayıcıda hatırlanıyor.
               kimlikYaz("kurum", kayitli.kurum.id);
@@ -220,12 +224,18 @@ function TaslakBolumu({
 }: {
   taslak: IhtiyacTaslagi;
   bekleniyor: boolean;
-  onOnayla: (kurum: KurumGirdisi) => void;
+  onOnayla: (kurum: KurumGirdisi, duzeltilmisTaslak: IhtiyacTaslagi) => void;
 }) {
   const [ad, setAd] = useState("");
   const [sektor, setSektor] = useState("");
   const [sehir, setSehir] = useState("");
   const [email, setEmail] = useState("");
+  // İki ayrı şehir var ve karıştırılıyordu: kurumun bulunduğu yer ile
+  // gencin bulunmasını istediğiniz yer. İkincisi eşleştirmenin sert
+  // filtresi, o yüzden burada görünür ve düzeltilebilir.
+  const [aranilanSehir, setAranilanSehir] = useState(
+    taslak.sehir_tercihi ?? "",
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -255,12 +265,15 @@ function TaslakBolumu({
           onSubmit={(olay) => {
             olay.preventDefault();
             if (bekleniyor) return;
-            onOnayla({
-              ad: ad.trim(),
-              sektor: sektor.trim() || null,
-              sehir: sehir.trim() || null,
-              iletisim_email: email.trim(),
-            });
+            onOnayla(
+              {
+                ad: ad.trim(),
+                sektor: sektor.trim() || null,
+                sehir: sehir || null,
+                iletisim_email: email.trim(),
+              },
+              { ...taslak, sehir_tercihi: aranilanSehir || null },
+            );
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">
@@ -293,13 +306,37 @@ function TaslakBolumu({
               />
             </FormAlani>
 
-            <FormAlani etiket="Şehir" htmlFor="sehir" istegeBagli>
+            <FormAlani etiket="Kurumun şehri" htmlFor="sehir" istegeBagli>
               {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
                   bozuyordu (bkz. backend/app/core/sehir.py). */}
               <select
                 id="sehir"
                 value={sehir}
-                onChange={(olay) => setSehir(olay.target.value)}
+                onChange={(olay) => {
+                  setSehir(olay.target.value);
+                  // Aranan şehir boşsa kurumun şehri makul bir varsayılan;
+                  // kullanıcı yine de değiştirebiliyor.
+                  if (!aranilanSehir) setAranilanSehir(olay.target.value);
+                }}
+                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+              >
+                {SEHIR_SECENEKLERI.map((secenek) => (
+                  <option key={secenek.deger} value={secenek.deger}>
+                    {secenek.etiket}
+                  </option>
+                ))}
+              </select>
+            </FormAlani>
+
+            <FormAlani
+              etiket="Aranan şehir"
+              htmlFor="aranilan-sehir"
+              istegeBagli
+            >
+              <select
+                id="aranilan-sehir"
+                value={aranilanSehir}
+                onChange={(olay) => setAranilanSehir(olay.target.value)}
                 className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
               >
                 {SEHIR_SECENEKLERI.map((secenek) => (
@@ -310,6 +347,13 @@ function TaslakBolumu({
               </select>
             </FormAlani>
           </div>
+
+          <p className="text-xs text-pretty text-muted-foreground">
+            <span className="font-medium">Kurumun şehri</span> sizin
+            bulunduğunuz yer; <span className="font-medium">aranan şehir</span>{" "}
+            gencin nerede olmasını istediğiniz. “Uzaktan / fark etmez”
+            seçerseniz şehir filtresi hiç uygulanmaz.
+          </p>
 
           <Button
             type="submit"
@@ -366,7 +410,7 @@ function TaslakKarti({
 
       <dl className="grid gap-px bg-kenar sm:grid-cols-2">
         <div className="bg-card px-4 py-3">
-          <dt className="text-xs text-muted-foreground">Şehir tercihi</dt>
+          <dt className="text-xs text-muted-foreground">Aranan şehir</dt>
           <dd className="text-sm break-words">
             {sehirEtiketi(taslak.sehir_tercihi)}
           </dd>
