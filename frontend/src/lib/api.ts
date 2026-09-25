@@ -389,7 +389,7 @@ export type Oneri = {
   skor: number;
   /** "onerildi" | "ilgileniliyor" | "kabul_edildi" | "reddedildi" */
   durum: string;
-  /** LLM kotası dolduysa null kalır — skor yine de geçerli. */
+  /** Dil modeli o an yanıt vermediyse null kalır — skor yine de geçerli. */
   gerekce_metni: string | null;
   yetenek_karti: YetenekKartiYaniti;
 };

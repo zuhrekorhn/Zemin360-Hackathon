@@ -266,7 +266,7 @@ function OneriKarti({
           <p className="text-sm text-pretty">{oneri.gerekce_metni}</p>
         ) : (
           <p className="text-sm text-pretty text-muted-foreground">
-            Gerekçe metni henüz üretilemedi (dil modeli kotası). Skor ve
+            Gerekçe metni henüz üretilemedi (dil modeli o an yanıt vermedi). Skor ve
             sıralama bundan etkilenmiyor; yeniden hesaplayınca gerekçe de gelir.
           </p>
         )}

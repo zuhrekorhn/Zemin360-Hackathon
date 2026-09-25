@@ -149,7 +149,7 @@ TANIMLAMA = motor.AjanTanimi(
 
 @lru_cache
 def _cikarim_zinciri() -> Runnable:
-    return motor.cikarim_zinciri(IhtiyacCikarimi)
+    return motor.cikarim_zinciri(IhtiyacCikarimi, "tanimlama_cikarim")
 
 
 def bos_taslak() -> dict[str, Any]:

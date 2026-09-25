@@ -9,8 +9,8 @@ veritabanına yazıldığı SQL ile doğrulanır. İki senaryo çalışır:
     .venv/Scripts/python.exe scripts/kesif_e2e.py            # iki senaryo
     .venv/Scripts/python.exe scripts/kesif_e2e.py b          # sadece "projem yok" senaryosu
 
-Gemini ücretsiz katmanın dakikalık istek sınırına takılmamak için çağrılar
-arasında kısa bir bekleme var.
+Ücretli katmanda çağrılar arasında bekleme yok. Hız sınırına takılırsan
+`E2E_BEKLEME_SN` ile çağrılar arasına bekleme koyabilirsin.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 API = os.environ.get("API_URL", "http://localhost:8000")
-CAGRI_ARASI_BEKLEME = 6.0  # saniye — Gemini ücretsiz katman hız sınırı
+CAGRI_ARASI_BEKLEME = float(os.environ.get("E2E_BEKLEME_SN", "0"))  # saniye
 MAKS_TUR = 8  # sonsuz döngüye karşı emniyet
 
 SENARYO_A = [

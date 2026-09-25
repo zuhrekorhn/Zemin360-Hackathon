@@ -27,7 +27,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
 
-from app.core.llm import llm_hatasini_cevir, model, yedekli_zincir
+from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 
 # Referans yanıtı için tanınan süre (docs/agent-specs.md § 4.2: 5-7 gün).
 # Üst sınır seçildi: erken "yanıt yok" demek referans kişiyi cezalandırır.
@@ -263,8 +263,12 @@ async def _basligi_oku(yanit: httpx.Response) -> str:
 
 @lru_cache
 def _rubrik_zinciri() -> Runnable:
+    # Güçlü katman: rubrik kanıtla iddiayı karşılaştırıp gerekçeli puan veriyor;
+    # nüans ve kurallara (itiraz notu beyandır vb.) uyum burada önemli.
     return yedekli_zincir(
-        lambda model_adi: RUBRIK_SABLONU | model(model_adi).with_structured_output(RubrikPuani)
+        "guclu",
+        "dogrulama_rubrik",
+        lambda m: RUBRIK_SABLONU | m.with_structured_output(RubrikPuani),
     )
 
 

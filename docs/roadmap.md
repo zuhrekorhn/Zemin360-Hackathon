@@ -58,6 +58,12 @@ katmandan ücretli API anahtarına geçilir. Katmanlı model stratejisi korunur:
 çıkarım işleri ucuz model, gerekçe ve rubrik güçlü model. Yedek model zinciri
 Gemini içinde çalışmaya devam eder. Her çağrının token kullanımı log'a yazılır.
 
+- [x] Yapıldı: iki katman (`GEMINI_HIZLI_*`, `GEMINI_GUCLU_*`, `.env`'den), yedek
+      model arıza/zaman aşımı/hız sınırı/404 için, 30 sn zaman aşımı, token log'u,
+      açılışta model adı kontrolü. Güçlü katman varsayılanı **geçici olarak**
+      `gemini-3.8-flash` (yeni anahtarlara kararlı Pro açık değil); Pro'ya geçilip
+      geçilmeyeceği karşılaştırma raporundan sonra kararlaştırılacak.
+
 **Kabul:** Tüm testler geçer; her bulgu için en az bir yeni test var.
 
 ## Faz B — Kimlik ve iki taraflı döngü (27-29 Eyl)

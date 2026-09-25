@@ -11,7 +11,7 @@ yetenek kartı ekler (Voyage embedding'iyle, Gemini çağrısı olmadan). Cold
 start sorununu elle aşmak için: gerçek sohbetten geçmiş kartlar azken
 pipeline'ın tamamını görebilmek gerekiyor.
 
-Gemini kotası: yalnızca gerekçe üretiminde, öneri başına bir çağrı.
+LLM: yalnızca gerekçe üretiminde (güçlü katman), öneri başına bir çağrı.
 """
 
 from __future__ import annotations

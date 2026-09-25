@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -19,11 +20,16 @@ from app.api import (
 )
 from app.core.config import get_settings
 from app.core.hatalar import hata_isleyicilerini_kur
+from app.core.llm import model_adlarini_dogrula
 
 # LLM süreleri ve hata ayrıntıları sunucu günlüğüne düşsün (app/core/llm.py,
 # app/core/hatalar.py). uvicorn kendi yapılandırmasını sonra kuruyor ama kök
 # handler'ı bozmuyor, satırlar görünmeye devam ediyor.
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s — %(message)s")
+# Gemini SDK'sı her çağrıda bir bilgi satırı basıyor (otomatik fonksiyon
+# çağırma uyarısı); token satırları arasında gürültü. SDK'nın tekrar
+# ("Retrying …") satırları başka bir logger'dan geliyor, onlar görünür kalıyor.
+logging.getLogger("google_genai.models").setLevel(logging.WARNING)
 
 
 @asynccontextmanager
@@ -34,11 +40,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     ile oluşturur; bunlar LangGraph'a ait olduğu için Alembic'e girmiyor.
     """
     ayarlar = get_settings()
+    # .env'deki model adlarını sağlayıcının listesiyle karşılaştır. Arka planda:
+    # açılışı beklemez, ağ yoksa sessizce geçer (app/core/llm.py).
+    model_kontrolu = asyncio.create_task(model_adlarini_dogrula())
     async with AsyncPostgresSaver.from_conn_string(ayarlar.checkpointer_url) as checkpointer:
         await checkpointer.setup()
         app.state.kesif_grafigi = kesif_grafigi_derle(checkpointer)
         app.state.tanimlama_grafigi = tanimlama_grafigi_derle(checkpointer)
         yield
+    model_kontrolu.cancel()
 
 
 app = FastAPI(

@@ -63,7 +63,7 @@ export default function KesifSayfasi() {
   const baslatildi = useRef(false);
   const sonMesaj = useRef<HTMLDivElement | null>(null);
 
-  // Hata cümlesi tek yerden: lib/hata.ts (429 kota, 503 yoğunluk ayrımı orada).
+  // Hata cümlesi tek yerden: lib/hata.ts (429 hız sınırı, 503 arıza ayrımı orada).
   const hatayiYaz = useCallback(
     (sebep: unknown) => setHata(hatayaCevir(sebep)),
     [],

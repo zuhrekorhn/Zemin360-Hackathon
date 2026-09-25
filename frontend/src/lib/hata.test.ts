@@ -2,35 +2,34 @@ import { describe, expect, it } from "vitest";
 
 import { ApiHatasi } from "@/lib/api";
 import {
-  KOTA_MESAJI,
+  HIZ_SINIRI_MESAJI,
   MESGUL_MESAJI,
   hatayaCevir,
   tekrarDenenebilirMi,
 } from "@/lib/hata";
 
 /**
- * Gerçek vaka: 429 (günlük kota) "Şu an yoğunluk var, birkaç saniye sonra
- * tekrar dene" diye gösteriliyordu. Kullanıcı saniyeler sonra yine aynı
- * hatayı görüyordu; backend'in doğru cümlesi de eziliyordu. Mantık iki
- * sayfada kopyalanmıştı.
+ * Gerçek vaka: backend'in doğru cümlesi frontend'de eziliyordu ve mantık
+ * iki sayfada kopyalanmıştı. 429 ücretli katmanda hız sınırı (dakikalık),
+ * 503 sağlayıcı arızası; ikisi farklı cümle.
  */
 describe("hatayaCevir", () => {
-  it("429'da kota der, yoğunluk demez", () => {
+  it("429'da hız sınırı cümlesi, kota demez", () => {
     const hata = hatayaCevir(new ApiHatasi("İstek başarısız: 429", 429));
-    expect(hata.metin).toBe(KOTA_MESAJI);
-    expect(hata.metin).toMatch(/kota/i);
-    expect(hata.metin).not.toMatch(/yoğun/i);
+    expect(hata.metin).toBe(HIZ_SINIRI_MESAJI);
+    expect(hata.metin).not.toMatch(/kota/i);
     expect(hata.kota).toBe(true);
   });
 
-  it("503'te yoğunluk der — kotadan ayrı bir durum", () => {
+  it("503'te yoğunluk der — hız sınırından ayrı bir durum", () => {
     const hata = hatayaCevir(new ApiHatasi("İstek başarısız: 503", 503));
     expect(hata.metin).toBe(MESGUL_MESAJI);
     expect(hata.kota).toBe(false);
   });
 
   it("backend'in kendi cümlesini korur", () => {
-    const backend = "LLM kotası doldu, biraz sonra tekrar dene. Sohbetin kayıtlı.";
+    const backend =
+      "Dil modeli şu an çok fazla istek alıyor. Biraz sonra tekrar dene. Sohbetin kayıtlı.";
     const hata = hatayaCevir(new ApiHatasi(backend, 429, backend));
     expect(hata.metin).toBe(backend);
     expect(hata.kota).toBe(true);

@@ -18,6 +18,7 @@ from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
 from app.core import calisma_modeli
+from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.metin import eposta_normalize
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
@@ -75,7 +76,7 @@ async def sohbet_cevap(istek: SohbetCevapIstegi, request: Request) -> TanimlamaS
     except HizSinirHatasi as hata:
         raise HTTPException(
             status_code=429,
-            detail="LLM kotası doldu, biraz sonra tekrar dene. Sohbetin kayıtlı.",
+            detail=f"{HIZ_SINIRI_MESAJI} Sohbetin kayıtlı.",
         ) from hata
 
     return _yanit(istek.oturum_id, durum)

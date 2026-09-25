@@ -26,6 +26,7 @@ from app.agents.dogrulama import (
     ucuncu_taraf_onayi_hesapla,
     zaman_asimina_ugradi_mi,
 )
+from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.llm import HizSinirHatasi
 from app.db.session import get_session
 from app.models.guven_skoru import GuvenSkoru
@@ -240,7 +241,7 @@ async def _rubrigi_yaz(
 ) -> None:
     """Ön rubriği üretip kaydeder; üçüncü taraf onayı korunur.
 
-    LLM kotası dolarsa 429 döner — burada sessizce puansız devam etmek
+    Dil modeli hız sınırına takılırsa 429 döner — burada sessizce puansız devam etmek
     yanlış olurdu, kullanıcı kanıtının değerlendirilmediğini bilmeli.
     """
     try:
@@ -254,7 +255,7 @@ async def _rubrigi_yaz(
     except HizSinirHatasi as hata:
         raise HTTPException(
             status_code=429,
-            detail="LLM kotası doldu, kanıt değerlendirilemedi. Biraz sonra tekrar dene.",
+            detail=f"Kanıt değerlendirilemedi. {HIZ_SINIRI_MESAJI}",
         ) from hata
 
     if cikti.guven_skoru is None:

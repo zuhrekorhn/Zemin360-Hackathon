@@ -207,7 +207,7 @@ async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> Oneri
 async def _gerekce(ihtiyac, aday: Aday) -> str | None:
     """Gerekçeyi üretir; LLM erişilemezse eşleşmeyi gerekçesiz bırakır.
 
-    Skor ve sıralama LLM'den bağımsız — kota ya da sağlayıcı arızası yüzünden
+    Skor ve sıralama LLM'den bağımsız — hız sınırı ya da sağlayıcı arızası yüzünden
     tüm öneri listesini kaybetmek mantıksız olurdu. Gerekçe NULL kalır,
     sonraki çalıştırmada yeniden denenir (arayüz bunu açıkça söylüyor).
     """

@@ -9,7 +9,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 
-from app.core.hatalar import BEKLENMEYEN_MESAJ, MESGUL_MESAJI, hata_isleyicilerini_kur
+from app.core.hatalar import (
+    BEKLENMEYEN_MESAJ,
+    HIZ_SINIRI_MESAJI,
+    MESGUL_MESAJI,
+    hata_isleyicilerini_kur,
+)
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 
 ORIGIN = "http://localhost:3000"
@@ -59,10 +64,13 @@ def test_izinsiz_origin_cors_basligi_almaz(istemci):
     assert yanit.status_code == 500
 
 
-def test_kota_hatasi_429_doner(istemci):
+def test_hiz_siniri_429_doner(istemci):
+    """Ücretli katmanda 429 günlük kota değil, anlık hız sınırı: "kota" denmez."""
     yanit = istemci.get("/kota", headers={"Origin": ORIGIN})
     assert yanit.status_code == 429
     assert yanit.headers["access-control-allow-origin"] == ORIGIN
+    assert yanit.json() == {"detail": HIZ_SINIRI_MESAJI}
+    assert "kota" not in yanit.text.lower()
 
 
 def test_mesgul_model_503_doner(istemci):

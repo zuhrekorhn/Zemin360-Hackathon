@@ -1,6 +1,6 @@
 import { ApiHatasi } from "@/lib/api";
 
-/** Ekranda gösterilecek hata. `kota` true ise dil modelinin kotası dolmuş. */
+/** Ekranda gösterilecek hata. `kota` true ise dil modeli hız sınırına takılmış (429). */
 export type Hata = { metin: string; kota: boolean };
 
 /**
@@ -9,10 +9,11 @@ export type Hata = { metin: string; kota: boolean };
  * ayrımı yapıyor ve öncelikli: ne olduğunu en iyi o biliyor.
  *
  * İkisi farklı şey söylüyor, karıştırılmamalı:
- *   429 — günlük kota doldu; saatler sürebilir.
- *   503 — model anlık yoğun; saniyeler içinde geçer.
+ *   429 — hız sınırı: dil modeli o an çok fazla istek alıyor.
+ *   503 — sağlayıcı arızası ya da zaman aşımı; model yanıt veremedi.
  */
-export const KOTA_MESAJI = "Dil modeli kotası doldu. Bir süre sonra tekrar dene.";
+export const HIZ_SINIRI_MESAJI =
+  "Dil modeli şu an çok fazla istek alıyor. Biraz sonra tekrar dene.";
 export const MESGUL_MESAJI =
   "Dil modeli şu an yoğun. Birkaç saniye sonra tekrar dene.";
 const BEKLENMEYEN_MESAJ = "Beklenmeyen bir şey oldu, tekrar dene.";
@@ -33,9 +34,8 @@ export function tekrarDenenebilirMi(sebep: unknown): boolean {
 /**
  * Hatayı kullanıcıya söylenebilir bir cümleye çevirir — uygulamadaki tek yer.
  *
- * Backend `{"detail": "..."}` gönderdiyse o cümle gösterilir. Önceden 429
- * burada "yoğunluk var, birkaç saniye sonra dene" diye eziliyordu; oysa 429
- * günlük kota demek ve kullanıcı saniyeler sonra yine aynı hatayı görüyordu.
+ * Backend `{"detail": "..."}` gönderdiyse o cümle gösterilir — ne olduğunu
+ * en iyi o biliyor. Yoksa durum koduna göre yedek cümle.
  */
 export function hatayaCevir(sebep: unknown): Hata {
   if (!(sebep instanceof ApiHatasi)) {
@@ -44,7 +44,7 @@ export function hatayaCevir(sebep: unknown): Hata {
 
   const kota = sebep.durumKodu === 429;
   if (sebep.ayrinti) return { metin: sebep.ayrinti, kota };
-  if (sebep.durumKodu === 429) return { metin: KOTA_MESAJI, kota };
+  if (sebep.durumKodu === 429) return { metin: HIZ_SINIRI_MESAJI, kota };
   if (sebep.durumKodu === 503) return { metin: MESGUL_MESAJI, kota };
   return { metin: sebep.message, kota };
 }

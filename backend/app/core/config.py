@@ -12,12 +12,25 @@ class Settings(BaseSettings):
     # Frontend origin'leri, virgülle ayrılmış (CORS). Varsayılan: Next.js dev sunucusu.
     cors_origins: str = "http://localhost:3000"
 
-    # Keşif/Tanımlama ajanlarının LLM'i (docs/architecture.md § Teknoloji Kararları)
+    # LLM: Gemini, ücretli katman (docs/architecture.md § Teknoloji Kararları).
+    # İki katman var; hangi işin hangisini kullandığı app/core/llm.py'de.
+    # Model adları buradan okunur ki .env'den kod değişmeden değiştirilebilsin.
     google_api_key: str = ""
-    gemini_model: str = "gemini-3.6-flash"
-    # Ücretsiz katman kotası model başına ayrı işliyor; ana modelin günlük
-    # kotası dolunca ajan buna düşer (bkz. app/agents/kesif.py).
-    gemini_yedek_model: str = "gemini-3.1-flash-lite"
+    # Hızlı katman: yapılandırılmış çıkarım (Keşif ve Tanımlama sohbetleri).
+    gemini_hizli_model: str = "gemini-3.6-flash"
+    gemini_hizli_yedek_model: str = "gemini-3.1-flash-lite"
+    # Güçlü katman: gerekçeli akıl yürütme (eşleştirme gerekçesi, doğrulama
+    # rubriği). Varsayılan kararlı (preview olmayan) bir model: demo günü
+    # preview modelin hız sınırı ya da kaldırılması sürpriz çıkarmasın. Yeni
+    # anahtarlara kararlı bir Pro açık değil (gemini-2.5-pro 404 dönüyor,
+    # gemini-pro-latest 3.1-pro-preview'a gidiyor); bu yüzden şimdilik en yeni
+    # kararlı Flash. Pro gerekip gerekmediği karşılaştırmayla belirlenecek.
+    gemini_guclu_model: str = "gemini-3.8-flash"
+    # Yedekler sağlayıcı arızası (5xx, zaman aşımı) ve anlık hız sınırı (429)
+    # için: sorun model başına oluştuğu için başka model o an genellikle boşta.
+    gemini_guclu_yedek_model: str = "gemini-3.6-flash"
+    # Tek çağrı bu süreyi aşarsa yedek modele geçilir.
+    gemini_zaman_asimi_sn: float = 30
 
     # Embedding sağlayıcısı (docs/matching-algorithm.md § 2)
     voyage_api_key: str = ""

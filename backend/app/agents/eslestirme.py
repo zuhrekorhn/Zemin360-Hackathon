@@ -31,7 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.calisma_modeli import sehir_eslesmeli_mi
-from app.core.llm import llm_hatasini_cevir, model, yedekli_zincir
+from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 from app.core.sehir import sehir_kanonik
 from app.models.eslesme import Eslesme
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -280,7 +280,11 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
 
 @lru_cache
 def _gerekce_zinciri() -> Runnable:
-    return yedekli_zincir(lambda model_adi: GEREKCE_SABLONU | model(model_adi) | StrOutputParser())
+    # Güçlü katman: gerekçe kartlardaki somut noktalara atıf yapmalı, genel
+    # geçer laf etmemeli — nüans burada önemli (app/core/llm.py).
+    return yedekli_zincir(
+        "guclu", "eslestirme_gerekce", lambda m: GEREKCE_SABLONU | m | StrOutputParser()
+    )
 
 
 async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str:

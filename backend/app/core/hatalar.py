@@ -26,7 +26,9 @@ logger = logging.getLogger("zemin360")
 # Kullanıcıya gösterilen metin: ne olduğunu söyler, iç ayrıntı sızdırmaz.
 # Yığın izi ve hata mesajı log'a yazılır (sunucu günlüğü).
 BEKLENMEYEN_MESAJ = "Beklenmeyen bir hata oldu. Tekrar dene; sorun sürerse bu bir hatadır."
-KOTA_MESAJI = "Dil modeli kotası doldu. Bir süre sonra tekrar dene."
+# 429: iki model de hız sınırına takıldı (ücretli katmanda dakikalık sınır;
+# ücretsiz katmandaki günlük kota değil). Birkaç saniye içinde geçer.
+HIZ_SINIRI_MESAJI = "Dil modeli şu an çok fazla istek alıyor. Biraz sonra tekrar dene."
 MESGUL_MESAJI = "Dil modeli şu an yoğun. Birkaç saniye sonra tekrar dene."
 
 
@@ -60,9 +62,9 @@ async def beklenmeyen_hata(istek: Request, hata: Exception) -> JSONResponse:
     return _yanit(istek, 500, BEKLENMEYEN_MESAJ)
 
 
-async def kota_hatasi(istek: Request, hata: Exception) -> JSONResponse:
-    logger.warning("LLM kotası doldu: %s %s — %s", istek.method, istek.url.path, hata)
-    return _yanit(istek, 429, KOTA_MESAJI)
+async def hiz_siniri_hatasi(istek: Request, hata: Exception) -> JSONResponse:
+    logger.warning("LLM hız sınırı: %s %s — %s", istek.method, istek.url.path, hata)
+    return _yanit(istek, 429, HIZ_SINIRI_MESAJI)
 
 
 async def mesgul_hatasi(istek: Request, hata: Exception) -> JSONResponse:
@@ -77,6 +79,6 @@ async def mesgul_hatasi(istek: Request, hata: Exception) -> JSONResponse:
 
 
 def hata_isleyicilerini_kur(app: FastAPI) -> None:
-    app.add_exception_handler(HizSinirHatasi, kota_hatasi)
+    app.add_exception_handler(HizSinirHatasi, hiz_siniri_hatasi)
     app.add_exception_handler(ModelMesgulHatasi, mesgul_hatasi)
     app.add_exception_handler(Exception, beklenmeyen_hata)

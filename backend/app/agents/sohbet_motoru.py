@@ -7,7 +7,7 @@ Motorun bildiği üç şey var:
   1. Grafik iskeleti — açılış → yapılandırılmış çıkarım → karar düğümü.
   2. Taslak birleştirme — skaler alan üzerine yazar, liste alanı tekrarsız
      ekler, boş gelen çıkarım eski değeri SİLMEZ.
-  3. Yedek modele düşen LLM zinciri (ücretsiz katman kotası model başına).
+  3. Hızlı katmanda, arızada yedek modele düşen LLM zinciri (app/core/llm.py).
 
 Ajana özel olan her şey (`AjanTanimi`) dışarıdan verilir: açılış sorusu,
 sistem talimatı, çıkarım şeması, zorunlu alanlar. Bir ajanın kendine has bir
@@ -28,7 +28,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
 
-from app.core.llm import HizSinirHatasi, llm_hatasini_cevir, model, yedekli_zincir
+from app.core.llm import HizSinirHatasi, llm_hatasini_cevir, yedekli_zincir
 from app.core.metin import sade_anahtar
 
 __all__ = ["HizSinirHatasi"]
@@ -97,17 +97,17 @@ class AjanTanimi:
     tamamla: Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
 
-def cikarim_zinciri(sema: type[BaseModel]) -> Runnable:
-    """Aynı prompt ve şemayla çalışan iki modelden oluşan zincir.
+def cikarim_zinciri(sema: type[BaseModel], is_adi: str) -> Runnable:
+    """Hızlı katmanda, aynı prompt ve şemayla çalışan iki modelden oluşan zincir.
 
-    Gemini ücretsiz katmanında günlük kota model başına ayrı işliyor; ana
-    modelin kotası dolunca (429/RESOURCE_EXHAUSTED) aynı çağrı yedek modele
-    düşer. Yedeğin de kotası dolarsa hata çağırana kadar çıkar ve kullanıcı
-    429 görür — sohbet checkpointer'da durduğu için kaybolmaz.
+    Yapılandırılmış çıkarım ince akıl yürütme istemiyor; hızlı katman yeterli
+    (app/core/llm.py). Ana model arıza ya da hız sınırı verirse aynı çağrı
+    yedek modele düşer. Yedek de başarısız olursa hata çağırana kadar çıkar —
+    sohbet checkpointer'da durduğu için kaybolmaz, kullanıcı tekrar deneyebilir.
 
     Önbellek ajanın kendi sarmalayıcısında (her ajan kendi zincirini tutar).
     """
-    return yedekli_zincir(lambda model_adi: model(model_adi).with_structured_output(sema))
+    return yedekli_zincir("hizli", is_adi, lambda m: m.with_structured_output(sema))
 
 
 def bos_taslak(tanim: AjanTanimi) -> dict[str, Any]:
@@ -204,7 +204,7 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
                 [SystemMessage(content=tanim.sistem_talimati), *durum["mesajlar"]]
             )
         except Exception as hata:
-            # Ücretsiz katmanda kota dolabiliyor, sağlayıcı da anlık 5xx
+            # Sağlayıcı anlık hız sınırı (429) ya da 5xx/zaman aşımı
             # verebiliyor. İkisini de 500 olarak değil, ne olduğunu söyleyen
             # ayrı hatalar olarak taşı.
             cevrilmis = llm_hatasini_cevir(hata)

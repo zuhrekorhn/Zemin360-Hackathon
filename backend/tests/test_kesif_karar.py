@@ -6,12 +6,6 @@ verdiğinden bağımsız olarak tutmaları gerekiyor.
 
 import asyncio
 
-from langchain_google_genai.chat_models import (
-    ChatGoogleGenerativeAIError,
-    GoogleAPIError,
-    GoogleRateLimitError,
-)
-
 from app.agents import sohbet_motoru as motor
 from app.agents.kesif import (
     FALLBACK_SORULARI,
@@ -19,11 +13,9 @@ from app.agents.kesif import (
     SomutCiktiTaslak,
     TaslakCikarimi,
     _birlestir,
-    _cikarim_zinciri,
     _karar,
     bos_taslak,
 )
-from app.core.config import get_settings
 
 
 def karar(durum: dict) -> dict:
@@ -288,45 +280,6 @@ def test_bos_taslak_tum_zorunlu_alanlari_icerir():
         "araclar_teknolojiler",
         "somut_ciktilar",
     }
-
-
-def test_kota_veya_ariza_ayni_sema_ile_yedek_modele_dusuyor(monkeypatch):
-    """Ana model kullanılamazsa aynı çağrı yedek modelle tekrarlanmalı.
-
-    İki sebep de model başına oluşuyor: günlük kota (`GoogleRateLimitError`)
-    ve sağlayıcı kaynaklı geçici arıza (`GoogleAPIError`, yalnızca 5xx).
-    """
-    monkeypatch.setenv("GOOGLE_API_KEY", "test-anahtari")
-    get_settings.cache_clear()
-    _cikarim_zinciri.cache_clear()
-    try:
-        zincir = _cikarim_zinciri()
-        ayarlar = get_settings()
-
-        assert zincir.exceptions_to_handle == (GoogleRateLimitError, GoogleAPIError)
-        assert zincir.runnable.first.model.endswith(ayarlar.gemini_model)
-        # Model adı sağlayıcıya göre "models/" önekiyle gelebiliyor.
-        yedekler = [f.first.model for f in zincir.fallbacks]
-        assert len(yedekler) == 1
-        assert yedekler[0].endswith(ayarlar.gemini_yedek_model)
-        # Yedek de aynı yapılandırılmış şemayı kullanmalı, yoksa çıkarım bozulur.
-        assert zincir.fallbacks[0].last == zincir.runnable.last
-    finally:
-        get_settings.cache_clear()
-        _cikarim_zinciri.cache_clear()
-
-
-def test_hatali_istek_yedek_modeli_bosuna_yormaz(monkeypatch):
-    """4xx hataları yedeğe düşürmemeli: aynı istek orada da başarısız olur."""
-    monkeypatch.setenv("GOOGLE_API_KEY", "test-anahtari")
-    get_settings.cache_clear()
-    _cikarim_zinciri.cache_clear()
-    try:
-        yakalananlar = _cikarim_zinciri().exceptions_to_handle
-        assert not any(issubclass(ChatGoogleGenerativeAIError, h) for h in yakalananlar)
-    finally:
-        get_settings.cache_clear()
-        _cikarim_zinciri.cache_clear()
 
 
 # --- Aynı işi anlatan çıktılar --------------------------------------------

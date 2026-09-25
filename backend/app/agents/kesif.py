@@ -257,7 +257,7 @@ KESIF = motor.AjanTanimi(
 
 @lru_cache
 def _cikarim_zinciri() -> Runnable:
-    return motor.cikarim_zinciri(TaslakCikarimi)
+    return motor.cikarim_zinciri(TaslakCikarimi, "kesif_cikarim")
 
 
 def bos_taslak() -> dict[str, Any]:

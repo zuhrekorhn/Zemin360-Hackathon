@@ -94,14 +94,14 @@ cp .env.example .env            # Windows PowerShell: Copy-Item .env.example .en
 
 `.env` içindeki `DATABASE_URL`'i kendi bağlantına göre düzenle (async sürücü: `postgresql+asyncpg://...`). Gerçek `.env` commit edilmez.
 
-**API anahtarları.** Sohbet ajanları (Keşif ve Tanımlama) iki dış servise gidiyor, ikisinin anahtarı da `.env`'de olmalı — yoksa sohbet ve kart onayı çalışmaz:
+**API anahtarları.** Ajanlar iki dış servise gidiyor, ikisinin anahtarı da `.env`'de olmalı — yoksa sohbet, kart onayı, eşleştirme gerekçesi ve kanıt değerlendirmesi çalışmaz:
 
 | Değişken | Ne için | Nereden |
 |---|---|---|
-| `GOOGLE_API_KEY` | Sohbet ve alan çıkarımı (Gemini 3.6 Flash, ücretsiz katman) | <https://aistudio.google.com/apikey> |
+| `GOOGLE_API_KEY` | Tüm LLM çağrıları (Gemini, **ücretli katman** — faturalandırması açık projenin anahtarı) | <https://aistudio.google.com/apikey> |
 | `VOYAGE_API_KEY` | Kart onaylanınca embedding üretimi (voyage-4) | <https://dashboard.voyageai.com> |
 
-Gemini'nin ücretsiz katmanında **model başına günde 20 istek** sınırı var (dakikalık sınır da ayrıca işliyor). Kota dolunca sohbet uç noktası `429` döner; sohbet checkpointer'da durduğu için kota yenilendiğinde aynı `oturum_id` ile kaldığın yerden devam edebilirsin. Bir sohbet yaklaşık 3-5 istek harcıyor, yani günde birkaç tam denemeye yetiyor. Kota model başına ayrı olduğu için ajan, ana modelin kotası dolduğunda otomatik olarak yedek modele (`GEMINI_YEDEK_MODEL`, varsayılan `gemini-3.1-flash-lite`) düşer; ikisi de dolarsa `429` görürsün.
+LLM çağrıları iki katmana ayrılıyor ve model adları `.env`'den okunuyor: **hızlı** katman Keşif ve Tanımlama'nın çıkarımı (`GEMINI_HIZLI_MODEL`, varsayılan `gemini-3.6-flash`), **güçlü** katman eşleştirme gerekçesi ve doğrulama rubriği (`GEMINI_GUCLU_MODEL`, varsayılan `gemini-3.8-flash`). Her katmanın bir yedek modeli var; sağlayıcı arızasında (5xx, 30 sn'yi aşan zaman aşımı), anlık hız sınırında (429) ya da model kullanılamadığında (404) aynı çağrı yedeğe düşer. Açılışta dört model adı sağlayıcının listesiyle karşılaştırılır; bulunamayan varsa sunucu log'unda uyarı çıkar. İkisi de yanıt veremezse uç nokta `503` (arıza) ya da `429` (hız sınırı) döner; sohbet checkpointer'da durduğu için aynı `oturum_id` ile kaldığın yerden devam edebilirsin. Her çağrının modeli, süresi ve token kullanımı sunucu günlüğüne yazılır (`LLM yanıtladı [iş] model: … token`). Değişkenlerin tamamı `.env.example`'da.
 
 **3. Migration ve sunucu.**
 
@@ -120,7 +120,7 @@ python run.py --reload          # http://localhost:8000
 ```bash
 pytest                                        # testler (DB ve API anahtarı gerektirmez)
 python scripts/kesif_e2e.py                   # Keşif Ajanı uçtan uca (sunucu + gerçek API'ler)
-python scripts/kesif_e2e.py b                 # sadece "hiç projem yok" senaryosu (kota tasarrufu)
+python scripts/kesif_e2e.py b                 # sadece "hiç projem yok" senaryosu
 python scripts/eslestirme_e2e.py <kurum_id> --tohum   # Eşleştirme pipeline'i uçtan uca
 ruff check . && ruff format .                 # lint + format
 alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni migration

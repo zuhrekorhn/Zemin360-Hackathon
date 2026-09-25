@@ -29,11 +29,11 @@ Faz 0 ve Faz 1 tamamlandı, **Faz 2 sürüyor**: Keşif, Tanımlama, Eşleştirm
 
 **Eşleştirmede iki ayrı sınır var, karıştırma:** benzerlik alt sınırı (0.45) "bu aday konuyla ilgili mi" sorusunu skordan ÖNCE yanıtlar; skor eşiği (%40) "ilgili adaylar arasında gösterilmeye değer mi" sorusunu sonra. Doğrulama bonusu sıralamayı etkiler, alakayı yaratmaz (`docs/matching-algorithm.md` § 5).
 
-**Hatalar kullanıcıya doğru cümleyi söylemeli:** yakalanmayan istisnalar `app/core/hatalar.py`'deki global işleyiciden CORS başlığıyla ve `{"detail": ...}` gövdesiyle dönüyor — aksi halde tarayıcı her hatayı "backend'e ulaşılamadı" sanıyor. LLM tarafında kota 429, sağlayıcı arızası 503; ikisi de önce yedek modele düşürülür.
+**Hatalar kullanıcıya doğru cümleyi söylemeli:** yakalanmayan istisnalar `app/core/hatalar.py`'deki global işleyiciden CORS başlığıyla ve `{"detail": ...}` gövdesiyle dönüyor — aksi halde tarayıcı her hatayı "backend'e ulaşılamadı" sanıyor. LLM tarafında hız sınırı 429, sağlayıcı arızası ve zaman aşımı 503; üçü de önce yedek modele düşürülür.
 
 **Zamanlayıcı yok, bilinçli:** cron/kuyruk altyapısı kurmuyoruz. Eşleştirme "arka plan işi" bir endpoint olarak duruyor; Doğrulama'nın 7 günlük zaman aşımı da okuma anında hesaplanıyor. Yeni bir periyodik iş gerekirse aynı deseni izle.
 
-**Her ajan sohbet ajanı değil:** Keşif ve Tanımlama çok turlu konuşur ve aynı motoru paylaşır; Eşleştirme ve Doğrulama tek seferlik hesaplardır (SQL → pgvector → skor → tek LLM çağrısı), `sohbet_motoru.py`'yi kullanmaz. LLM sağlayıcısı ve yedek model zinciri ikisinde de ortak: `app/core/llm.py`.
+**Her ajan sohbet ajanı değil:** Keşif ve Tanımlama çok turlu konuşur ve aynı motoru paylaşır; Eşleştirme ve Doğrulama tek seferlik hesaplardır (SQL → pgvector → skor → tek LLM çağrısı), `sohbet_motoru.py`'yi kullanmaz. LLM sağlayıcısı (Gemini, ücretli katman), model katmanları ve yedek zincir ikisinde de ortak: `app/core/llm.py`. Çıkarım işleri **hızlı** katmanda, gerekçe ve rubrik **güçlü** katmanda; model adları `.env`'den (`GEMINI_*`), her çağrının token kullanımı log'a yazılıyor.
 
 İki sohbet ajanı **aynı motoru** paylaşıyor (`app/agents/sohbet_motoru.py`); yeni bir sohbet ajanı gerekirse grafik iskeletini kopyalama, bir `AjanTanimi` yaz. Ajana özel olan şey soru seti, çıkarım şeması ve varsa ek dalıdır.
 
