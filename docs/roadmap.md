@@ -1,32 +1,161 @@
-# Yol Haritası
+# Yol Haritası — "Tam Uygulama" Sürümü
+
+> Bu belge önceki faz planının yerini alır. Organizatörler kısa bir MVP değil,
+> eksiksiz çalışan bir uygulama beklediklerini söyledi. Hedef çizgi buna göre
+> yeniden çizildi.
+>
+> **Teknik iş 5 Ekim'de biter.** 6-7 Ekim tampon, 8 Ekim boş, 9-11 Ekim yalnızca
+> sunum. Bu tarihten sonra yeni özellik girmez.
+
+## "Tam" ne demek
+
+Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyorsa bu
+takvime girmez.
+
+1. **Döngü kapalı.** Genç kart oluşturur → kanıt ekler → kurum ihtiyaç tanımlar
+   → öneri görür → ilgilenir → genç kabul eder → iletişim açılır → iş birliği
+   milestone'larla ilerler → tamamlanır → tamamlanma sisteme sinyal olarak
+   geri döner.
+2. **Herkes kendi kapısından girer.** Üç rol (genç, kurum, GİRVAK), her birinin
+   kendi paneli.
+3. **Canlı adreste.** Jüri localhost görmez.
+4. **Çıkmaz sokak yok.** Hiçbir ekran "Faz 3'te gelecek" demez.
 
 ## Takvim
 
-| Faz | Tarih | Odak |
+| Tarih | Faz | Çıktı |
 |---|---|---|
-| **Faz 0** | 19-21 Eylül | Mimari, veri şeması, sequence diyagramları, API sözleşmeleri, repo iskeleti — **tamamlandı** |
-| **Faz 1** | 22-28 Eylül | Çekirdek altyapı, Keşif + Tanımlama ajanı (paylaşılan motor), frontend iskeleti |
-| **Faz 2** | 29 Eylül - 3 Ekim | Eşleştirme ajanı (embedding + gerekçe), Doğrulama ajanı (rubrik), entegrasyon |
-| **Faz 3** | 4-6 Ekim | Canlılık + Takip ajanları, UI/UX cilası, uçtan uca test |
-| **Tampon** | 7-8 Ekim | Hata düzeltme, prova — 8'i geçmeyecek şekilde |
-| **Hackathon** | 9-11 Ekim | Sadece sunum + son rötuş |
+| 25-26 Eyl | A — Sağlamlaştırma | İnceleme bulguları kapandı, ücretli LLM'e geçildi |
+| 27-29 Eyl | B — Kimlik ve iki taraflı döngü | JWT, üç rol, genç paneli, karşılıklı onay |
+| 30 Eyl-1 Eki | C — Takip Ajanı | Milestone planı, ilerleme, tamamlanma sinyali |
+| 2-3 Eki | D — Canlılık Ajanı + GİRVAK paneli | Tarama, hatırlatma, fırsat, KPI'lar |
+| 3 Eki akşam | **Özellik dondurma** | Bundan sonra yalnızca hata düzeltme |
+| 4 Eki | E — Yayına alma + tohum veri | Canlı adres, gerçekçi havuz |
+| 5 Eki | F — Uçtan uca prova | Demo senaryosu, belgeler, yedek video |
 
-## Jüri Kriteri Eşlemesi (100 puan, eşit ağırlıklı %20)
+## Faz A — Sağlamlaştırma (25-26 Eyl)
 
-| Kriter | Bu projede karşılığı |
-|---|---|
-| Problem–Çözüm Uyumu | 6 problemin hepsi ele alınıyor, tek bir paylaşılan veri katmanı üzerinden |
-| Teknik Yetkinlik & Kod Kalitesi | Mimari kararların gerekçeli seçilmesi, temiz repo yapısı, açık kaynak standartları |
-| Yapay Zeka Entegrasyonu | 6 ajan, LangGraph supervisor pattern, katmanlı model stratejisi |
-| Kullanıcı Deneyimi (UI/UX) | Next.js + Tailwind + shadcn/ui, sade akışlar |
-| Çalışan Demo & Tamamlanmışlık | **Kapsam disiplini** — az ama tam çalışan özellik, hiçbir ajan yarım bırakılmıyor |
+İnceleme bulguları, önem sırasıyla:
 
-**Stratejik ilke:** 5 kriter eşit ağırlıklı olduğu için "ne kadar çok özellik" değil "ne kadar sağlam ve bitmiş" belirleyici. Bu yüzden 6 ajanın hepsi gerçek ve çalışır, ancak teknik derinlik jüri kriterine göre kalibre edilmiş (bkz. `agent-specs.md`).
+- [ ] `eslesme (ihtiyac_karti_id, yetenek_karti_id)` UNIQUE kısıtı; pipeline
+      çakışmada `ON CONFLICT` ile dayanıklı. Arka plan işi ile `GET /oneriler`
+      aynı anda çalışınca mükerrer satır ve çift LLM çağrısı olmamalı.
+- [ ] Onay tekrarlanabilir: aynı `oturum_id` ikinci kez onaylanınca yeni kart
+      açılmaz, mevcut kart döner. Embedding hatası yakalanır, kart yine döner;
+      embedding'i yeniden hesaplatan bir yol eklenir.
+- [ ] Referans gizliliği: girişsiz uç noktalar başka referansların e-postasını,
+      puanını ve token'ını dönmez. (Faz B'deki yetkilendirme ile tamamen kapanır.)
+- [ ] `musaitlik_tercihi` `Literal` olur, onayda doğrulanır, formda düzeltilebilir.
+- [ ] 429 mesajı düzeltilir ("kota doldu", "yoğunluk" değil); üç kopya tek
+      fonksiyonda (`lib/hata.ts`) toplanır.
+- [ ] Ek takip soruları ayrı sayaç kullanır; "bilmiyorum" cevabında aynı soru
+      tekrarlanmaz.
+- [ ] Tüm çıktılar silinirse kart gerçekten "potansiyel" kaydedilir.
+- [ ] `email` ve `iletisim_email` UNIQUE; kayıtlı kullanıcı bilgisi güncellenebilir.
 
-## Farklılaşma Noktaları
+**LLM geçişi:** `app/core/llm.py` sağlayıcıdan bağımsız kalır. Katmanlı model
+stratejisi korunur: çıkarım işleri ucuz model, gerekçe ve rubrik güçlü model.
+Yedek zincir ücretli sağlayıcı içinde çalışır. Her çağrının token kullanımı
+log'a yazılır.
 
-Rakip takımların muhtemelen atlayacağı üç nokta:
+**Kabul:** Tüm testler geçer; her bulgu için en az bir yeni test var.
 
-1. **"Neden eşleşti" açıklaması** — kara kutu skor yerine gerekçeli öneri.
-2. **Kapalı döngü** — Doğrulama → Eşleştirme → Takip → tamamlanan iş birliği yeni bir referans sinyaline dönüşüyor; "canlı ağ" vizyonu gerçekten çalışıyor.
-3. **Sektör-bağımsız taksonomi** — çoğu takım örtük olarak sadece teknik profilleri düşünecek; bu platform reklamcıdan üretim çalışanına kadar herkesi kapsıyor.
+## Faz B — Kimlik ve iki taraflı döngü (27-29 Eyl)
+
+**Kimlik kararı:** E-posta + şifre, JWT. Karmaşıklık bilinçli olarak düşük tutulur.
+
+- Şifreler argon2 (ya da bcrypt) ile hash'lenir.
+- JWT **httpOnly, Secure cookie** içinde taşınır; localStorage'a yazılmaz.
+- Tek access token, 7 gün ömür. Refresh token bu sürümde yok.
+- Token'da `sub` (kullanıcı id) ve `rol` (`genc` | `kurum` | `girvak`).
+- Frontend backend'e **Next.js rewrites** üzerinden gider (`/api/*` → FastAPI).
+  Böylece tarayıcı açısından aynı origin olur; farklı alan adlarında cookie ve
+  CORS sorunu çıkmaz.
+- Rol yetmez, **sahiplik** kontrol edilir: genç yalnızca kendi kartını, kurum
+  yalnızca kendi ihtiyaç kartını ve önerilerini görür/değiştirir.
+- Referans yanıt sayfası girişsiz kalır (token bazlı, önceki karar).
+
+**Döngü:**
+
+- [ ] Kayıt ve giriş sayfaları; rol seçimi kayıtta.
+- [ ] `Kullanici` / `Kurum` kayıtları hesaba bağlanır; onaydaki "e-postayla bul
+      veya oluştur" mantığı kaldırılır.
+- [ ] Genç paneli: kartım, kanıtlarım, bana gelen ilgiler, iş birliklerim.
+- [ ] Kurum paneli: ihtiyaç kartlarım, önerilerim, iş birliklerim.
+- [ ] Karşılıklı onay: kurum "ilgileniyorum" der → eşleşme `ilgileniliyor` →
+      genç kabul eder → `kabul_edildi` + iş birliği açılır → **iletişim bilgisi
+      ancak şimdi iki tarafa görünür**. Genç reddederse `reddedildi`.
+- [ ] Uygulama içi bildirimler (tablo + panelde sayaç). Gerçek e-posta yok.
+
+**Kabul:** İki ayrı tarayıcıda genç ve kurum olarak döngü, iletişim açılmasına
+kadar çıkmaz sokak olmadan yürür.
+
+## Faz C — Takip Ajanı (30 Eyl-1 Eki)
+
+- [ ] İş birliği açılınca ajan ihtiyaç kartının başarı kriterinden 3-5
+      milestone'luk plan önerir (LLM, yapılandırılmış çıktı).
+- [ ] İki taraf planı onaylar ya da düzenler.
+- [ ] Her milestone iki tarafça işaretlenir; iki taraf da aynı zaman çizelgesini görür.
+- [ ] Ajan kısa durum özeti yazar; tarihi geçen milestone'u işaretler.
+- [ ] İş birliği tamamlanınca gencin kartına "tamamlanmış pilot" sinyali yazılır
+      ve Eşleştirme'nin doğrulama bonusuna girer. **Geri besleme döngüsü burada kapanır.**
+
+**Sınır:** Ajan karar vermez, milestone'u kendisi kapatmaz; öneri ve özet üretir.
+
+## Faz D — Canlılık Ajanı + GİRVAK paneli (2-3 Eki)
+
+**Canlılık:**
+
+- [ ] Periyodik tarama (uygulama içi zamanlayıcı ya da platform cron'u) +
+      GİRVAK panelinde "taramayı şimdi çalıştır" butonu.
+- [ ] Belirli süredir hareketsiz eşleşme/iş birliği → kişiye özel hatırlatma (LLM).
+- [ ] Yeni ihtiyaç kartı → eski yetenek kartları yeniden taranır → "sana uygun
+      yeni ihtiyaç" fırsatı.
+- [ ] Her olay `canlilik_olayi` tablosuna yazılır.
+
+**GİRVAK paneli:**
+
+- [ ] Program hedefleri gerçek sayılarla: başvuru (80), kurum (20), eşleşme (10),
+      pilot (5).
+- [ ] Pasifleşen bağlantılar listesi, son Canlılık olayları.
+
+**Demo notu:** Tohum verinin bir kısmının `son_aktivite_tarihi` geriye çekilir;
+pasifleşme günlerce beklemeden gösterilebilir.
+
+## Faz E — Yayına alma + tohum veri (4 Eki)
+
+- [ ] Frontend: Vercel. Backend: Railway ya da Render. Postgres: pgvector
+      destekleyen yönetilen servis (Neon ya da Supabase).
+- [ ] Migration'lar canlı veritabanında sıfırdan çalışır.
+- [ ] Tohum veri: 30-50 yetenek kartı, 8-10 kurum, birkaç tamamlanmış ve
+      pasifleşmiş iş birliği. Demo senaryosuyla aynı hikâyeden beslenir.
+- [ ] Demo hesapları (genç, kurum, GİRVAK) hazır.
+
+## Faz F — Uçtan uca prova (5 Eki)
+
+- [ ] Demo senaryosu canlı adreste baştan sona en az iki kez.
+- [ ] README güncel: proje adı, canlı adres, ekran görüntüleri, "Sırada" bölümü.
+- [ ] LICENSE dosyası (MIT).
+- [ ] `architecture.md`, `agent-specs.md`, `data-schema.md` koddaki gerçek durumla uyumlu.
+- [ ] Yedek demo videosu (canlı demoda LLM gecikmesine karşı).
+
+## Kesim çizgisi
+
+Kayma olursa sırayla tampona gider: (1) GİRVAK panelinin grafik kısmı (sayılar
+kalır), (2) Canlılık'ın "yeni fırsat" dalı (hatırlatma kalır), (3) Takip'in durum özeti.
+
+**Asla kesilmez:** döngünün kapanması (Faz B + Takip tamamlanma sinyali) ve
+yayına alma.
+
+## Kapsam dışı
+
+Mobil uygulama, taraflar arası mesajlaşma, gerçek e-posta gönderimi, ESCO
+taksonomisi, çoklu dil, refresh token / OAuth.
+
+## Çalışma kuralları
+
+- Her faz önce kısa bir özellik notuyla başlar (ne yapar, hangi tablo, hangi uç
+  nokta, ne yapmaz), kod sonra yazılır.
+- Her bulgu / özellik ayrı commit ve testle girer.
+- Commit mesajlarında Claude veya Opus imzası / co-author satırı bulunmaz.
+- Faz sonunda `CLAUDE.md` ve bu belge güncellenir.
