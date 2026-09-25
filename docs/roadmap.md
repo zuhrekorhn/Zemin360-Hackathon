@@ -51,7 +51,7 @@ takvime girmez.
 - [x] Ek takip soruları ayrı sayaç kullanır; "bilmiyorum" cevabında aynı soru
       tekrarlanmaz.
 - [x] Tüm çıktılar silinirse kart gerçekten "potansiyel" kaydedilir.
-- [ ] `email` ve `iletisim_email` UNIQUE; kayıtlı kullanıcı bilgisi güncellenebilir.
+- [x] `email` ve `iletisim_email` UNIQUE; kayıtlı kullanıcı bilgisi güncellenebilir.
 
 **LLM geçişi:** `app/core/llm.py` sağlayıcıdan bağımsız kalır. Katmanlı model
 stratejisi korunur: çıkarım işleri ucuz model, gerekçe ve rubrik güçlü model.

@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from app.core.musaitlik import KatiMusaitlik
 from app.schemas.dogrulama import GuvenSkoruYaniti
-from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
+from app.schemas.sohbet import DoluMetin, SohbetBaslatIstegi, SohbetCevapIstegi
 
 __all__ = ["SohbetBaslatIstegi", "SohbetCevapIstegi"]
 
@@ -44,7 +44,7 @@ class KullaniciGirdisi(BaseModel):
     e-postayla eşleştirilerek alınıyor.
     """
 
-    ad: str
+    ad: DoluMetin
     email: EmailStr
     # Şehir artık zorunlu: eşleştirmenin sert filtresi buna bakıyor ve
     # "belirtilmedi" bir yer değil (bkz. app/core/sehir.py).

@@ -22,6 +22,17 @@ def turkce_kucult(metin: str) -> str:
     return hazir.lower().replace(_BIRLESEN_NOKTA, "")
 
 
+def eposta_normalize(eposta: str) -> str:
+    """E-postayı karşılaştırılabilir biçime getirir: boşluk atılır, küçültülür.
+
+    Kullanıcı ve kurum kaydı e-postayla bulunuyor ve e-posta UNIQUE.
+    "Elif@Ornek.com" ile "elif@ornek.com" iki ayrı kayıt açmamalı. E-posta
+    adresleri ASCII olduğu için burada düz `lower()` doğru (Türkçe katlama
+    gerekmiyor).
+    """
+    return eposta.strip().lower()
+
+
 def sade_anahtar(metin: str) -> str:
     """Karşılaştırma anahtarı: harf ve rakam dışındaki her şey atılır.
 

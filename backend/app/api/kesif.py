@@ -9,7 +9,8 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy import select
+from sqlalchemy import Insert, case, func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -17,6 +18,7 @@ from sqlalchemy.orm import selectinload
 from app.agents.kesif import HizSinirHatasi, kullanici_mesaji, potansiyel_kurali
 from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
 from app.core import calisma_modeli
+from app.core.metin import eposta_normalize
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.kullanici import Kullanici
@@ -124,11 +126,11 @@ async def kart_onayla(
     if not taslak.rol_alani or not taslak.deneyim_seviyesi:
         raise HTTPException(status_code=422, detail="Taslakta rol ve deneyim seviyesi zorunlu")
 
-    kullanici = await _kullaniciyi_bul_veya_olustur(oturum, istek)
+    kullanici_id = await _kullaniciyi_kaydet(oturum, istek)
 
     kart = YetenekKarti(
         oturum_id=istek.oturum_id,
-        kullanici_id=kullanici.id,
+        kullanici_id=kullanici_id,
         rol_alani=taslak.rol_alani,
         deneyim_seviyesi=taslak.deneyim_seviyesi,
         sektor_ilgi_alani=taslak.sektor_ilgi_alani,
@@ -176,17 +178,56 @@ async def _mevcut_karti_don(oturum: AsyncSession, kart: YetenekKarti) -> Yetenek
     return await kart_yaniti(oturum, kart.id)
 
 
-async def _kullaniciyi_bul_veya_olustur(oturum: AsyncSession, istek: KartOnaylaIstegi) -> Kullanici:
+def kullanici_upsert_ifadesi(
+    *,
+    ad: str,
+    email: str,
+    sehir: str | None,
+    calisma_modelleri: list[str],
+    musaitlik: str | None,
+) -> Insert:
+    """Kullanıcıyı e-postasıyla ekler ya da günceller; kimliğini döner.
+
+    Tek ifade, yarışa dayanıklı (email UNIQUE). Kayıtlı kişi onayda yeni
+    bilgi verdiyse güncellenir — eskiden yok sayılıyordu, ikinci kartında
+    şehrini değiştiren gencin filtresi eski şehre göre çalışıyordu.
+
+    Boş gelen alan kayıtlı değeri SİLMEZ (taslak birleştirmedeki kuralın
+    aynısı): skalerlerde COALESCE, listede "boşsa eskisi kalsın".
+
+    Bu "e-postayla bul" mantığı Faz B'de hesaba bağlanınca kalkacak.
+    """
+    ifade = pg_insert(Kullanici).values(
+        id=uuid.uuid4(),
+        ad=ad,
+        email=email,
+        sehir=sehir,
+        calisma_modelleri=calisma_modelleri,
+        musaitlik=musaitlik,
+    )
+    yeni, eski = ifade.excluded, Kullanici.__table__.c
+    return ifade.on_conflict_do_update(
+        index_elements=[Kullanici.email],
+        set_={
+            "ad": func.coalesce(yeni.ad, eski.ad),
+            "sehir": func.coalesce(yeni.sehir, eski.sehir),
+            "musaitlik": func.coalesce(yeni.musaitlik, eski.musaitlik),
+            "calisma_modelleri": case(
+                (func.cardinality(yeni.calisma_modelleri) == 0, eski.calisma_modelleri),
+                else_=yeni.calisma_modelleri,
+            ),
+        },
+    ).returning(Kullanici.id)
+
+
+async def _kullaniciyi_kaydet(oturum: AsyncSession, istek: KartOnaylaIstegi) -> uuid.UUID:
     girdi = istek.kullanici
-    kullanici = await oturum.scalar(select(Kullanici).where(Kullanici.email == str(girdi.email)))
-    if kullanici is None:
-        kullanici = Kullanici(
+    return await oturum.scalar(
+        kullanici_upsert_ifadesi(
             ad=girdi.ad,
-            email=str(girdi.email),
+            email=eposta_normalize(str(girdi.email)),
             sehir=sehir_kanonik(girdi.sehir),
             calisma_modelleri=calisma_modeli.temizle(girdi.calisma_modelleri),
             musaitlik=girdi.musaitlik,
         )
-        oturum.add(kullanici)
-        await oturum.flush()
-    return kullanici
+    )

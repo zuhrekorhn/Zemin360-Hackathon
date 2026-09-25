@@ -16,7 +16,9 @@ class Kullanici(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "kullanici"
 
     ad: Mapped[str] = mapped_column(String)
-    email: Mapped[str] = mapped_column(String)
+    # Tekil ve normalize (app/core/metin.py › eposta_normalize). Onay anında
+    # kayıt bu alanla upsert ediliyor; Faz B'de hesaba bağlanacak.
+    email: Mapped[str] = mapped_column(String, unique=True)
     sehir: Mapped[str | None] = mapped_column(String)
     # Kabul ettiği çalışma modelleri (is_yerinde | hibrit | uzaktan).
     # Şehirden ayrı: "İstanbul'da ama hibrit de olur" ifade edilebilsin.

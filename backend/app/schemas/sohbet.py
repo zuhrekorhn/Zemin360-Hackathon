@@ -7,8 +7,13 @@ istekleri de aynı biçimde.
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
+
+# Boşluktan ibaret olmayan metin. Onaydaki ad alanı için: kayıt e-postayla
+# upsert ediliyor ve boş ad yeni kayıtta NOT NULL'a takılırdı; 422 daha net.
+DoluMetin = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 class SohbetBaslatIstegi(BaseModel):

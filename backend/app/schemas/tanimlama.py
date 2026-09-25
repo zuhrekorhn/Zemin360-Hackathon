@@ -10,6 +10,7 @@ import uuid
 from pydantic import BaseModel, EmailStr
 
 from app.core.musaitlik import HosgoruluMusaitlik, KatiMusaitlik
+from app.schemas.sohbet import DoluMetin
 
 
 class IhtiyacTaslagi(BaseModel):
@@ -55,7 +56,7 @@ class KurumGirdisi(BaseModel):
     Kullanici ile yaptığının aynısı. Giriş/kayıt akışı Faz 3'te gelecek.
     """
 
-    ad: str
+    ad: DoluMetin
     sektor: str | None = None
     sehir: str | None = None
     iletisim_email: EmailStr

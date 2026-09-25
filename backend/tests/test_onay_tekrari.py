@@ -108,14 +108,14 @@ def kesif(monkeypatch):
         return durum.bulunanlar.pop(0) if durum.bulunanlar else None
 
     async def kullanici(_oturum, _istek):
-        return SimpleNamespace(id=uuid.uuid4())
+        return uuid.uuid4()
 
     async def kart_yaniti(oturum, kart_id):
         adaylar = [*oturum.eklenenler, *durum.kartlar.values()]
         return yetenek_yaniti(next(k for k in adaylar if k.id == kart_id))
 
     monkeypatch.setattr(kesif_api, "_oturumun_karti", oturumun_karti)
-    monkeypatch.setattr(kesif_api, "_kullaniciyi_bul_veya_olustur", kullanici)
+    monkeypatch.setattr(kesif_api, "_kullaniciyi_kaydet", kullanici)
     monkeypatch.setattr(kesif_api, "kart_yaniti", kart_yaniti)
     app.state.kesif_grafigi = SahteGrafik(
         {
@@ -255,7 +255,7 @@ def tanimlama(monkeypatch):
         return None
 
     async def kurum(_oturum, _istek):
-        return SimpleNamespace(id=kurum_id)
+        return kurum_id
 
     async def kart_yaniti(oturum, kart_id):
         kart: IhtiyacKarti = next(k for k in oturum.eklenenler if k.id == kart_id)
@@ -275,7 +275,7 @@ def tanimlama(monkeypatch):
         durum.eslestirilenler.append(kimlik)
 
     monkeypatch.setattr(tanimlama_api, "_oturumun_karti", oturumun_karti)
-    monkeypatch.setattr(tanimlama_api, "_kurumu_bul_veya_olustur", kurum)
+    monkeypatch.setattr(tanimlama_api, "_kurumu_kaydet", kurum)
     monkeypatch.setattr(tanimlama_api, "kart_yaniti", kart_yaniti)
     monkeypatch.setattr(tanimlama_api, "eslestirmeyi_arka_planda_calistir", eslestir)
     app.state.tanimlama_grafigi = SahteGrafik(

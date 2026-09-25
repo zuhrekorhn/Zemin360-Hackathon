@@ -9,7 +9,8 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
-from sqlalchemy import select
+from sqlalchemy import Insert, func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +18,7 @@ from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
 from app.core import calisma_modeli
+from app.core.metin import eposta_normalize
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -109,11 +111,11 @@ async def kart_onayla(
     if not taslak.problem_tanimi:
         raise HTTPException(status_code=422, detail="Taslakta problem tanımı zorunlu")
 
-    kurum = await _kurumu_bul_veya_olustur(oturum, istek)
+    kurum_id = await _kurumu_kaydet(oturum, istek)
 
     kart = IhtiyacKarti(
         oturum_id=istek.oturum_id,
-        kurum_id=kurum.id,
+        kurum_id=kurum_id,
         problem_tanimi=taslak.problem_tanimi,
         basari_kriteri=taslak.basari_kriteri,
         kisitlar=taslak.kisitlar,
@@ -141,7 +143,7 @@ async def kart_onayla(
     if await embedding_hesapla(oturum, kart):
         # Yanıt gönderildikten sonra başlıyor: kurum öneriler sayfasına
         # geldiğinde hesap çoğunlukla hazır olur.
-        arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kurum.id)
+        arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kurum_id)
 
     return await kart_yaniti(oturum, kart.id)
 
@@ -159,18 +161,37 @@ async def _mevcut_karti_don(
     return await kart_yaniti(oturum, kart.id)
 
 
-async def _kurumu_bul_veya_olustur(oturum: AsyncSession, istek: IhtiyacKartiOnaylaIstegi) -> Kurum:
-    girdi = istek.kurum
-    kurum = await oturum.scalar(
-        select(Kurum).where(Kurum.iletisim_email == str(girdi.iletisim_email))
+def kurum_upsert_ifadesi(
+    *, ad: str, iletisim_email: str, sektor: str | None, sehir: str | None
+) -> Insert:
+    """Kurumu iletişim e-postasıyla ekler ya da günceller; kimliğini döner.
+
+    Keşif'teki `kullanici_upsert_ifadesi` ile aynı sözleşme: yarışa dayanıklı,
+    kayıtlı kurumun bilgisi güncellenir, boş gelen alan eskisini silmez.
+    Faz B'de hesaba bağlanınca kalkacak.
+    """
+    ifade = pg_insert(Kurum).values(
+        id=uuid.uuid4(), ad=ad, iletisim_email=iletisim_email, sektor=sektor, sehir=sehir
     )
-    if kurum is None:
-        kurum = Kurum(
+    yeni, eski = ifade.excluded, Kurum.__table__.c
+    return ifade.on_conflict_do_update(
+        index_elements=[Kurum.iletisim_email],
+        set_={
+            "ad": func.coalesce(yeni.ad, eski.ad),
+            "sektor": func.coalesce(yeni.sektor, eski.sektor),
+            "sehir": func.coalesce(yeni.sehir, eski.sehir),
+        },
+    ).returning(Kurum.id)
+
+
+async def _kurumu_kaydet(oturum: AsyncSession, istek: IhtiyacKartiOnaylaIstegi) -> uuid.UUID:
+    girdi = istek.kurum
+    return await oturum.scalar(
+        kurum_upsert_ifadesi(
             ad=girdi.ad,
-            sektor=girdi.sektor,
+            iletisim_email=eposta_normalize(str(girdi.iletisim_email)),
+            # Boş dize "bilgi yok" demek; COALESCE'in eskisini koruması için None.
+            sektor=(girdi.sektor or "").strip() or None,
             sehir=sehir_kanonik(girdi.sehir),
-            iletisim_email=str(girdi.iletisim_email),
         )
-        oturum.add(kurum)
-        await oturum.flush()
-    return kurum
+    )

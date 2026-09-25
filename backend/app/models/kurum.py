@@ -19,7 +19,9 @@ class Kurum(UUIDPrimaryKeyMixin, Base):
     sehir: Mapped[str | None] = mapped_column(String)
     # Kurum kaydı bu e-postayla bulunur/oluşturulur (Kullanici.email ile aynı
     # desen). Kart yanıtlarında DIŞARIYA VERİLMEZ — bkz. app/schemas/tanimlama.py
-    iletisim_email: Mapped[str | None] = mapped_column(String, index=True)
+    # Tekil ve normalize; NULL birden fazla olabilir (Postgres UNIQUE'i NULL'ları
+    # eşit saymaz).
+    iletisim_email: Mapped[str | None] = mapped_column(String, index=True, unique=True)
 
     ihtiyac_kartlari: Mapped[list[IhtiyacKarti]] = relationship(
         back_populates="kurum", cascade="all, delete-orphan"
