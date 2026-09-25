@@ -3,12 +3,14 @@
 Grafik iskeleti, taslak birleştirme ve LLM zinciri ortak motorda
 (app/agents/sohbet_motoru.py). Burada kalan her şey Keşif'e özel.
 
-docs/agent-specs.md § 1. Sınırlar oradan geliyor:
-  - Boş alan kalırsa EN FAZLA 2 tur takip sorusu (madde 2).
-  - "Hiç projem yok" → fallback soru zinciri, hâlâ yoksa deneyim_seviyesi
-    "potansiyel" ile kart oluşur (madde 4). Bu iki sınır ayrı sayılır:
-    eksik alan takibi 2 tur, fallback zinciri 2 soru → açılışla birlikte en
-    fazla 5 soru, yani spec'teki "5-7 soru" aralığında.
+docs/agent-specs.md § 1. Sınırlar oradan geliyor; üç sayaç birbirinden ayrı:
+  - Zorunlu alanlar (rol, deneyim, sektör, araçlar) eksikken en fazla 6 tur
+    takip sorusu. Tavan yalnızca sonsuz döngüye karşı; gelinirse alanlar
+    "belirtilmedi" ile dolar (madde 2).
+  - Çıktı başına ölçülebilir sonuç ve kişinin kendi payı: en fazla 2 soru,
+    her biri BİR kez. Kullanıcı bilmiyorsa ısrar edilmez, sıradakine geçilir.
+  - "Hiç projem yok" → 2 soruluk fallback zinciri, hâlâ yoksa deneyim_seviyesi
+    "potansiyel" ile kart oluşur (madde 4).
   - Kart taslağı kullanıcıya gösterilir, kaydetme onaydan sonra olur (madde 3).
 
 Doğrulama ve puanlama bu ajanın işi değil — kanıt linki sadece toplanır,

@@ -92,10 +92,22 @@ def test_zorunlu_alan_icin_iki_turdan_sonra_da_sorulur():
 
 
 def test_zorunlu_tavaninda_kart_yine_de_kapanir():
-    """Sonsuz döngü olmasın: tavanda alanlar yer tutucuyla dolup kart çıkar."""
+    """Sonsuz döngü olmasın: tavanda alanlar yer tutucuyla dolup kart çıkar.
+
+    Çıktının ölçüt ve rol bilgisi tam: ek sorular kendi sayacıyla ayrıca
+    soruluyor (bkz. test_zorunlu_alanlar_uzun_surse_de_ek_soru_sorulur),
+    burada yalnızca zorunlu alan tavanı sınanıyor.
+    """
+    tam_cikti = [
+        {
+            "baslik": "Kütüphane sistemi",
+            "olculebilir_sonuc": "400 kitap",
+            "kendi_rolu": "hepsini ben yazdım",
+        }
+    ]
     sonuc = karar(
         {
-            "taslak": dolu_taslak(rol_alani=None),
+            "taslak": dolu_taslak(rol_alani=None, somut_ciktilar=tam_cikti),
             "takip_turu": motor.MAKS_ZORUNLU_TURU,
             "fallback_indeksi": 0,
         }
@@ -147,6 +159,76 @@ def test_cikti_detaylari_tamsa_kart_kapanir():
                 ]
             ),
             "takip_turu": 0,
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["taslak_hazir"] is True
+
+
+# --- Ek sorular: ayrı sayaç, tekrar yok --------------------------------------
+# Eskiden ek sorular zorunlu alanlarla aynı sayacı paylaşıyordu (zorunlu alanlar
+# 2 tur sürünce hiç sorulmuyorlardı) ve hep listedeki ilk soru seçiliyordu
+# ("bilmiyorum" diyene aynı soru kelimesi kelimesine tekrar geliyordu).
+
+OLCUTSUZ_ROLSUZ = [{"baslik": "Kütüphane sistemi", "aciklama": None, "kanit_linki": None}]
+
+
+def test_zorunlu_alanlar_uzun_surse_de_ek_soru_sorulur():
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(somut_ciktilar=OLCUTSUZ_ROLSUZ),
+            "takip_turu": motor.MAKS_TAKIP_TURU + 1,  # zorunlu alanlar 3 tur sürdü
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["taslak_hazir"] is False
+    assert "sayıyla" in sonuc["sonraki_soru"]
+    assert sonuc["ek_takip_turu"] == 1
+    # Ek soru zorunlu alan sayacına dokunmuyor
+    assert "takip_turu" not in sonuc
+
+
+def test_bilmiyorum_denen_ek_soru_tekrarlanmaz():
+    """Ölçüt sorulmuş, kullanıcı bilmiyor: alan boş kaldı ama soru bir daha gelmez."""
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(somut_ciktilar=OLCUTSUZ_ROLSUZ),
+            "takip_turu": 0,
+            "ek_takip_turu": 1,
+            "sorulan_ekler": ["olcut:Kütüphane sistemi"],
+            "fallback_indeksi": 0,
+        }
+    )
+    assert "sayıyla" not in sonuc["sonraki_soru"]
+    assert "payın" in sonuc["sonraki_soru"]
+    assert sonuc["sorulan_ekler"] == ["olcut:Kütüphane sistemi", "rol:Kütüphane sistemi"]
+
+
+def test_hepsi_sorulduysa_kart_kapanir_ve_israr_edilmez():
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(somut_ciktilar=OLCUTSUZ_ROLSUZ),
+            "takip_turu": 0,
+            "ek_takip_turu": 2,
+            "sorulan_ekler": ["olcut:Kütüphane sistemi", "rol:Kütüphane sistemi"],
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["taslak_hazir"] is True
+
+
+def test_ek_soru_tavani_iki():
+    """İki çıktı → dört eksik; yine de en fazla iki ek soru sorulur."""
+    iki_cikti = [
+        {"baslik": "Kütüphane sistemi", "aciklama": None, "kanit_linki": None},
+        {"baslik": "Kulüp sitesi", "aciklama": None, "kanit_linki": None},
+    ]
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(somut_ciktilar=iki_cikti),
+            "takip_turu": 0,
+            "ek_takip_turu": motor.MAKS_TAKIP_TURU,
+            "sorulan_ekler": ["olcut:Kütüphane sistemi", "rol:Kütüphane sistemi"],
             "fallback_indeksi": 0,
         }
     )

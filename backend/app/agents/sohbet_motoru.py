@@ -33,8 +33,9 @@ from app.core.metin import sade_anahtar
 
 __all__ = ["HizSinirHatasi"]
 
-# Eksik alan için en fazla kaç tur takip sorusu sorulur (agent-specs.md § 1.2;
-# Tanımlama da aynı sınırı kullanır).
+# Kısa tavan (agent-specs.md § 1.2): Keşif'te ajana özel ek sorular (çıktı
+# başına ölçüt/rol) en fazla bu kadar sorulur, kendi sayacıyla; Tanımlama
+# zorunlu alanları için de bu tavanı kullanır.
 MAKS_TAKIP_TURU = 2
 # Zorunlu alanlar için ayrı ve daha yüksek bir tavan: eksik alanla kart
 # kapatmak, sohbeti bir tur uzatmaktan kötü (boş "sektör ilgisi" eşleştirmede
@@ -48,7 +49,16 @@ class SohbetDurumu(TypedDict, total=False):
 
     mesajlar: Annotated[list[AnyMessage], add_messages]
     taslak: dict[str, Any]
+    # Zorunlu alan takip turları
     takip_turu: int
+    # Ajana özel ek sorular (Keşif'te çıktı başına ölçüt/rol) AYRI sayılır:
+    # eskiden aynı sayacı paylaşıyorlardı ve zorunlu alanlar 2 tur sürünce
+    # ek sorular hiç sorulmuyordu.
+    ek_takip_turu: int
+    # Sorulmuş ek soruların anahtarları. Kullanıcı "bilmiyorum" deyince alan
+    # boş kalıyor; bu liste olmadan aynı soru kelimesi kelimesine tekrar
+    # geliyordu. Her ek soru en fazla bir kez sorulur.
+    sorulan_ekler: list[str]
     sonraki_soru: str | None
     taslak_hazir: bool
     # Son turun çıkarımından karar düğümüne taşınan takip sorusu önerisi
@@ -176,6 +186,8 @@ def _acilis_dugumu(tanim: AjanTanimi, ek_baslangic: Mapping[str, Any]):
             "mesajlar": [AIMessage(content=tanim.acilis_sorusu)],
             "taslak": bos_taslak(tanim),
             "takip_turu": 0,
+            "ek_takip_turu": 0,
+            "sorulan_ekler": [],
             "sonraki_soru": tanim.acilis_sorusu,
             "taslak_hazir": False,
             **ek_baslangic,
@@ -229,12 +241,27 @@ async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
         return _soru_durumu(soru, takip_turu)
 
     # 2) Ajana özel eksikler (Keşif'te çıktı başına ölçülebilir sonuç ve rol).
-    #    Zorunlu alanlardan sonra ve daha kısa bir tavanla soruluyor: bunlar
-    #    kartı güçlendirir ama olmadan da kart kurulabilir.
-    if tanim.ek_eksikler is not None and takip_turu < MAKS_TAKIP_TURU:
-        ekler = tanim.ek_eksikler(taslak)
-        if ekler:
-            return _soru_durumu(ekler[0][1], takip_turu)
+    #    Zorunlu alanlardan sonra, kendi sayacıyla ve daha kısa bir tavanla
+    #    soruluyor: bunlar kartı güçlendirir ama olmadan da kart kurulabilir.
+    #    Sorulmuş bir soru bir daha sorulmaz — kullanıcı bilmiyorsa ısrar yok,
+    #    sıradaki eksiğe geçilir.
+    ek_takip_turu = durum.get("ek_takip_turu", 0)
+    if tanim.ek_eksikler is not None and ek_takip_turu < MAKS_TAKIP_TURU:
+        sorulanlar = list(durum.get("sorulan_ekler") or [])
+        sorulmamislar = [
+            (anahtar, soru)
+            for anahtar, soru in tanim.ek_eksikler(taslak)
+            if anahtar not in sorulanlar
+        ]
+        if sorulmamislar:
+            anahtar, soru = sorulmamislar[0]
+            return {
+                "mesajlar": [AIMessage(content=soru)],
+                "ek_takip_turu": ek_takip_turu + 1,
+                "sorulan_ekler": [*sorulanlar, anahtar],
+                "sonraki_soru": soru,
+                "taslak_hazir": False,
+            }
 
     # 3) Ajana özel dal (Keşif'te "hiç projem yok" zinciri; Tanımlama'da yok).
     if tanim.ek_dal is not None:

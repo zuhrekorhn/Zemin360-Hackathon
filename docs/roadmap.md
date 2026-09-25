@@ -48,7 +48,7 @@ takvime girmez.
 - [x] `musaitlik_tercihi` `Literal` olur, onayda doğrulanır, formda düzeltilebilir.
 - [x] 429 mesajı düzeltilir ("kota doldu", "yoğunluk" değil); üç kopya tek
       fonksiyonda (`lib/hata.ts`) toplanır.
-- [ ] Ek takip soruları ayrı sayaç kullanır; "bilmiyorum" cevabında aynı soru
+- [x] Ek takip soruları ayrı sayaç kullanır; "bilmiyorum" cevabında aynı soru
       tekrarlanmaz.
 - [ ] Tüm çıktılar silinirse kart gerçekten "potansiyel" kaydedilir.
 - [ ] `email` ve `iletisim_email` UNIQUE; kayıtlı kullanıcı bilgisi güncellenebilir.
