@@ -26,12 +26,18 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | | `/dogrulama/kanit/{somut_cikti_id}` | GET | Kanıtın güncel durumu: rubrik puanı + referans istekleri. Zaman aşımı (`bekliyor` → `yanit_yok`) bu okuma anında hesaplanır — ayrı bir zamanlayıcı yok |
 | **Eşleştirme** | `/eslestirme/calistir` | POST | Pipeline'ı yeniden çalıştırır. Kurum yalnızca kendi kurumu için (gövde boş; başka `kurum_id` 404), GİRVAK `kurum_id` vermek zorunda. İhtiyaç kartı onaylanınca arka planda da çalışır (zamanlayıcı yok) |
 | | `/eslestirme/oneriler/{kurum_id}` | GET | Kurum yalnızca kendi `kurum_id`'si (başkası 404), GİRVAK hepsi. Sıralı liste + gerekçe. `skor_esigi` ve `az_sonuc_uyarisi` yanıtta döner — arayüz eşiği kendi içine yazmaz |
-| | `/eslestirme/ilgileniyorum` | POST | `ESLESME.durum`'u günceller, `ISBIRLIGI` oluşturabilir |
+| | `/eslestirme/ilgileniyorum` | POST | Kurum (ihtiyacın sahibi): `onerildi` → `ilgileniliyor`. İş birliği AÇMAZ |
+| | `/eslestirme/{id}/kabul` | POST | Genç (kartın sahibi): `ilgileniliyor` → `kabul_edildi`, `ISBIRLIGI` açılır, yanıtta `iletisim` (iki e-posta) |
+| | `/eslestirme/{id}/red` | POST | Genç (kartın sahibi): `ilgileniliyor` → `reddedildi` |
+| | `/eslestirme/bana-gelenler` | GET | Genç: kartlarına ilgi gösterilmiş eşleşmeler (`onerildi` hariç), ihtiyaç kartı ve kurum adıyla |
+| | `/isbirliklerim` | GET | Genç ve kurum: taraf olduğu iş birlikleri, iki tarafa aynı görünüm, `iletisim` dahil |
 | **Canlılık** | `/canlilik/tarama` | Arka plan iş (günlük cron) | Pasif `ESLESME` kayıtlarını tarar |
 | | `/canlilik/hatirlatma/{eslesme_id}` | GET | Üretilen mesajı gösterir |
 | **Takip** | `/isbirligi/{id}/milestone-ekle` | POST | |
 | | `/isbirligi/{id}/milestone/{mid}` | PATCH | Durum günceller, kanıt ekler |
 | | `/isbirligi/{id}/zaman-cizelgesi` | GET | İki tarafa da aynı görünüm |
+
+**Eşleşme durumları** (docs/faz-b-kimlik-ve-dongu.md § 5): kural tek yerde, `app/agents/eslesme_durumu.py` › `gecis()`. Tablo dışı geçiş 409 ve mevcut durumu söyler; aynı geçişin tekrarı 200, yan etkisiz. Gencin adı kart görünümünde (`genc_adi`) baştan var; e-postalar yalnızca `kabul_edildi`'de, yalnızca iki tarafa, ayrı `iletisim` alanında döner (GİRVAK'a da `null`).
 
 ## Mimari Notlar
 

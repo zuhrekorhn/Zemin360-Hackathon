@@ -169,6 +169,9 @@ export type SomutCiktiYaniti = {
  *  (docs/agent-specs.md § 1.5). */
 export type YetenekKartiYaniti = {
   id: string;
+  /** Gencin adı iletişim bilgisi sayılmıyor, baştan görünür; e-posta
+   *  yalnızca kabulden sonra `iletisim` alanında gelir. */
+  genc_adi: string;
   rol_alani: string;
   deneyim_seviyesi: string;
   sektor_ilgi_alani: string[];
@@ -447,6 +450,14 @@ export type Oneri = {
    *  olduğundan güçlü anlattığı için gerekçe bırakıldı. Skor yine de geçerli. */
   gerekce_metni: string | null;
   yetenek_karti: YetenekKartiYaniti;
+  /** Yalnızca `kabul_edildi` durumunda ve yalnızca iki tarafa dolu. */
+  iletisim: Iletisim | null;
+};
+
+/** Gencin kabulüyle açılan e-postalar (docs/faz-b-kimlik-ve-dongu.md § 5). */
+export type Iletisim = {
+  genc_email: string;
+  kurum_email: string | null;
 };
 
 export type Oneriler = {
@@ -458,11 +469,13 @@ export type Oneriler = {
   skor_esigi: number;
 };
 
-export type IlgileniyorumYaniti = {
+/** İlgileniyorum / kabul / red sonrası eşleşme. İş birliği gencin
+ *  kabulüyle açılır; öncesinde `isbirligi_id` ve `iletisim` null. */
+export type EslesmeDurumYaniti = {
   eslesme_id: string;
   durum: string;
-  isbirligi_id: string;
-  isbirligi_durum: string;
+  isbirligi_id: string | null;
+  iletisim: Iletisim | null;
 };
 
 /** GET /eslestirme/oneriler/{kurum_id} — hesaplanmış listeyi okur.
@@ -487,8 +500,8 @@ export function eslestirmeCalistir(): Promise<Oneriler> {
 }
 
 /** POST /eslestirme/ilgileniyorum — eşleşmeyi kabul eder, iş birliğini açar. */
-export function ilgileniyorum(eslesmeId: string): Promise<IlgileniyorumYaniti> {
-  return apiIstek<IlgileniyorumYaniti>("/eslestirme/ilgileniyorum", {
+export function ilgileniyorum(eslesmeId: string): Promise<EslesmeDurumYaniti> {
+  return apiIstek<EslesmeDurumYaniti>("/eslestirme/ilgileniyorum", {
     method: "POST",
     body: JSON.stringify({ eslesme_id: eslesmeId }),
   });

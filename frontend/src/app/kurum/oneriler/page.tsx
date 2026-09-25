@@ -12,7 +12,6 @@ import {
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import {
-  type IlgileniyorumYaniti,
   type Oneri,
   type Oneriler,
   eslestirmeCalistir,
@@ -26,8 +25,8 @@ import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
 /**
  * Eşleştirme önerileri — kurum tarafı (docs/agent-specs.md § 3).
  *
- * Bu ekranda yalnızca kurum var: gencin "eşleştin" bildirimi Faz 3+
- * kapsamında, bilinçli olarak yok.
+ * Kurum "ilgileniyorum" der, genç kabul ya da red eder; iş birliği ve
+ * e-postalar yalnızca kabulle açılır (docs/faz-b-kimlik-ve-dongu.md § 5).
  *
  * Skor ve gerekçe birlikte gösteriliyor — matching-algorithm.md § 6'nın
  * kararı: kuruma "şu yüzden" denmeden bir isim listesi sunulmuyor.
@@ -35,9 +34,16 @@ import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
 const DURUM_ETIKETLERI: Record<string, string> = {
   onerildi: "Önerildi",
-  ilgileniliyor: "İlgileniliyor",
-  kabul_edildi: "İş birliği açıldı",
-  reddedildi: "Reddedildi",
+  ilgileniliyor: "İlgini bildirdin",
+  kabul_edildi: "Kabul edildi, iş birliği açıldı",
+  reddedildi: "Aday şu an kabul etmedi",
+};
+
+const DURUM_ACIKLAMALARI: Record<string, string> = {
+  ilgileniliyor:
+    "Gencin yanıtı bekleniyor; kabul ederse iletişim bilgileri açılır.",
+  kabul_edildi: "İletişim bilgileri aşağıda.",
+  reddedildi: "Bu eşleşme kapandı.",
 };
 
 export default function OnerilerSayfasi() {
@@ -45,9 +51,6 @@ export default function OnerilerSayfasi() {
   const [veri, setVeri] = useState<Oneriler | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState<Hata | null>(null);
-  const [acilanIsbirligi, setAcilanIsbirligi] = useState<
-    Record<string, string>
-  >({});
   const okundu = useRef(false);
 
   /**
@@ -96,18 +99,14 @@ export default function OnerilerSayfasi() {
   async function ilgilendigimiSoyle(oneri: Oneri) {
     setHata(null);
     try {
-      const yanit: IlgileniyorumYaniti = await ilgileniyorum(oneri.eslesme_id);
-      setAcilanIsbirligi((oncekiler) => ({
-        ...oncekiler,
-        [oneri.eslesme_id]: yanit.isbirligi_id,
-      }));
+      const yanit = await ilgileniyorum(oneri.eslesme_id);
       setVeri((onceki) =>
         onceki
           ? {
               ...onceki,
               oneriler: onceki.oneriler.map((kayit) =>
                 kayit.eslesme_id === oneri.eslesme_id
-                  ? { ...kayit, durum: yanit.durum }
+                  ? { ...kayit, durum: yanit.durum, iletisim: yanit.iletisim }
                   : kayit,
               ),
             }
@@ -152,11 +151,7 @@ export default function OnerilerSayfasi() {
       {!yukleniyor && !kurumId && !hata ? <KurumYok /> : null}
 
       {!yukleniyor && veri ? (
-        <OneriListesi
-          veri={veri}
-          acilanIsbirligi={acilanIsbirligi}
-          onIlgileniyorum={ilgilendigimiSoyle}
-        />
+        <OneriListesi veri={veri} onIlgileniyorum={ilgilendigimiSoyle} />
       ) : null}
 
       <footer className="mt-auto flex flex-wrap gap-3 border-t border-kenar pt-6">
@@ -195,11 +190,9 @@ function KurumYok() {
 
 function OneriListesi({
   veri,
-  acilanIsbirligi,
   onIlgileniyorum,
 }: {
   veri: Oneriler;
-  acilanIsbirligi: Record<string, string>;
   onIlgileniyorum: (oneri: Oneri) => void;
 }) {
   if (veri.oneriler.length === 0) {
@@ -233,7 +226,6 @@ function OneriListesi({
         <OneriKarti
           key={oneri.eslesme_id}
           oneri={oneri}
-          isbirligiId={acilanIsbirligi[oneri.eslesme_id]}
           onIlgileniyorum={() => onIlgileniyorum(oneri)}
         />
       ))}
@@ -243,11 +235,9 @@ function OneriListesi({
 
 function OneriKarti({
   oneri,
-  isbirligiId,
   onIlgileniyorum,
 }: {
   oneri: Oneri;
-  isbirligiId?: string;
   onIlgileniyorum: () => void;
 }) {
   const kart = oneri.yetenek_karti;
@@ -256,7 +246,7 @@ function OneriKarti({
   return (
     <BelgeKarti
       baslik={kart.rol_alani}
-      altbaslik={`Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
+      altbaslik={`${kart.genc_adi} · Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
       rozet={<SkorRozeti skor={oneri.skor} />}
     >
       <section className="flex flex-col gap-1.5">
@@ -298,9 +288,7 @@ function OneriKarti({
             <span className="font-medium">
               {DURUM_ETIKETLERI[oneri.durum] ?? oneri.durum}.
             </span>{" "}
-            {isbirligiId
-              ? "İş birliği kaydı açıldı; iletişim bilgileri iki taraf da onaylayınca paylaşılır."
-              : "Bu eşleşme için kararını daha önce verdin."}
+            {DURUM_ACIKLAMALARI[oneri.durum] ?? ""}
           </p>
         ) : (
           <>
@@ -308,11 +296,26 @@ function OneriKarti({
               İlgileniyorum
             </Button>
             <span className="text-xs text-muted-foreground">
-              Ayrı bir onay adımı yok: iş birliği kaydı hemen açılır.
+              Gence bildirilir; kabul ederse iş birliği açılır ve e-postalar
+              paylaşılır.
             </span>
           </>
         )}
       </div>
+
+      {oneri.iletisim ? (
+        <dl className="grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-4">
+          <dt className="text-muted-foreground">Gencin e-postası</dt>
+          <dd className="break-all">
+            <a
+              className="text-baglanti underline"
+              href={`mailto:${oneri.iletisim.genc_email}`}
+            >
+              {oneri.iletisim.genc_email}
+            </a>
+          </dd>
+        </dl>
+      ) : null}
     </BelgeKarti>
   );
 }

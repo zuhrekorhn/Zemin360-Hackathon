@@ -180,7 +180,8 @@ async def main() -> None:
             .json()
         )
         print(f"  eşleşme durumu: {sonuc['durum']}")
-        print(f"  iş birliği: {sonuc['isbirligi_id']} ({sonuc['isbirligi_durum']})")
+        # İş birliği gencin kabulüyle açılır (POST /eslestirme/{id}/kabul, genç hesabıyla).
+        print("  iş birliği: gencin kabulünü bekliyor")
 
 
 if __name__ == "__main__":

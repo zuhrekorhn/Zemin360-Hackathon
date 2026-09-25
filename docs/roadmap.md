@@ -86,7 +86,7 @@ Gemini içinde çalışmaya devam eder. Her çağrının token kullanımı log'a
       veya oluştur" mantığı kaldırılır.
 - [ ] Genç paneli: kartım, kanıtlarım, bana gelen ilgiler, iş birliklerim.
 - [ ] Kurum paneli: ihtiyaç kartlarım, önerilerim, iş birliklerim.
-- [ ] Karşılıklı onay: kurum "ilgileniyorum" der → eşleşme `ilgileniliyor` →
+- [x] Karşılıklı onay: kurum "ilgileniyorum" der → eşleşme `ilgileniliyor` →
       genç kabul eder → `kabul_edildi` + iş birliği açılır → **iletişim bilgisi
       ancak şimdi iki tarafa görünür**. Genç reddederse `reddedildi`.
 - [ ] Uygulama içi bildirimler (tablo + panelde sayaç). Gerçek e-posta yok.

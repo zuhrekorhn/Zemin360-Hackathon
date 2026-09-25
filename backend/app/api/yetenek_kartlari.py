@@ -50,13 +50,17 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiY
     """
     kart = await oturum.scalar(
         select(YetenekKarti)
-        .options(selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru))
+        .options(
+            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru),
+            selectinload(YetenekKarti.kullanici),
+        )
         .where(YetenekKarti.id == kart_id)
     )
     if kart is None:
         raise bulunamadi(KART_BULUNAMADI)
     return YetenekKartiYaniti(
         id=kart.id,
+        genc_adi=kart.kullanici.ad,
         rol_alani=kart.rol_alani,
         deneyim_seviyesi=kart.deneyim_seviyesi,
         sektor_ilgi_alani=kart.sektor_ilgi_alani,

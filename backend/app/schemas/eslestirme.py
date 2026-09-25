@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import uuid
 
 from pydantic import BaseModel
 
 from app.schemas.kesif import YetenekKartiYaniti
+from app.schemas.tanimlama import IhtiyacKartiYaniti
 
 
 class EslestirmeCalistirIstegi(BaseModel):
@@ -16,11 +18,23 @@ class EslestirmeCalistirIstegi(BaseModel):
     kurum_id: uuid.UUID | None = None
 
 
+class Iletisim(BaseModel):
+    """Kabulle açılan e-postalar (docs/faz-b-kimlik-ve-dongu.md § 5).
+
+    Yalnızca `kabul_edildi` durumunda ve yalnızca eşleşmenin iki tarafına
+    dolu döner; başka her durumda ve GİRVAK'a `iletisim` alanı `null`.
+    Adlar burada değil: iletişim bilgisi sayılmıyor, kart görünümünde baştan var.
+    """
+
+    genc_email: str
+    kurum_email: str | None
+
+
 class OneriYaniti(BaseModel):
     """Kuruma gösterilen tek bir öneri.
 
-    Yetenek kartı burada da iletişim bilgisi taşımaz (agent-specs.md § 1.5) —
-    Keşif'in kart şeması aynen kullanılıyor.
+    Yetenek kartı e-posta taşımaz (agent-specs.md § 1.5) — Keşif'in kart
+    şeması aynen kullanılıyor; e-postalar kabulden sonra `iletisim`'de.
     """
 
     eslesme_id: uuid.UUID
@@ -28,6 +42,7 @@ class OneriYaniti(BaseModel):
     durum: str
     gerekce_metni: str | None
     yetenek_karti: YetenekKartiYaniti
+    iletisim: Iletisim | None = None
 
 
 class OnerilerYaniti(BaseModel):
@@ -45,13 +60,41 @@ class IlgileniyorumIstegi(BaseModel):
     eslesme_id: uuid.UUID
 
 
-class IlgileniyorumYaniti(BaseModel):
-    """Kurum ilgilendiğini söyleyince eşleşme kabul edilir ve iş birliği açılır.
+class EslesmeDurumYaniti(BaseModel):
+    """İlgileniyorum / kabul / red sonrası eşleşmenin durumu.
 
-    Ayrı bir onay adımı yok — MVP kararı (bkz. README § Proje Durumu).
+    İş birliği yalnızca gencin kabulüyle açılır; öncesinde `isbirligi_id` ve
+    `iletisim` boş.
     """
 
     eslesme_id: uuid.UUID
     durum: str
+    isbirligi_id: uuid.UUID | None = None
+    iletisim: Iletisim | None = None
+
+
+class BanaGelenIlgi(BaseModel):
+    """Gencin kartına gelen ilgi: kurum "ilgileniyorum" dedikten sonra görünür."""
+
+    eslesme_id: uuid.UUID
+    durum: str
+    son_aktivite_tarihi: dt.datetime
+    yetenek_karti_id: uuid.UUID
+    rol_alani: str
+    ihtiyac_karti: IhtiyacKartiYaniti
+    isbirligi_id: uuid.UUID | None = None
+    iletisim: Iletisim | None = None
+
+
+class IsbirligiOzeti(BaseModel):
+    """`GET /isbirliklerim` satırı — iki tarafa da aynı görünüm."""
+
     isbirligi_id: uuid.UUID
-    isbirligi_durum: str
+    durum: str
+    baslangic_tarihi: dt.date | None
+    eslesme_id: uuid.UUID
+    genc_adi: str
+    kurum_adi: str
+    rol_alani: str
+    problem_tanimi: str
+    iletisim: Iletisim

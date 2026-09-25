@@ -98,6 +98,7 @@ def yetenek_karti(**degisiklik) -> YetenekKarti:
 def yetenek_yaniti(kart: YetenekKarti) -> YetenekKartiYaniti:
     return YetenekKartiYaniti(
         id=kart.id,
+        genc_adi="Elif",
         rol_alani=kart.rol_alani,
         deneyim_seviyesi=kart.deneyim_seviyesi,
         sektor_ilgi_alani=kart.sektor_ilgi_alani or [],

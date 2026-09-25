@@ -57,7 +57,7 @@ async def _hesap(oturum, rol: str, ad: str | None) -> Kisi:
 
 
 async def dunya_kur(oturum) -> SimpleNamespace:
-    d = SimpleNamespace()
+    d = SimpleNamespace(oturum=oturum)
     d.genc1 = await _hesap(oturum, "genc", "Elif")
     d.genc2 = await _hesap(oturum, "genc", "Can")
     d.kurum1 = await _hesap(oturum, "kurum", "Koop Bir")

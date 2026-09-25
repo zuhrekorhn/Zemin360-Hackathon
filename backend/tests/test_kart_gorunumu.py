@@ -46,10 +46,15 @@ def test_cikti_rubrigi_tasiyabilir():
     assert cikti.guven_skoru.ucuncu_taraf_onayi == 1
 
 
-def test_kart_gorunumu_iletisim_bilgisi_tasimaz():
-    """agent-specs.md § 1.5 — rubrik eklenirken sızdırmadığımızı sabitler."""
+def test_kart_gorunumu_eposta_tasimaz_ad_tasir():
+    """agent-specs.md § 1.5 — e-posta kabulle açılır, ayrı `iletisim` alanında.
+
+    Gencin adı iletişim bilgisi sayılmıyor, baştan görünür
+    (docs/faz-b-kimlik-ve-dongu.md § 5).
+    """
     alanlar = set(YetenekKartiYaniti.model_fields) | set(SomutCiktiYaniti.model_fields)
-    assert not {"email", "iletisim_email", "telefon", "ad"} & alanlar
+    assert not {"email", "iletisim_email", "telefon", "iletisim"} & alanlar
+    assert "genc_adi" in alanlar
 
 
 def test_kurum_yaniti_kimlik_tasir_email_tasimaz():

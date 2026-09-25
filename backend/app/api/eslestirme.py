@@ -19,6 +19,13 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.agents.eslesme_durumu import (
+    OLAY_ILGILENIYORUM,
+    OLAY_KABUL,
+    OLAY_RED,
+    GecersizGecis,
+    gecis,
+)
 from app.agents.eslestirme import (
     DURUM_KABUL_EDILDI,
     SKOR_ESIGI,
@@ -33,18 +40,29 @@ from app.agents.eslestirme import (
     temizlenecekler,
 )
 from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import bulunamadi, girvak_mi, ihtiyac_kartinin_sahibi_mi
+from app.api.sahiplik import (
+    GENCE_ACIK_DURUMLAR,
+    bulunamadi,
+    girvak_mi,
+    ihtiyac_kartinin_sahibi_mi,
+    kullanici_id,
+    yetenek_kartinin_sahibi_mi,
+)
 from app.api.sahiplik import kurum_id as hesabin_kurumu
 from app.api.yetenek_kartlari import kart_yaniti
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_session, get_sessionmaker
 from app.models.eslesme import Eslesme
-from app.models.hesap import ROL_GIRVAK, ROL_KURUM, Hesap
+from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
+from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
+from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import (
+    BanaGelenIlgi,
+    EslesmeDurumYaniti,
     EslestirmeCalistirIstegi,
+    Iletisim,
     IlgileniyorumIstegi,
-    IlgileniyorumYaniti,
     OnerilerYaniti,
     OneriYaniti,
 )
@@ -55,6 +73,7 @@ router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
 ISBIRLIGI_AKTIF = "aktif"
 IHTIYAC_YOK = "Kuruma ait ihtiyaç kartı yok"
+ESLESME_BULUNAMADI = "Eşleşme bulunamadı"
 
 
 def _hedef_kurum(hesap: Hesap, istenen: uuid.UUID | None) -> uuid.UUID:
@@ -79,7 +98,7 @@ async def calistir(
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM, ROL_GIRVAK)),
     oturum: AsyncSession = Depends(get_session),
 ) -> OnerilerYaniti:
-    return await _pipeline_calistir(oturum, _hedef_kurum(hesap, istek.kurum_id))
+    return await _pipeline_calistir(oturum, _hedef_kurum(hesap, istek.kurum_id), hesap)
 
 
 @router.get("/oneriler/{kurum_id}", response_model=OnerilerYaniti)
@@ -96,50 +115,183 @@ async def oneriler(
 
     mevcut = await _eslesmeleri_oku(oturum, ihtiyac.id)
     if not mevcut:
-        return await _pipeline_calistir(oturum, kurum_id)
+        return await _pipeline_calistir(oturum, kurum_id, hesap)
 
-    return await _yanit_kur(oturum, ihtiyac.id, mevcut)
+    return await _yanit_kur(oturum, ihtiyac.id, mevcut, hesap)
 
 
-@router.post("/ilgileniyorum", response_model=IlgileniyorumYaniti)
+@router.post("/ilgileniyorum", response_model=EslesmeDurumYaniti)
 async def ilgileniyorum(
     istek: IlgileniyorumIstegi,
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
-) -> IlgileniyorumYaniti:
-    """Kurum ilgilendiğini söyler: eşleşme kabul edilir, iş birliği açılır.
+) -> EslesmeDurumYaniti:
+    """Kurum ilgilendiğini söyler: `onerildi` → `ilgileniliyor`.
 
-    Ayrı bir kabul adımı yok — MVP kararı. Genç'e bildirim gitmesi Faz 3+
-    kapsamında (şu an bilinçli olarak yok).
+    İş birliği burada AÇILMAZ; gencin kabulünü bekler
+    (docs/faz-b-kimlik-ve-dongu.md § 5). Gence bildirim 5. adımda.
     """
-    eslesme = await oturum.scalar(
-        select(Eslesme)
-        .options(selectinload(Eslesme.isbirligi), selectinload(Eslesme.ihtiyac_karti))
-        .where(Eslesme.id == istek.eslesme_id)
-    )
-    # Yalnızca eşleşmenin ihtiyaç kartının sahibi kurum.
+    eslesme = await _eslesmeyi_kilitle(oturum, istek.eslesme_id)
     if eslesme is None or not ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
-        raise bulunamadi("Eşleşme bulunamadı")
+        raise bulunamadi(ESLESME_BULUNAMADI)
+    await _gecisi_uygula(oturum, eslesme, OLAY_ILGILENIYORUM, hesap)
+    return _durum_yaniti(eslesme, hesap)
 
-    eslesme.durum = DURUM_KABUL_EDILDI
-    eslesme.son_aktivite_tarihi = dt.datetime.now(dt.UTC)
 
-    isbirligi = eslesme.isbirligi
-    if isbirligi is None:
-        isbirligi = Isbirligi(
-            eslesme_id=eslesme.id,
-            baslangic_tarihi=dt.date.today(),
-            durum=ISBIRLIGI_AKTIF,
-        )
-        oturum.add(isbirligi)
-
+@router.post("/{eslesme_id}/kabul", response_model=EslesmeDurumYaniti)
+async def kabul(
+    eslesme_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Genç kurumun ilgisini kabul eder: iş birliği açılır, e-postalar görünür."""
+    eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
+    if await _gecisi_uygula(oturum, eslesme, OLAY_KABUL, hesap, commit=False):
+        if eslesme.isbirligi is None:
+            eslesme.isbirligi = Isbirligi(baslangic_tarihi=dt.date.today(), durum=ISBIRLIGI_AKTIF)
+    # Durum ve iş birliği aynı işlemde: biri yazılıp öbürü kaybolmasın.
     await oturum.commit()
+    return _durum_yaniti(eslesme, hesap)
 
-    return IlgileniyorumYaniti(
+
+@router.post("/{eslesme_id}/red", response_model=EslesmeDurumYaniti)
+async def red(
+    eslesme_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Genç şu an kabul etmiyor. Kuruma bildirim (nötr dil) 5. adımda."""
+    eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
+    await _gecisi_uygula(oturum, eslesme, OLAY_RED, hesap)
+    return _durum_yaniti(eslesme, hesap)
+
+
+@router.get("/bana-gelenler", response_model=list[BanaGelenIlgi])
+async def bana_gelenler(
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[BanaGelenIlgi]:
+    """Gencin kartlarına gelen ilgiler, en yeni hareket önce.
+
+    `onerildi` durumundakiler burada yok: kurum henüz karar vermedi; genç
+    eşleşmeyi ancak ilgi bildirildiğinde görür (sahiplik.GENCE_ACIK_DURUMLAR).
+    """
+    # ihtiyac_kartlari bu modülü içe aktarıyor (arka plan eşleştirmesi); döngü olmasın.
+    from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
+
+    eslesmeler = await oturum.scalars(
+        _iliskileriyle(select(Eslesme))
+        .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
+        .where(
+            YetenekKarti.kullanici_id == kullanici_id(hesap),
+            Eslesme.durum.in_(GENCE_ACIK_DURUMLAR),
+        )
+        .order_by(Eslesme.son_aktivite_tarihi.desc())
+    )
+    return [
+        BanaGelenIlgi(
+            eslesme_id=eslesme.id,
+            durum=eslesme.durum,
+            son_aktivite_tarihi=eslesme.son_aktivite_tarihi,
+            yetenek_karti_id=eslesme.yetenek_karti_id,
+            rol_alani=eslesme.yetenek_karti.rol_alani,
+            ihtiyac_karti=await ihtiyac_karti_yaniti(oturum, eslesme.ihtiyac_karti_id),
+            isbirligi_id=eslesme.isbirligi.id if eslesme.isbirligi else None,
+            iletisim=iletisim(eslesme, hesap),
+        )
+        for eslesme in eslesmeler.all()
+    ]
+
+
+# --- Durum geçişi ----------------------------------------------------------------------
+
+
+def _iliskileriyle(sorgu):
+    """İletişim bilgisi ve sahiplik için gereken ilişkiler: iki taraf ve iş birliği."""
+    return sorgu.options(
+        selectinload(Eslesme.yetenek_karti).selectinload(YetenekKarti.kullanici),
+        selectinload(Eslesme.ihtiyac_karti).selectinload(IhtiyacKarti.kurum),
+        selectinload(Eslesme.isbirligi),
+    )
+
+
+async def _eslesmeyi_kilitle(oturum: AsyncSession, eslesme_id: uuid.UUID) -> Eslesme | None:
+    """Satırı kilitleyerek okur: çift tıklama iki iş birliği açmasın.
+
+    İkinci istek birincinin commit'ini bekler, sonra güncel durumu okur ve
+    geçişi "tekrar" olarak görür.
+    """
+    return await oturum.scalar(
+        _iliskileriyle(select(Eslesme))
+        .where(Eslesme.id == eslesme_id)
+        .with_for_update(of=Eslesme)
+        .execution_options(populate_existing=True)
+    )
+
+
+async def _gencin_eslesmesi(oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid.UUID) -> Eslesme:
+    """Gencin kendi kartına ait ve ona açılmış eşleşme; değilse 404.
+
+    `onerildi` durumundaki eşleşme de 404: genç onu henüz göremiyor, varlığı
+    sızdırılmaz (sahiplik sözleşmesi).
+    """
+    eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
+    if (
+        eslesme is None
+        or not yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti)
+        or eslesme.durum not in GENCE_ACIK_DURUMLAR
+    ):
+        raise bulunamadi(ESLESME_BULUNAMADI)
+    return eslesme
+
+
+async def _gecisi_uygula(
+    oturum: AsyncSession, eslesme: Eslesme, olay: str, hesap: Hesap, *, commit: bool = True
+) -> bool:
+    """Kuralı `gecis()`'e sorar; değiştiyse durumu ve aktivite tarihini yazar.
+
+    Döner: geçiş gerçekten oldu mu. False = aynı geçişin tekrarı; çağıran yan
+    etkiyi (iş birliği, bildirim) tekrarlamaz.
+    """
+    try:
+        sonuc = gecis(eslesme.durum, olay, hesap.rol)
+    except GecersizGecis as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
+    if sonuc.degisti:
+        eslesme.durum = sonuc.durum
+        eslesme.son_aktivite_tarihi = dt.datetime.now(dt.UTC)
+    if commit:
+        await oturum.commit()
+    return sonuc.degisti
+
+
+def taraf_mi(hesap: Hesap, eslesme: Eslesme) -> bool:
+    """Hesap eşleşmenin iki tarafından biri mi (kartın genci ya da ihtiyacın kurumu)?"""
+    return yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti) or (
+        ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti)
+    )
+
+
+def iletisim(eslesme: Eslesme, hesap: Hesap | None) -> Iletisim | None:
+    """E-postalar yalnızca `kabul_edildi`'de ve yalnızca iki taraftan birine.
+
+    GİRVAK okuma yetkisiyle her şeyi görür ama iletişim bilgisi onun işi
+    değil. `eslesme` ilişkileriyle yüklenmiş olmalı (`_iliskileriyle`).
+    """
+    if eslesme.durum != DURUM_KABUL_EDILDI or hesap is None or not taraf_mi(hesap, eslesme):
+        return None
+    return Iletisim(
+        genc_email=eslesme.yetenek_karti.kullanici.email,
+        kurum_email=eslesme.ihtiyac_karti.kurum.iletisim_email,
+    )
+
+
+def _durum_yaniti(eslesme: Eslesme, hesap: Hesap) -> EslesmeDurumYaniti:
+    return EslesmeDurumYaniti(
         eslesme_id=eslesme.id,
         durum=eslesme.durum,
-        isbirligi_id=isbirligi.id,
-        isbirligi_durum=isbirligi.durum,
+        isbirligi_id=eslesme.isbirligi.id if eslesme.isbirligi else None,
+        iletisim=iletisim(eslesme, hesap),
     )
 
 
@@ -167,7 +319,9 @@ async def eslestirmeyi_arka_planda_calistir(kurum_id: uuid.UUID) -> None:
 # --- Pipeline --------------------------------------------------------------
 
 
-async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> OnerilerYaniti:
+async def _pipeline_calistir(
+    oturum: AsyncSession, kurum_id: uuid.UUID, hesap: Hesap | None = None
+) -> OnerilerYaniti:
     ihtiyac = await ihtiyac_kartini_getir(oturum, kurum_id)
     if ihtiyac is None:
         raise bulunamadi(IHTIYAC_YOK)
@@ -230,7 +384,7 @@ async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> Oneri
 
     await oturum.commit()
 
-    return await _yanit_kur(oturum, ihtiyac.id, await _eslesmeleri_oku(oturum, ihtiyac.id))
+    return await _yanit_kur(oturum, ihtiyac.id, await _eslesmeleri_oku(oturum, ihtiyac.id), hesap)
 
 
 async def _gerekce(ihtiyac, aday: Aday) -> str | None:
@@ -248,7 +402,7 @@ async def _gerekce(ihtiyac, aday: Aday) -> str | None:
 
 async def _eslesmeleri_oku(oturum: AsyncSession, ihtiyac_karti_id: uuid.UUID) -> list[Eslesme]:
     satirlar = await oturum.scalars(
-        select(Eslesme)
+        _iliskileriyle(select(Eslesme))
         .where(Eslesme.ihtiyac_karti_id == ihtiyac_karti_id)
         .order_by(Eslesme.skor.desc())
     )
@@ -256,8 +410,13 @@ async def _eslesmeleri_oku(oturum: AsyncSession, ihtiyac_karti_id: uuid.UUID) ->
 
 
 async def _yanit_kur(
-    oturum: AsyncSession, ihtiyac_karti_id: uuid.UUID, eslesmeler: list[Eslesme]
+    oturum: AsyncSession,
+    ihtiyac_karti_id: uuid.UUID,
+    eslesmeler: list[Eslesme],
+    hesap: Hesap | None,
 ) -> OnerilerYaniti:
+    """`hesap` yalnızca iletişim bilgisini kime açacağımızı bilmek için;
+    arka plan işi hesapsız çağırır ve yanıtı zaten kimseye dönmez."""
     oneriler = [
         OneriYaniti(
             eslesme_id=eslesme.id,
@@ -265,6 +424,7 @@ async def _yanit_kur(
             durum=eslesme.durum,
             gerekce_metni=eslesme.gerekce_metni,
             yetenek_karti=await kart_yaniti(oturum, eslesme.yetenek_karti_id),
+            iletisim=iletisim(eslesme, hesap),
         )
         for eslesme in eslesmeler
     ]

@@ -85,12 +85,14 @@ class SomutCiktiYaniti(BaseModel):
 class YetenekKartiYaniti(BaseModel):
     """Kartın dışarıya açılan hali.
 
-    E-posta ve diğer iletişim bilgileri BURADA YOK — agent-specs.md § 1.5:
-    iletişim bilgisi kuruma varsayılan olarak gösterilmez, iki taraf da
-    onaylayınca açılır.
+    E-posta BURADA YOK — agent-specs.md § 1.5: iletişim bilgisi kuruma
+    varsayılan olarak gösterilmez, gencin kabulüyle açılır ve ayrı bir
+    `iletisim` alanında taşınır (schemas/eslestirme.py). Gencin adı iletişim
+    bilgisi sayılmıyor, baştan görünür (docs/faz-b-kimlik-ve-dongu.md § 5).
     """
 
     id: uuid.UUID
+    genc_adi: str
     rol_alani: str
     deneyim_seviyesi: str
     sektor_ilgi_alani: list[str]
