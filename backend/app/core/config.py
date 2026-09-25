@@ -5,6 +5,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Gemini 3 `thinking_level` değerleri; "" = modelin kendi varsayılanı.
 DUSUNME_SEVIYELERI = ("", "minimal", "low", "medium", "high")
+# HS256 için anahtar en az 256 bit olmalı; 32 karakter bunun alt sınırı.
+JWT_ANAHTAR_EN_AZ = 32
 
 
 class Settings(BaseSettings):
@@ -14,6 +16,11 @@ class Settings(BaseSettings):
     app_env: str = "development"
     # Frontend origin'leri, virgülle ayrılmış (CORS). Varsayılan: Next.js dev sunucusu.
     cors_origins: str = "http://localhost:3000"
+
+    # Kimlik (docs/faz-b-kimlik-ve-dongu.md § 1). JWT'yi imzalayan gizli anahtar.
+    # Varsayılanı YOK: tanımlı değilse uygulama açılmaz — tahmin edilebilir bir
+    # anahtarla imzalanmış token herkesin her hesabı taklit etmesine izin verir.
+    jwt_gizli_anahtar: str
 
     # LLM: Gemini, ücretli katman (docs/architecture.md § Teknoloji Kararları).
     # İki katman var; hangi işin hangisini kullandığı app/core/llm.py'de.
@@ -66,6 +73,16 @@ class Settings(BaseSettings):
         if v not in DUSUNME_SEVIYELERI:
             gecerliler = ", ".join(repr(s) for s in DUSUNME_SEVIYELERI)
             raise ValueError(f"GEMINI_HIZLI_DUSUNME={v!r} geçersiz. Geçerli değerler: {gecerliler}")
+        return v
+
+    @field_validator("jwt_gizli_anahtar")
+    @classmethod
+    def _jwt_anahtari_yeterince_uzun(cls, v: str) -> str:
+        if len(v) < JWT_ANAHTAR_EN_AZ:
+            raise ValueError(
+                f"JWT_GIZLI_ANAHTAR en az {JWT_ANAHTAR_EN_AZ} karakter olmalı. Üretmek için: "
+                'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+            )
         return v
 
     @field_validator("database_url")

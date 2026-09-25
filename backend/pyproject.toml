@@ -20,6 +20,9 @@ dependencies = [
     # asyncpg'yi desteklemiyor. Uygulama verisi hâlâ asyncpg üzerinden okunur.
     "langgraph-checkpoint-postgres>=2.0",
     "psycopg[binary,pool]>=3.2",
+    # Kimlik (docs/faz-b-kimlik-ve-dongu.md § 1): şifre hash'i ve JWT
+    "argon2-cffi>=23.1",
+    "PyJWT>=2.8",
 ]
 
 [project.optional-dependencies]
@@ -47,6 +50,8 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.per-file-ignores]
 # FastAPI'nin standart kalıbı: bağımlılıklar argüman varsayılanında Depends() ile verilir.
 "app/api/*.py" = ["B008"]
+# Testlerdeki küçük uygulamalar da aynı kalıbı kullanıyor.
+"tests/*.py" = ["B008"]
 
 [tool.ruff.lint.isort]
 # Yerel alembic/ klasörü ile PyPI paketi karışmasın
