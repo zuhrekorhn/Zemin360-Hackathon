@@ -25,7 +25,7 @@ takvime girmez.
 
 | Tarih | Faz | Çıktı |
 |---|---|---|
-| 25-26 Eyl | A — Sağlamlaştırma | İnceleme bulguları kapandı, ücretli LLM'e geçildi |
+| 25-26 Eyl | A — Sağlamlaştırma | İnceleme bulguları kapandı, Gemini ücretli anahtara geçildi |
 | 27-29 Eyl | B — Kimlik ve iki taraflı döngü | JWT, üç rol, genç paneli, karşılıklı onay |
 | 30 Eyl-1 Eki | C — Takip Ajanı | Milestone planı, ilerleme, tamamlanma sinyali |
 | 2-3 Eki | D — Canlılık Ajanı + GİRVAK paneli | Tarama, hatırlatma, fırsat, KPI'lar |
@@ -53,10 +53,10 @@ takvime girmez.
 - [x] Tüm çıktılar silinirse kart gerçekten "potansiyel" kaydedilir.
 - [x] `email` ve `iletisim_email` UNIQUE; kayıtlı kullanıcı bilgisi güncellenebilir.
 
-**LLM geçişi:** `app/core/llm.py` sağlayıcıdan bağımsız kalır. Katmanlı model
-stratejisi korunur: çıkarım işleri ucuz model, gerekçe ve rubrik güçlü model.
-Yedek zincir ücretli sağlayıcı içinde çalışır. Her çağrının token kullanımı
-log'a yazılır.
+**LLM geçişi:** Sağlayıcı değişmez, Gemini'de kalınır; yalnızca ücretsiz
+katmandan ücretli API anahtarına geçilir. Katmanlı model stratejisi korunur:
+çıkarım işleri ucuz model, gerekçe ve rubrik güçlü model. Yedek model zinciri
+Gemini içinde çalışmaya devam eder. Her çağrının token kullanımı log'a yazılır.
 
 **Kabul:** Tüm testler geçer; her bulgu için en az bir yeni test var.
 
@@ -65,12 +65,10 @@ log'a yazılır.
 **Kimlik kararı:** E-posta + şifre, JWT. Karmaşıklık bilinçli olarak düşük tutulur.
 
 - Şifreler argon2 (ya da bcrypt) ile hash'lenir.
-- JWT **httpOnly, Secure cookie** içinde taşınır; localStorage'a yazılmaz.
+- JWT **localStorage**'da tutulur ve her istekte
+  `Authorization: Bearer <token>` başlığıyla gönderilir.
 - Tek access token, 7 gün ömür. Refresh token bu sürümde yok.
 - Token'da `sub` (kullanıcı id) ve `rol` (`genc` | `kurum` | `girvak`).
-- Frontend backend'e **Next.js rewrites** üzerinden gider (`/api/*` → FastAPI).
-  Böylece tarayıcı açısından aynı origin olur; farklı alan adlarında cookie ve
-  CORS sorunu çıkmaz.
 - Rol yetmez, **sahiplik** kontrol edilir: genç yalnızca kendi kartını, kurum
   yalnızca kendi ihtiyaç kartını ve önerilerini görür/değiştirir.
 - Referans yanıt sayfası girişsiz kalır (token bazlı, önceki karar).
@@ -126,6 +124,7 @@ pasifleşme günlerce beklemeden gösterilebilir.
 
 - [ ] Frontend: Vercel. Backend: Railway ya da Render. Postgres: pgvector
       destekleyen yönetilen servis (Neon ya da Supabase).
+- [ ] Canlı frontend adresi backend'in CORS_ORIGINS ayarına eklenecek.
 - [ ] Migration'lar canlı veritabanında sıfırdan çalışır.
 - [ ] Tohum veri: 30-50 yetenek kartı, 8-10 kurum, birkaç tamamlanmış ve
       pasifleşmiş iş birliği. Demo senaryosuyla aynı hikâyeden beslenir.
@@ -150,7 +149,8 @@ yayına alma.
 ## Kapsam dışı
 
 Mobil uygulama, taraflar arası mesajlaşma, gerçek e-posta gönderimi, ESCO
-taksonomisi, çoklu dil, refresh token / OAuth.
+taksonomisi, çoklu dil, refresh token / OAuth, httpOnly cookie'ye geçiş
+(ürünleşme dönemi).
 
 ## Çalışma kuralları
 
