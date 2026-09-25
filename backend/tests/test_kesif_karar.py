@@ -341,3 +341,84 @@ def test_potansiyel_kurali_ciktisiz_karti_etiketler():
     assert potansiyel_kurali("orta", 0) == POTANSIYEL
     assert potansiyel_kurali(None, 0) == POTANSIYEL
     assert potansiyel_kurali("orta", 1) == "orta"
+
+
+# --- Zorunlu fazda modelin sorusu yalnızca zorunlu konudaysa -------------------
+# Gerçek sohbette: sektör eksikken model "projede rolün neydi" diye sordu; bu
+# soru hiçbir deftere girmediği için bir sonraki turda sistemin ek sorusu aynı
+# konuyu tekrar sordu. Kullanıcı aynı soruyu iki kez gördü.
+
+ROL_SORUSU_LLM = "Bu çalışmayı tek başına mı geliştirdin? Senin rolün neydi?"
+
+
+def test_zorunlu_fazda_ek_konulu_llm_sorusu_kullanilmaz():
+    from app.agents.kesif import YEDEK_SORULAR
+
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(sektor_ilgi_alani=[]),
+            "takip_turu": 0,
+            "son_takip_sorusu": ROL_SORUSU_LLM,
+            "son_takip_konusu": "kendi_rolu",
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["sonraki_soru"] == YEDEK_SORULAR["sektor_ilgi_alani"]
+
+
+def test_zorunlu_konulu_llm_sorusu_kullanilir():
+    """Doğal ifade sabit yedek sorudan iyi; konu doğruysa modelin sorusu sorulur."""
+    llm_sorusu = "Hangi alanlarda çalışmak seni heyecanlandırır?"
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(sektor_ilgi_alani=[]),
+            "takip_turu": 0,
+            "son_takip_sorusu": llm_sorusu,
+            "son_takip_konusu": "sektor_ilgi_alani",
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["sonraki_soru"] == llm_sorusu
+
+
+def test_konusu_belirtilmemis_llm_sorusu_kullanilmaz():
+    from app.agents.kesif import YEDEK_SORULAR
+
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(rol_alani=None),
+            "takip_turu": 0,
+            "son_takip_sorusu": "Başka ne yaptın?",
+            "son_takip_konusu": None,
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["sonraki_soru"] == YEDEK_SORULAR["rol_alani"]
+
+
+def test_gozlenen_sohbette_rol_konusu_bir_kez_sorulur():
+    """Gerçek sohbetin dizisi: 1. turda sektör eksik + model rol sordu,
+    2. turda zorunlular tamam. Rol/pay konusu toplamda yalnızca bir kez gelir."""
+    cikti = [{"baslik": "Kütüphane sistemi", "olculebilir_sonuc": "400 kitap"}]
+    durum = {
+        "taslak": dolu_taslak(sektor_ilgi_alani=[], somut_ciktilar=cikti),
+        "takip_turu": 0,
+        "son_takip_sorusu": ROL_SORUSU_LLM,
+        "son_takip_konusu": "kendi_rolu",
+        "fallback_indeksi": 0,
+    }
+    sorular = []
+    for tur_taslagi in (
+        durum["taslak"],
+        dolu_taslak(somut_ciktilar=cikti),  # kullanıcı sektörünü söyledi
+        dolu_taslak(somut_ciktilar=cikti),  # rolünü söylemedi
+    ):
+        durum = {**durum, "taslak": tur_taslagi}
+        sonuc = karar(durum)
+        if sonuc.get("taslak_hazir"):
+            break
+        sorular.append(sonuc["sonraki_soru"])
+        durum = {**durum, **{k: v for k, v in sonuc.items() if k != "mesajlar"}}
+
+    rol_sorulari = [s for s in sorular if "rol" in s.lower() or "payın" in s]
+    assert len(rol_sorulari) == 1, sorular

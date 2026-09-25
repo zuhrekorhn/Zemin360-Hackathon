@@ -69,6 +69,10 @@ Alanlar:
   Bu, müsaitlikten (tam/yarı zamanlı) FARKLI bir şey — karıştırma.
 - musaitlik_tercihi: tam zamanlı / yarı zamanlı / proje bazlı / staj gibi bir
   beklenti söylendiyse (yoksa boş).
+
+takip_sorusu ve takip_konusu: problem_tanimi ya da basari_kriteri eksikse
+takip sorusunda ÖNCE bunlardan birini sor ve takip_konusu'na o alanın adını
+yaz. Sorunun konusu eksik bir zorunlu alan değilse sistem senin soruna yer vermez.
 """
 
 YEDEK_SORULAR = {
@@ -116,6 +120,20 @@ class IhtiyacCikarimi(BaseModel):
             "ifadeyi ölçülebilir hale getirmeyi hedefle."
         ),
     )
+    # Sistem, soruyu yalnızca konusu eksik bir zorunlu alansa kullanıyor
+    # (sohbet_motoru.zorunlu_alan_sorusu).
+    takip_konusu: (
+        Literal[
+            "problem_tanimi",
+            "basari_kriteri",
+            "kisitlar",
+            "sehir_tercihi",
+            "calisma_modeli",
+            "musaitlik_tercihi",
+            "diger",
+        ]
+        | None
+    ) = Field(default=None, description="takip_sorusu hangi alanı soruyor")
 
 
 class TanimlamaDurumu(SohbetDurumu, total=False):

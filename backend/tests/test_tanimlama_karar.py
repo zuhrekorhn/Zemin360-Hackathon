@@ -112,3 +112,31 @@ def test_calisma_modeli_musaitlikten_ayri_soruluyor():
 
     assert "calisma_modeli" in SISTEM_TALIMATI
     assert "müsaitlikten (tam/yarı zamanlı) FARKLI" in SISTEM_TALIMATI
+
+
+def test_zorunlu_fazda_baska_konulu_llm_sorusu_kullanilmaz():
+    """Başarı kriteri eksikken model kısıtları sorduysa sabit kriter sorusu gelir."""
+    from app.agents.tanimlama import YEDEK_SORULAR
+
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(basari_kriteri=None),
+            "takip_turu": 0,
+            "son_takip_sorusu": "Bütçeniz ne kadar?",
+            "son_takip_konusu": "kisitlar",
+        }
+    )
+    assert sonuc["sonraki_soru"] == YEDEK_SORULAR["basari_kriteri"]
+
+
+def test_zorunlu_konulu_sokratik_soru_kullanilir():
+    soru = "Geciken iadelerin yüzde kaçı hatırlatmayla dönerse başarılı sayarsınız?"
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(basari_kriteri=None),
+            "takip_turu": 0,
+            "son_takip_sorusu": soru,
+            "son_takip_konusu": "basari_kriteri",
+        }
+    )
+    assert sonuc["sonraki_soru"] == soru

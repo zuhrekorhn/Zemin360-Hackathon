@@ -76,6 +76,12 @@ Alanlar:
 
 Aynı işten ikinci kez bahsedilirse YENİ bir çıktı açma; aynı başlıkla yeniden
 döndür, eksik alanları doldur.
+
+takip_sorusu ve takip_konusu:
+- rol_alani, deneyim_seviyesi, sektor_ilgi_alani ya da araclar_teknolojiler
+  eksikse takip sorusunda ÖNCE bunlardan birini sor.
+- takip_konusu'na sorunun hedeflediği alanı yaz (örn. "sektor_ilgi_alani").
+  Sorunun konusu bu alanlardan biri değilse sistem senin soruna yer vermez.
 """
 
 YEDEK_SORULAR = {
@@ -137,6 +143,21 @@ class TaslakCikarimi(BaseModel):
         default=None,
         description="Eksik kalan alanlar için sorulabilecek tek bir doğal takip sorusu",
     )
+    # Sistem, soruyu yalnızca konusu eksik bir zorunlu alansa kullanıyor
+    # (sohbet_motoru.zorunlu_alan_sorusu); ölçüt/rol konusu ek fazın işi.
+    takip_konusu: (
+        Literal[
+            "rol_alani",
+            "deneyim_seviyesi",
+            "sektor_ilgi_alani",
+            "araclar_teknolojiler",
+            "somut_ciktilar",
+            "olculebilir_sonuc",
+            "kendi_rolu",
+            "diger",
+        ]
+        | None
+    ) = Field(default=None, description="takip_sorusu hangi alanı soruyor")
 
 
 class KesifDurumu(SohbetDurumu, total=False):

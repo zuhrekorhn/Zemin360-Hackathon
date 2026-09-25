@@ -63,6 +63,10 @@ class SohbetDurumu(TypedDict, total=False):
     taslak_hazir: bool
     # Son turun çıkarımından karar düğümüne taşınan takip sorusu önerisi
     son_takip_sorusu: str | None
+    # O sorunun hangi alanı hedeflediği (modelin kendi etiketi, çıkarım
+    # şemasındaki `takip_konusu`). Karar düğümü soruyu yalnızca konusu eksik
+    # bir zorunlu alansa kullanır — bkz. `zorunlu_alan_sorusu`.
+    son_takip_konusu: str | None
 
 
 @dataclass(frozen=True)
@@ -213,6 +217,7 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
         return {
             "taslak": birlestir(tanim, durum.get("taslak") or bos_taslak(tanim), cikarim),
             "son_takip_sorusu": getattr(cikarim, "takip_sorusu", None),
+            "son_takip_konusu": getattr(cikarim, "takip_konusu", None),
             **(tanim.ek_cikarim_alanlari(cikarim) if tanim.ek_cikarim_alanlari else {}),
         }
 
@@ -228,6 +233,25 @@ def _soru_durumu(soru: str, takip_turu: int) -> dict[str, Any]:
     }
 
 
+def zorunlu_alan_sorusu(tanim: AjanTanimi, durum: dict[str, Any], eksikler: list[str]) -> str:
+    """Zorunlu alan eksikken sorulacak soru.
+
+    Modelin önerdiği soru yalnızca konusu eksik bir zorunlu alansa kullanılır;
+    değilse ilk eksik alanın sabit sorusu sorulur.
+
+    Neden: sistem talimatı modele "her çıktının ölçülebilir sonucunu ve kişinin
+    kendi payını da öğren" diyor. Model zorunlu fazda sektör eksikken
+    "projede rolün neydi" diye sordu; bu soru ne zorunlu alanı doldurdu ne de
+    sistemin "sorulan ek sorular" defterine girdi. Bir sonraki turda sistemin
+    ek sorusu aynı konuyu yeniden sordu. Zorunlu faz artık yalnızca zorunlu
+    alanları soruyor; rol/ölçüt konusunu tek başına ek faz yönetiyor.
+    """
+    onerilen = durum.get("son_takip_sorusu")
+    if onerilen and durum.get("son_takip_konusu") in eksikler:
+        return onerilen
+    return tanim.yedek_sorular[eksikler[0]]
+
+
 async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
     """Takip sorusu mu, ajana özel dal mı, yoksa taslak mı — tek karar noktası."""
     taslak = durum["taslak"]
@@ -237,8 +261,7 @@ async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
     # 1) Zorunlu alan eksikse sormaya devam et. Kartı eksik kapatmak son
     #    çare; tavan yalnızca sonsuz döngüyü engelliyor.
     if eksikler and takip_turu < tanim.maks_zorunlu_turu:
-        soru = durum.get("son_takip_sorusu") or tanim.yedek_sorular[eksikler[0]]
-        return _soru_durumu(soru, takip_turu)
+        return _soru_durumu(zorunlu_alan_sorusu(tanim, durum, eksikler), takip_turu)
 
     # 2) Ajana özel eksikler (Keşif'te çıktı başına ölçülebilir sonuç ve rol).
     #    Zorunlu alanlardan sonra, kendi sayacıyla ve daha kısa bir tavanla
