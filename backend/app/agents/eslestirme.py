@@ -25,13 +25,15 @@ from typing import Protocol
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
-from sqlalchemy import func, or_, select
+from sqlalchemy import Insert, func, or_, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.calisma_modeli import sehir_eslesmeli_mi
 from app.core.llm import llm_hatasini_cevir, model, yedekli_zincir
 from app.core.sehir import sehir_kanonik
+from app.models.eslesme import Eslesme
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
@@ -169,6 +171,37 @@ def temizlenecekler(
         for eslesme in mevcutlar
         if eslesme.yetenek_karti_id not in kalanlar and eslesme.durum == DURUM_ONERILDI
     ]
+
+
+def kilit_anahtari(ihtiyac_karti_id: uuid.UUID) -> int:
+    """Aynı ihtiyaç kartı için pipeline'ı sıraya sokan advisory lock anahtarı.
+
+    `pg_advisory_xact_lock` işaretli 64 bitlik bir tamsayı istiyor; UUID'nin
+    ilk 8 baytı bu kadar ayırt edici. Farklı kartlar nadiren aynı anahtara
+    düşse bile sonuç yalnızca kısa bir bekleme olur, yanlış veri değil.
+    """
+    return int.from_bytes(ihtiyac_karti_id.bytes[:8], "big", signed=True)
+
+
+def eslesme_ekle_ifadesi(
+    *, ihtiyac_karti_id: uuid.UUID, yetenek_karti_id: uuid.UUID, skor: float
+) -> Insert:
+    """Yeni öneriyi ekler; aynı çift zaten varsa hiçbir şey yapmaz.
+
+    Asıl koruma pipeline'daki kilit. Bu ifade ikinci güvenlik ağı: kilit
+    bir gün atlanırsa bile UNIQUE kısıt ihlali 500'e dönüşmesin.
+    """
+    return (
+        pg_insert(Eslesme)
+        .values(
+            id=uuid.uuid4(),
+            ihtiyac_karti_id=ihtiyac_karti_id,
+            yetenek_karti_id=yetenek_karti_id,
+            skor=skor,
+            durum=DURUM_ONERILDI,
+        )
+        .on_conflict_do_nothing(index_elements=["ihtiyac_karti_id", "yetenek_karti_id"])
+    )
 
 
 def kart_dogrulanmis_mi(kart: YetenekKarti) -> bool:

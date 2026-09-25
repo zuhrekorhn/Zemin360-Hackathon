@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Float, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, Float, ForeignKey, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,6 +19,10 @@ if TYPE_CHECKING:
 
 class Eslesme(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "eslesme"
+    # Bir ihtiyaç kartı ile bir yetenek kartı arasında tek eşleşme olur.
+    # Arka plan işi ile GET /oneriler aynı anda çalışınca mükerrer satır
+    # açılıyordu; pipeline artık bu kısıta ON CONFLICT ile dayanıyor.
+    __table_args__ = (UniqueConstraint("ihtiyac_karti_id", "yetenek_karti_id"),)
 
     yetenek_karti_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("yetenek_karti.id", ondelete="CASCADE"), index=True

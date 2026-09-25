@@ -37,7 +37,7 @@ takvime girmez.
 
 İnceleme bulguları, önem sırasıyla:
 
-- [ ] `eslesme (ihtiyac_karti_id, yetenek_karti_id)` UNIQUE kısıtı; pipeline
+- [x] `eslesme (ihtiyac_karti_id, yetenek_karti_id)` UNIQUE kısıtı; pipeline
       çakışmada `ON CONFLICT` ile dayanıklı. Arka plan işi ile `GET /oneriler`
       aynı anda çalışınca mükerrer satır ve çift LLM çağrısı olmamalı.
 - [ ] Onay tekrarlanabilir: aynı `oturum_id` ikinci kez onaylanınca yeni kart

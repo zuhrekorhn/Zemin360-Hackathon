@@ -15,19 +15,20 @@ import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.eslestirme import (
     DURUM_KABUL_EDILDI,
-    DURUM_ONERILDI,
     SKOR_ESIGI,
     TOP_N,
     Aday,
     adaylari_getir,
+    eslesme_ekle_ifadesi,
     gerekce_uret,
     ihtiyac_kartini_getir,
+    kilit_anahtari,
     siralayip_ele,
     temizlenecekler,
 )
@@ -146,6 +147,16 @@ async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> Oneri
             status_code=409, detail="İhtiyaç kartının embedding'i yok; kart yeniden onaylanmalı"
         )
 
+    # Aynı ihtiyaç kartı için pipeline'lar sıraya girer: kart onaylanınca
+    # arka plan işi başlıyor, kurum da o sırada öneriler sayfasını açınca
+    # GET /oneriler ikinci bir pipeline başlatıyordu — mükerrer satır ve çift
+    # LLM çağrısı. İkinci çağrı burada birincinin commit'ini bekler, sonra
+    # kayıtları ve gerekçeleri hazır bulur. Kilit transaction sonunda kalkar.
+    await oturum.execute(
+        text("SELECT pg_advisory_xact_lock(:anahtar)"),
+        {"anahtar": kilit_anahtari(ihtiyac.id)},
+    )
+
     secilenler = siralayip_ele(await adaylari_getir(oturum, ihtiyac))
     eskiler = await _eslesmeleri_oku(oturum, ihtiyac.id)
     mevcutlar = {e.yetenek_karti_id: e for e in eskiler}
@@ -156,26 +167,28 @@ async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> Oneri
         mevcutlar.pop(eskimis.yetenek_karti_id, None)
         await oturum.delete(eskimis)
 
-    gerekce_bekleyenler: list[tuple[Eslesme, Aday]] = []
-
     for aday in secilenler:
         eslesme = mevcutlar.get(aday.yetenek_karti.id)
         if eslesme is None:
-            eslesme = Eslesme(
-                yetenek_karti_id=aday.yetenek_karti.id,
-                ihtiyac_karti_id=ihtiyac.id,
-                skor=aday.skor,
-                durum=DURUM_ONERILDI,
+            await oturum.execute(
+                eslesme_ekle_ifadesi(
+                    ihtiyac_karti_id=ihtiyac.id,
+                    yetenek_karti_id=aday.yetenek_karti.id,
+                    skor=aday.skor,
+                )
             )
-            oturum.add(eslesme)
-            mevcutlar[aday.yetenek_karti.id] = eslesme
         else:
             # Kurumun verdiği karar (ilgileniliyor/kabul/red) ezilmez;
             # yalnızca skor tazelenir.
             eslesme.skor = aday.skor
 
-        if eslesme.gerekce_metni is None:
-            gerekce_bekleyenler.append((eslesme, aday))
+    # Eklenenler ON CONFLICT ile yazıldı; ORM nesneleri yeniden okunarak alınır.
+    guncel = {e.yetenek_karti_id: e for e in await _eslesmeleri_oku(oturum, ihtiyac.id)}
+    gerekce_bekleyenler: list[tuple[Eslesme, Aday]] = [
+        (guncel[aday.yetenek_karti.id], aday)
+        for aday in secilenler
+        if aday.yetenek_karti.id in guncel and guncel[aday.yetenek_karti.id].gerekce_metni is None
+    ]
 
     # Gerekçeler birbirinden bağımsız: sırayla beklemek Top-5'te kullanıcıyı
     # beş çağrı boyunca bekletiyordu. Hepsi aynı anda gidiyor.
