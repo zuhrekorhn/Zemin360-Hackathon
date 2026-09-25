@@ -6,6 +6,7 @@ import uuid
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.core.musaitlik import KatiMusaitlik
 from app.schemas.dogrulama import GuvenSkoruYaniti
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
 
@@ -51,7 +52,9 @@ class KullaniciGirdisi(BaseModel):
     # Kabul ettiği çalışma modelleri (is_yerinde | hibrit | uzaktan).
     # Müsaitlikten ayrı: o çalışma tipi, bu çalışma yeri.
     calisma_modelleri: list[str] = Field(default_factory=list)
-    musaitlik: str | None = None
+    # Kod olarak saklanır (app/core/musaitlik.py); eşleştirme filtresi düz
+    # eşitlikle çalıştığı için serbest metin sessiz elemeye yol açıyordu.
+    musaitlik: KatiMusaitlik = None
 
 
 class KartOnaylaIstegi(BaseModel):

@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from app.agents import sohbet_motoru as motor
 from app.agents.sohbet_motoru import SohbetDurumu
+from app.core.musaitlik import Musaitlik
 
 ACILIS_SORUSU = (
     "Merhaba! Çözmeye çalıştığınız problemi anlatın — ne yaşıyorsunuz, "
@@ -103,8 +104,10 @@ class IhtiyacCikarimi(BaseModel):
     sehir_tercihi: str | None = Field(
         default=None, description="Sadece belirli bir şehir şartı varsa"
     )
-    musaitlik_tercihi: str | None = Field(
-        default=None, description="tam_zamanli | yarim_zamanli | proje_bazli | staj"
+    # Literal: serbest metin ("tam zamanlı") eşleştirmenin düz eşitlik
+    # filtresinde gencin koduyla eşleşmiyor, tüm adayları sessizce eliyordu.
+    musaitlik_tercihi: Musaitlik | None = Field(
+        default=None, description="Çalışma tipi; söylenmediyse boş bırak"
     )
     takip_sorusu: str | None = Field(
         default=None,

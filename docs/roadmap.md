@@ -45,7 +45,7 @@ takvime girmez.
       embedding'i yeniden hesaplatan bir yol eklenir.
 - [x] Referans gizliliği: girişsiz uç noktalar başka referansların e-postasını,
       puanını ve token'ını dönmez. (Faz B'deki yetkilendirme ile tamamen kapanır.)
-- [ ] `musaitlik_tercihi` `Literal` olur, onayda doğrulanır, formda düzeltilebilir.
+- [x] `musaitlik_tercihi` `Literal` olur, onayda doğrulanır, formda düzeltilebilir.
 - [ ] 429 mesajı düzeltilir ("kota doldu", "yoğunluk" değil); üç kopya tek
       fonksiyonda (`lib/hata.ts`) toplanır.
 - [ ] Ek takip soruları ayrı sayaç kullanır; "bilmiyorum" cevabında aynı soru

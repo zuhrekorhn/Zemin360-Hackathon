@@ -28,6 +28,7 @@ import {
   CALISMA_MODELI_ETIKETLERI,
   CALISMA_MODELLERI,
   MUSAITLIK_ETIKETLERI,
+  MUSAITLIK_SECENEKLERI,
   SEHIR_SECENEKLERI,
   etiketle,
   sehirEtiketi,
@@ -246,6 +247,8 @@ function TaslakBolumu({
   const [calismaModeli, setCalismaModeli] = useState(
     taslak.calisma_modeli ?? "",
   );
+  // Eşleştirmenin sert filtresi; ajan yanlış anlamış olabilir, kurum düzeltsin.
+  const [musaitlik, setMusaitlik] = useState(taslak.musaitlik_tercihi ?? "");
 
   return (
     <div className="flex flex-col gap-8">
@@ -286,6 +289,7 @@ function TaslakBolumu({
                 ...taslak,
                 sehir_tercihi: aranilanSehir || null,
                 calisma_modeli: calismaModeli || null,
+                musaitlik_tercihi: musaitlik || null,
               },
             );
           }}
@@ -377,6 +381,21 @@ function TaslakBolumu({
               {CALISMA_MODELLERI.map((model) => (
                 <option key={model.deger} value={model.deger}>
                   {model.etiket}
+                </option>
+              ))}
+            </select>
+          </FormAlani>
+
+          <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istegeBagli>
+            <select
+              id="musaitlik"
+              value={musaitlik}
+              onChange={(olay) => setMusaitlik(olay.target.value)}
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+            >
+              {MUSAITLIK_SECENEKLERI.map((secenek) => (
+                <option key={secenek.deger} value={secenek.deger}>
+                  {secenek.etiket}
                 </option>
               ))}
             </select>

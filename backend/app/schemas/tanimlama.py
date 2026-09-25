@@ -9,9 +9,16 @@ import uuid
 
 from pydantic import BaseModel, EmailStr
 
+from app.core.musaitlik import HosgoruluMusaitlik, KatiMusaitlik
+
 
 class IhtiyacTaslagi(BaseModel):
-    """Kuruma onay için gösterilen taslak — henüz veritabanında değil."""
+    """Kuruma onay için gösterilen taslak — henüz veritabanında değil.
+
+    Checkpoint'ten okunurken kullanılıyor (sohbet uçlarının yanıtı ve düzeltme
+    gönderilmeyen onay). Müsaitlik bu yüzden hoşgörülü: eskiden serbest metin
+    olarak kaydedilmiş bir taslak sohbeti kırmamalı.
+    """
 
     problem_tanimi: str | None = None
     basari_kriteri: str | None = None
@@ -21,7 +28,17 @@ class IhtiyacTaslagi(BaseModel):
     # Tek seçim: is_yerinde | hibrit | uzaktan. "Uzaktan" seçilirse şehir
     # filtresi uygulanmaz.
     calisma_modeli: str | None = None
-    musaitlik_tercihi: str | None = None
+    musaitlik_tercihi: HosgoruluMusaitlik = None
+
+
+class IhtiyacTaslagiGirdisi(IhtiyacTaslagi):
+    """Kurumun onay formunda düzelttiği taslak — istemciden gelir, katı okunur.
+
+    Formda seçim listesi var; listede olmayan bir müsaitlik gelmişse sessizce
+    atmak yerine 422 ile söylüyoruz.
+    """
+
+    musaitlik_tercihi: KatiMusaitlik = None
 
 
 class TanimlamaSohbetYaniti(BaseModel):
@@ -47,7 +64,7 @@ class KurumGirdisi(BaseModel):
 class IhtiyacKartiOnaylaIstegi(BaseModel):
     oturum_id: uuid.UUID
     kurum: KurumGirdisi
-    duzeltilmis_taslak: IhtiyacTaslagi | None = None
+    duzeltilmis_taslak: IhtiyacTaslagiGirdisi | None = None
 
 
 class KurumYaniti(BaseModel):
