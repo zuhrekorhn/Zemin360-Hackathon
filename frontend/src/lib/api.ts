@@ -389,7 +389,8 @@ export type Oneri = {
   skor: number;
   /** "onerildi" | "ilgileniliyor" | "kabul_edildi" | "reddedildi" */
   durum: string;
-  /** Dil modeli o an yanıt vermediyse null kalır — skor yine de geçerli. */
+  /** Gerekçe yoksa null: dil modeli o an yanıt vermedi ya da kanıtı
+   *  olduğundan güçlü anlattığı için gerekçe bırakıldı. Skor yine de geçerli. */
   gerekce_metni: string | null;
   yetenek_karti: YetenekKartiYaniti;
 };

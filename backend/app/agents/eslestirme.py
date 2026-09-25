@@ -16,6 +16,8 @@ taksonomi bileşeni (§ İsteğe Bağlı Geliştirme) bilinçli olarak dışarı
 
 from __future__ import annotations
 
+import logging
+import re
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -32,12 +34,16 @@ from sqlalchemy.orm import selectinload
 
 from app.core.calisma_modeli import sehir_eslesmeli_mi
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
+from app.core.metin import turkce_kucult
 from app.core.sehir import sehir_kanonik
 from app.models.eslesme import Eslesme
+from app.models.guven_skoru import GuvenSkoru
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+
+logger = logging.getLogger("zemin360.eslestirme")
 
 # docs/matching-algorithm.md § 4-5
 BENZERLIK_AGIRLIGI = 0.75
@@ -67,8 +73,12 @@ Kurallar:
   çıktı başlığı. Kartta olmayan bir yetenek ya da deneyim UYDURMA.
 - "İyi bir aday", "güçlü bir profil", "harika bir eşleşme" gibi genel geçer
   ifadeler KULLANMA. Bunlar hiçbir şey söylemiyor.
-- Zayıf tarafı gizleme: kart doğrulanmamışsa ya da deneyim "potansiyel" ise
-  bunu bir cümlede sakince belirt.
+- Zayıf tarafı gizleme: kanıt zayıfsa ya da deneyim "potansiyel" ise bunu bir
+  cümlede sakince belirt.
+- "Doğrulanmış", "doğrulandı", "kanıtlanmış" gibi ifadeleri YALNIZCA doğrulama
+  özetinin "Genel" satırı güçlü kanıt olduğunu söylüyorsa kullan. Aksi halde
+  kanıtın ne durumda olduğunu özetteki ifadelerle anlat ("kanıt linki var ama
+  iddiayla ilişkisi zayıf" gibi). Puanları rakamla verme.
 - Türkçe, sade, abartısız. Karar kurumun; sen sadece neden bu kartın önerildiğini
   anlat.
 """
@@ -87,9 +97,10 @@ GEREKCE_SABLONU = ChatPromptTemplate.from_messages(
             "Deneyim: {deneyim}\n"
             "Sektör ilgisi: {sektorler}\n"
             "Araçlar: {araclar}\n"
-            "Somut çıktılar: {ciktilar}\n"
-            "Doğrulama durumu: {dogrulama}\n\n"
-            "Bu eşleşmenin gerekçesini yaz.",
+            "Somut çıktılar: {ciktilar}\n\n"
+            "DOĞRULAMA ÖZETİ (Doğrulama Ajanı'nın rubrik puanlarından)\n"
+            "{dogrulama}\n\n"
+            "{ek_not}Bu eşleşmenin gerekçesini yaz.",
         ),
     ]
 )
@@ -204,8 +215,96 @@ def eslesme_ekle_ifadesi(
     )
 
 
-def kart_dogrulanmis_mi(kart: YetenekKarti) -> bool:
-    return any(cikti.guven_skoru is not None for cikti in kart.somut_ciktilar)
+# --- Doğrulama özeti (gerekçeye giden) -------------------------------------
+# Eskiden gerekçeye ikili bir etiket gidiyordu: herhangi bir çıktının güven
+# skoru kaydı varsa "kanıtları doğrulandı". Orijinallik 1/3 (link iddiayla
+# ilgisiz) olan kart da "doğrulanmış" diye anlatılıyordu. Şimdi rubrik
+# puanları, rubriğin kendi tanımlarıyla cümleye çevrilip gönderiliyor.
+
+ORIJINALLIK_IFADELERI = {
+    0: "kanıt linki yok ya da açılmıyor",
+    1: "kanıt linki açılıyor ama iddiayla ilişkisi zayıf",
+    2: "kanıt iddiayla ilgili ama kişinin kendi işi olduğu belirsiz",
+    3: "kanıt linki iddia edilen işin kendisine götürüyor",
+}
+OLCULEBILIRLIK_IFADELERI = {
+    0: "sonuç belirtilmemiş",
+    1: "sonuç yalnızca niteliksel anlatılmış",
+    2: "sayı var ama neyin ölçüsü olduğu net değil",
+    3: "sonuç sayıyla ve net biçimde ölçülmüş",
+}
+ROL_IFADELERI = {
+    0: "kişinin bu işteki rolü yazmıyor",
+    1: "kişinin rolü belirsiz",
+    2: "rol yazılmış ama ekip içindeki payı belirsiz",
+    3: "kişinin ne yaptığı açık",
+}
+UCUNCU_TARAF_IFADELERI = {
+    0: "üçüncü taraf onayı yok",
+    1: "referansın yanıtı zayıf ya da çekimser",
+    2: "bir referans olumlu yanıt verdi",
+    3: "referans güçlü biçimde onayladı",
+}
+
+
+def guclu_kanitli_mi(skor: GuvenSkoru) -> bool:
+    """Bu çıktı "doğrulanmış" diye anlatılabilir mi?
+
+    İki yoldan: kanıt işin kendisine götürüyor (orijinallik 3/3) ya da bir
+    referans olumlu yanıt verdi (üçüncü taraf 2 veya 3) — referansın olumlu
+    yanıtı da doğrulamadır. Ölçülebilirlik ve rol netliği iddianın ne kadar
+    açık yazıldığını ölçer, doğruluğunu değil; burada sayılmaz.
+    """
+    return skor.kanit_orijinalligi == 3 or skor.ucuncu_taraf_onayi >= 2
+
+
+def kart_guclu_kanitli_mi(kart: YetenekKarti) -> bool:
+    return any(
+        cikti.guven_skoru is not None and guclu_kanitli_mi(cikti.guven_skoru)
+        for cikti in kart.somut_ciktilar
+    )
+
+
+def dogrulama_ozeti(kart: YetenekKarti) -> str:
+    """Gerekçe istemine giden dürüst doğrulama durumu.
+
+    Çıktı başına dört bileşen, rubriğin tanımlarıyla; en altta modelin
+    "doğrulanmış" deyip diyemeyeceğini söyleyen tek bir "Genel" satırı.
+    """
+    if not kart.somut_ciktilar:
+        return "Genel: kartta somut çıktı yok (potansiyel); doğrulanacak bir iddia bulunmuyor."
+
+    satirlar = []
+    for cikti in kart.somut_ciktilar:
+        skor = cikti.guven_skoru
+        if skor is None:
+            satirlar.append(f"- {cikti.baslik}: kanıt eklenmemiş, Doğrulama Ajanı'ndan geçmemiş.")
+            continue
+        satirlar.append(
+            f"- {cikti.baslik}: "
+            f"{ORIJINALLIK_IFADELERI[skor.kanit_orijinalligi]}; "
+            f"{OLCULEBILIRLIK_IFADELERI[skor.sonuc_olculebilirligi]}; "
+            f"{ROL_IFADELERI[skor.rol_netligi]}; "
+            f"{UCUNCU_TARAF_IFADELERI[skor.ucuncu_taraf_onayi]}."
+        )
+
+    if kart_guclu_kanitli_mi(kart):
+        genel = "Genel: en az bir çıktı güçlü kanıtla doğrulandı."
+    elif any(c.guven_skoru is not None for c in kart.somut_ciktilar):
+        genel = 'Genel: güçlü kanıt yok — kartı "doğrulanmış" diye anlatma.'
+    else:
+        genel = "Genel: hiçbir çıktı henüz doğrulanmadı."
+    return "\n".join([*satirlar, genel])
+
+
+# "Doğrulanmış / doğrulandı / doğrulanan / kanıtlanmış" — olumsuzları
+# ("doğrulanmamış", "doğrulanmadı") yakalamaz: kökten hemen sonra "ma/me" geliyor.
+_DOGRULAMA_IDDIASI = re.compile(r"(doğrulan|kanıtlan)(mış|dı|an)")
+
+
+def dogrulama_iddiasi_var_mi(metin: str) -> bool:
+    """Gerekçe kartı doğrulanmış diye mi anlatıyor?"""
+    return bool(_DOGRULAMA_IDDIASI.search(turkce_kucult(metin)))
 
 
 # --- Veri katmanı ----------------------------------------------------------
@@ -287,9 +386,15 @@ def _gerekce_zinciri() -> Runnable:
     )
 
 
-async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str:
-    """Öneri başına 2-3 cümlelik gerekçe (docs/matching-algorithm.md § 6)."""
-    kart = aday.yetenek_karti
+DUZELTME_NOTU = (
+    'DİKKAT: Önceki denemede kartı "doğrulanmış" diye anlattın, oysa doğrulama '
+    'özeti güçlü kanıt olmadığını söylüyor. Bu kez "doğrulanmış", "doğrulandı" '
+    'ya da "kanıtlanmış" deme; kanıtın durumunu özetteki ifadelerle anlat.\n\n'
+)
+
+
+def gerekce_girdileri(ihtiyac: IhtiyacKarti, kart: YetenekKarti, ek_not: str = "") -> dict:
+    """Gerekçe şablonunun değişkenleri (canlı test de bunu kullanıyor)."""
     ciktilar = (
         "; ".join(
             f"{cikti.baslik}" + (f" — {cikti.aciklama}" if cikti.aciklama else "")
@@ -297,31 +402,54 @@ async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str:
         )
         or "yok"
     )
-    dogrulama = (
-        "kanıtları doğrulandı"
-        if kart_dogrulanmis_mi(kart)
-        else "henüz doğrulanmadı (Doğrulama Ajanı'ndan geçmemiş)"
-    )
+    return {
+        "problem": ihtiyac.problem_tanimi,
+        "basari_kriteri": ihtiyac.basari_kriteri or "belirtilmedi",
+        "kisitlar": ihtiyac.kisitlar or "belirtilmedi",
+        "rol": kart.rol_alani,
+        "deneyim": kart.deneyim_seviyesi,
+        "sektorler": ", ".join(kart.sektor_ilgi_alani) or "belirtilmedi",
+        "araclar": ", ".join(kart.araclar_teknolojiler) or "belirtilmedi",
+        "ciktilar": ciktilar,
+        "dogrulama": dogrulama_ozeti(kart),
+        "ek_not": ek_not,
+    }
 
+
+async def _gerekce_cagir(girdiler: dict) -> str:
     try:
-        metin = await _gerekce_zinciri().ainvoke(
-            {
-                "problem": ihtiyac.problem_tanimi,
-                "basari_kriteri": ihtiyac.basari_kriteri or "belirtilmedi",
-                "kisitlar": ihtiyac.kisitlar or "belirtilmedi",
-                "rol": kart.rol_alani,
-                "deneyim": kart.deneyim_seviyesi,
-                "sektorler": ", ".join(kart.sektor_ilgi_alani) or "belirtilmedi",
-                "araclar": ", ".join(kart.araclar_teknolojiler) or "belirtilmedi",
-                "ciktilar": ciktilar,
-                "dogrulama": dogrulama,
-            }
-        )
+        metin = await _gerekce_zinciri().ainvoke(girdiler)
     except Exception as hata:
         cevrilmis = llm_hatasini_cevir(hata)
         raise cevrilmis from hata
-
     return metin.strip()
+
+
+async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str | None:
+    """Öneri başına 2-3 cümlelik gerekçe (docs/matching-algorithm.md § 6).
+
+    Koruma: güçlü kanıt yokken model kartı "doğrulanmış" diye anlatırsa gerekçe
+    düzeltme notuyla bir kez yeniden üretilir. Yine iddia ederse None döner —
+    kuruma yanlış bir "doğrulandı" göstermektense gerekçesiz öneri daha iyi;
+    skor geçerli kalır, sonraki hesapta gerekçe yeniden denenir.
+    """
+    kart = aday.yetenek_karti
+    metin = await _gerekce_cagir(gerekce_girdileri(ihtiyac, kart))
+    if kart_guclu_kanitli_mi(kart) or not dogrulama_iddiasi_var_mi(metin):
+        return metin
+
+    logger.info("Gerekçe güçlü kanıt yokken 'doğrulanmış' dedi; yeniden üretiliyor (%s)", kart.id)
+    metin = await _gerekce_cagir(gerekce_girdileri(ihtiyac, kart, ek_not=DUZELTME_NOTU))
+    if not dogrulama_iddiasi_var_mi(metin):
+        return metin
+
+    logger.warning(
+        "Gerekçe iki denemede de güçlü kanıt yokken 'doğrulanmış' dedi; gerekçesiz "
+        "bırakılıyor (%s): %s",
+        kart.id,
+        metin,
+    )
+    return None
 
 
 async def ihtiyac_kartini_getir(oturum: AsyncSession, kurum_id: uuid.UUID) -> IhtiyacKarti | None:

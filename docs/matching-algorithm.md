@@ -85,7 +85,13 @@ Alt sınır ayrıca SQL sorgusunda da uygulanıyor (havuz Python'a taşınmadan 
 
 ## 6. Gerekçe Üretimi (LLM)
 
-LLM'e verilenler: ihtiyaç kartı özeti, yetenek kartı özeti, doğrulama durumu. İstenen çıktı: 2-3 cümlelik, somut noktalara referans veren bir gerekçe — genel geçer ifadeler değil ("iyi bir aday" gibi), kartlardaki gerçek alanlara atıf yapan cümleler.
+LLM'e verilenler: ihtiyaç kartı özeti, yetenek kartı özeti, doğrulama özeti. İstenen çıktı: 2-3 cümlelik, somut noktalara referans veren bir gerekçe — genel geçer ifadeler değil ("iyi bir aday" gibi), kartlardaki gerçek alanlara atıf yapan cümleler.
+
+**Doğrulama özeti ikili değil.** Eskiden "kanıtları doğrulandı / doğrulanmadı" gidiyordu ve güven skoru kaydı olan her kart "doğrulandı" sayılıyordu — kanıt orijinalliği 1/3 (link iddiayla ilgisiz) olsa bile; model de kartı "doğrulanmış" diye anlatıyordu. Artık çıktı başına dört rubrik puanı, rubriğin kendi tanımlarıyla cümleye çevrilip gönderiliyor ("kanıt linki açılıyor ama iddiayla ilişkisi zayıf" gibi) ve en altta tek bir "Genel" satırı var.
+
+**Güçlü kanıt** (modelin "doğrulanmış" diyebileceği durum): kanıt orijinalliği 3/3 *ya da* üçüncü taraf onayı 2-3 (bir referansın olumlu yanıtı da doğrulamadır). Ölçülebilirlik ve rol netliği iddianın ne kadar açık yazıldığını ölçer, doğruluğunu değil; bu karara girmez.
+
+**Koruma:** güçlü kanıt yokken gerekçe "doğrulanmış / doğrulandı / kanıtlanmış" derse düzeltme notuyla bir kez yeniden üretilir; yine derse öneri gerekçesiz gösterilir (skor geçerli kalır, sonraki hesapta yeniden denenir). Kuruma yanlış bir "doğrulandı" göstermektense gerekçesiz öneri daha iyi. İstemin kendi başına işlediği `CANLI_TEST=1` ile çalışan bir testle ölçülüyor.
 
 ## İsteğe Bağlı Geliştirme — ESCO Taksonomi Eşleme
 
