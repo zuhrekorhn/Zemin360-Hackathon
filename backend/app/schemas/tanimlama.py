@@ -7,10 +7,9 @@ from __future__ import annotations
 
 import uuid
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, Field
 
 from app.core.musaitlik import HosgoruluMusaitlik, KatiMusaitlik
-from app.schemas.sohbet import DoluMetin
 
 
 class IhtiyacTaslagi(BaseModel):
@@ -49,22 +48,20 @@ class TanimlamaSohbetYaniti(BaseModel):
     taslak_hazir: bool
 
 
-class KurumGirdisi(BaseModel):
-    """Kart bir kuruma bağlı (data-schema.md: IHTIYAC_KARTI.kurum_id).
+class KurumProfili(BaseModel):
+    """İhtiyaç kartı onayıyla gelen kurum profili güncellemesi (Faz B not § 4).
 
-    Kurum kaydı iletişim e-postasıyla bulunur/oluşturulur — Keşif'in
-    Kullanici ile yaptığının aynısı. Giriş/kayıt akışı Faz 3'te gelecek.
+    Kimlik token'daki hesaptan; kurumun adı ve iletişim e-postası kayıtta
+    alındı. Boş gelen alan kayıtlı değeri silmez.
     """
 
-    ad: DoluMetin
     sektor: str | None = None
     sehir: str | None = None
-    iletisim_email: EmailStr
 
 
 class IhtiyacKartiOnaylaIstegi(BaseModel):
     oturum_id: uuid.UUID
-    kurum: KurumGirdisi
+    kurum_profili: KurumProfili = Field(default_factory=KurumProfili)
     duzeltilmis_taslak: IhtiyacTaslagiGirdisi | None = None
 
 

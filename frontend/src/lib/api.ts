@@ -1,7 +1,13 @@
 /**
  * Backend (FastAPI) ile konuşan ince bir fetch sarmalayıcısı.
  * Endpoint listesi: docs/api-contracts.md
+ *
+ * Token varsa her isteğe `Authorization: Bearer` eklenir (lib/token.ts).
+ * 401 gelirse token silinir: süresi dolmuş ya da geçersiz; kullanıcı yeniden
+ * giriş yapmalı (docs/faz-b-kimlik-ve-dongu.md § 1).
  */
+
+import { tokenOku, tokenSil } from "@/lib/token";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -28,10 +34,12 @@ export async function apiIstek<T>(
   let yanit: Response;
 
   try {
+    const token = tokenOku();
     yanit = await fetch(`${API_URL}${yol}`, {
       ...secenekler,
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...secenekler.headers,
       },
     });
@@ -39,6 +47,8 @@ export async function apiIstek<T>(
     // Ağ hatası / backend ayakta değil / CORS engeli
     throw new ApiHatasi(`Backend'e ulaşılamadı (${API_URL})`);
   }
+
+  if (yanit.status === 401) tokenSil();
 
   if (!yanit.ok) {
     // FastAPI hatayı {"detail": "..."} olarak döner; varsa onu göster.
@@ -60,6 +70,51 @@ export async function apiIstek<T>(
 }
 
 export type SaglikYaniti = { status: string };
+
+/* --- Kimlik (docs/faz-b-kimlik-ve-dongu.md § 1) ---------------------------
+   Tipler backend'deki app/schemas/auth.py ile birebir eşleşir. */
+
+export type Rol = "genc" | "kurum" | "girvak";
+
+export type TokenYaniti = {
+  token: string;
+  token_turu: "bearer";
+  hesap_id: string;
+  rol: Rol;
+};
+
+export type YetenekKartiOzeti = {
+  id: string;
+  rol_alani: string;
+  deneyim_seviyesi: string;
+  kanit_bekleyen: boolean;
+  embedding_var: boolean;
+};
+
+export type IhtiyacKartiOzeti = {
+  id: string;
+  problem_tanimi: string;
+  olusturma_tarihi: string;
+  embedding_var: boolean;
+};
+
+/** Giriş yapmış hesap; kart ve kurum kimliği buradan okunur. */
+export type MeYaniti = {
+  hesap_id: string;
+  email: string;
+  rol: Rol;
+  ad: string | null;
+  kullanici_id: string | null;
+  kurum_id: string | null;
+  yetenek_kartlari: YetenekKartiOzeti[];
+  ihtiyac_kartlari: IhtiyacKartiOzeti[];
+  okunmamis_bildirim: number;
+};
+
+/** GET /me — giriş yoksa 401 (token da silinir). */
+export function me(): Promise<MeYaniti> {
+  return apiIstek<MeYaniti>("/me", { cache: "no-store" });
+}
 
 /** GET /health — backend ayakta mı? */
 export function saglikKontrol(): Promise<SaglikYaniti> {
@@ -91,13 +146,13 @@ export type SohbetYaniti = {
   taslak_hazir: boolean;
 };
 
-export type KullaniciGirdisi = {
-  ad: string;
-  email: string;
-  /** Zorunlu: eşleştirmenin sert filtresi buna bakıyor. */
-  sehir: string;
+/** Kart onayıyla gelen profil güncellemesi. Kimlik token'dan; ad ve e-posta
+ *  kayıtta alındı. Boş bırakılan alan kayıtlı değeri silmez. */
+export type GencProfili = {
+  /** Profilde şehir yoksa onay 422 döner: eşleştirme şehre göre süzüyor. */
+  sehir?: string | null;
   /** Kabul ettiği çalışma modelleri — çoklu seçim. */
-  calisma_modelleri: string[];
+  calisma_modelleri?: string[];
   musaitlik?: string | null;
 };
 
@@ -163,14 +218,14 @@ export function sohbetCevap(
 /** POST /kesif/kart/onayla — taslağı YETENEK_KARTI'na yazar. */
 export function kartOnayla(
   oturumId: string,
-  kullanici: KullaniciGirdisi,
+  profil: GencProfili,
   duzeltilmisTaslak?: KartTaslagi,
 ): Promise<YetenekKartiYaniti> {
   return apiIstek<YetenekKartiYaniti>("/kesif/kart/onayla", {
     method: "POST",
     body: JSON.stringify({
       oturum_id: oturumId,
-      kullanici,
+      profil,
       duzeltilmis_taslak: duzeltilmisTaslak ?? null,
     }),
   });
@@ -196,11 +251,10 @@ export type TanimlamaSohbetYaniti = {
   taslak_hazir: boolean;
 };
 
-export type KurumGirdisi = {
-  ad: string;
+/** İhtiyaç kartı onayıyla gelen kurum profili; ad ve e-posta kayıtta alındı. */
+export type KurumProfili = {
   sektor?: string | null;
   sehir?: string | null;
-  iletisim_email: string;
 };
 
 /** Kartla gösterilen kurum bilgisi — iletişim e-postası taşımaz.
@@ -256,14 +310,14 @@ export function tanimlamaCevap(
 /** POST /tanimlama/kart/onayla — taslağı IHTIYAC_KARTI'na yazar. */
 export function ihtiyacKartiOnayla(
   oturumId: string,
-  kurum: KurumGirdisi,
+  kurumProfili: KurumProfili,
   duzeltilmisTaslak?: IhtiyacTaslagi,
 ): Promise<IhtiyacKartiYaniti> {
   return apiIstek<IhtiyacKartiYaniti>("/tanimlama/kart/onayla", {
     method: "POST",
     body: JSON.stringify({
       oturum_id: oturumId,
-      kurum,
+      kurum_profili: kurumProfili,
       duzeltilmis_taslak: duzeltilmisTaslak ?? null,
     }),
   });
@@ -424,10 +478,11 @@ export function eslestirmeOnerileri(kurumId: string): Promise<Oneriler> {
  * eksik gerekçeler üretilir, artık uygun olmayan öneriler listeden düşer.
  * Kurumun karar verdiği eşleşmelere dokunulmaz.
  */
-export function eslestirmeCalistir(kurumId: string): Promise<Oneriler> {
+export function eslestirmeCalistir(): Promise<Oneriler> {
+  // Kurum token'dan belli; gövdede kurum_id yalnızca GİRVAK için.
   return apiIstek<Oneriler>("/eslestirme/calistir", {
     method: "POST",
-    body: JSON.stringify({ kurum_id: kurumId }),
+    body: JSON.stringify({}),
   });
 }
 

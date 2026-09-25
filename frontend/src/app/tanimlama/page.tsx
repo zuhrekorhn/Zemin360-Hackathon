@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import {
   type IhtiyacKartiYaniti,
   type IhtiyacTaslagi,
-  type KurumGirdisi,
+  type KurumProfili,
   ihtiyacKartiHazirla,
   ihtiyacKartiOnayla,
   tanimlamaBaslat,
@@ -33,7 +33,6 @@ import {
   etiketle,
   sehirEtiketi,
 } from "@/lib/sabitler";
-import { kimlikYaz } from "@/lib/yerel";
 
 /**
  * Tanımlama Ajanı sohbeti (docs/agent-specs.md § 2).
@@ -174,19 +173,16 @@ export default function TanimlamaSayfasi() {
         <TaslakBolumu
           taslak={taslak}
           bekleniyor={bekleniyor}
-          onOnayla={async (kurum, duzeltilmisTaslak) => {
+          onOnayla={async (kurumProfili, duzeltilmisTaslak) => {
             if (!oturumId) return;
             setHata(null);
             setBekleniyor(true);
             try {
               const kayitli = await ihtiyacKartiOnayla(
                 oturumId,
-                kurum,
+                kurumProfili,
                 duzeltilmisTaslak,
               );
-              // Öneri ekranı kurum kimliğiyle çalışıyor; giriş akışı
-              // olmadığı için kimlik tarayıcıda hatırlanıyor.
-              kimlikYaz("kurum", kayitli.kurum.id);
               setKart(kayitli);
               setAsama("kaydedildi");
             } catch (sebep) {
@@ -220,12 +216,13 @@ function TaslakBolumu({
 }: {
   taslak: IhtiyacTaslagi;
   bekleniyor: boolean;
-  onOnayla: (kurum: KurumGirdisi, duzeltilmisTaslak: IhtiyacTaslagi) => void;
+  onOnayla: (
+    kurumProfili: KurumProfili,
+    duzeltilmisTaslak: IhtiyacTaslagi,
+  ) => void;
 }) {
-  const [ad, setAd] = useState("");
   const [sektor, setSektor] = useState("");
   const [sehir, setSehir] = useState("");
-  const [email, setEmail] = useState("");
   // İki ayrı şehir var ve karıştırılıyordu: kurumun bulunduğu yer ile
   // gencin bulunmasını istediğiniz yer. İkincisi eşleştirmenin sert
   // filtresi, o yüzden burada görünür ve düzeltilebilir.
@@ -257,8 +254,8 @@ function TaslakBolumu({
             Kurum bilgileri
           </h2>
           <p className="text-sm text-pretty text-muted-foreground">
-            İletişim e-postanız kartta görünmez. Gençlere sadece kart
-            gösterilir; iletişim iki taraf da onaylayınca açılır.
+            Kurum adınız ve iletişim e-postanız kayıtta alındı. E-posta kartta
+            görünmez; iletişim iki taraf da onaylayınca açılır.
           </p>
         </div>
 
@@ -269,10 +266,8 @@ function TaslakBolumu({
             if (bekleniyor) return;
             onOnayla(
               {
-                ad: ad.trim(),
                 sektor: sektor.trim() || null,
                 sehir: sehir || null,
-                iletisim_email: email.trim(),
               },
               {
                 ...taslak,
@@ -284,27 +279,6 @@ function TaslakBolumu({
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormAlani etiket="Kurum adı" htmlFor="ad">
-              <Input
-                id="ad"
-                value={ad}
-                onChange={(olay) => setAd(olay.target.value)}
-                required
-                autoComplete="organization"
-              />
-            </FormAlani>
-
-            <FormAlani etiket="İletişim e-postası" htmlFor="email">
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(olay) => setEmail(olay.target.value)}
-                required
-                autoComplete="email"
-              />
-            </FormAlani>
-
             <FormAlani etiket="Sektör" htmlFor="sektor" istegeBagli>
               <Input
                 id="sektor"
@@ -503,9 +477,7 @@ function KayitliKart({
       </p>
 
       <Button asChild size="lg" className="mt-1 w-fit">
-        <Link href={`/kurum/oneriler?kurum=${kart.kurum.id}`}>
-          Eşleştirme önerilerini gör
-        </Link>
+        <Link href="/kurum/oneriler">Eşleştirme önerilerini gör</Link>
       </Button>
     </section>
   );

@@ -26,8 +26,23 @@ def sahte_hesap(rol: str) -> SimpleNamespace:
         id=uuid.uuid4(),
         rol=rol,
         email=f"{rol}@ornek.com",
-        kullanici=SimpleNamespace(id=uuid.uuid4()) if rol == "genc" else None,
-        kurum=SimpleNamespace(id=uuid.uuid4(), ad="Kooperatif") if rol == "kurum" else None,
+        kullanici=(
+            SimpleNamespace(
+                id=uuid.uuid4(),
+                ad="Elif",
+                email=f"{rol}@ornek.com",
+                sehir="İstanbul",
+                calisma_modelleri=[],
+                musaitlik=None,
+            )
+            if rol == "genc"
+            else None
+        ),
+        kurum=(
+            SimpleNamespace(id=uuid.uuid4(), ad="Kooperatif", sektor=None, sehir=None)
+            if rol == "kurum"
+            else None
+        ),
     )
 
 

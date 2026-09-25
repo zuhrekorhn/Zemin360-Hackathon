@@ -144,7 +144,7 @@ def _onayla_kurum():
         "/tanimlama/kart/onayla",
         json={
             "oturum_id": str(uuid.uuid4()),
-            "kurum": {"ad": "Kooperatif", "iletisim_email": "iletisim@koop.org"},
+            "kurum_profili": {},
             "duzeltilmis_taslak": {
                 "problem_tanimi": "Destek biletleri elle ayrılıyor",
                 "musaitlik_tercihi": "haftasonu",
@@ -164,11 +164,6 @@ def _onayla_genc():
         "/kesif/kart/onayla",
         json={
             "oturum_id": str(uuid.uuid4()),
-            "kullanici": {
-                "ad": "Elif",
-                "email": "elif@ornek.com",
-                "sehir": "İstanbul",
-                "musaitlik": "haftasonu",
-            },
+            "profil": {"sehir": "İstanbul", "musaitlik": "haftasonu"},
         },
     )

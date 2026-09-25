@@ -325,6 +325,10 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
         .join(Kullanici, Kullanici.id == YetenekKarti.kullanici_id)
         .options(selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru))
         .where(YetenekKarti.embedding.isnot(None))
+        # Hesabı olmayan profilin kartı önerilmez: kurum ilgilense bile kabul
+        # edecek kimse yok, döngü çıkmaz sokakta biterdi. Faz B öncesi
+        # profiller böyle (docs/faz-b-kimlik-ve-dongu.md § 8).
+        .where(Kullanici.hesap_id.isnot(None))
         # Alaka alt sınırı SQL'de de uygulanıyor: havuz embedding hesabından
         # sonra ama Python'a taşınmadan daralsın. Kural yine de saf
         # `siralayip_ele` tarafında duruyor (tek doğruluk kaynağı orası).

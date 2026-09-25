@@ -24,10 +24,9 @@ class Kurum(UUIDPrimaryKeyMixin, Base):
     ad: Mapped[str] = mapped_column(String)
     sektor: Mapped[str | None] = mapped_column(String)
     sehir: Mapped[str | None] = mapped_column(String)
-    # Kurum kaydı bu e-postayla bulunur/oluşturulur (Kullanici.email ile aynı
-    # desen). Kart yanıtlarında DIŞARIYA VERİLMEZ — bkz. app/schemas/tanimlama.py
-    # Tekil ve normalize; NULL birden fazla olabilir (Postgres UNIQUE'i NULL'ları
-    # eşit saymaz).
+    # İletişim bilgisi (kimlik `hesap`ta). Kayıtta hesap e-postasıyla
+    # doldurulur; gence yalnızca eşleşme kabul edilince görünür. Tekil ve
+    # normalize; NULL birden fazla olabilir (UNIQUE NULL'ları eşit saymaz).
     iletisim_email: Mapped[str | None] = mapped_column(String, index=True, unique=True)
 
     hesap: Mapped[Hesap | None] = relationship(back_populates="kurum")

@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import {
   type KartTaslagi,
   type SomutCiktiTaslagi,
-  type KullaniciGirdisi,
+  type GencProfili,
   type YetenekKartiYaniti,
   kartOnayla,
   sohbetBaslat,
@@ -32,7 +32,6 @@ import {
   SEHIR_SECENEKLERI,
   etiketle,
 } from "@/lib/sabitler";
-import { kimlikYaz } from "@/lib/yerel";
 
 /**
  * Keşif Ajanı sohbeti (docs/agent-specs.md § 1).
@@ -179,19 +178,16 @@ export default function KesifSayfasi() {
         <TaslakBolumu
           taslak={taslak}
           bekleniyor={bekleniyor}
-          onOnayla={async (kullanici, duzeltilmisTaslak) => {
+          onOnayla={async (profil, duzeltilmisTaslak) => {
             if (!oturumId) return;
             setHata(null);
             setBekleniyor(true);
             try {
               const kayitli = await kartOnayla(
                 oturumId,
-                kullanici,
+                profil,
                 duzeltilmisTaslak,
               );
-              // Kanıt ekleme ekranı kart kimliğiyle açılıyor; giriş akışı
-              // olmadığı için kimlik tarayıcıda hatırlanıyor.
-              kimlikYaz("kart", kayitli.id);
               setKart(kayitli);
               setAsama("kaydedildi");
             } catch (sebep) {
@@ -225,16 +221,11 @@ function TaslakBolumu({
 }: {
   taslak: KartTaslagi;
   bekleniyor: boolean;
-  onOnayla: (
-    kullanici: KullaniciGirdisi,
-    duzeltilmisTaslak: KartTaslagi,
-  ) => void;
+  onOnayla: (profil: GencProfili, duzeltilmisTaslak: KartTaslagi) => void;
 }) {
   // Sohbetten çıkan taslak üzerinde kullanıcı son sözü söylesin: ajan aynı işi
   // iki kez yazmış ya da bir şeyi yanlış anlamış olabilir.
   const [ciktilar, setCiktilar] = useState(taslak.somut_ciktilar);
-  const [ad, setAd] = useState("");
-  const [email, setEmail] = useState("");
   const [sehir, setSehir] = useState("");
   // Kabul ettiği çalışma modelleri — çoklu. Konumdan ayrı bir şey.
   const [calismaModelleri, setCalismaModelleri] = useState<string[]>([]);
@@ -268,10 +259,10 @@ function TaslakBolumu({
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-xl font-semibold text-ana">
-            Seninle nasıl iletişime geçelim
+            Nerede ve nasıl çalışabilirsin
           </h2>
           <p className="text-sm text-pretty text-muted-foreground">
-            E-postan kartta görünmez. Kurumlara sadece kart gösterilir; iletişim
+            Eşleştirme bu bilgilerle yapılır. E-postan kartta görünmez; iletişim
             iki taraf da onaylayınca açılır.
           </p>
         </div>
@@ -283,8 +274,6 @@ function TaslakBolumu({
             if (bekleniyor) return;
             onOnayla(
               {
-                ad: ad.trim(),
-                email: email.trim(),
                 sehir,
                 calisma_modelleri: calismaModelleri,
                 musaitlik: musaitlik || null,
@@ -294,27 +283,6 @@ function TaslakBolumu({
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormAlani etiket="Ad" htmlFor="ad">
-              <Input
-                id="ad"
-                value={ad}
-                onChange={(olay) => setAd(olay.target.value)}
-                required
-                autoComplete="name"
-              />
-            </FormAlani>
-
-            <FormAlani etiket="E-posta" htmlFor="email">
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(olay) => setEmail(olay.target.value)}
-                required
-                autoComplete="email"
-              />
-            </FormAlani>
-
             <FormAlani etiket="Şehir" htmlFor="sehir">
               {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
                   bozuyordu (bkz. backend/app/core/sehir.py). */}

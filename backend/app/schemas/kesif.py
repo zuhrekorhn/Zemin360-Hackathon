@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import uuid
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 from app.core.musaitlik import KatiMusaitlik
 from app.schemas.dogrulama import GuvenSkoruYaniti
-from app.schemas.sohbet import DoluMetin, SohbetBaslatIstegi, SohbetCevapIstegi
+from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
 
 __all__ = ["SohbetBaslatIstegi", "SohbetCevapIstegi"]
 
@@ -37,18 +37,17 @@ class SohbetYaniti(BaseModel):
     taslak_hazir: bool
 
 
-class KullaniciGirdisi(BaseModel):
-    """Kart bir kullanıcıya bağlı (data-schema.md: YETENEK_KARTI.kullanici_id).
+class GencProfili(BaseModel):
+    """Kart onayıyla gelen profil güncellemesi (docs/faz-b-kimlik-ve-dongu.md § 4).
 
-    Giriş/kayıt akışı Faz 3'te geleceği için kimlik şimdilik onay anında,
-    e-postayla eşleştirilerek alınıyor.
+    Kimlik artık token'daki hesaptan geliyor; ad ve e-posta kayıtta alındı,
+    burada yok. Boş gelen alan kayıtlı değeri SİLMEZ (Faz A'daki kural):
+    ikinci kartını onaylayan genç şehrini yeniden yazmak zorunda değil.
     """
 
-    ad: DoluMetin
-    email: EmailStr
-    # Şehir artık zorunlu: eşleştirmenin sert filtresi buna bakıyor ve
-    # "belirtilmedi" bir yer değil (bkz. app/core/sehir.py).
-    sehir: str
+    # Profilde şehir yoksa onay 422 döner: eşleştirmenin sert filtresi buna
+    # bakıyor ve "belirtilmedi" bir yer değil (bkz. app/core/sehir.py).
+    sehir: str | None = None
     # Kabul ettiği çalışma modelleri (is_yerinde | hibrit | uzaktan).
     # Müsaitlikten ayrı: o çalışma tipi, bu çalışma yeri.
     calisma_modelleri: list[str] = Field(default_factory=list)
@@ -59,7 +58,7 @@ class KullaniciGirdisi(BaseModel):
 
 class KartOnaylaIstegi(BaseModel):
     oturum_id: uuid.UUID
-    kullanici: KullaniciGirdisi
+    profil: GencProfili = Field(default_factory=GencProfili)
     # Kullanıcı taslakta düzeltme yaptıysa son hali; yoksa sohbetteki taslak kaydedilir.
     duzeltilmis_taslak: KartTaslagi | None = None
 

@@ -326,7 +326,7 @@ def test_sohbetleri_yalnizca_rolun_sahibi_surdurur():
             onay = {
                 "json": {
                     "oturum_id": str(uuid.uuid4()),
-                    "kullanici": {"ad": "Can", "email": "can@ornek.com", "sehir": "İzmir"},
+                    "profil": {"sehir": "İzmir"},
                 }
             }
             await durumlar(istemci, "POST", "/kesif/kart/onayla", {d.genc2: 404}, **onay)

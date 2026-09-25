@@ -24,8 +24,9 @@ class Kullanici(UUIDPrimaryKeyMixin, Base):
         UUID(as_uuid=True), ForeignKey("hesap.id", ondelete="CASCADE"), unique=True
     )
     ad: Mapped[str] = mapped_column(String)
-    # Tekil ve normalize (app/core/metin.py › eposta_normalize). Onay anında
-    # kayıt bu alanla upsert ediliyor; Faz B'de hesaba bağlanacak.
+    # İletişim bilgisi (kimlik değil: kimlik `hesap`ta). Kayıtta hesap
+    # e-postasıyla doldurulur; kuruma yalnızca eşleşme kabul edilince görünür
+    # (docs/faz-b-kimlik-ve-dongu.md § 5). Tekil ve normalize.
     email: Mapped[str] = mapped_column(String, unique=True)
     sehir: Mapped[str | None] = mapped_column(String)
     # Kabul ettiği çalışma modelleri (is_yerinde | hibrit | uzaktan).

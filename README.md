@@ -166,7 +166,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 - `/kurum/oneriler` eşleştirme önerileri: skor, gerekçe ve "İlgileniyorum". Eşik ve "az sonuç" uyarısı backend yanıtından geliyor, arayüzde sabit değil.
 - `/referans?token=…` referans kişinin girişsiz yanıt sayfası: iddia formun üstünde gösterilir, harcanmış ya da süresi geçmiş link form açmaz.
 - Kart ve gerekçe görünümünün paylaşılan parçaları `src/components/kart.tsx` içinde; ana sayfadaki örnek blok da bunları kullanıyor (statik veriyle, backend kapalıyken de çizilsin diye).
-- Giriş/kayıt akışı Faz 3'te: kart ve kurum kimliği şimdilik tarayıcıda (`src/lib/yerel.ts`) hatırlanıyor, sunucuda hiçbir yetki taşımıyor.
+- Kimlik Faz B'de: token tarayıcıda (`src/lib/token.ts`), her istekte `Authorization: Bearer` ile gidiyor; kart ve kurum kimliği `GET /me`'den. Giriş/kayıt ekranları henüz yok (Faz B 6. adım), o zamana kadar arayüz token'sız 401 alır.
 
 ## Proje Durumu
 

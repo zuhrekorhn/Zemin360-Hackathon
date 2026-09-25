@@ -100,17 +100,12 @@ async def sohbeti_yurut(istemci: httpx.AsyncClient, cevaplar: list[str]) -> dict
     return yanit
 
 
-async def karti_onayla(istemci: httpx.AsyncClient, oturum_id: str, email: str) -> dict:
+async def karti_onayla(istemci: httpx.AsyncClient, oturum_id: str) -> dict:
     yanit = await istemci.post(
         f"{API}/kesif/kart/onayla",
         json={
             "oturum_id": oturum_id,
-            "kullanici": {
-                "ad": "Test Kullanıcı",
-                "email": email,
-                "sehir": "İstanbul",
-                "musaitlik": "yarim_zamanli",
-            },
+            "profil": {"sehir": "İstanbul", "musaitlik": "yarim_zamanli"},
         },
         timeout=60,
     )
@@ -150,7 +145,7 @@ async def veritabanindan_dogrula(kart_id: str) -> None:
 async def senaryo_a(istemci: httpx.AsyncClient) -> None:
     print("\n=== Senaryo A — normal akış ===")
     a = await sohbeti_yurut(istemci, SENARYO_A)
-    kart_a = await karti_onayla(istemci, a["oturum_id"], f"test-a-{uuid.uuid4().hex[:8]}@ornek.com")
+    kart_a = await karti_onayla(istemci, a["oturum_id"])
     print(f"  Kart yanıtı: {kart_a}")
     await veritabanindan_dogrula(kart_a["id"])
 
@@ -162,7 +157,7 @@ async def senaryo_a(istemci: httpx.AsyncClient) -> None:
 async def senaryo_b(istemci: httpx.AsyncClient) -> None:
     print("\n=== Senaryo B — 'hiç projem yok' ===")
     b = await sohbeti_yurut(istemci, SENARYO_B)
-    kart_b = await karti_onayla(istemci, b["oturum_id"], f"test-b-{uuid.uuid4().hex[:8]}@ornek.com")
+    kart_b = await karti_onayla(istemci, b["oturum_id"])
     print(f"  Kart yanıtı: {kart_b}")
     await veritabanindan_dogrula(kart_b["id"])
     assert kart_b["deneyim_seviyesi"] == "potansiyel", (

@@ -18,10 +18,10 @@ import {
   eslestirmeCalistir,
   eslestirmeOnerileri,
   ilgileniyorum,
+  me,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
-import { kimlikOku } from "@/lib/yerel";
 
 /**
  * Eşleştirme önerileri — kurum tarafı (docs/agent-specs.md § 3).
@@ -61,9 +61,7 @@ export default function OnerilerSayfasi() {
     setYukleniyor(true);
     try {
       setVeri(
-        await (tazele
-          ? eslestirmeCalistir(kimlik)
-          : eslestirmeOnerileri(kimlik)),
+        await (tazele ? eslestirmeCalistir() : eslestirmeOnerileri(kimlik)),
       );
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
@@ -76,13 +74,16 @@ export default function OnerilerSayfasi() {
     if (okundu.current) return;
     okundu.current = true;
 
-    // Demoda başka bir tarayıcıdan bakılabilsin diye adres çubuğu da kabul
-    // ediliyor; yoksa Tanımlama'dan hatırlanan kimlik kullanılıyor.
-    // Kimlik yalnızca tarayıcıda olduğu için okuma render sırasında değil,
-    // bağlandıktan sonra yapılıyor (sunucu render'ıyla uyuşsun diye).
+    // Kurum kimliği token'daki hesaptan (/me); başka kurumun önerileri
+    // backend'de 404. Token yalnızca tarayıcıda olduğu için okuma render
+    // sırasında değil, bağlandıktan sonra yapılıyor.
     async function baslat() {
-      const adresten = new URLSearchParams(window.location.search).get("kurum");
-      const kimlik = adresten ?? kimlikOku("kurum");
+      let kimlik: string | null = null;
+      try {
+        kimlik = (await me()).kurum_id;
+      } catch (sebep) {
+        setHata(hatayaCevir(sebep));
+      }
       setKurumId(kimlik);
 
       if (kimlik) await onerileriGetir(kimlik);
@@ -148,7 +149,7 @@ export default function OnerilerSayfasi() {
         </p>
       ) : null}
 
-      {!yukleniyor && !kurumId ? <KurumYok /> : null}
+      {!yukleniyor && !kurumId && !hata ? <KurumYok /> : null}
 
       {!yukleniyor && veri ? (
         <OneriListesi
@@ -266,8 +267,9 @@ function OneriKarti({
           <p className="text-sm text-pretty">{oneri.gerekce_metni}</p>
         ) : (
           <p className="text-sm text-pretty text-muted-foreground">
-            Bu öneri için henüz güvenilir bir gerekçe metni yok. Skor ve sıralama
-            bundan etkilenmiyor; yeniden hesaplayınca gerekçe tekrar denenir.
+            Bu öneri için henüz güvenilir bir gerekçe metni yok. Skor ve
+            sıralama bundan etkilenmiyor; yeniden hesaplayınca gerekçe tekrar
+            denenir.
           </p>
         )}
       </section>

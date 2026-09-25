@@ -117,15 +117,11 @@ def kesif(monkeypatch):
     async def oturumun_karti(_oturum, _oturum_id):
         return durum.bulunanlar.pop(0) if durum.bulunanlar else None
 
-    async def kullanici(_oturum, _istek):
-        return uuid.uuid4()
-
     async def kart_yaniti(oturum, kart_id):
         adaylar = [*oturum.eklenenler, *durum.kartlar.values()]
         return yetenek_yaniti(next(k for k in adaylar if k.id == kart_id))
 
     monkeypatch.setattr(kesif_api, "_oturumun_karti", oturumun_karti)
-    monkeypatch.setattr(kesif_api, "_kullaniciyi_kaydet", kullanici)
     monkeypatch.setattr(kesif_api, "kart_yaniti", kart_yaniti)
     app.state.kesif_grafigi = SahteGrafik(
         {
@@ -148,7 +144,7 @@ def onayla() -> object:
         "/kesif/kart/onayla",
         json={
             "oturum_id": str(uuid.uuid4()),
-            "kullanici": {"ad": "Elif", "email": "elif@ornek.com", "sehir": "İstanbul"},
+            "profil": {"sehir": "İstanbul"},
         },
     )
 
@@ -262,13 +258,10 @@ def test_embedding_ucu_servis_yoksa_503_ve_net_mesaj(monkeypatch):
 @pytest.fixture
 def tanimlama(monkeypatch):
     durum = SimpleNamespace(oturum=SahteOturum(), eslestirilenler=[])
-    kurum_id = uuid.uuid4()
+    kurum_id = KURUM.kurum.id
 
     async def oturumun_karti(_oturum, _oturum_id):
         return None
-
-    async def kurum(_oturum, _istek):
-        return kurum_id
 
     async def kart_yaniti(oturum, kart_id):
         kart: IhtiyacKarti = next(k for k in oturum.eklenenler if k.id == kart_id)
@@ -288,7 +281,6 @@ def tanimlama(monkeypatch):
         durum.eslestirilenler.append(kimlik)
 
     monkeypatch.setattr(tanimlama_api, "_oturumun_karti", oturumun_karti)
-    monkeypatch.setattr(tanimlama_api, "_kurumu_kaydet", kurum)
     monkeypatch.setattr(tanimlama_api, "kart_yaniti", kart_yaniti)
     monkeypatch.setattr(tanimlama_api, "eslestirmeyi_arka_planda_calistir", eslestir)
     app.state.tanimlama_grafigi = SahteGrafik(
@@ -307,7 +299,7 @@ def ihtiyac_onayla():
         "/tanimlama/kart/onayla",
         json={
             "oturum_id": str(uuid.uuid4()),
-            "kurum": {"ad": "Kooperatif", "iletisim_email": "iletisim@koop.org"},
+            "kurum_profili": {},
         },
     )
 
@@ -343,7 +335,7 @@ def duzeltilmis_onayla(somut_ciktilar: list[dict]):
         "/kesif/kart/onayla",
         json={
             "oturum_id": str(uuid.uuid4()),
-            "kullanici": {"ad": "Elif", "email": "elif@ornek.com", "sehir": "İstanbul"},
+            "profil": {"sehir": "İstanbul"},
             "duzeltilmis_taslak": {
                 "rol_alani": "backend geliştirici",
                 "deneyim_seviyesi": "orta",

@@ -9,23 +9,19 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from sqlalchemy import Insert, case, func, select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.kesif import HizSinirHatasi, kullanici_mesaji, potansiyel_kurali
 from app.api.kimlik import rol_gerekli
+from app.api.profil import gencin_profilini_guncelle
 from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
-from app.core import calisma_modeli
 from app.core.hatalar import HIZ_SINIRI_MESAJI
-from app.core.metin import eposta_normalize
-from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.hesap import ROL_GENC, Hesap
-from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import (
@@ -38,6 +34,8 @@ from app.schemas.kesif import (
 )
 
 router = APIRouter(prefix="/kesif", tags=["kesif"])
+
+SEHIR_GEREKLI = "Şehir gerekli: eşleştirme adayları şehre göre süzüyor."
 
 
 def _grafik(request: Request):
@@ -136,11 +134,16 @@ async def kart_onayla(
     if not taslak.rol_alani or not taslak.deneyim_seviyesi:
         raise HTTPException(status_code=422, detail="Taslakta rol ve deneyim seviyesi zorunlu")
 
-    kullanici_id = await _kullaniciyi_kaydet(oturum, istek)
+    # Kart token'daki hesabın profiline bağlanır; onay yalnızca eşleştirmeyi
+    # etkileyen alanları günceller (docs/faz-b-kimlik-ve-dongu.md § 4).
+    kullanici = hesap.kullanici
+    gencin_profilini_guncelle(kullanici, istek.profil)
+    if not kullanici.sehir:
+        raise HTTPException(status_code=422, detail=SEHIR_GEREKLI)
 
     kart = YetenekKarti(
         oturum_id=istek.oturum_id,
-        kullanici_id=kullanici_id,
+        kullanici_id=kullanici.id,
         rol_alani=taslak.rol_alani,
         deneyim_seviyesi=taslak.deneyim_seviyesi,
         sektor_ilgi_alani=taslak.sektor_ilgi_alani,
@@ -186,58 +189,3 @@ async def _mevcut_karti_don(oturum: AsyncSession, kart: YetenekKarti) -> Yetenek
     if kart.embedding is None:
         await embedding_hesapla(oturum, kart)
     return await kart_yaniti(oturum, kart.id)
-
-
-def kullanici_upsert_ifadesi(
-    *,
-    ad: str,
-    email: str,
-    sehir: str | None,
-    calisma_modelleri: list[str],
-    musaitlik: str | None,
-) -> Insert:
-    """Kullanıcıyı e-postasıyla ekler ya da günceller; kimliğini döner.
-
-    Tek ifade, yarışa dayanıklı (email UNIQUE). Kayıtlı kişi onayda yeni
-    bilgi verdiyse güncellenir — eskiden yok sayılıyordu, ikinci kartında
-    şehrini değiştiren gencin filtresi eski şehre göre çalışıyordu.
-
-    Boş gelen alan kayıtlı değeri SİLMEZ (taslak birleştirmedeki kuralın
-    aynısı): skalerlerde COALESCE, listede "boşsa eskisi kalsın".
-
-    Bu "e-postayla bul" mantığı Faz B'de hesaba bağlanınca kalkacak.
-    """
-    ifade = pg_insert(Kullanici).values(
-        id=uuid.uuid4(),
-        ad=ad,
-        email=email,
-        sehir=sehir,
-        calisma_modelleri=calisma_modelleri,
-        musaitlik=musaitlik,
-    )
-    yeni, eski = ifade.excluded, Kullanici.__table__.c
-    return ifade.on_conflict_do_update(
-        index_elements=[Kullanici.email],
-        set_={
-            "ad": func.coalesce(yeni.ad, eski.ad),
-            "sehir": func.coalesce(yeni.sehir, eski.sehir),
-            "musaitlik": func.coalesce(yeni.musaitlik, eski.musaitlik),
-            "calisma_modelleri": case(
-                (func.cardinality(yeni.calisma_modelleri) == 0, eski.calisma_modelleri),
-                else_=yeni.calisma_modelleri,
-            ),
-        },
-    ).returning(Kullanici.id)
-
-
-async def _kullaniciyi_kaydet(oturum: AsyncSession, istek: KartOnaylaIstegi) -> uuid.UUID:
-    girdi = istek.kullanici
-    return await oturum.scalar(
-        kullanici_upsert_ifadesi(
-            ad=girdi.ad,
-            email=eposta_normalize(str(girdi.email)),
-            sehir=sehir_kanonik(girdi.sehir),
-            calisma_modelleri=calisma_modeli.temizle(girdi.calisma_modelleri),
-            musaitlik=girdi.musaitlik,
-        )
-    )
