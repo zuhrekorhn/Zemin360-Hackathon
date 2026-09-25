@@ -138,3 +138,87 @@ def test_yanitlanmis_linke_tekrar_yanit_verilemez():
 def test_gecersiz_token_404_doner():
     yanit = istemci(None).get("/dogrulama/referans/olmayan-token")
     assert yanit.status_code == 404
+
+
+# --- Yanıt gönderildikten sonra dönen gövde ----------------------------------
+# Eskiden kanıtın tam durumu dönüyordu: aynı çıktının BAŞKA referanslarının
+# e-postası, puanı, yorumu ve yanıt token'ı. Bu uç nokta girişsiz, yani tek bir
+# token'ı olan referans kişi diğerlerinin yerine de yanıt verebiliyordu.
+
+from types import SimpleNamespace  # noqa: E402
+
+from app.schemas.dogrulama import ReferansYanitiSonucu  # noqa: E402
+
+DIGER_EMAIL = "diger-referans@ornek.com"
+DIGER_TOKEN = "digerinin-gizli-tokeni-1234567890"
+
+
+class SiraliOturum:
+    """`scalar()` çağrılarına sırayla hazır cevap veren oturum taklidi."""
+
+    def __init__(self, *sonuclar):
+        self.sonuclar = list(sonuclar)
+
+    async def scalar(self, *_args, **_kwargs):
+        return self.sonuclar.pop(0)
+
+    async def commit(self):
+        pass
+
+
+def _yanitlanan_ve_diger_referans():
+    yanitlanan = SimpleNamespace(
+        token="token-123",
+        durum=DURUM_BEKLIYOR,
+        olusturma_tarihi=dt.datetime.now(dt.UTC),
+        yanit_metni=None,
+        puan=None,
+        somut_cikti_id=uuid.uuid4(),
+    )
+    diger = SimpleNamespace(
+        token=DIGER_TOKEN,
+        referans_email=DIGER_EMAIL,
+        durum=DURUM_YANITLANDI,
+        puan=2,
+        yanit_metni="Katkısı sınırlıydı",
+    )
+    cikti = SimpleNamespace(
+        id=yanitlanan.somut_cikti_id,
+        baslik="Mahalle kütüphanesi ödünç takip sistemi",
+        guven_skoru=None,
+        referans_istekleri=[yanitlanan, diger],
+    )
+    return yanitlanan, cikti
+
+
+def test_yanit_sonrasi_baska_referansin_bilgisi_donmez():
+    yanitlanan, cikti = _yanitlanan_ve_diger_referans()
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti)
+
+    yanit = TestClient(app).post(
+        "/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5}
+    )
+
+    assert yanit.status_code == 200
+    assert DIGER_EMAIL not in yanit.text
+    assert DIGER_TOKEN not in yanit.text
+    assert "Katkısı sınırlıydı" not in yanit.text
+    assert yanit.json() == {
+        "baslik": "Mahalle kütüphanesi ödünç takip sistemi",
+        "durum": DURUM_YANITLANDI,
+    }
+
+
+def test_yanit_sonrasi_skor_yine_de_hesaplanir():
+    """Gövde daraldı, hesap değişmedi: iki referansın ortalaması yazılır."""
+    yanitlanan, cikti = _yanitlanan_ve_diger_referans()
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti)
+
+    TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5})
+
+    # 5 -> 3, 2 -> 1 : ortalama 2
+    assert cikti.guven_skoru.ucuncu_taraf_onayi == 2
+
+
+def test_yanit_sonucu_semasi_yalnizca_baslik_ve_durum_tasir():
+    assert set(ReferansYanitiSonucu.model_fields) == {"baslik", "durum"}

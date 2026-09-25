@@ -40,6 +40,7 @@ from app.schemas.dogrulama import (
     ReferansDurumuYaniti,
     ReferansIstegiYaniti,
     ReferansYanitiIstegi,
+    ReferansYanitiSonucu,
 )
 
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
@@ -73,11 +74,16 @@ async def kanit_ekle(
     return await _durum_yaniti(oturum, cikti.id, kontrol.erisilebilir)
 
 
-@router.post("/referans-yaniti", response_model=KanitDurumuYaniti)
+@router.post("/referans-yaniti", response_model=ReferansYanitiSonucu)
 async def referans_yaniti(
     istek: ReferansYanitiIstegi, oturum: AsyncSession = Depends(get_session)
-) -> KanitDurumuYaniti:
-    """Token ile bulunur, giriş gerektirmez (api-contracts.md § Mimari Notlar)."""
+) -> ReferansYanitiSonucu:
+    """Token ile bulunur, giriş gerektirmez (api-contracts.md § Mimari Notlar).
+
+    Yanıt yalnızca iddianın başlığını ve durumu taşır: bu uç noktayı tek
+    bir token'ı olan herkes çağırabiliyor, kanıtın geri kalanı (diğer
+    referanslar, puanlar, token'lar) onun işi değil.
+    """
     referans = await oturum.scalar(
         select(ReferansIstegi).where(ReferansIstegi.token == istek.token)
     )
@@ -111,7 +117,7 @@ async def referans_yaniti(
     )
 
     await oturum.commit()
-    return await _durum_yaniti(oturum, cikti.id, None)
+    return ReferansYanitiSonucu(baslik=cikti.baslik, durum=referans.durum)
 
 
 @router.get("/referans/{token}", response_model=ReferansIstegiYaniti)

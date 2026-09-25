@@ -354,13 +354,20 @@ export function itirazEt(
   });
 }
 
+/** Referans yanıtından sonra dönen tek bilgi. Girişsiz uç nokta olduğu için
+ *  diğer referansların e-postası, puanı ya da token'ı burada yok. */
+export type ReferansYanitiSonucu = {
+  baslik: string;
+  durum: string;
+};
+
 /** POST /dogrulama/referans-yaniti — girişsiz, token bazlı. */
 export function referansYanitla(
   token: string,
   puan: number,
   yorum?: string | null,
-): Promise<KanitDurumu> {
-  return apiIstek<KanitDurumu>("/dogrulama/referans-yaniti", {
+): Promise<ReferansYanitiSonucu> {
+  return apiIstek<ReferansYanitiSonucu>("/dogrulama/referans-yaniti", {
     method: "POST",
     body: JSON.stringify({ token, puan, yorum: yorum ?? null }),
   });

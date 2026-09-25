@@ -91,6 +91,20 @@ class ReferansYanitiIstegi(BaseModel):
     yorum: str | None = None
 
 
+class ReferansYanitiSonucu(BaseModel):
+    """Referans kişi yanıtını gönderdikten sonra gördüğü tek şey.
+
+    Bu uç nokta girişsiz; eskiden kanıtın tam durumunu dönüyordu ve o yanıtta
+    aynı çıktının BAŞKA referanslarının e-postası, puanı, yorumu ve yanıt
+    token'ı vardı — referans kişi diğerlerinin yerine de yanıt verebiliyordu.
+    Burada yalnızca neyi yanıtladığı ve yanıtının alındığı var.
+    """
+
+    baslik: str
+    # "yanitlandi" — yanıtın alındığını söyler, olumlu olduğunu değil
+    durum: str
+
+
 class ItirazIstegi(BaseModel):
     somut_cikti_id: uuid.UUID
     # Kullanıcı kanıtı düzelttiyse yeni link; boşsa mevcut kanıt yeniden değerlendirilir

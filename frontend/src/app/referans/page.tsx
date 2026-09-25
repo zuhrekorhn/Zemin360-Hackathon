@@ -6,8 +6,8 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import {
-  type KanitDurumu,
   type ReferansIstegiBilgisi,
+  type ReferansYanitiSonucu,
   referansIstegiGetir,
   referansYanitla,
 } from "@/lib/api";
@@ -57,7 +57,7 @@ function ReferansFormu() {
   const [hata, setHata] = useState<Hata | null>(null);
   // Kalıcı hatalarda (404/409) "Tekrar dene" göstermiyoruz.
   const [tekrarDenenir, setTekrarDenenir] = useState(true);
-  const [sonuc, setSonuc] = useState<KanitDurumu | null>(null);
+  const [sonuc, setSonuc] = useState<ReferansYanitiSonucu | null>(null);
   const okundu = useRef(false);
 
   const bilgiyiGetir = useCallback(async (kimlik: string) => {
@@ -251,7 +251,7 @@ function Bilgilendirme({ metin }: { metin: string }) {
   );
 }
 
-function Tesekkur({ sonuc }: { sonuc: KanitDurumu }) {
+function Tesekkur({ sonuc }: { sonuc: ReferansYanitiSonucu }) {
   return (
     <section className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-5 py-4">
       <h2 className="font-heading text-xl font-semibold text-ana">

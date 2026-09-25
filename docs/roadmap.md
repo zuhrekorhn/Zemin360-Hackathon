@@ -43,7 +43,7 @@ takvime girmez.
 - [x] Onay tekrarlanabilir: aynı `oturum_id` ikinci kez onaylanınca yeni kart
       açılmaz, mevcut kart döner. Embedding hatası yakalanır, kart yine döner;
       embedding'i yeniden hesaplatan bir yol eklenir.
-- [ ] Referans gizliliği: girişsiz uç noktalar başka referansların e-postasını,
+- [x] Referans gizliliği: girişsiz uç noktalar başka referansların e-postasını,
       puanını ve token'ını dönmez. (Faz B'deki yetkilendirme ile tamamen kapanır.)
 - [ ] `musaitlik_tercihi` `Literal` olur, onayda doğrulanır, formda düzeltilebilir.
 - [ ] 429 mesajı düzeltilir ("kota doldu", "yoğunluk" değil); üç kopya tek
