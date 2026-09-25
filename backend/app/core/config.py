@@ -3,6 +3,9 @@ from functools import lru_cache
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Gemini 3 `thinking_level` değerleri; "" = modelin kendi varsayılanı.
+DUSUNME_SEVIYELERI = ("", "minimal", "low", "medium", "high")
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -19,6 +22,12 @@ class Settings(BaseSettings):
     # Hızlı katman: yapılandırılmış çıkarım (Keşif ve Tanımlama sohbetleri).
     gemini_hizli_model: str = "gemini-3.6-flash"
     gemini_hizli_yedek_model: str = "gemini-3.1-flash-lite"
+    # Hızlı katmanın düşünme seviyesi (Gemini 3 `thinking_level`); boş = modelin
+    # varsayılanı. Güçlü katmana uygulanmaz. "minimal" ölçümle seçildi: modelin
+    # varsayılanında çıktının %70-90'ı düşünmeydi (tur ~6 sn), üstelik iki
+    # koşuda da kullanıcının söylemediği "tek başına yazdı" bilgisini taslağa
+    # ekledi. minimal'de tur ~2 sn, uydurma yok, taslak aynı ya da daha iyi.
+    gemini_hizli_dusunme: str = "minimal"
     # Güçlü katman: gerekçeli akıl yürütme (eşleştirme gerekçesi, doğrulama
     # rubriği). Varsayılan kararlı (preview olmayan) bir model: demo günü
     # preview modelin hız sınırı ya da kaldırılması sürpriz çıkarmasın. Yeni
@@ -48,6 +57,16 @@ class Settings(BaseSettings):
         (app/db/session.py) asyncpg üzerinden okunmaya devam ediyor.
         """
         return self.database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+
+    @field_validator("gemini_hizli_dusunme")
+    @classmethod
+    def _dusunme_seviyesi_gecerli(cls, v: str) -> str:
+        # Yanlış yazılmış bir seviye sessizce yok sayılmasın: açılışta durdur.
+        v = v.strip().lower()
+        if v not in DUSUNME_SEVIYELERI:
+            gecerliler = ", ".join(repr(s) for s in DUSUNME_SEVIYELERI)
+            raise ValueError(f"GEMINI_HIZLI_DUSUNME={v!r} geçersiz. Geçerli değerler: {gecerliler}")
+        return v
 
     @field_validator("database_url")
     @classmethod

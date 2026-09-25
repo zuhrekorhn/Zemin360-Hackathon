@@ -248,7 +248,13 @@ def katman_modelleri(katman: Katman) -> tuple[str, str]:
     return ayarlar.gemini_guclu_model, ayarlar.gemini_guclu_yedek_model
 
 
-def model(model_adi: str, is_adi: str, ayar_adi: str | None = None) -> ChatGoogleGenerativeAI:
+def model(
+    model_adi: str,
+    is_adi: str,
+    ayar_adi: str | None = None,
+    dusunme: str | None = None,
+) -> ChatGoogleGenerativeAI:
+    """`dusunme` verilirse Gemini 3'ün `thinking_level`'ı olarak iletilir."""
     ayarlar = get_settings()
     if not ayarlar.google_api_key:
         raise RuntimeError("GOOGLE_API_KEY tanımlı değil (.env)")
@@ -259,6 +265,7 @@ def model(model_adi: str, is_adi: str, ayar_adi: str | None = None) -> ChatGoogl
         max_retries=MAKS_TEKRAR,
         timeout=ayarlar.gemini_zaman_asimi_sn,
         callbacks=[SureOlcer(is_adi, model_adi, ayar_adi)],
+        **({"thinking_level": dusunme} if dusunme else {}),
     )
 
 
@@ -274,8 +281,11 @@ def yedekli_zincir(
     """
     ana, yedek = katman_modelleri(katman)
     ana_ayari, yedek_ayari = AYAR_ADLARI[katman]
-    return zincir_kur(model(ana, is_adi, ana_ayari)).with_fallbacks(
-        [zincir_kur(model(yedek, is_adi, yedek_ayari))],
+    # Düşünme seviyesi yalnızca hızlı katmanda ayarlanabiliyor; güçlü katman
+    # (gerekçe, rubrik) modelin varsayılanıyla düşünür.
+    dusunme = get_settings().gemini_hizli_dusunme if katman == "hizli" else None
+    return zincir_kur(model(ana, is_adi, ana_ayari, dusunme)).with_fallbacks(
+        [zincir_kur(model(yedek, is_adi, yedek_ayari, dusunme))],
         exceptions_to_handle=YEDEGE_DUSUREN_HATALAR,
     )
 

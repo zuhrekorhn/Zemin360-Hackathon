@@ -314,3 +314,53 @@ def test_acilis_kontrolu_anahtar_yoksa_istek_atmaz(monkeypatch):
         assert _dogrula(_istemci(isleyici)) == []
     finally:
         get_settings.cache_clear()
+
+
+# --- Hızlı katmanın düşünme seviyesi -----------------------------------------------
+
+
+def test_dusunme_seviyesi_yalnizca_hizli_katmana_gider(ortam, monkeypatch):
+    monkeypatch.setenv("GEMINI_HIZLI_DUSUNME", "low")
+    get_settings.cache_clear()
+    for zincir in ZINCIRLER:
+        zincir.cache_clear()
+
+    hizli = kesif._cikarim_zinciri()
+    assert _model(hizli.runnable).thinking_level == "low"
+    # Yedek model de aynı seviyede çalışmalı (arıza anında davranış değişmesin)
+    assert _model(hizli.fallbacks[0]).thinking_level == "low"
+    assert _model(tanimlama._cikarim_zinciri().runnable).thinking_level == "low"
+
+    for guclu in (eslestirme._gerekce_zinciri(), dogrulama._rubrik_zinciri()):
+        assert _model(guclu.runnable).thinking_level is None
+
+
+def test_varsayilan_dusunme_seviyesi_minimal(monkeypatch):
+    """Ölçümle seçildi: modelin varsayılanı yavaştı ve taslağa uydurma ekledi."""
+    monkeypatch.delenv("GEMINI_HIZLI_DUSUNME", raising=False)
+    varsayilan = type(get_settings()).model_fields["gemini_hizli_dusunme"].default
+    assert varsayilan == "minimal"
+
+
+def test_dusunme_bossa_modelin_varsayilani_kullanilir(ortam, monkeypatch):
+    monkeypatch.setenv("GEMINI_HIZLI_DUSUNME", "")
+    get_settings.cache_clear()
+    kesif._cikarim_zinciri.cache_clear()
+    assert get_settings().gemini_hizli_dusunme == ""
+    assert _model(kesif._cikarim_zinciri().runnable).thinking_level is None
+
+
+def test_dusunme_seviyesi_buyuk_kucuk_harf_ve_bosluk_toleransli(ortam, monkeypatch):
+    monkeypatch.setenv("GEMINI_HIZLI_DUSUNME", " Minimal ")
+    get_settings.cache_clear()
+    assert get_settings().gemini_hizli_dusunme == "minimal"
+
+
+def test_gecersiz_dusunme_seviyesi_acilista_durdurur(ortam, monkeypatch):
+    """Yanlış yazılmış seviye sessizce yok sayılmamalı."""
+    from pydantic import ValidationError
+
+    monkeypatch.setenv("GEMINI_HIZLI_DUSUNME", "dusuk")
+    get_settings.cache_clear()
+    with pytest.raises(ValidationError, match="GEMINI_HIZLI_DUSUNME"):
+        get_settings()
