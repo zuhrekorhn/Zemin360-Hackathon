@@ -207,15 +207,32 @@ def _cikti_aciklamasi(cikti: dict[str, Any]) -> str | None:
     return metin or None
 
 
-def _tamamla(taslak: dict[str, Any]) -> dict[str, Any]:
+POTANSIYEL = "potansiyel"
+
+
+def potansiyel_kurali(deneyim_seviyesi: str | None, cikti_sayisi: int) -> str | None:
     """Çıktısı olmayan kart "potansiyel" etiketiyle çıkar — Doğrulama Ajanı'nı
-    atlayıp doğrudan Eşleştirme'ye gider (agent-specs.md § 1.4)."""
+    atlayıp doğrudan Eşleştirme'ye gider (agent-specs.md § 1.4).
+
+    İki yerde uygulanıyor ve ikisi aynı kuralı işletmeli: sohbet taslağı
+    kapatırken (`_tamamla`) ve onay anında (app/api/kesif.py). İkincisi
+    gerekli çünkü kullanıcı taslak ekranında tüm çıktıları "Çıkar"
+    diyebiliyor; arayüz o anda "potansiyel olarak kaydedilecek" diyordu ama
+    kart sohbetteki eski seviyeyle kaydediliyordu.
+    """
+    return POTANSIYEL if cikti_sayisi == 0 else deneyim_seviyesi
+
+
+def _tamamla(taslak: dict[str, Any]) -> dict[str, Any]:
+    """Taslağı kapatmadan önceki son rötuş: açıklama birleştirme, potansiyel
+    kuralı, boş zorunlu alanlara yer tutucu."""
     son = dict(taslak)
     son["somut_ciktilar"] = [
         {**cikti, "aciklama": _cikti_aciklamasi(cikti)} for cikti in son.get("somut_ciktilar") or []
     ]
-    if not son["somut_ciktilar"]:
-        son["deneyim_seviyesi"] = "potansiyel"
+    son["deneyim_seviyesi"] = potansiyel_kurali(
+        son.get("deneyim_seviyesi"), len(son["somut_ciktilar"])
+    )
     return motor.zorunlu_alanlari_doldur(
         son, ZORUNLU_ALANLAR, metin_alanlari=("rol_alani", "deneyim_seviyesi")
     )

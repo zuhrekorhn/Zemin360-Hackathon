@@ -315,3 +315,44 @@ def test_ihtiyac_embeddingi_varsa_eslestirme_baslar(tanimlama, monkeypatch):
 
     assert yanit.status_code == 201
     assert len(tanimlama.eslestirilenler) == 1
+
+
+# --- Tüm çıktılar silinirse "potansiyel" ------------------------------------
+# Taslak ekranında kullanıcı çıktıların hepsini "Çıkar" diyebiliyor. Arayüz o
+# anda "potansiyel olarak kaydedilecek" diyordu ama kart sohbetteki eski
+# seviyeyle ("orta") kaydediliyordu (agent-specs.md § 1.4).
+
+
+def duzeltilmis_onayla(somut_ciktilar: list[dict]):
+    return TestClient(app).post(
+        "/kesif/kart/onayla",
+        json={
+            "oturum_id": str(uuid.uuid4()),
+            "kullanici": {"ad": "Elif", "email": "elif@ornek.com", "sehir": "İstanbul"},
+            "duzeltilmis_taslak": {
+                "rol_alani": "backend geliştirici",
+                "deneyim_seviyesi": "orta",
+                "sektor_ilgi_alani": ["eğitim"],
+                "araclar_teknolojiler": ["Python"],
+                "somut_ciktilar": somut_ciktilar,
+            },
+        },
+    )
+
+
+def test_tum_ciktilar_silinirse_kart_potansiyel_kaydedilir(kesif, monkeypatch):
+    embedding_basarili(monkeypatch)
+
+    yanit = duzeltilmis_onayla([])
+
+    assert yanit.status_code == 201
+    assert kesif.oturum.eklenenler[0].deneyim_seviyesi == "potansiyel"
+    assert yanit.json()["deneyim_seviyesi"] == "potansiyel"
+
+
+def test_ciktisi_kalan_kartin_seviyesi_korunur(kesif, monkeypatch):
+    embedding_basarili(monkeypatch)
+
+    duzeltilmis_onayla([{"baslik": "Kütüphane sistemi"}])
+
+    assert kesif.oturum.eklenenler[0].deneyim_seviyesi == "orta"

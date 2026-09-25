@@ -379,3 +379,12 @@ def test_gercekten_farkli_isler_ayri_kalir():
         taslak, TaslakCikarimi(somut_ciktilar=[SomutCiktiTaslak(baslik="Kütüphane takip sistemi")])
     )
     assert len(sonuc["somut_ciktilar"]) == 2
+
+
+def test_potansiyel_kurali_ciktisiz_karti_etiketler():
+    """Sohbet kapanışı ve onay aynı kuralı kullanıyor (app/api/kesif.py)."""
+    from app.agents.kesif import POTANSIYEL, potansiyel_kurali
+
+    assert potansiyel_kurali("orta", 0) == POTANSIYEL
+    assert potansiyel_kurali(None, 0) == POTANSIYEL
+    assert potansiyel_kurali("orta", 1) == "orta"

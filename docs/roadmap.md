@@ -50,7 +50,7 @@ takvime girmez.
       fonksiyonda (`lib/hata.ts`) toplanır.
 - [x] Ek takip soruları ayrı sayaç kullanır; "bilmiyorum" cevabında aynı soru
       tekrarlanmaz.
-- [ ] Tüm çıktılar silinirse kart gerçekten "potansiyel" kaydedilir.
+- [x] Tüm çıktılar silinirse kart gerçekten "potansiyel" kaydedilir.
 - [ ] `email` ve `iletisim_email` UNIQUE; kayıtlı kullanıcı bilgisi güncellenebilir.
 
 **LLM geçişi:** `app/core/llm.py` sağlayıcıdan bağımsız kalır. Katmanlı model

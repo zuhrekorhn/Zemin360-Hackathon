@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.agents.kesif import HizSinirHatasi, kullanici_mesaji
+from app.agents.kesif import HizSinirHatasi, kullanici_mesaji, potansiyel_kurali
 from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
 from app.core import calisma_modeli
 from app.core.sehir import sehir_kanonik
@@ -112,6 +112,15 @@ async def kart_onayla(
         raise HTTPException(status_code=409, detail="Taslak henüz hazır değil")
 
     taslak = istek.duzeltilmis_taslak or KartTaslagi(**mevcut.values["taslak"])
+    # Kullanıcı taslak ekranında tüm çıktıları çıkarmış olabilir: sohbetin
+    # kapatırken uyguladığı kural burada da işlesin (agent-specs.md § 1.4).
+    taslak = taslak.model_copy(
+        update={
+            "deneyim_seviyesi": potansiyel_kurali(
+                taslak.deneyim_seviyesi, len(taslak.somut_ciktilar)
+            )
+        }
+    )
     if not taslak.rol_alani or not taslak.deneyim_seviyesi:
         raise HTTPException(status_code=422, detail="Taslakta rol ve deneyim seviyesi zorunlu")
 
