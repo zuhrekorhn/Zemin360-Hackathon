@@ -8,14 +8,15 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.agents.kesif import HizSinirHatasi, kullanici_mesaji
-from app.api.yetenek_kartlari import kart_yaniti
+from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
 from app.core import calisma_modeli
-from app.core.embeddings import embedding_uret, yetenek_temsil_metni
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.kullanici import Kullanici
@@ -88,13 +89,25 @@ async def sohbet_cevap(istek: SohbetCevapIstegi, request: Request) -> SohbetYani
 async def kart_onayla(
     istek: KartOnaylaIstegi,
     request: Request,
+    yanit: Response,
     oturum: AsyncSession = Depends(get_session),
 ) -> YetenekKartiYaniti:
-    """Onaylanan taslağı YETENEK_KARTI'na yazar, ardından embedding'ini hesaplar."""
+    """Onaylanan taslağı YETENEK_KARTI'na yazar, ardından embedding'ini hesaplar.
+
+    Tekrarlanabilir: aynı `oturum_id` ikinci kez onaylanırsa (çift tıklama,
+    embedding hatası sonrası yeniden deneme) yeni kart açılmaz, mevcut kart
+    200 ile döner — embedding'i eksikse bu sırada yeniden denenir.
+    """
     config = {"configurable": {"thread_id": str(istek.oturum_id)}}
     mevcut = await _grafik(request).aget_state(config)
     if not mevcut.values:
         raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
+
+    onceki = await _oturumun_karti(oturum, istek.oturum_id)
+    if onceki is not None:
+        yanit.status_code = 200
+        return await _mevcut_karti_don(oturum, onceki)
+
     if not mevcut.values.get("taslak_hazir"):
         raise HTTPException(status_code=409, detail="Taslak henüz hazır değil")
 
@@ -105,6 +118,7 @@ async def kart_onayla(
     kullanici = await _kullaniciyi_bul_veya_olustur(oturum, istek)
 
     kart = YetenekKarti(
+        oturum_id=istek.oturum_id,
         kullanici_id=kullanici.id,
         rol_alani=taslak.rol_alani,
         deneyim_seviyesi=taslak.deneyim_seviyesi,
@@ -119,21 +133,37 @@ async def kart_onayla(
         ],
     )
     oturum.add(kart)
-    await oturum.commit()
+    try:
+        await oturum.commit()
+    except IntegrityError:
+        # Aynı oturum için eşzamanlı ikinci onay: diğer istek kartı yazdı.
+        await oturum.rollback()
+        onceki = await _oturumun_karti(oturum, istek.oturum_id)
+        if onceki is None:
+            raise
+        yanit.status_code = 200
+        return await _mevcut_karti_don(oturum, onceki)
 
     # Kart kaydedildikten SONRA embedding (docs/matching-algorithm.md § 1-2).
-    # Voyage'a ulaşılamazsa kart kaybolmasın: kayıt durur, embedding NULL kalır
-    # ve kart eşleştirmeye girmez.
-    metin = yetenek_temsil_metni(
-        rol_alani=kart.rol_alani,
-        deneyim_seviyesi=kart.deneyim_seviyesi,
-        sektor_ilgi_alani=kart.sektor_ilgi_alani,
-        araclar_teknolojiler=kart.araclar_teknolojiler,
-        somut_ciktilar=[(c.baslik, c.aciklama) for c in taslak.somut_ciktilar],
-    )
-    kart.embedding = await embedding_uret(metin, girdi_turu="document")
-    await oturum.commit()
+    # Voyage'a ulaşılamazsa kart kaybolmaz: embedding NULL kalır, yanıtta
+    # `embedding_var: false` döner ve arayüz yeniden hesaplatmayı önerir.
+    await embedding_hesapla(oturum, kart)
 
+    return await kart_yaniti(oturum, kart.id)
+
+
+async def _oturumun_karti(oturum: AsyncSession, oturum_id: uuid.UUID) -> YetenekKarti | None:
+    return await oturum.scalar(
+        select(YetenekKarti)
+        .options(selectinload(YetenekKarti.somut_ciktilar))
+        .where(YetenekKarti.oturum_id == oturum_id)
+    )
+
+
+async def _mevcut_karti_don(oturum: AsyncSession, kart: YetenekKarti) -> YetenekKartiYaniti:
+    """Daha önce onaylanmış kartı döner; embedding'i eksikse bir kez daha dener."""
+    if kart.embedding is None:
+        await embedding_hesapla(oturum, kart)
     return await kart_yaniti(oturum, kart.id)
 
 

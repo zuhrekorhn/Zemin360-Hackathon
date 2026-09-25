@@ -31,6 +31,9 @@ class IhtiyacKarti(UUIDPrimaryKeyMixin, Base):
     calisma_modeli: Mapped[str | None] = mapped_column(String)
     musaitlik_tercihi: Mapped[str | None] = mapped_column(String)
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM))
+    # Kartı doğuran Tanımlama sohbeti; tekil (onay tekrarlanabilir olsun diye,
+    # bkz. YetenekKarti.oturum_id).
+    oturum_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), unique=True)
     # Eşleştirme "kurumun en son kartı"nı bundan bulur; UUID kronolojik değil
     # (docs/data-schema.md § Tasarım Kararları)
     olusturma_tarihi: Mapped[datetime] = mapped_column(

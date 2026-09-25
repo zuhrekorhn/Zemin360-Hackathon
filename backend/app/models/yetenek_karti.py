@@ -36,6 +36,10 @@ class YetenekKarti(UUIDPrimaryKeyMixin, Base):
     versiyon: Mapped[int] = mapped_column(Integer, default=1, server_default=text("1"))
     # Kart onaylanınca/güncellenince hesaplanır; o zamana kadar NULL
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM))
+    # Kartı doğuran Keşif sohbeti. Tekil: aynı sohbet ikinci kez onaylanınca
+    # yeni kart açılmaz, bu kart döner (çift tıklama, embedding hatası sonrası
+    # yeniden deneme). Sohbet dışından gelen kartlarda NULL.
+    oturum_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), unique=True)
 
     kullanici: Mapped[Kullanici] = relationship(back_populates="yetenek_kartlari")
     somut_ciktilar: Mapped[list[SomutCikti]] = relationship(

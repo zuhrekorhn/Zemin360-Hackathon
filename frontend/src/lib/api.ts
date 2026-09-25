@@ -124,6 +124,16 @@ export function yetenekKartiGetir(kartId: string): Promise<YetenekKartiYaniti> {
   });
 }
 
+/** POST /yetenek-kartlari/{id}/embedding — onayda vektör servisine
+ *  ulaşılamadıysa kartı eşleştirmeye hazırlar. */
+export function yetenekKartiHazirla(
+  kartId: string,
+): Promise<YetenekKartiYaniti> {
+  return apiIstek<YetenekKartiYaniti>(`/yetenek-kartlari/${kartId}/embedding`, {
+    method: "POST",
+  });
+}
+
 /** POST /kesif/sohbet/baslat — yeni oturum açar, açılış sorusunu döner. */
 export function sohbetBaslat(): Promise<SohbetYaniti> {
   return apiIstek<SohbetYaniti>("/kesif/sohbet/baslat", {
@@ -206,6 +216,16 @@ export type IhtiyacKartiYaniti = {
   embedding_var: boolean;
   kurum: KurumYaniti;
 };
+
+/** POST /ihtiyac-kartlari/{id}/embedding — kartı eşleştirmeye hazırlar;
+ *  başarılıysa eşleştirme de arka planda başlar. */
+export function ihtiyacKartiHazirla(
+  kartId: string,
+): Promise<IhtiyacKartiYaniti> {
+  return apiIstek<IhtiyacKartiYaniti>(`/ihtiyac-kartlari/${kartId}/embedding`, {
+    method: "POST",
+  });
+}
 
 /** POST /tanimlama/sohbet/baslat */
 export function tanimlamaBaslat(): Promise<TanimlamaSohbetYaniti> {

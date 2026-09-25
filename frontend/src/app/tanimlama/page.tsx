@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
   CevapAlani,
   FormAlani,
@@ -18,6 +19,7 @@ import {
   type IhtiyacKartiYaniti,
   type IhtiyacTaslagi,
   type KurumGirdisi,
+  ihtiyacKartiHazirla,
   ihtiyacKartiOnayla,
   tanimlamaBaslat,
   tanimlamaCevap,
@@ -206,7 +208,9 @@ export default function TanimlamaSayfasi() {
         />
       ) : null}
 
-      {asama === "kaydedildi" && kart ? <KayitliKart kart={kart} /> : null}
+      {asama === "kaydedildi" && kart ? (
+        <KayitliKart kart={kart} onGuncelle={setKart} />
+      ) : null}
 
       <footer className="mt-auto border-t border-kenar pt-6">
         <Button asChild variant="outline" size="lg">
@@ -462,15 +466,27 @@ function TaslakKarti({
   );
 }
 
-function KayitliKart({ kart }: { kart: IhtiyacKartiYaniti }) {
+function KayitliKart({
+  kart,
+  onGuncelle,
+}: {
+  kart: IhtiyacKartiYaniti;
+  onGuncelle: (kart: IhtiyacKartiYaniti) => void;
+}) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-heading text-xl font-semibold text-ana">
         İhtiyaç kartınız kaydedildi
       </h2>
-      <p className="text-sm text-pretty text-muted-foreground">
-        Artık genç yeteneklerin yetenek kartlarıyla eşleştirilebilir.
-      </p>
+      {kart.embedding_var ? (
+        <p className="text-sm text-pretty text-muted-foreground">
+          Artık genç yeteneklerin yetenek kartlarıyla eşleştirilebilir.
+        </p>
+      ) : (
+        <EslestirmeyeHazirla
+          hazirla={async () => onGuncelle(await ihtiyacKartiHazirla(kart.id))}
+        />
+      )}
 
       <TaslakKarti taslak={kart} kurumAdi={kart.kurum.ad} />
 

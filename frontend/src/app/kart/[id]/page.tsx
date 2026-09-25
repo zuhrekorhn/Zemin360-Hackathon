@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import { BelgeKarti, CiktiOzeti, EtiketSatiri } from "@/components/kart";
 import { KanitBolumu } from "@/components/kanit";
 import { HataKutusu } from "@/components/sohbet";
@@ -13,6 +14,7 @@ import {
   type YetenekKartiYaniti,
   kanitDurumu,
   yetenekKartiGetir,
+  yetenekKartiHazirla,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
@@ -149,6 +151,20 @@ export default function KartSayfasi() {
               Bu görünüm iletişim bilgisi taşımaz; kurumlar kartı böyle görür.
             </p>
           </BelgeKarti>
+
+          {!kart.embedding_var ? (
+            <EslestirmeyeHazirla
+              hazirla={async () => {
+                const guncel = await yetenekKartiHazirla(kart.id);
+                // Çıktıların kanıt durumu ayrı tutuluyor; yalnızca bayrak değişti.
+                setKart((onceki) =>
+                  onceki
+                    ? { ...onceki, embedding_var: guncel.embedding_var }
+                    : onceki,
+                );
+              }}
+            />
+          ) : null}
 
           <section className="flex flex-col gap-6">
             <h2 className="font-heading text-xl font-semibold text-ana">

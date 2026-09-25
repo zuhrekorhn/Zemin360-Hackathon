@@ -6,11 +6,13 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 |---|---|---|---|
 | **Keşif** | `/kesif/sohbet/baslat` | POST | Yeni sohbet oturumu açar |
 | | `/kesif/sohbet/cevap` | POST | Kullanıcı cevabını işler, sıradaki soruyu döner |
-| | `/kesif/kart/onayla` | POST | Taslağı `YETENEK_KARTI`'na yazar |
+| | `/kesif/kart/onayla` | POST | Taslağı `YETENEK_KARTI`'na yazar. Tekrarlanabilir: aynı `oturum_id` ikinci kez gelirse yeni kart açılmaz, mevcut kart 200 ile döner. Embedding hesaplanamazsa kart yine 201 ile döner, `embedding_var: false` |
+| | `/yetenek-kartlari/{id}/embedding` | POST | Embedding'i yeniden hesaplar (onayda vektör servisine ulaşılamadıysa). Servis yine yoksa 503 |
 | | `/yetenek-kartlari/{id}` | GET | İletişim bilgisi döndürmez (agent-specs.md § 1.5). Her somut çıktı, varsa Doğrulama rubriğini (`guven_skoru`) birlikte taşır — kanıt eklenmemişse `null` |
 | **Tanımlama** | `/tanimlama/sohbet/baslat` | POST | Keşif ile aynı motoru kullanır, farklı soru seti |
 | | `/tanimlama/sohbet/cevap` | POST | Kullanıcı (kurum) cevabını işler, sıradaki soruyu döner |
-| | `/tanimlama/kart/onayla` | POST | Taslağı `IHTIYAC_KARTI`'na yazar |
+| | `/tanimlama/kart/onayla` | POST | Taslağı `IHTIYAC_KARTI`'na yazar. Keşif'teki gibi tekrarlanabilir; eşleştirme yalnızca embedding hesaplandıysa arka planda başlar |
+| | `/ihtiyac-kartlari/{id}/embedding` | POST | Embedding'i yeniden hesaplar; başarılıysa eşleştirmeyi başlatır |
 | | `/ihtiyac-kartlari/{id}` | GET | Eşleştirme Ajanı'nın da okuyacağı kart görünümü. `kurum.id` döner (öneri uç noktası kurum kimliğiyle çalışıyor); iletişim e-postası dönmez |
 | **Doğrulama** | `/dogrulama/kanit-ekle` | POST | `SOMUT_CIKTI` + ön rubrik skoru |
 | | `/dogrulama/referans/{token}` | GET | Token bazlı, girişsiz. Referans kişinin yanıt vermeden önce gördüğü bilgi: çıktının başlığı, açıklaması, **iddia sahibinin adı** ve isteğin durumu. E-posta/telefon gibi iletişim bilgisi DÖNMEZ — referans kişi kimin için konuştuğunu bilmeli, ama bu uç nokta girişsiz olduğu için yalnızca yanıt vermeye yetecek kadarını açar. Zaman aşımı (`bekliyor` → `yanit_yok`) bu okuma anında hesaplanır |

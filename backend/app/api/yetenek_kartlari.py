@@ -1,4 +1,4 @@
-"""Yetenek kartı okuma uç noktası.
+"""Yetenek kartı okuma ve embedding uç noktaları.
 
 Gizlilik (docs/agent-specs.md § 1.5): bu yanıt kullanıcının e-postasını ve
 diğer iletişim bilgilerini İÇERMEZ — kart görünür, iletişim iki taraf da
@@ -8,6 +8,7 @@ yani yanlışlıkla sızdırmak için şemayı değiştirmek gerekir.
 
 from __future__ import annotations
 
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,12 +16,20 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.embeddings import EmbeddingHatasi, embedding_uret, yetenek_temsil_metni
 from app.db.session import get_session
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import YetenekKartiYaniti
 
+logger = logging.getLogger("zemin360.embedding")
+
 router = APIRouter(tags=["yetenek-kartlari"])
+
+EMBEDDING_HATA_MESAJI = (
+    "Kart kayıtlı, ama eşleştirmeye hazırlanamadı (vektör servisine ulaşılamadı). "
+    "Biraz sonra tekrar dene."
+)
 
 
 async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiYaniti:
@@ -49,8 +58,54 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiY
     )
 
 
+async def embedding_hesapla(oturum: AsyncSession, kart: YetenekKarti) -> bool:
+    """Kartın embedding'ini hesaplayıp kaydeder (docs/matching-algorithm.md § 1-2).
+
+    Voyage'a ulaşılamazsa hata fırlatmaz, False döner: kart zaten kayıtlı ve
+    kaybolmamalı. Embedding NULL kalan kart eşleştirmeye girmez; arayüz bunu
+    söyleyip yeniden hesaplatma butonu gösteriyor.
+
+    `kart.somut_ciktilar` yüklenmiş olmalı (temsil metni onlardan kuruluyor).
+    """
+    metin = yetenek_temsil_metni(
+        rol_alani=kart.rol_alani,
+        deneyim_seviyesi=kart.deneyim_seviyesi,
+        sektor_ilgi_alani=kart.sektor_ilgi_alani,
+        araclar_teknolojiler=kart.araclar_teknolojiler,
+        somut_ciktilar=[(c.baslik, c.aciklama) for c in kart.somut_ciktilar],
+    )
+    try:
+        kart.embedding = await embedding_uret(metin, girdi_turu="document")
+    except EmbeddingHatasi:
+        logger.warning("Yetenek kartı embedding'i hesaplanamadı (%s)", kart.id, exc_info=True)
+        return False
+    await oturum.commit()
+    return True
+
+
 @router.get("/yetenek-kartlari/{kart_id}", response_model=YetenekKartiYaniti)
 async def yetenek_karti_getir(
     kart_id: uuid.UUID, oturum: AsyncSession = Depends(get_session)
 ) -> YetenekKartiYaniti:
     return await kart_yaniti(oturum, kart_id)
+
+
+@router.post("/yetenek-kartlari/{kart_id}/embedding", response_model=YetenekKartiYaniti)
+async def yetenek_karti_embedding(
+    kart_id: uuid.UUID, oturum: AsyncSession = Depends(get_session)
+) -> YetenekKartiYaniti:
+    """Embedding'i yeniden hesaplar — onay sırasında Voyage'a ulaşılamadıysa.
+
+    Kart zaten embedding'liyse de yeniden hesaplanır; zararsız ve temsil
+    şablonu değiştiğinde tek tek tazelemenin yolu bu.
+    """
+    kart = await oturum.scalar(
+        select(YetenekKarti)
+        .options(selectinload(YetenekKarti.somut_ciktilar))
+        .where(YetenekKarti.id == kart_id)
+    )
+    if kart is None:
+        raise HTTPException(status_code=404, detail="Yetenek kartı bulunamadı")
+    if not await embedding_hesapla(oturum, kart):
+        raise HTTPException(status_code=503, detail=EMBEDDING_HATA_MESAJI)
+    return await kart_yaniti(oturum, kart.id)

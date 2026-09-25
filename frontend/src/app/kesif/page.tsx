@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
   CevapAlani,
   FormAlani,
@@ -22,6 +23,7 @@ import {
   kartOnayla,
   sohbetBaslat,
   sohbetCevap,
+  yetenekKartiHazirla,
 } from "@/lib/api";
 import {
   CALISMA_MODELLERI,
@@ -212,7 +214,9 @@ export default function KesifSayfasi() {
         />
       ) : null}
 
-      {asama === "kaydedildi" && kart ? <KayitliKart kart={kart} /> : null}
+      {asama === "kaydedildi" && kart ? (
+        <KayitliKart kart={kart} onGuncelle={setKart} />
+      ) : null}
 
       <footer className="mt-auto border-t border-kenar pt-6">
         <Button asChild variant="outline" size="lg">
@@ -552,18 +556,30 @@ function KartSatiri({
   );
 }
 
-function KayitliKart({ kart }: { kart: YetenekKartiYaniti }) {
+function KayitliKart({
+  kart,
+  onGuncelle,
+}: {
+  kart: YetenekKartiYaniti;
+  onGuncelle: (kart: YetenekKartiYaniti) => void;
+}) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-heading text-xl font-semibold text-ana">
         Kartın kaydedildi
       </h2>
-      <p className="text-sm text-pretty text-muted-foreground">
-        Artık kurumların ihtiyaç kartlarıyla eşleştirilebilir.
-        {kart.kanit_bekleyen
-          ? " Çıktılarının bir kısmı kanıt bekliyor — kanıt eklersen kartın daha güçlü görünür."
-          : null}
-      </p>
+      {kart.embedding_var ? (
+        <p className="text-sm text-pretty text-muted-foreground">
+          Artık kurumların ihtiyaç kartlarıyla eşleştirilebilir.
+          {kart.kanit_bekleyen
+            ? " Çıktılarının bir kısmı kanıt bekliyor — kanıt eklersen kartın daha güçlü görünür."
+            : null}
+        </p>
+      ) : (
+        <EslestirmeyeHazirla
+          hazirla={async () => onGuncelle(await yetenekKartiHazirla(kart.id))}
+        />
+      )}
 
       <TaslakKarti
         taslak={{

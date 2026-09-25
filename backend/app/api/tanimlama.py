@@ -8,15 +8,15 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.eslestirme import eslestirmeyi_arka_planda_calistir
-from app.api.ihtiyac_kartlari import kart_yaniti
+from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
 from app.core import calisma_modeli
-from app.core.embeddings import embedding_uret, ihtiyac_temsil_metni
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -84,13 +84,24 @@ async def kart_onayla(
     istek: IhtiyacKartiOnaylaIstegi,
     request: Request,
     arka_plan: BackgroundTasks,
+    yanit: Response,
     oturum: AsyncSession = Depends(get_session),
 ) -> IhtiyacKartiYaniti:
-    """Onaylanan taslağı IHTIYAC_KARTI'na yazar, ardından embedding'ini hesaplar."""
+    """Onaylanan taslağı IHTIYAC_KARTI'na yazar, ardından embedding'ini hesaplar.
+
+    Keşif'teki gibi tekrarlanabilir: aynı `oturum_id` ikinci kez onaylanırsa
+    mevcut kart 200 ile döner, embedding'i eksikse yeniden denenir.
+    """
     config = {"configurable": {"thread_id": str(istek.oturum_id)}}
     mevcut = await _grafik(request).aget_state(config)
     if not mevcut.values:
         raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
+
+    onceki = await _oturumun_karti(oturum, istek.oturum_id)
+    if onceki is not None:
+        yanit.status_code = 200
+        return await _mevcut_karti_don(oturum, onceki, arka_plan)
+
     if not mevcut.values.get("taslak_hazir"):
         raise HTTPException(status_code=409, detail="Taslak henüz hazır değil")
 
@@ -101,6 +112,7 @@ async def kart_onayla(
     kurum = await _kurumu_bul_veya_olustur(oturum, istek)
 
     kart = IhtiyacKarti(
+        oturum_id=istek.oturum_id,
         kurum_id=kurum.id,
         problem_tanimi=taslak.problem_tanimi,
         basari_kriteri=taslak.basari_kriteri,
@@ -112,21 +124,38 @@ async def kart_onayla(
         musaitlik_tercihi=taslak.musaitlik_tercihi,
     )
     oturum.add(kart)
-    await oturum.commit()
+    try:
+        await oturum.commit()
+    except IntegrityError:
+        # Aynı oturum için eşzamanlı ikinci onay: diğer istek kartı yazdı.
+        await oturum.rollback()
+        onceki = await _oturumun_karti(oturum, istek.oturum_id)
+        if onceki is None:
+            raise
+        yanit.status_code = 200
+        return await _mevcut_karti_don(oturum, onceki, arka_plan)
 
     # Kart kaydedildikten SONRA embedding (docs/matching-algorithm.md § 1-2).
-    kart.embedding = await embedding_uret(
-        ihtiyac_temsil_metni(
-            problem_tanimi=kart.problem_tanimi, basari_kriteri=kart.basari_kriteri
-        ),
-        girdi_turu="document",
-    )
-    await oturum.commit()
+    # Voyage'a ulaşılamazsa kart kaybolmaz; eşleştirme de başlamaz, çünkü
+    # embedding'siz kart aday bulamaz. Arayüz yeniden hesaplatmayı önerir.
+    if await embedding_hesapla(oturum, kart):
+        # Yanıt gönderildikten sonra başlıyor: kurum öneriler sayfasına
+        # geldiğinde hesap çoğunlukla hazır olur.
+        arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kurum.id)
 
-    # Eşleştirme yanıt gönderildikten sonra başlıyor: kurum öneriler sayfasına
-    # geldiğinde hesap çoğunlukla hazır olur.
-    arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kurum.id)
+    return await kart_yaniti(oturum, kart.id)
 
+
+async def _oturumun_karti(oturum: AsyncSession, oturum_id: uuid.UUID) -> IhtiyacKarti | None:
+    return await oturum.scalar(select(IhtiyacKarti).where(IhtiyacKarti.oturum_id == oturum_id))
+
+
+async def _mevcut_karti_don(
+    oturum: AsyncSession, kart: IhtiyacKarti, arka_plan: BackgroundTasks
+) -> IhtiyacKartiYaniti:
+    """Daha önce onaylanmış kartı döner; embedding'i eksikse bir kez daha dener."""
+    if kart.embedding is None and await embedding_hesapla(oturum, kart):
+        arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kart.kurum_id)
     return await kart_yaniti(oturum, kart.id)
 
 
