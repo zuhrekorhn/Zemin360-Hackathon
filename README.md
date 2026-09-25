@@ -152,6 +152,7 @@ Arayüz: <http://localhost:3000>
 npm run dev       # geliştirme sunucusu
 npm run build     # üretim derlemesi + tip kontrolü
 npm run lint      # ESLint
+npm test          # Vitest birim testleri (src/**/*.test.ts)
 npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 ```
 

@@ -6,9 +6,15 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export class ApiHatasi extends Error {
+  /**
+   * @param ayrinti Backend'in `{"detail": "..."}` gövdesindeki cümle. Ayrı
+   *   tutuluyor ki `hatayaCevir` backend'in söylediğini kendi yedek
+   *   cümlesinden ayırt edebilsin (lib/hata.ts).
+   */
   constructor(
     message: string,
     readonly durumKodu?: number,
+    readonly ayrinti?: string,
   ) {
     super(message);
     this.name = "ApiHatasi";
@@ -46,6 +52,7 @@ export async function apiIstek<T>(
     throw new ApiHatasi(
       ayrinti ?? `İstek başarısız: ${yanit.status} ${yanit.statusText}`,
       yanit.status,
+      ayrinti,
     );
   }
 

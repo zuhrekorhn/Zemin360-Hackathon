@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  ApiHatasi,
   type IhtiyacKartiYaniti,
   type IhtiyacTaslagi,
   type KurumGirdisi,
@@ -24,6 +23,7 @@ import {
   tanimlamaBaslat,
   tanimlamaCevap,
 } from "@/lib/api";
+import { hatayaCevir } from "@/lib/hata";
 import {
   CALISMA_MODELI_ETIKETLERI,
   CALISMA_MODELLERI,
@@ -60,22 +60,11 @@ export default function TanimlamaSayfasi() {
   const baslatildi = useRef(false);
   const sonMesaj = useRef<HTMLDivElement | null>(null);
 
-  const hatayiYaz = useCallback((sebep: unknown) => {
-    if (sebep instanceof ApiHatasi && sebep.durumKodu === 429) {
-      setHata({
-        metin: "Şu an yoğunluk var. Birkaç saniye sonra tekrar deneyin.",
-        kota: true,
-      });
-      return;
-    }
-    setHata({
-      metin:
-        sebep instanceof ApiHatasi
-          ? sebep.message
-          : "Beklenmeyen bir şey oldu, tekrar deneyin.",
-      kota: false,
-    });
-  }, []);
+  // Hata cümlesi tek yerden: lib/hata.ts (429 kota, 503 yoğunluk ayrımı orada).
+  const hatayiYaz = useCallback(
+    (sebep: unknown) => setHata(hatayaCevir(sebep)),
+    [],
+  );
 
   const sohbetiBaslat = useCallback(async () => {
     setHata(null);
