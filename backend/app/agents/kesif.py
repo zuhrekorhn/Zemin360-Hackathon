@@ -62,7 +62,11 @@ Görevin: konuşmadan yetenek kartı alanlarını çıkarmak.
 
 Alanlar:
 - rol_alani: kullanıcının kendini konumlandırdığı alan ("mobil geliştirici",
-  "sosyal medya içerik üreticisi" gibi).
+  "sosyal medya içerik üreticisi" gibi). Teknik rol adlarını TÜRKÇELEŞTİRME:
+  sektörde ve kullanıcının ağzında yaygın olan adı koru — "backend geliştirici",
+  "frontend geliştirici", "full-stack geliştirici", "DevOps mühendisi"; "arka
+  yüz geliştirici", "ön yüz geliştirici", "tam yığın geliştirici" DEĞİL. Aynı
+  kural sorduğun sorulardaki örnekler için de geçerli.
 - deneyim_seviyesi: potansiyel | baslangic | orta | ileri.
   Somut bir çıktısı yoksa "potansiyel".
 - sektor_ilgi_alani: ilgilendiği sektörler.

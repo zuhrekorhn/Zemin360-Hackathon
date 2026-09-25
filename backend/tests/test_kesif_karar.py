@@ -422,3 +422,16 @@ def test_gozlenen_sohbette_rol_konusu_bir_kez_sorulur():
 
     rol_sorulari = [s for s in sorular if "rol" in s.lower() or "payın" in s]
     assert len(rol_sorulari) == 1, sorular
+
+
+def test_teknik_rol_adlari_turkcelestirilmiyor():
+    """Sahada görüldü: model "arka yüz geliştirici, tam yığın geliştirici" diye sordu.
+    Kurum ve genç bu rolleri "backend", "full-stack" diye arıyor; eşleştirme
+    metni de aynı adla daha iyi çalışır."""
+    from app.agents.kesif import SISTEM_TALIMATI
+
+    talimat = " ".join(SISTEM_TALIMATI.split())  # satır kırılmasından bağımsız
+    assert "TÜRKÇELEŞTİRME" in talimat
+    assert '"backend geliştirici"' in talimat
+    assert '"arka yüz geliştirici"' in talimat
+    assert "sorduğun sorulardaki örnekler için de" in talimat
