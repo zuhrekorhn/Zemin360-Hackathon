@@ -20,6 +20,7 @@ from app.api import ihtiyac_kartlari as ihtiyac_api
 from app.api import kesif as kesif_api
 from app.api import tanimlama as tanimlama_api
 from app.api import yetenek_kartlari as yetenek_api
+from app.api.kimlik import mevcut_hesap
 from app.core.embeddings import EmbeddingHatasi
 from app.db.base import EMBEDDING_DIM
 from app.db.session import get_session
@@ -28,6 +29,11 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import YetenekKartiYaniti
 from app.schemas.tanimlama import IhtiyacKartiYaniti, KurumYaniti
+from tests.sahte_hesap import sahte_hesap, sohbet_degerleri
+
+# Giriş yapmış genç ve kurum: sohbetleri onlar açmış, kartlar onların.
+GENC = sahte_hesap("genc")
+KURUM = sahte_hesap("kurum")
 
 VEKTOR = [0.0] * EMBEDDING_DIM
 
@@ -62,16 +68,20 @@ class SahteOturum:
 
 
 class SahteGrafik:
-    def __init__(self, taslak: dict):
+    def __init__(self, taslak: dict, sahip=GENC):
         self.taslak = taslak
+        self.sahip = sahip
 
     async def aget_state(self, _config):
-        return SimpleNamespace(values={"taslak_hazir": True, "taslak": self.taslak})
+        return SimpleNamespace(
+            values=sohbet_degerleri(self.sahip, taslak_hazir=True, taslak=self.taslak)
+        )
 
 
 def yetenek_karti(**degisiklik) -> YetenekKarti:
     kart = YetenekKarti(
         id=uuid.uuid4(),
+        kullanici_id=GENC.kullanici.id,
         rol_alani="backend geliştirici",
         deneyim_seviyesi="orta",
         sektor_ilgi_alani=["eğitim"],
@@ -127,6 +137,7 @@ def kesif(monkeypatch):
         }
     )
     app.dependency_overrides[get_session] = lambda: durum.oturum
+    app.dependency_overrides[mevcut_hesap] = lambda: GENC
     yield durum
     app.dependency_overrides.clear()
     del app.state.kesif_grafigi
@@ -221,6 +232,7 @@ def test_embedding_yeniden_hesaplama_ucu(monkeypatch):
 
     monkeypatch.setattr(yetenek_api, "kart_yaniti", kart_yaniti)
     app.dependency_overrides[get_session] = lambda: oturum
+    app.dependency_overrides[mevcut_hesap] = lambda: GENC
     try:
         yanit = TestClient(app).post(f"/yetenek-kartlari/{kart.id}/embedding")
     finally:
@@ -234,6 +246,7 @@ def test_embedding_ucu_servis_yoksa_503_ve_net_mesaj(monkeypatch):
     embedding_basarisiz(monkeypatch)
     kart = yetenek_karti(embedding=None)
     app.dependency_overrides[get_session] = lambda: SahteOturum(bulunan=kart)
+    app.dependency_overrides[mevcut_hesap] = lambda: GENC
     try:
         yanit = TestClient(app).post(f"/yetenek-kartlari/{kart.id}/embedding")
     finally:
@@ -279,9 +292,11 @@ def tanimlama(monkeypatch):
     monkeypatch.setattr(tanimlama_api, "kart_yaniti", kart_yaniti)
     monkeypatch.setattr(tanimlama_api, "eslestirmeyi_arka_planda_calistir", eslestir)
     app.state.tanimlama_grafigi = SahteGrafik(
-        {"problem_tanimi": "Destek biletleri elle ayrılıyor", "basari_kriteri": "%50 otomatik"}
+        {"problem_tanimi": "Destek biletleri elle ayrılıyor", "basari_kriteri": "%50 otomatik"},
+        sahip=KURUM,
     )
     app.dependency_overrides[get_session] = lambda: durum.oturum
+    app.dependency_overrides[mevcut_hesap] = lambda: KURUM
     yield durum
     app.dependency_overrides.clear()
     del app.state.tanimlama_grafigi

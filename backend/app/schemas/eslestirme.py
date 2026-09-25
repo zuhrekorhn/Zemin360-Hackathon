@@ -10,7 +10,10 @@ from app.schemas.kesif import YetenekKartiYaniti
 
 
 class EslestirmeCalistirIstegi(BaseModel):
-    kurum_id: uuid.UUID
+    """Kurum için boş bırakılır: kurum token'dan alınır. GİRVAK hangi kurum
+    için çalıştırdığını söylemek zorunda."""
+
+    kurum_id: uuid.UUID | None = None
 
 
 class OneriYaniti(BaseModel):

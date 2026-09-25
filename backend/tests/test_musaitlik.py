@@ -25,6 +25,10 @@ from app.core.musaitlik import (
 from app.db.session import get_session
 from app.main import app
 from app.schemas.tanimlama import IhtiyacTaslagi, IhtiyacTaslagiGirdisi
+from tests.sahte_hesap import giris_yapmis, sahte_hesap, sohbet_degerleri
+
+KURUM = sahte_hesap("kurum")
+GENC = sahte_hesap("genc")
 
 # --- Kanonikleştirme ----------------------------------------------------------
 
@@ -97,7 +101,9 @@ class EskiTaslakliGrafik:
     }
 
     async def aget_state(self, _config):
-        return SimpleNamespace(values={"taslak_hazir": False, "taslak": self.TASLAK})
+        return SimpleNamespace(
+            values=sohbet_degerleri(KURUM, taslak_hazir=False, taslak=self.TASLAK)
+        )
 
     async def ainvoke(self, _girdi, config=None):
         return {"taslak": self.TASLAK, "sonraki_soru": "Neye bakıp oldu diyeceksiniz?"}
@@ -106,10 +112,11 @@ class EskiTaslakliGrafik:
 def test_eski_taslakla_sohbet_ucu_kirilmaz():
     app.state.tanimlama_grafigi = EskiTaslakliGrafik()
     try:
-        yanit = TestClient(app).post(
-            "/tanimlama/sohbet/cevap",
-            json={"oturum_id": str(uuid.uuid4()), "cevap": "Ayda 3000 bilet geliyor"},
-        )
+        with giris_yapmis(KURUM):
+            yanit = TestClient(app).post(
+                "/tanimlama/sohbet/cevap",
+                json={"oturum_id": str(uuid.uuid4()), "cevap": "Ayda 3000 bilet geliyor"},
+            )
     finally:
         del app.state.tanimlama_grafigi
 
@@ -126,7 +133,14 @@ def oturumsuz():
 
 
 def test_gecersiz_musaitlikle_ihtiyac_onayi_422(oturumsuz):
-    yanit = TestClient(app).post(
+    with giris_yapmis(KURUM):
+        yanit = _onayla_kurum()
+    assert yanit.status_code == 422
+    assert "haftasonu" in yanit.text
+
+
+def _onayla_kurum():
+    return TestClient(app).post(
         "/tanimlama/kart/onayla",
         json={
             "oturum_id": str(uuid.uuid4()),
@@ -137,12 +151,16 @@ def test_gecersiz_musaitlikle_ihtiyac_onayi_422(oturumsuz):
             },
         },
     )
-    assert yanit.status_code == 422
-    assert "haftasonu" in yanit.text
 
 
 def test_gecersiz_musaitlikle_yetenek_onayi_422(oturumsuz):
-    yanit = TestClient(app).post(
+    with giris_yapmis(GENC):
+        yanit = _onayla_genc()
+    assert yanit.status_code == 422
+
+
+def _onayla_genc():
+    return TestClient(app).post(
         "/kesif/kart/onayla",
         json={
             "oturum_id": str(uuid.uuid4()),
@@ -154,4 +172,3 @@ def test_gecersiz_musaitlikle_yetenek_onayi_422(oturumsuz):
             },
         },
     )
-    assert yanit.status_code == 422

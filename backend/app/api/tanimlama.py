@@ -17,11 +17,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
+from app.api.kimlik import rol_gerekli
+from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.core import calisma_modeli
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.metin import eposta_normalize
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
+from app.models.hesap import ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kurum import Kurum
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
@@ -52,21 +55,26 @@ def _yanit(oturum_id: uuid.UUID, durum: dict) -> TanimlamaSohbetYaniti:
 
 
 @router.post("/sohbet/baslat", response_model=TanimlamaSohbetYaniti)
-async def sohbet_baslat(_: SohbetBaslatIstegi, request: Request) -> TanimlamaSohbetYaniti:
+async def sohbet_baslat(
+    _: SohbetBaslatIstegi, request: Request, hesap: Hesap = Depends(rol_gerekli(ROL_KURUM))
+) -> TanimlamaSohbetYaniti:
     oturum_id = uuid.uuid4()
+    # Oturumu açan hesap checkpoint'e yazılır; cevap ve onay yalnızca ondan.
     durum = await _grafik(request).ainvoke(
-        {}, config={"configurable": {"thread_id": str(oturum_id)}}
+        sohbet_baslangici(hesap), config={"configurable": {"thread_id": str(oturum_id)}}
     )
     return _yanit(oturum_id, durum)
 
 
 @router.post("/sohbet/cevap", response_model=TanimlamaSohbetYaniti)
-async def sohbet_cevap(istek: SohbetCevapIstegi, request: Request) -> TanimlamaSohbetYaniti:
+async def sohbet_cevap(
+    istek: SohbetCevapIstegi, request: Request, hesap: Hesap = Depends(rol_gerekli(ROL_KURUM))
+) -> TanimlamaSohbetYaniti:
     config = {"configurable": {"thread_id": str(istek.oturum_id)}}
     grafik = _grafik(request)
 
     mevcut = await grafik.aget_state(config)
-    if not mevcut.values:
+    if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
         raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
     if mevcut.values.get("taslak_hazir"):
         raise HTTPException(status_code=409, detail="Taslak hazır; sıradaki adım onay")
@@ -88,6 +96,7 @@ async def kart_onayla(
     request: Request,
     arka_plan: BackgroundTasks,
     yanit: Response,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> IhtiyacKartiYaniti:
     """Onaylanan taslağı IHTIYAC_KARTI'na yazar, ardından embedding'ini hesaplar.
@@ -97,7 +106,7 @@ async def kart_onayla(
     """
     config = {"configurable": {"thread_id": str(istek.oturum_id)}}
     mevcut = await _grafik(request).aget_state(config)
-    if not mevcut.values:
+    if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
         raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
 
     onceki = await _oturumun_karti(oturum, istek.oturum_id)

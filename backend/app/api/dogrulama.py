@@ -26,10 +26,13 @@ from app.agents.dogrulama import (
     ucuncu_taraf_onayi_hesapla,
     zaman_asimina_ugradi_mi,
 )
+from app.api.kimlik import rol_gerekli
+from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.llm import HizSinirHatasi
 from app.db.session import get_session
 from app.models.guven_skoru import GuvenSkoru
+from app.models.hesap import ROL_GENC, ROL_GIRVAK, Hesap
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -46,6 +49,8 @@ from app.schemas.dogrulama import (
 
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
 
+CIKTI_BULUNAMADI = "Somut çıktı bulunamadı"
+
 # Referans kişiye gönderilecek girişsiz yanıt adresi. Gerçek e-posta
 # göndermiyoruz (SMTP yok, MVP kararı) — link API yanıtında dönüyor.
 YANIT_YOLU = "/dogrulama/referans-yaniti?token={token}"
@@ -53,10 +58,15 @@ YANIT_YOLU = "/dogrulama/referans-yaniti?token={token}"
 
 @router.post("/kanit-ekle", response_model=KanitDurumuYaniti, status_code=201)
 async def kanit_ekle(
-    istek: KanitEkleIstegi, oturum: AsyncSession = Depends(get_session)
+    istek: KanitEkleIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
-    """Kanıtı kaydeder, erişilebilirliğini sınar, ön rubrik puanını üretir."""
-    cikti = await _ciktiyi_getir(oturum, istek.somut_cikti_id)
+    """Kanıtı kaydeder, erişilebilirliğini sınar, ön rubrik puanını üretir.
+
+    Yalnızca çıktının sahibi genç; başkasının çıktısı 404.
+    """
+    cikti = await _sahibinin_ciktisi(oturum, hesap, istek.somut_cikti_id)
 
     if istek.kanit_linki:
         cikti.kanit_linki = istek.kanit_linki
@@ -151,26 +161,35 @@ async def referans_istegi_goruntule(
 
 @router.get("/kanit/{somut_cikti_id}", response_model=KanitDurumuYaniti)
 async def kanit_durumu(
-    somut_cikti_id: uuid.UUID, oturum: AsyncSession = Depends(get_session)
+    somut_cikti_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
-    """Kanıtın güncel durumu.
+    """Kanıtın güncel durumu: rubrik ve referans istekleri (e-postalar, yanıt linkleri).
+
+    Yalnızca çıktının sahibi genç ve GİRVAK. Kurum 403: rubriği yetenek kartı
+    görünümünden zaten görüyor; referans e-postaları ve token'lı yanıt
+    linkleri kuruma hiç gitmez (docs/faz-b-kimlik-ve-dongu.md § 3, not ²).
 
     Zaman aşımına uğramış referans istekleri bu okuma sırasında `yanit_yok`
     olarak işaretlenir — ayrı bir zamanlayıcı kurmuyoruz (bilinçli).
     """
+    await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id, girvak_okuyabilir=True)
     return await _durum_yaniti(oturum, somut_cikti_id, None)
 
 
 @router.post("/itiraz", response_model=KanitDurumuYaniti)
 async def itiraz(
-    istek: ItirazIstegi, oturum: AsyncSession = Depends(get_session)
+    istek: ItirazIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
     """Kullanıcı skoru itiraz eder, rubrik yeniden hesaplanır.
 
     Skor kaydı silinmez, üzerine yazılır. Üçüncü taraf onayı korunur —
     referans zaten yanıtlamışsa itiraz onu geçersiz kılmamalı.
     """
-    cikti = await _ciktiyi_getir(oturum, istek.somut_cikti_id)
+    cikti = await _sahibinin_ciktisi(oturum, hesap, istek.somut_cikti_id)
     if istek.yeni_kanit_linki:
         cikti.kanit_linki = istek.yeni_kanit_linki
 
@@ -222,6 +241,25 @@ def referans_gorunumu(referans: ReferansIstegi) -> ReferansIstegiYaniti:
     )
 
 
+async def _sahibinin_ciktisi(
+    oturum: AsyncSession,
+    hesap: Hesap,
+    somut_cikti_id: uuid.UUID,
+    girvak_okuyabilir: bool = False,
+) -> SomutCikti:
+    """Çıktıyı getirir; hesap çıktının kartının sahibi değilse 404.
+
+    `_ciktiyi_getir` sahipliğe bakmıyor, çünkü girişsiz referans yanıtı da
+    onu kullanıyor (orada kimlik token'ın kendisi).
+    """
+    cikti = await _ciktiyi_getir(oturum, somut_cikti_id)
+    kart = await oturum.get(YetenekKarti, cikti.yetenek_karti_id)
+    izinli = yetenek_kartinin_sahibi_mi(hesap, kart) or (girvak_okuyabilir and girvak_mi(hesap))
+    if not izinli:
+        raise bulunamadi(CIKTI_BULUNAMADI)
+    return cikti
+
+
 async def _ciktiyi_getir(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> SomutCikti:
     cikti = await oturum.scalar(
         select(SomutCikti)
@@ -232,7 +270,7 @@ async def _ciktiyi_getir(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> Som
         .where(SomutCikti.id == somut_cikti_id)
     )
     if cikti is None:
-        raise HTTPException(status_code=404, detail="Somut çıktı bulunamadı")
+        raise bulunamadi(CIKTI_BULUNAMADI)
     return cikti
 
 

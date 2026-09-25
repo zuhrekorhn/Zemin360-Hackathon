@@ -49,6 +49,9 @@ class SohbetDurumu(TypedDict, total=False):
 
     mesajlar: Annotated[list[AnyMessage], add_messages]
     taslak: dict[str, Any]
+    # Sohbeti açan hesap (Faz B). Sonraki cevap ve onay istekleri token'daki
+    # hesapla karşılaştırılır; başkasının sohbeti 404 (app/api/sahiplik.py).
+    sahip_hesap_id: str
     # Zorunlu alan takip turları
     takip_turu: int
     # Ajana özel ek sorular (Keşif'te çıktı başına ölçüt/rol) AYRI sayılır:

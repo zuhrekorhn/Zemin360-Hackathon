@@ -22,6 +22,7 @@ from sqlalchemy.pool import NullPool
 
 from app.api import kesif as kesif_api
 from app.api.kesif import kullanici_upsert_ifadesi
+from app.api.kimlik import mevcut_hesap
 from app.api.tanimlama import kurum_upsert_ifadesi
 from app.core.metin import eposta_normalize
 from app.db.session import get_session
@@ -29,6 +30,7 @@ from app.main import app
 from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.schemas.kesif import KartOnaylaIstegi
+from tests.sahte_hesap import sahte_hesap
 
 
 def _sql(ifade) -> str:
@@ -96,6 +98,7 @@ def test_onay_e_postayi_normalize_edip_bos_musaitligi_none_gonderir():
 def test_bos_ad_422():
     """Upsert yeni kayıtta NOT NULL'a takılmasın; istek baştan reddedilir."""
     app.dependency_overrides[get_session] = lambda: None
+    app.dependency_overrides[mevcut_hesap] = lambda: sahte_hesap("genc")
     try:
         yanit = TestClient(app).post(
             "/kesif/kart/onayla",

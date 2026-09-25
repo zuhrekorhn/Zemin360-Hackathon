@@ -3,8 +3,11 @@
 Pipeline'ı gerçek veriyle çalıştırır: sert filtreler → pgvector benzerliği →
 skor → eşik → LLM gerekçesi → "ilgileniyorum" → ISBIRLIGI.
 
-    python scripts/eslestirme_e2e.py <kurum_id>
-    python scripts/eslestirme_e2e.py <kurum_id> --tohum
+    python scripts/eslestirme_e2e.py
+    python scripts/eslestirme_e2e.py --tohum
+
+Kurum hesabıyla giriş yapar (Faz B): `.env`'de E2E_KURUM_EPOSTA ve
+E2E_KURUM_SIFRE tanımlı olmalı; kurum ve ihtiyaç kartı o hesabınkidir.
 
 `--tohum`, havuzda ihtiyaca gerçekten uyan bir aday yoksa DEMO amaçlı bir
 yetenek kartı ekler (Voyage embedding'iyle, Gemini çağrısı olmadan). Cold
@@ -25,6 +28,7 @@ import httpx
 from dotenv import load_dotenv
 from sqlalchemy import select
 
+from app.api.auth import hesap_olustur
 from app.core.embeddings import embedding_uret, yetenek_temsil_metni
 from app.db.session import get_sessionmaker
 from app.models.guven_skoru import GuvenSkoru
@@ -59,13 +63,14 @@ async def demo_karti_ekle() -> uuid.UUID:
     async with get_sessionmaker()() as oturum:
         kullanici = await oturum.scalar(select(Kullanici).where(Kullanici.email == DEMO_EMAIL))
         if kullanici is None:
-            kullanici = Kullanici(
-                ad=DEMO["ad"],
-                email=DEMO_EMAIL,
-                sehir=DEMO["sehir"],
-                musaitlik=DEMO["musaitlik"],
+            # Hesapsız profilin kartı eşleştirmeye girmez (Faz B notu § 8):
+            # demo aday da bir hesaba bağlı. Şifre kullanılmıyor, rastgele.
+            hesap = await hesap_olustur(
+                oturum, email=DEMO_EMAIL, sifre=uuid.uuid4().hex, rol="genc", ad=DEMO["ad"]
             )
-            oturum.add(kullanici)
+            kullanici = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
+            kullanici.sehir = DEMO["sehir"]
+            kullanici.musaitlik = DEMO["musaitlik"]
             await oturum.flush()
 
         mevcut = await oturum.scalar(
@@ -132,20 +137,23 @@ def oneri_yaz(yanit: dict) -> None:
 
 async def main() -> None:
     load_dotenv()
-    if len(sys.argv) < 2:
-        raise SystemExit("kullanım: python scripts/eslestirme_e2e.py <kurum_id> [--tohum]")
-    kurum_id = sys.argv[1]
+    eposta, sifre = os.environ.get("E2E_KURUM_EPOSTA"), os.environ.get("E2E_KURUM_SIFRE")
+    if not (eposta and sifre):
+        raise SystemExit(".env'de E2E_KURUM_EPOSTA ve E2E_KURUM_SIFRE tanımlı olmalı")
 
     if "--tohum" in sys.argv:
         print("=== Demo aday kartı ===")
         await demo_karti_ekle()
 
     async with httpx.AsyncClient(timeout=120) as istemci:
+        giris = await istemci.post(f"{API}/auth/giris", json={"email": eposta, "sifre": sifre})
+        giris.raise_for_status()
+        istemci.headers["Authorization"] = f"Bearer {giris.json()['token']}"
+        kurum_id = (await istemci.get(f"{API}/me")).raise_for_status().json()["kurum_id"]
+
         print("\n=== POST /eslestirme/calistir ===")
         yanit = (
-            (await istemci.post(f"{API}/eslestirme/calistir", json={"kurum_id": kurum_id}))
-            .raise_for_status()
-            .json()
+            (await istemci.post(f"{API}/eslestirme/calistir", json={})).raise_for_status().json()
         )
         oneri_yaz(yanit)
 

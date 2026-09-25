@@ -32,10 +32,14 @@ from app.agents.eslestirme import (
     siralayip_ele,
     temizlenecekler,
 )
+from app.api.kimlik import rol_gerekli
+from app.api.sahiplik import bulunamadi, girvak_mi, ihtiyac_kartinin_sahibi_mi
+from app.api.sahiplik import kurum_id as hesabin_kurumu
 from app.api.yetenek_kartlari import kart_yaniti
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_session, get_sessionmaker
 from app.models.eslesme import Eslesme
+from app.models.hesap import ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.isbirligi import Isbirligi
 from app.schemas.eslestirme import (
     EslestirmeCalistirIstegi,
@@ -50,23 +54,45 @@ logger = logging.getLogger("zemin360.eslestirme")
 router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
 ISBIRLIGI_AKTIF = "aktif"
+IHTIYAC_YOK = "Kuruma ait ihtiyaç kartı yok"
+
+
+def _hedef_kurum(hesap: Hesap, istenen: uuid.UUID | None) -> uuid.UUID:
+    """Hangi kurumun eşleştirmesi? Kurum yalnızca kendisininkini, GİRVAK herhangi birini.
+
+    Kurum başka bir kurumun kimliğini verirse 404 (sahiplik sözleşmesi,
+    app/api/sahiplik.py); kimlik vermezse kendi kurumu kullanılır.
+    """
+    if girvak_mi(hesap):
+        if istenen is None:
+            raise HTTPException(status_code=422, detail="Hangi kurum için? kurum_id gerekli.")
+        return istenen
+    kendi = hesabin_kurumu(hesap)
+    if kendi is None or (istenen is not None and istenen != kendi):
+        raise bulunamadi(IHTIYAC_YOK)
+    return kendi
 
 
 @router.post("/calistir", response_model=OnerilerYaniti)
 async def calistir(
-    istek: EslestirmeCalistirIstegi, oturum: AsyncSession = Depends(get_session)
+    istek: EslestirmeCalistirIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM, ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
 ) -> OnerilerYaniti:
-    return await _pipeline_calistir(oturum, istek.kurum_id)
+    return await _pipeline_calistir(oturum, _hedef_kurum(hesap, istek.kurum_id))
 
 
 @router.get("/oneriler/{kurum_id}", response_model=OnerilerYaniti)
 async def oneriler(
-    kurum_id: uuid.UUID, oturum: AsyncSession = Depends(get_session)
+    kurum_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM, ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
 ) -> OnerilerYaniti:
     """Hesaplanmış önerileri sıralı döner; hiç hesaplanmamışsa pipeline'ı tetikler."""
+    kurum_id = _hedef_kurum(hesap, kurum_id)
     ihtiyac = await ihtiyac_kartini_getir(oturum, kurum_id)
     if ihtiyac is None:
-        raise HTTPException(status_code=404, detail="Kuruma ait ihtiyaç kartı yok")
+        raise bulunamadi(IHTIYAC_YOK)
 
     mevcut = await _eslesmeleri_oku(oturum, ihtiyac.id)
     if not mevcut:
@@ -77,7 +103,9 @@ async def oneriler(
 
 @router.post("/ilgileniyorum", response_model=IlgileniyorumYaniti)
 async def ilgileniyorum(
-    istek: IlgileniyorumIstegi, oturum: AsyncSession = Depends(get_session)
+    istek: IlgileniyorumIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
 ) -> IlgileniyorumYaniti:
     """Kurum ilgilendiğini söyler: eşleşme kabul edilir, iş birliği açılır.
 
@@ -86,11 +114,12 @@ async def ilgileniyorum(
     """
     eslesme = await oturum.scalar(
         select(Eslesme)
-        .options(selectinload(Eslesme.isbirligi))
+        .options(selectinload(Eslesme.isbirligi), selectinload(Eslesme.ihtiyac_karti))
         .where(Eslesme.id == istek.eslesme_id)
     )
-    if eslesme is None:
-        raise HTTPException(status_code=404, detail="Eşleşme bulunamadı")
+    # Yalnızca eşleşmenin ihtiyaç kartının sahibi kurum.
+    if eslesme is None or not ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
+        raise bulunamadi("Eşleşme bulunamadı")
 
     eslesme.durum = DURUM_KABUL_EDILDI
     eslesme.son_aktivite_tarihi = dt.datetime.now(dt.UTC)
@@ -141,7 +170,7 @@ async def eslestirmeyi_arka_planda_calistir(kurum_id: uuid.UUID) -> None:
 async def _pipeline_calistir(oturum: AsyncSession, kurum_id: uuid.UUID) -> OnerilerYaniti:
     ihtiyac = await ihtiyac_kartini_getir(oturum, kurum_id)
     if ihtiyac is None:
-        raise HTTPException(status_code=404, detail="Kuruma ait ihtiyaç kartı yok")
+        raise bulunamadi(IHTIYAC_YOK)
     if ihtiyac.embedding is None:
         raise HTTPException(
             status_code=409, detail="İhtiyaç kartının embedding'i yok; kart yeniden onaylanmalı"

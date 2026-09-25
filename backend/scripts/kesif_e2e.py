@@ -53,7 +53,23 @@ async def bekle() -> None:
     await asyncio.sleep(CAGRI_ARASI_BEKLEME)
 
 
+async def genc_hesabi_ac(istemci: httpx.AsyncClient) -> None:
+    """Her koşuda yeni bir genç hesabı; token istemcinin varsayılan başlığı olur."""
+    yanit = await istemci.post(
+        f"{API}/auth/kayit",
+        json={
+            "email": f"test-{uuid.uuid4().hex[:8]}@ornek.com",
+            "sifre": uuid.uuid4().hex,
+            "rol": "genc",
+            "ad": "Test Kullanıcı",
+        },
+    )
+    yanit.raise_for_status()
+    istemci.headers["Authorization"] = f"Bearer {yanit.json()['token']}"
+
+
 async def sohbeti_yurut(istemci: httpx.AsyncClient, cevaplar: list[str]) -> dict:
+    await genc_hesabi_ac(istemci)
     yanit = (await istemci.post(f"{API}/kesif/sohbet/baslat", json={})).raise_for_status().json()
     oturum_id = yanit["oturum_id"]
     print(f"  Ajan: {yanit['soru']}")
@@ -138,7 +154,7 @@ async def senaryo_a(istemci: httpx.AsyncClient) -> None:
     print(f"  Kart yanıtı: {kart_a}")
     await veritabanindan_dogrula(kart_a["id"])
 
-    getir = (await istemci.get(f"{API}/yetenek-kartlari/{kart_a['id']}")).json()
+    getir = (await istemci.get(f"{API}/yetenek-kartlari/{kart_a['id']}")).raise_for_status().json()
     assert "email" not in str(getir), "GET yanıtında e-posta sızmış"
     print("  GET /yetenek-kartlari: e-posta içermiyor ✓")
 
