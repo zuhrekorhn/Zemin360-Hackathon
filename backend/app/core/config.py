@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Varsayılanı YOK: tanımlı değilse uygulama açılmaz — tahmin edilebilir bir
     # anahtarla imzalanmış token herkesin her hesabı taklit etmesine izin verir.
     jwt_gizli_anahtar: str
+    # Demo hesaplarının ortak şifresi (scripts/demo_hesaplari.py). Yalnızca betik
+    # okur; repoda şifre yok. Boşsa betik çalışmaz.
+    demo_sifresi: str = ""
 
     # LLM: Gemini, ücretli katman (docs/architecture.md § Teknoloji Kararları).
     # İki katman var; hangi işin hangisini kullandığı app/core/llm.py'de.

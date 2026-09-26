@@ -191,9 +191,9 @@ Bugünkü kayıtların hiçbiri gerçek kullanıcı değil:
 - GİRVAK'ın kullanıcı yönetimi (Faz D)
 
 **Demo hesapları:** `scripts/demo_hesaplari.py`
-- Üç hesap açar: `genc@demo.zemin360`, `kurum@demo.zemin360`, `girvak@demo.zemin360`.
+- Üç hesap açar: `genc@demo.zemin360.example`, `kurum@demo.zemin360.example`, `girvak@demo.zemin360.example`. (İlk yazılan `@demo.zemin360` giriş formunun e-posta doğrulamasından geçmiyordu; `.example` belgeler için ayrılmış alan adı, hiçbir zaman gerçek bir posta kutusuna çözülmez.)
 - Şifre `.env`'deki `DEMO_SIFRESI`'nden gelir; repoda şifre yok.
-- Genç hesabına bir örnek yetenek kartı, kuruma bir örnek ihtiyaç kartı eklenir. Kartlar sohbetsiz, doğrudan yazılır; LLM çağrısı yok, yalnızca embedding.
+- Genç hesabına bir örnek yetenek kartı, kuruma bir örnek ihtiyaç kartı eklenir. Kartlar sohbetsiz, doğrudan yazılır; LLM çağrısı yok, yalnızca embedding. İki kart birbirine önerilecek şekilde seçildi: betik gerçek benzerliği ve skoru yazdırır, iki sınırdan birine takılırsa uyarır (kanıtsız kartın skoru 0.75 × benzerlik; eşiği geçmek için benzerlik ≥ 0.534).
 - Tam demo havuzu (30-50 kart, pasifleşmiş iş birlikleri) Faz E'nin işi.
 
 ## 10. Uygulama sırası

@@ -118,10 +118,13 @@ python run.py --reload          # http://localhost:8000
 **Yararlı komutlar** (`backend/` içinde):
 
 ```bash
-pytest                                        # testler (DB ve API anahtarı gerektirmez)
+pytest                                        # testler (API anahtarı gerektirmez; yerel DB yoksa DB testleri atlanır)
 python scripts/kesif_e2e.py                   # Keşif Ajanı uçtan uca (sunucu + gerçek API'ler)
 python scripts/kesif_e2e.py b                 # sadece "hiç projem yok" senaryosu
 python scripts/eslestirme_e2e.py <kurum_id> --tohum   # Eşleştirme pipeline'i uçtan uca
+python scripts/yerel_sifirla.py              # yerel DB'yi boşaltır (onay sorar; production'da çalışmaz)
+python scripts/demo_hesaplari.py             # genç/kurum/GİRVAK demo hesapları + birer kart (.env: DEMO_SIFRESI)
+python scripts/girvak_hesabi.py --email …    # GİRVAK hesabı açar (açık kayıtla açılamaz)
 ruff check . && ruff format .                 # lint + format
 alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni migration
 alembic check                                 # modeller ile migration arasında fark var mı?
