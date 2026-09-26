@@ -14,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.bildirimler import okunmamis_sayisi
 from app.api.kimlik import mevcut_hesap
 from app.core.kimlik import sifre_dogru_mu, sifre_hashle, token_uret
 from app.core.metin import eposta_normalize
@@ -98,7 +99,13 @@ async def giris(istek: GirisIstegi, oturum: AsyncSession = Depends(get_session))
 async def me(
     hesap: Hesap = Depends(mevcut_hesap), oturum: AsyncSession = Depends(get_session)
 ) -> MeYaniti:
-    yanit = MeYaniti(hesap_id=hesap.id, email=hesap.email, rol=hesap.rol, ad=None)
+    yanit = MeYaniti(
+        hesap_id=hesap.id,
+        email=hesap.email,
+        rol=hesap.rol,
+        ad=None,
+        okunmamis_bildirim=await okunmamis_sayisi(oturum, hesap.id),
+    )
 
     if hesap.kullanici is not None:
         kullanici = await oturum.scalar(

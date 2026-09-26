@@ -8,7 +8,10 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 |---|---|---|---|
 | **Kimlik** | `/auth/kayit` | POST | `{email, sifre, rol: genc\|kurum, ad}` → 201 + token. GİRVAK açık kayıtla açılamaz (422), e-posta kayıtlıysa 409 (bkz. `faz-b-kimlik-ve-dongu.md`) |
 | | `/auth/giris` | POST | `{email, sifre}` → token. Yanlış e-posta ve yanlış şifre aynı 401'i alır |
-| | `/me` | GET | Giriş gerekli (`Authorization: Bearer`). Hesap, profil özeti, kartlar |
+| | `/me` | GET | Giriş gerekli (`Authorization: Bearer`). Hesap, profil özeti, kartlar, `okunmamis_bildirim` |
+| **Bildirimler** | `/bildirimler` | GET | Kendi bildirimleri, en yeni önce (en çok 100). Her rol |
+| | `/bildirimler/{id}/okundu` | POST | Kendi bildirimi; başkasınınki 404. Tekrarında ilk okunma tarihi korunur |
+| | `/bildirimler/hepsini-oku` | POST | `{okunan}` döner |
 | **Keşif** | `/kesif/sohbet/baslat` | POST | Yeni sohbet oturumu açar |
 | | `/kesif/sohbet/cevap` | POST | Kullanıcı cevabını işler, sıradaki soruyu döner |
 | | `/kesif/kart/onayla` | POST | Taslağı `YETENEK_KARTI`'na yazar. Tekrarlanabilir: aynı `oturum_id` ikinci kez gelirse yeni kart açılmaz, mevcut kart 200 ile döner. Embedding hesaplanamazsa kart yine 201 ile döner, `embedding_var: false` |

@@ -39,6 +39,7 @@ from app.agents.eslestirme import (
     siralayip_ele,
     temizlenecekler,
 )
+from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import (
     GENCE_ACIK_DURUMLAR,
@@ -52,10 +53,12 @@ from app.api.sahiplik import kurum_id as hesabin_kurumu
 from app.api.yetenek_kartlari import kart_yaniti
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_session, get_sessionmaker
+from app.models.bildirim import TUR_ILGI, TUR_KABUL, TUR_RED, TUR_YENI_ONERI
 from app.models.eslesme import Eslesme
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
+from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import (
     BanaGelenIlgi,
@@ -129,12 +132,22 @@ async def ilgileniyorum(
     """Kurum ilgilendiğini söyler: `onerildi` → `ilgileniliyor`.
 
     İş birliği burada AÇILMAZ; gencin kabulünü bekler
-    (docs/faz-b-kimlik-ve-dongu.md § 5). Gence bildirim 5. adımda.
+    (docs/faz-b-kimlik-ve-dongu.md § 5). Gence bildirim gider.
     """
     eslesme = await _eslesmeyi_kilitle(oturum, istek.eslesme_id)
     if eslesme is None or not ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
         raise bulunamadi(ESLESME_BULUNAMADI)
-    await _gecisi_uygula(oturum, eslesme, OLAY_ILGILENIYORUM, hesap)
+    if _gecisi_uygula(eslesme, OLAY_ILGILENIYORUM, hesap):
+        kurum = eslesme.ihtiyac_karti.kurum
+        bildirim_ekle(
+            oturum,
+            eslesme.yetenek_karti.kullanici.hesap_id,
+            TUR_ILGI,
+            f"{kurum.ad}, “{eslesme.yetenek_karti.rol_alani}” kartınla ilgileniyor. "
+            "Kabul edersen e-posta adresleriniz paylaşılır.",
+            eslesme.id,
+        )
+    await oturum.commit()
     return _durum_yaniti(eslesme, hesap)
 
 
@@ -146,10 +159,17 @@ async def kabul(
 ) -> EslesmeDurumYaniti:
     """Genç kurumun ilgisini kabul eder: iş birliği açılır, e-postalar görünür."""
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
-    if await _gecisi_uygula(oturum, eslesme, OLAY_KABUL, hesap, commit=False):
+    if _gecisi_uygula(eslesme, OLAY_KABUL, hesap):
         if eslesme.isbirligi is None:
             eslesme.isbirligi = Isbirligi(baslangic_tarihi=dt.date.today(), durum=ISBIRLIGI_AKTIF)
-    # Durum ve iş birliği aynı işlemde: biri yazılıp öbürü kaybolmasın.
+        bildirim_ekle(
+            oturum,
+            eslesme.ihtiyac_karti.kurum.hesap_id,
+            TUR_KABUL,
+            f"{eslesme.yetenek_karti.kullanici.ad} ilgini kabul etti; iletişim bilgileri açıldı.",
+            eslesme.id,
+        )
+    # Durum, iş birliği ve bildirim aynı işlemde: biri yazılıp öbürü kaybolmasın.
     await oturum.commit()
     return _durum_yaniti(eslesme, hesap)
 
@@ -160,9 +180,17 @@ async def red(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> EslesmeDurumYaniti:
-    """Genç şu an kabul etmiyor. Kuruma bildirim (nötr dil) 5. adımda."""
+    """Genç şu an kabul etmiyor. Kuruma nötr dilde bildirim gider."""
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
-    await _gecisi_uygula(oturum, eslesme, OLAY_RED, hesap)
+    if _gecisi_uygula(eslesme, OLAY_RED, hesap):
+        bildirim_ekle(
+            oturum,
+            eslesme.ihtiyac_karti.kurum.hesap_id,
+            TUR_RED,
+            f"{eslesme.yetenek_karti.kullanici.ad} bu eşleşmeyi şu an kabul etmedi.",
+            eslesme.id,
+        )
+    await oturum.commit()
     return _durum_yaniti(eslesme, hesap)
 
 
@@ -245,13 +273,12 @@ async def _gencin_eslesmesi(oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid
     return eslesme
 
 
-async def _gecisi_uygula(
-    oturum: AsyncSession, eslesme: Eslesme, olay: str, hesap: Hesap, *, commit: bool = True
-) -> bool:
+def _gecisi_uygula(eslesme: Eslesme, olay: str, hesap: Hesap) -> bool:
     """Kuralı `gecis()`'e sorar; değiştiyse durumu ve aktivite tarihini yazar.
 
     Döner: geçiş gerçekten oldu mu. False = aynı geçişin tekrarı; çağıran yan
-    etkiyi (iş birliği, bildirim) tekrarlamaz.
+    etkiyi (iş birliği, bildirim) tekrarlamaz. Commit çağıranın işi: yan
+    etkiler geçişle aynı işlemde yazılsın.
     """
     try:
         sonuc = gecis(eslesme.durum, olay, hesap.rol)
@@ -260,8 +287,6 @@ async def _gecisi_uygula(
     if sonuc.degisti:
         eslesme.durum = sonuc.durum
         eslesme.son_aktivite_tarihi = dt.datetime.now(dt.UTC)
-    if commit:
-        await oturum.commit()
     return sonuc.degisti
 
 
@@ -350,16 +375,20 @@ async def _pipeline_calistir(
         mevcutlar.pop(eskimis.yetenek_karti_id, None)
         await oturum.delete(eskimis)
 
+    yeni_oneri = 0
     for aday in secilenler:
         eslesme = mevcutlar.get(aday.yetenek_karti.id)
         if eslesme is None:
-            await oturum.execute(
+            # ON CONFLICT DO NOTHING: aynı anda çalışan başka bir pipeline
+            # eklemişse rowcount 0, bildirimde iki kez sayılmaz.
+            eklenen = await oturum.execute(
                 eslesme_ekle_ifadesi(
                     ihtiyac_karti_id=ihtiyac.id,
                     yetenek_karti_id=aday.yetenek_karti.id,
                     skor=aday.skor,
                 )
             )
+            yeni_oneri += eklenen.rowcount
         else:
             # Kurumun verdiği karar (ilgileniliyor/kabul/red) ezilmez;
             # yalnızca skor tazelenir.
@@ -381,6 +410,14 @@ async def _pipeline_calistir(
         )
         for (eslesme, _), metin in zip(gerekce_bekleyenler, metinler, strict=True):
             eslesme.gerekce_metni = metin
+
+    if yeni_oneri:
+        bildirim_ekle(
+            oturum,
+            await oturum.scalar(select(Kurum.hesap_id).where(Kurum.id == kurum_id)),
+            TUR_YENI_ONERI,
+            f"İhtiyaç kartın için {yeni_oneri} yeni öneri var.",
+        )
 
     await oturum.commit()
 

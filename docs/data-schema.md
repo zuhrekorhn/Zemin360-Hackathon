@@ -14,6 +14,10 @@ erDiagram
   ESLESME ||--o| ISBIRLIGI : donusur
   ISBIRLIGI ||--o{ MILESTONE : icerir
   ESLESME ||--o{ CANLILIK_OLAYI : tetikler
+  HESAP ||--o| KULLANICI : profil
+  HESAP ||--o| KURUM : profil
+  HESAP ||--o{ BILDIRIM : alir
+  ESLESME |o--o{ BILDIRIM : konusu
 
   KULLANICI {
     uuid id PK
@@ -113,6 +117,7 @@ erDiagram
 ## Tasarım Kararları
 
 - **`HESAP` (Faz B) — kimlik profilden ayrı.** `hesap(id, email UNIQUE, sifre_hash, rol, olusturma_tarihi)`; `rol` ∈ `genc | kurum | girvak`. Genç hesabının bir `KULLANICI` profili, kurum hesabının bir `KURUM` profili olur (`hesap_id` UNIQUE FK, 1-1); GİRVAK hesabının profili yok. Şifre argon2id ile hash'lenir, düz şifre saklanmaz. `hesap_id` nullable: Faz B öncesi profiller için hesap uydurulmadı. Gerekçe ve iki seçeneğin karşılaştırması: `faz-b-kimlik-ve-dongu.md` § 1.
+- **`BILDIRIM` (Faz B) — uygulama içi bildirim.** `bildirim(id, hesap_id FK CASCADE, tur, metin, eslesme_id FK nullable SET NULL, olusturma_tarihi, okundu_tarihi nullable)`. `tur` ∈ `yeni_oneri | ilgi | kabul | red | referans_yaniti`; Canlılık ve Takip (Faz C/D) aynı tabloya kendi türleriyle yazar. Olayla aynı işlemde yazılır; aynı geçişin tekrarı yeni bildirim yazmaz. Metin e-posta taşımaz. Gerçek e-posta gönderilmez. Bkz. `faz-b-kimlik-ve-dongu.md` § 6.
 - **`GUVEN_SKORU` ve `REFERANS_ISTEGI`, `SOMUT_CIKTI`'dan ayrı tablolar.** Bir çıktının birden fazla referans isteği olabilir; güven skoru zamanla güncellenebilir olmalı (itiraz sonrası yeniden hesaplama).
 - **`ESLESME` → `ISBIRLIGI` ilişkisi isteğe bağlı (0 veya 1).** Her eşleşme iş birliğine dönüşmez — kurum "ilgileniyorum" der, iş birliği ancak genç kabul edince (`kabul_edildi`) açılır (docs/faz-b-kimlik-ve-dongu.md § 5).
 - **`CANLILIK_OLAYI` doğrudan `ESLESME`'ye bağlı, `ISBIRLIGI`'na değil.** Pasiflik takibi bir iş birliği resmen başlamadan da çalışabilmeli — örn. "eşleşme önerildi ama kimse tıklamadı" durumu.

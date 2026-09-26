@@ -154,7 +154,11 @@ DIGER_TOKEN = "digerinin-gizli-tokeni-1234567890"
 
 
 class SiraliOturum:
-    """`scalar()` çağrılarına sırayla hazır cevap veren oturum taklidi."""
+    """`scalar()` çağrılarına sırayla hazır cevap veren oturum taklidi.
+
+    Referans yanıtında sıra: referans, çıktı, gencin hesap kimliği (bildirim
+    için; None = hesapsız profil, bildirim atlanır).
+    """
 
     def __init__(self, *sonuclar):
         self.sonuclar = list(sonuclar)
@@ -185,6 +189,7 @@ def _yanitlanan_ve_diger_referans():
     cikti = SimpleNamespace(
         id=yanitlanan.somut_cikti_id,
         baslik="Mahalle kütüphanesi ödünç takip sistemi",
+        yetenek_karti_id=uuid.uuid4(),
         guven_skoru=None,
         referans_istekleri=[yanitlanan, diger],
     )
@@ -193,7 +198,7 @@ def _yanitlanan_ve_diger_referans():
 
 def test_yanit_sonrasi_baska_referansin_bilgisi_donmez():
     yanitlanan, cikti = _yanitlanan_ve_diger_referans()
-    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti)
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti, None)
 
     yanit = TestClient(app).post(
         "/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5}
@@ -212,7 +217,7 @@ def test_yanit_sonrasi_baska_referansin_bilgisi_donmez():
 def test_yanit_sonrasi_skor_yine_de_hesaplanir():
     """Gövde daraldı, hesap değişmedi: iki referansın ortalaması yazılır."""
     yanitlanan, cikti = _yanitlanan_ve_diger_referans()
-    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti)
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti, None)
 
     TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5})
 

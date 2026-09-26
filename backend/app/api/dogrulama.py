@@ -26,13 +26,16 @@ from app.agents.dogrulama import (
     ucuncu_taraf_onayi_hesapla,
     zaman_asimina_ugradi_mi,
 )
+from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.llm import HizSinirHatasi
 from app.db.session import get_session
+from app.models.bildirim import TUR_REFERANS_YANITI
 from app.models.guven_skoru import GuvenSkoru
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, Hesap
+from app.models.kullanici import Kullanici
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -125,6 +128,16 @@ async def referans_yaniti(
     # Birden fazla referans yanıtlamış olabilir; son gelen öncekini ezmesin.
     cikti.guven_skoru.ucuncu_taraf_onayi = ucuncu_taraf_onayi_hesapla(
         [r.puan for r in cikti.referans_istekleri if r.puan is not None]
+    )
+    bildirim_ekle(
+        oturum,
+        await oturum.scalar(
+            select(Kullanici.hesap_id)
+            .join(YetenekKarti, YetenekKarti.kullanici_id == Kullanici.id)
+            .where(YetenekKarti.id == cikti.yetenek_karti_id)
+        ),
+        TUR_REFERANS_YANITI,
+        "Bir referansın yanıt verdi; güven göstergen güncellendi.",
     )
 
     await oturum.commit()
