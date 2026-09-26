@@ -62,21 +62,17 @@ class KayitTutanOturum:
 
 def test_kilit_eslesmeler_okunmadan_once_alinir(monkeypatch):
     """İkinci pipeline, birincinin yazdıklarını görmeden okumaya başlamamalı."""
-    ihtiyac = SimpleNamespace(id=uuid.uuid4(), embedding=[0.1])
+    ihtiyac = SimpleNamespace(id=uuid.uuid4(), kurum_id=uuid.uuid4(), embedding=[0.1])
     okunanlar: list[str] = []
-
-    async def ihtiyac_getir(oturum, kurum_id):
-        return ihtiyac
 
     async def adaylar(oturum, ihtiyac_karti):
         okunanlar.append("adaylar")
         return []
 
-    monkeypatch.setattr(eslestirme_api, "ihtiyac_kartini_getir", ihtiyac_getir)
     monkeypatch.setattr(eslestirme_api, "adaylari_getir", adaylar)
 
     oturum = KayitTutanOturum()
-    asyncio.run(eslestirme_api._pipeline_calistir(oturum, uuid.uuid4()))
+    asyncio.run(eslestirme_api._pipeline_calistir(oturum, ihtiyac))
 
     assert "pg_advisory_xact_lock" in oturum.ifadeler[0]
     # Eşleşme okumaları kilitten sonra

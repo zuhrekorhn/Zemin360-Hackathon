@@ -153,7 +153,7 @@ async def kart_onayla(
     if await embedding_hesapla(oturum, kart):
         # Yanıt gönderildikten sonra başlıyor: kurum öneriler sayfasına
         # geldiğinde hesap çoğunlukla hazır olur.
-        arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kurum_id)
+        arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kart.id)
 
     return await kart_yaniti(oturum, kart.id)
 
@@ -167,5 +167,5 @@ async def _mevcut_karti_don(
 ) -> IhtiyacKartiYaniti:
     """Daha önce onaylanmış kartı döner; embedding'i eksikse bir kez daha dener."""
     if kart.embedding is None and await embedding_hesapla(oturum, kart):
-        arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kart.kurum_id)
+        arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kart.id)
     return await kart_yaniti(oturum, kart.id)

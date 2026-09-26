@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { giristenSonra, guvenliSonra, panelYolu } from "@/lib/yonlendirme";
+import {
+  bildirimHedefi,
+  giristenSonra,
+  guvenliSonra,
+  panelYolu,
+} from "@/lib/yonlendirme";
 
 describe("panelYolu", () => {
   it("her rolün kendi paneli var", () => {
@@ -38,5 +43,19 @@ describe("giristenSonra", () => {
     expect(giristenSonra("genc", "/kesif")).toBe("/kesif");
     expect(giristenSonra("kurum", "//kotu.site")).toBe("/kurum");
     expect(giristenSonra("girvak", null)).toBe("/girvak");
+  });
+});
+
+describe("bildirimHedefi", () => {
+  it("bildirimi alan rolün paneline, ilgili bölüme götürür", () => {
+    expect(bildirimHedefi("ilgi")).toBe("/genc#ilgiler");
+    expect(bildirimHedefi("referans_yaniti")).toBe("/genc#kartlar");
+    expect(bildirimHedefi("yeni_oneri")).toBe("/kurum#ihtiyaclar");
+    expect(bildirimHedefi("kabul")).toBe("/kurum#isbirlikleri");
+    expect(bildirimHedefi("red")).toBe("/kurum#oneriler");
+  });
+
+  it("bilinmeyen tür bildirim sayfasında kalır", () => {
+    expect(bildirimHedefi("canlilik")).toBe("/bildirimler");
   });
 });

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { GirisKapisi } from "@/components/giris-kapisi";
+import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
   BelgeKarti,
   CiktiOzeti,
@@ -18,7 +18,6 @@ import {
   eslestirmeCalistir,
   eslestirmeOnerileri,
   ilgileniyorum,
-  me,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
@@ -56,9 +55,13 @@ export default function OnerilerSayfasi() {
 }
 
 function OnerilerIcerigi() {
-  const [kurumId, setKurumId] = useState<string | null>(null);
+  const hesap = useGirisliHesap();
+  const kurumId = hesap.kurum_id;
+  const kartVar = hesap.ihtiyac_kartlari.length > 0;
+  // Kurum panelinden `?ihtiyac=<id>` ile gelinir; yoksa en son ihtiyaç kartı.
+  const [ihtiyacKartiId, setIhtiyacKartiId] = useState<string | null>(null);
   const [veri, setVeri] = useState<Oneriler | null>(null);
-  const [yukleniyor, setYukleniyor] = useState(true);
+  const [yukleniyor, setYukleniyor] = useState(kartVar);
   const [hata, setHata] = useState<Hata | null>(null);
   const okundu = useRef(false);
 
@@ -68,42 +71,34 @@ function OnerilerIcerigi() {
    * eksik gerekçeler üretilir, eskiyen öneriler düşer. Dil modeli çağrısı
    * burada olabilir, o yüzden açılışta değil yalnızca istenince.
    */
-  const onerileriGetir = useCallback(async (kimlik: string, tazele = false) => {
-    setHata(null);
-    setYukleniyor(true);
-    try {
-      setVeri(
-        await (tazele ? eslestirmeCalistir() : eslestirmeOnerileri(kimlik)),
-      );
-    } catch (sebep) {
-      setHata(hatayaCevir(sebep));
-    } finally {
-      setYukleniyor(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (okundu.current) return;
-    okundu.current = true;
-
-    // Kurum kimliği token'daki hesaptan (/me); başka kurumun önerileri
-    // backend'de 404. Token yalnızca tarayıcıda olduğu için okuma render
-    // sırasında değil, bağlandıktan sonra yapılıyor.
-    async function baslat() {
-      let kimlik: string | null = null;
+  const onerileriGetir = useCallback(
+    async (kart: string | null, tazele = false) => {
+      if (!kurumId) return;
+      setHata(null);
+      setYukleniyor(true);
       try {
-        kimlik = (await me()).kurum_id;
+        setVeri(
+          await (tazele
+            ? eslestirmeCalistir(kart)
+            : eslestirmeOnerileri(kurumId, kart)),
+        );
       } catch (sebep) {
         setHata(hatayaCevir(sebep));
+      } finally {
+        setYukleniyor(false);
       }
-      setKurumId(kimlik);
+    },
+    [kurumId],
+  );
 
-      if (kimlik) await onerileriGetir(kimlik);
-      else setYukleniyor(false);
-    }
-
-    void baslat();
-  }, [onerileriGetir]);
+  useEffect(() => {
+    if (okundu.current || !kartVar) return;
+    okundu.current = true;
+    // Adres çubuğu yalnızca tarayıcıda; okuma bağlandıktan sonra.
+    const kart = new URLSearchParams(window.location.search).get("ihtiyac");
+    setIhtiyacKartiId(kart);
+    void onerileriGetir(kart);
+  }, [kartVar, onerileriGetir]);
 
   async function ilgilendigimiSoyle(oneri: Oneri) {
     setHata(null);
@@ -126,6 +121,10 @@ function OnerilerIcerigi() {
     }
   }
 
+  const gosterilenKart = veri
+    ? hesap.ihtiyac_kartlari.find((kart) => kart.id === veri.ihtiyac_karti_id)
+    : undefined;
+
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
       <header className="flex flex-col gap-2">
@@ -136,14 +135,17 @@ function OnerilerIcerigi() {
           İhtiyaç kartınla eşleşen yetenek kartları, skoruyla ve neden
           önerildiğinin gerekçesiyle birlikte. Karar senin.
         </p>
+        {gosterilenKart ? (
+          <p className="border-l-2 border-kenar pl-3 text-sm text-pretty">
+            {gosterilenKart.problem_tanimi}
+          </p>
+        ) : null}
       </header>
 
       {hata ? (
         <HataKutusu
           hata={hata}
-          tekrarDene={() => {
-            if (kurumId) void onerileriGetir(kurumId);
-          }}
+          tekrarDene={() => void onerileriGetir(ihtiyacKartiId)}
         />
       ) : null}
 
@@ -157,7 +159,7 @@ function OnerilerIcerigi() {
         </p>
       ) : null}
 
-      {!yukleniyor && !kurumId && !hata ? <KurumYok /> : null}
+      {!kartVar ? <KurumYok /> : null}
 
       {!yukleniyor && veri ? (
         <OneriListesi veri={veri} onIlgileniyorum={ilgilendigimiSoyle} />
@@ -165,15 +167,20 @@ function OnerilerIcerigi() {
 
       <footer className="mt-auto flex flex-wrap gap-3 border-t border-kenar pt-6">
         <Button asChild variant="outline" size="lg">
-          <Link href="/">Ana sayfaya dön</Link>
+          <Link href="/kurum">Panele dön</Link>
         </Button>
-        {kurumId ? (
+        {kartVar ? (
           <Button
             type="button"
             variant="outline"
             size="lg"
             disabled={yukleniyor}
-            onClick={() => void onerileriGetir(kurumId, true)}
+            onClick={() =>
+              void onerileriGetir(
+                veri?.ihtiyac_karti_id ?? ihtiyacKartiId,
+                true,
+              )
+            }
           >
             Yeniden hesapla
           </Button>

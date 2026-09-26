@@ -529,9 +529,16 @@ export type EslesmeDurumYaniti = {
 };
 
 /** GET /eslestirme/oneriler/{kurum_id} — hesaplanmış listeyi okur.
- *  Kayıt varsa yeniden hesaplamaz; tazelemek için `eslestirmeCalistir`. */
-export function eslestirmeOnerileri(kurumId: string): Promise<Oneriler> {
-  return apiIstek<Oneriler>(`/eslestirme/oneriler/${kurumId}`, {
+ *  Kayıt varsa yeniden hesaplamaz; tazelemek için `eslestirmeCalistir`.
+ *  `ihtiyacKartiId` verilmezse kurumun en son ihtiyaç kartı. */
+export function eslestirmeOnerileri(
+  kurumId: string,
+  ihtiyacKartiId?: string | null,
+): Promise<Oneriler> {
+  const sorgu = ihtiyacKartiId
+    ? `?ihtiyac_karti_id=${encodeURIComponent(ihtiyacKartiId)}`
+    : "";
+  return apiIstek<Oneriler>(`/eslestirme/oneriler/${kurumId}${sorgu}`, {
     cache: "no-store",
   });
 }
@@ -541,20 +548,117 @@ export function eslestirmeOnerileri(kurumId: string): Promise<Oneriler> {
  * eksik gerekçeler üretilir, artık uygun olmayan öneriler listeden düşer.
  * Kurumun karar verdiği eşleşmelere dokunulmaz.
  */
-export function eslestirmeCalistir(): Promise<Oneriler> {
+export function eslestirmeCalistir(
+  ihtiyacKartiId?: string | null,
+): Promise<Oneriler> {
   // Kurum token'dan belli; gövdede kurum_id yalnızca GİRVAK için.
   return apiIstek<Oneriler>("/eslestirme/calistir", {
     method: "POST",
-    body: JSON.stringify({}),
+    body: JSON.stringify(
+      ihtiyacKartiId ? { ihtiyac_karti_id: ihtiyacKartiId } : {},
+    ),
   });
 }
 
-/** POST /eslestirme/ilgileniyorum — eşleşmeyi kabul eder, iş birliğini açar. */
+/** POST /eslestirme/ilgileniyorum — `onerildi` → `ilgileniliyor`. İş birliği
+ *  açmaz; gencin kabulünü bekler. */
 export function ilgileniyorum(eslesmeId: string): Promise<EslesmeDurumYaniti> {
   return apiIstek<EslesmeDurumYaniti>("/eslestirme/ilgileniyorum", {
     method: "POST",
     body: JSON.stringify({ eslesme_id: eslesmeId }),
   });
+}
+
+/* --- Paneller (docs/faz-b-kimlik-ve-dongu.md § 5, § 7) -------------------- */
+
+/** Gencin kartına gelen ilgi: kurum "ilgileniyorum" dedikten sonra görünür. */
+export type BanaGelenIlgi = {
+  eslesme_id: string;
+  /** "ilgileniliyor" | "kabul_edildi" | "reddedildi" */
+  durum: string;
+  son_aktivite_tarihi: string;
+  yetenek_karti_id: string;
+  rol_alani: string;
+  ihtiyac_karti: IhtiyacKartiYaniti;
+  isbirligi_id: string | null;
+  iletisim: Iletisim | null;
+};
+
+export function banaGelenler(): Promise<BanaGelenIlgi[]> {
+  return apiIstek<BanaGelenIlgi[]>("/eslestirme/bana-gelenler", {
+    cache: "no-store",
+  });
+}
+
+/** POST /eslestirme/{id}/kabul — iş birliği açılır, e-postalar iki tarafa görünür. */
+export function eslesmeyiKabulEt(
+  eslesmeId: string,
+): Promise<EslesmeDurumYaniti> {
+  return apiIstek<EslesmeDurumYaniti>(`/eslestirme/${eslesmeId}/kabul`, {
+    method: "POST",
+  });
+}
+
+export function eslesmeyiReddet(
+  eslesmeId: string,
+): Promise<EslesmeDurumYaniti> {
+  return apiIstek<EslesmeDurumYaniti>(`/eslestirme/${eslesmeId}/red`, {
+    method: "POST",
+  });
+}
+
+/** Kurum panelindeki öneri özeti (tüm ihtiyaç kartlarından). */
+export type KurumOnerisi = {
+  eslesme_id: string;
+  durum: string;
+  skor: number;
+  son_aktivite_tarihi: string;
+  ihtiyac_karti_id: string;
+  problem_tanimi: string;
+  yetenek_karti_id: string;
+  genc_adi: string;
+  rol_alani: string;
+  iletisim: Iletisim | null;
+};
+
+export function onerilerim(): Promise<KurumOnerisi[]> {
+  return apiIstek<KurumOnerisi[]>("/eslestirme/onerilerim", {
+    cache: "no-store",
+  });
+}
+
+/** `GET /isbirliklerim` satırı — iki tarafa aynı görünüm, e-postalar dahil. */
+export type IsbirligiOzeti = {
+  isbirligi_id: string;
+  durum: string;
+  baslangic_tarihi: string | null;
+  eslesme_id: string;
+  genc_adi: string;
+  kurum_adi: string;
+  rol_alani: string;
+  problem_tanimi: string;
+  iletisim: Iletisim;
+};
+
+export function isbirliklerim(): Promise<IsbirligiOzeti[]> {
+  return apiIstek<IsbirligiOzeti[]>("/isbirliklerim", { cache: "no-store" });
+}
+
+export type GirvakSayilari = {
+  hesap: { genc: number; kurum: number; girvak: number };
+  yetenek_karti: number;
+  ihtiyac_karti: number;
+  eslesme: {
+    onerildi: number;
+    ilgileniliyor: number;
+    kabul_edildi: number;
+    reddedildi: number;
+  };
+  isbirligi: number;
+};
+
+export function girvakSayilari(): Promise<GirvakSayilari> {
+  return apiIstek<GirvakSayilari>("/girvak/sayilar", { cache: "no-store" });
 }
 
 export { API_URL };

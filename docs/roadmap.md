@@ -84,12 +84,12 @@ Gemini içinde çalışmaya devam eder. Her çağrının token kullanımı log'a
 - [x] Kayıt ve giriş sayfaları; rol seçimi kayıtta.
 - [x] `Kullanici` / `Kurum` kayıtları hesaba bağlanır; onaydaki "e-postayla bul
       veya oluştur" mantığı kaldırılır.
-- [ ] Genç paneli: kartım, kanıtlarım, bana gelen ilgiler, iş birliklerim.
-- [ ] Kurum paneli: ihtiyaç kartlarım, önerilerim, iş birliklerim.
+- [x] Genç paneli: kartım, kanıtlarım, bana gelen ilgiler, iş birliklerim.
+- [x] Kurum paneli: ihtiyaç kartlarım, önerilerim, iş birliklerim.
 - [x] Karşılıklı onay: kurum "ilgileniyorum" der → eşleşme `ilgileniliyor` →
       genç kabul eder → `kabul_edildi` + iş birliği açılır → **iletişim bilgisi
       ancak şimdi iki tarafa görünür**. Genç reddederse `reddedildi`.
-- [ ] Uygulama içi bildirimler (tablo + panelde sayaç). Gerçek e-posta yok.
+- [x] Uygulama içi bildirimler (tablo + panelde sayaç). Gerçek e-posta yok.
 
 **Kabul:** İki ayrı tarayıcıda genç ve kurum olarak döngü, iletişim açılmasına
 kadar çıkmaz sokak olmadan yürür.

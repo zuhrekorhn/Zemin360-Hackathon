@@ -31,3 +31,26 @@ export function guvenliSonra(sonra: string | null): string | null {
 export function giristenSonra(rol: Rol, sonra: string | null): string {
   return guvenliSonra(sonra) ?? panelYolu(rol);
 }
+
+/**
+ * Bildirime tıklayınca nereye (docs/faz-b-kimlik-ve-dongu.md § 6).
+ * Gence gidenler (ilgi, referans yanıtı) genç paneline; kuruma gidenler
+ * (yeni öneri, kabul, red) kurum paneline. Bilinmeyen tür (Faz C/D'de
+ * eklenecekler) bildirim sayfasında kalır.
+ */
+export function bildirimHedefi(tur: string): string {
+  switch (tur) {
+    case "ilgi":
+      return "/genc#ilgiler";
+    case "referans_yaniti":
+      return "/genc#kartlar";
+    case "yeni_oneri":
+      return "/kurum#ihtiyaclar";
+    case "kabul":
+      return "/kurum#isbirlikleri";
+    case "red":
+      return "/kurum#oneriler";
+    default:
+      return "/bildirimler";
+  }
+}

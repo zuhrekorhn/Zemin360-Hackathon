@@ -16,6 +16,8 @@ class EslestirmeCalistirIstegi(BaseModel):
     için çalıştırdığını söylemek zorunda."""
 
     kurum_id: uuid.UUID | None = None
+    # Verilmezse kurumun en son ihtiyaç kartı.
+    ihtiyac_karti_id: uuid.UUID | None = None
 
 
 class Iletisim(BaseModel):
@@ -83,6 +85,21 @@ class BanaGelenIlgi(BaseModel):
     rol_alani: str
     ihtiyac_karti: IhtiyacKartiYaniti
     isbirligi_id: uuid.UUID | None = None
+    iletisim: Iletisim | None = None
+
+
+class KurumOnerisi(BaseModel):
+    """`GET /eslestirme/onerilerim` satırı: kurum panelindeki öneri özeti."""
+
+    eslesme_id: uuid.UUID
+    durum: str
+    skor: float
+    son_aktivite_tarihi: dt.datetime
+    ihtiyac_karti_id: uuid.UUID
+    problem_tanimi: str
+    yetenek_karti_id: uuid.UUID
+    genc_adi: str
+    rol_alani: str
     iletisim: Iletisim | None = None
 
 

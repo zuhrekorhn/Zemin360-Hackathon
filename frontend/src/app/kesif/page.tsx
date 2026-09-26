@@ -214,7 +214,7 @@ function KesifSohbeti() {
 
       <footer className="mt-auto border-t border-kenar pt-6">
         <Button asChild variant="outline" size="lg">
-          <Link href="/">Ana sayfaya dön</Link>
+          <Link href="/genc">Panele dön</Link>
         </Button>
       </footer>
     </main>

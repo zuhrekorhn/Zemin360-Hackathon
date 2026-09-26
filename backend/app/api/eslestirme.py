@@ -66,6 +66,7 @@ from app.schemas.eslestirme import (
     EslestirmeCalistirIstegi,
     Iletisim,
     IlgileniyorumIstegi,
+    KurumOnerisi,
     OnerilerYaniti,
     OneriYaniti,
 )
@@ -101,26 +102,65 @@ async def calistir(
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM, ROL_GIRVAK)),
     oturum: AsyncSession = Depends(get_session),
 ) -> OnerilerYaniti:
-    return await _pipeline_calistir(oturum, _hedef_kurum(hesap, istek.kurum_id), hesap)
+    kurum_id = _hedef_kurum(hesap, istek.kurum_id)
+    ihtiyac = await _ihtiyac_karti(oturum, kurum_id, istek.ihtiyac_karti_id)
+    return await _pipeline_calistir(oturum, ihtiyac, hesap)
 
 
 @router.get("/oneriler/{kurum_id}", response_model=OnerilerYaniti)
 async def oneriler(
     kurum_id: uuid.UUID,
+    ihtiyac_karti_id: uuid.UUID | None = None,
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM, ROL_GIRVAK)),
     oturum: AsyncSession = Depends(get_session),
 ) -> OnerilerYaniti:
-    """Hesaplanmış önerileri sıralı döner; hiç hesaplanmamışsa pipeline'ı tetikler."""
+    """Hesaplanmış önerileri sıralı döner; hiç hesaplanmamışsa pipeline'ı tetikler.
+
+    `?ihtiyac_karti_id=` verilmezse kurumun en son ihtiyaç kartı (Faz B
+    öncesi davranış); kurum panelinde her kart kendi önerilerine gider.
+    """
     kurum_id = _hedef_kurum(hesap, kurum_id)
-    ihtiyac = await ihtiyac_kartini_getir(oturum, kurum_id)
-    if ihtiyac is None:
-        raise bulunamadi(IHTIYAC_YOK)
+    ihtiyac = await _ihtiyac_karti(oturum, kurum_id, ihtiyac_karti_id)
 
     mevcut = await _eslesmeleri_oku(oturum, ihtiyac.id)
     if not mevcut:
-        return await _pipeline_calistir(oturum, kurum_id, hesap)
+        return await _pipeline_calistir(oturum, ihtiyac, hesap)
 
     return await _yanit_kur(oturum, ihtiyac.id, mevcut, hesap)
+
+
+@router.get("/onerilerim", response_model=list[KurumOnerisi])
+async def onerilerim(
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[KurumOnerisi]:
+    """Kurumun tüm ihtiyaç kartlarındaki öneriler, durumları ve gencin adıyla.
+
+    Yalnızca okur, pipeline çalıştırmaz (dil modeli çağrısı yok): panel her
+    açılışta hızlı gelsin. Tazelemek öneriler sayfasının işi. En son hareket
+    olan önce.
+    """
+    eslesmeler = await oturum.scalars(
+        _iliskileriyle(select(Eslesme))
+        .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
+        .where(IhtiyacKarti.kurum_id == hesabin_kurumu(hesap))
+        .order_by(Eslesme.son_aktivite_tarihi.desc(), Eslesme.skor.desc())
+    )
+    return [
+        KurumOnerisi(
+            eslesme_id=eslesme.id,
+            durum=eslesme.durum,
+            skor=round(eslesme.skor, 4),
+            son_aktivite_tarihi=eslesme.son_aktivite_tarihi,
+            ihtiyac_karti_id=eslesme.ihtiyac_karti_id,
+            problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
+            yetenek_karti_id=eslesme.yetenek_karti_id,
+            genc_adi=eslesme.yetenek_karti.kullanici.ad,
+            rol_alani=eslesme.yetenek_karti.rol_alani,
+            iletisim=iletisim(eslesme, hesap),
+        )
+        for eslesme in eslesmeler.all()
+    ]
 
 
 @router.post("/ilgileniyorum", response_model=EslesmeDurumYaniti)
@@ -320,7 +360,7 @@ def _durum_yaniti(eslesme: Eslesme, hesap: Hesap) -> EslesmeDurumYaniti:
     )
 
 
-async def eslestirmeyi_arka_planda_calistir(kurum_id: uuid.UUID) -> None:
+async def eslestirmeyi_arka_planda_calistir(ihtiyac_karti_id: uuid.UUID) -> None:
     """İhtiyaç kartı onaylanınca eşleştirmeyi yanıt gönderildikten sonra başlatır.
 
     Kurum öneriler sayfasına geldiğinde hesap çoğunlukla bitmiş oluyor; bitmemişse
@@ -334,22 +374,36 @@ async def eslestirmeyi_arka_planda_calistir(kurum_id: uuid.UUID) -> None:
     """
     async with get_sessionmaker()() as oturum:
         try:
-            await _pipeline_calistir(oturum, kurum_id)
+            ihtiyac = await oturum.get(IhtiyacKarti, ihtiyac_karti_id)
+            if ihtiyac is not None:
+                await _pipeline_calistir(oturum, ihtiyac)
         except HTTPException as hata:
-            logger.info("Arka plan eşleştirme atlandı (%s): %s", kurum_id, hata.detail)
+            logger.info("Arka plan eşleştirme atlandı (%s): %s", ihtiyac_karti_id, hata.detail)
         except Exception:
-            logger.exception("Arka plan eşleştirme başarısız (%s)", kurum_id)
+            logger.exception("Arka plan eşleştirme başarısız (%s)", ihtiyac_karti_id)
 
 
 # --- Pipeline --------------------------------------------------------------
 
 
-async def _pipeline_calistir(
-    oturum: AsyncSession, kurum_id: uuid.UUID, hesap: Hesap | None = None
-) -> OnerilerYaniti:
-    ihtiyac = await ihtiyac_kartini_getir(oturum, kurum_id)
+async def _ihtiyac_karti(
+    oturum: AsyncSession, kurum_id: uuid.UUID, ihtiyac_karti_id: uuid.UUID | None
+) -> IhtiyacKarti:
+    """Kurumun istenen ihtiyaç kartı; verilmezse en sonuncusu. Başka kurumunki 404."""
+    if ihtiyac_karti_id is None:
+        ihtiyac = await ihtiyac_kartini_getir(oturum, kurum_id)
+    else:
+        ihtiyac = await oturum.get(IhtiyacKarti, ihtiyac_karti_id)
+        if ihtiyac is not None and ihtiyac.kurum_id != kurum_id:
+            ihtiyac = None
     if ihtiyac is None:
         raise bulunamadi(IHTIYAC_YOK)
+    return ihtiyac
+
+
+async def _pipeline_calistir(
+    oturum: AsyncSession, ihtiyac: IhtiyacKarti, hesap: Hesap | None = None
+) -> OnerilerYaniti:
     if ihtiyac.embedding is None:
         raise HTTPException(
             status_code=409, detail="İhtiyaç kartının embedding'i yok; kart yeniden onaylanmalı"
@@ -414,7 +468,7 @@ async def _pipeline_calistir(
     if yeni_oneri:
         bildirim_ekle(
             oturum,
-            await oturum.scalar(select(Kurum.hesap_id).where(Kurum.id == kurum_id)),
+            await oturum.scalar(select(Kurum.hesap_id).where(Kurum.id == ihtiyac.kurum_id)),
             TUR_YENI_ONERI,
             f"İhtiyaç kartın için {yeni_oneri} yeni öneri var.",
         )

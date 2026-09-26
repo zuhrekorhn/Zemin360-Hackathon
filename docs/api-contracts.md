@@ -27,13 +27,15 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | | `/dogrulama/referans-yaniti` | POST | Token bazlı, girişsiz — referans kişi için auth gerektirmez. Harcanmış **ya da süresi dolmuş** token 409 döner — GET ile aynı kural. Yanıt yalnızca `{baslik, durum}`: aynı çıktının diğer referanslarının e-postası, puanı ve token'ı DÖNMEZ |
 | | `/dogrulama/itiraz` | POST | Yeniden değerlendirme tetikler |
 | | `/dogrulama/kanit/{somut_cikti_id}` | GET | Kanıtın güncel durumu: rubrik puanı + referans istekleri. Zaman aşımı (`bekliyor` → `yanit_yok`) bu okuma anında hesaplanır — ayrı bir zamanlayıcı yok |
-| **Eşleştirme** | `/eslestirme/calistir` | POST | Pipeline'ı yeniden çalıştırır. Kurum yalnızca kendi kurumu için (gövde boş; başka `kurum_id` 404), GİRVAK `kurum_id` vermek zorunda. İhtiyaç kartı onaylanınca arka planda da çalışır (zamanlayıcı yok) |
-| | `/eslestirme/oneriler/{kurum_id}` | GET | Kurum yalnızca kendi `kurum_id`'si (başkası 404), GİRVAK hepsi. Sıralı liste + gerekçe. `skor_esigi` ve `az_sonuc_uyarisi` yanıtta döner — arayüz eşiği kendi içine yazmaz |
+| **Eşleştirme** | `/eslestirme/calistir` | POST | Pipeline'ı yeniden çalıştırır. Kurum yalnızca kendi kurumu için (gövde boş; başka `kurum_id` 404), GİRVAK `kurum_id` vermek zorunda. Gövdede `ihtiyac_karti_id` verilmezse kurumun en son ihtiyaç kartı. İhtiyaç kartı onaylanınca (ya da embedding'i yeniden hesaplanınca) o kart için arka planda da çalışır (zamanlayıcı yok) |
+| | `/eslestirme/oneriler/{kurum_id}` | GET | Kurum yalnızca kendi `kurum_id`'si (başkası 404), GİRVAK hepsi. `?ihtiyac_karti_id=` ile belirli kart (başka kurumunki 404), verilmezse en son kart. Sıralı liste + gerekçe. `skor_esigi` ve `az_sonuc_uyarisi` yanıtta döner — arayüz eşiği kendi içine yazmaz |
 | | `/eslestirme/ilgileniyorum` | POST | Kurum (ihtiyacın sahibi): `onerildi` → `ilgileniliyor`. İş birliği AÇMAZ |
 | | `/eslestirme/{id}/kabul` | POST | Genç (kartın sahibi): `ilgileniliyor` → `kabul_edildi`, `ISBIRLIGI` açılır, yanıtta `iletisim` (iki e-posta) |
 | | `/eslestirme/{id}/red` | POST | Genç (kartın sahibi): `ilgileniliyor` → `reddedildi` |
 | | `/eslestirme/bana-gelenler` | GET | Genç: kartlarına ilgi gösterilmiş eşleşmeler (`onerildi` hariç), ihtiyaç kartı ve kurum adıyla |
-| | `/isbirliklerim` | GET | Genç ve kurum: taraf olduğu iş birlikleri, iki tarafa aynı görünüm, `iletisim` dahil |
+| | `/eslestirme/onerilerim` | GET | Kurum: tüm ihtiyaç kartlarındaki öneriler, durum ve gencin adıyla (`iletisim` yalnızca `kabul_edildi`'de). Yalnızca okur, pipeline çalıştırmaz |
+| | `/isbirliklerim` | GET | Genç ve kurum: taraf olduğu iş birlikleri, iki tarafa aynı görünüm, `iletisim` dahil; eşleşmenin `son_aktivite_tarihi`'ne göre en yeni önce |
+| **GİRVAK** | `/girvak/sayilar` | GET | Yalnızca GİRVAK. Hesap (role göre), kart, eşleşme (duruma göre), iş birliği sayıları; kişisel veri yok |
 | **Canlılık** | `/canlilik/tarama` | Arka plan iş (günlük cron) | Pasif `ESLESME` kayıtlarını tarar |
 | | `/canlilik/hatirlatma/{eslesme_id}` | GET | Üretilen mesajı gösterir |
 | **Takip** | `/isbirligi/{id}/milestone-ekle` | POST | |

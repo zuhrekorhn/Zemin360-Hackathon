@@ -111,5 +111,5 @@ async def ihtiyac_karti_embedding(
         raise bulunamadi(KART_BULUNAMADI)
     if not await embedding_hesapla(oturum, kart):
         raise HTTPException(status_code=503, detail=EMBEDDING_HATA_MESAJI)
-    arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kart.kurum_id)
+    arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kart.id)
     return await kart_yaniti(oturum, kart.id)

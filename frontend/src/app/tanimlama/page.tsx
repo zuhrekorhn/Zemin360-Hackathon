@@ -209,7 +209,7 @@ function TanimlamaSohbeti() {
 
       <footer className="mt-auto border-t border-kenar pt-6">
         <Button asChild variant="outline" size="lg">
-          <Link href="/">Ana sayfaya dön</Link>
+          <Link href="/kurum">Panele dön</Link>
         </Button>
       </footer>
     </main>
@@ -486,7 +486,9 @@ function KayitliKart({
       </p>
 
       <Button asChild size="lg" className="mt-1 w-fit">
-        <Link href="/kurum/oneriler">Eşleştirme önerilerini gör</Link>
+        <Link href={`/kurum/oneriler?ihtiyac=${kart.id}`}>
+          Eşleştirme önerilerini gör
+        </Link>
       </Button>
     </section>
   );

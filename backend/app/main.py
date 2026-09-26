@@ -14,6 +14,7 @@ from app.api import (
     bildirimler,
     dogrulama,
     eslestirme,
+    girvak,
     health,
     ihtiyac_kartlari,
     isbirlikleri,
@@ -85,3 +86,4 @@ app.include_router(ihtiyac_kartlari.router)
 app.include_router(eslestirme.router)
 app.include_router(dogrulama.router)
 app.include_router(isbirlikleri.router)
+app.include_router(girvak.router)
