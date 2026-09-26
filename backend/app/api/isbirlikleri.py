@@ -41,7 +41,10 @@ async def isbirliklerim(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> list[IsbirligiOzeti]:
-    """Hesabın taraf olduğu iş birlikleri, en yeni önce."""
+    """Hesabın taraf olduğu iş birlikleri; eşleşmede en son hareket olan önce.
+
+    Başlangıç tarihi yalnızca gün tuttuğu için aynı gün açılanları sıralayamıyordu.
+    """
     isbirlikleri = await oturum.scalars(
         select(Isbirligi)
         .join(Eslesme, Isbirligi.eslesme_id == Eslesme.id)
@@ -56,7 +59,7 @@ async def isbirliklerim(
             .selectinload(IhtiyacKarti.kurum),
         )
         .where(_taraf_kosulu(hesap))
-        .order_by(Isbirligi.baslangic_tarihi.desc().nulls_last())
+        .order_by(Eslesme.son_aktivite_tarihi.desc())
     )
     ozetler = []
     for isbirligi in isbirlikleri.all():

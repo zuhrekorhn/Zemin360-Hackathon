@@ -110,7 +110,7 @@ GİRVAK okuma işlerinde her şeyi görür. Yazma işleri genç ve kurumun işid
   - `reddedildi` iken ilgileniyorum
   - `kabul_edildi` iken red
 - **Aynı geçişin tekrarı** (çift tıklama; örneğin `ilgileniliyor` iken yeniden "ilgileniyorum") 200 ile mevcut durumu döner, yan etkiyi (bildirim, iş birliği) tekrarlamaz.
-- **Aktivite tarihi:** Her geçişte `son_aktivite_tarihi` güncellenir; Canlılık Ajanı bunu okuyacak.
+- **Aktivite tarihi:** Her geçişte `son_aktivite_tarihi` güncellenir; Canlılık Ajanı bunu okuyacak. `GET /isbirliklerim` de bu tarihe göre sıralanır (en yeni önce).
 - **Kural tek yerde:** Geçiş kuralı tek bir saf fonksiyonda durur (`gecis(durum, olay, rol)`); yukarıdaki tablo testle birebir sabitlenir.
 - **Ad baştan görünür, e-posta kabulle açılır:**
   - Gencin adı yetenek kartı görünümünde (öneriler, kart sayfası) kuruma her durumda görünür; kurumun adı da gence baştan görünür.
@@ -205,6 +205,7 @@ Onaydan sonra, her adım ayrı commit ve testli:
 3. Onayın hesaba bağlanması; e-posta upsert'inin kalkması; `lib/yerel.ts` yerine `/me`
 4. Eşleşme durum makinesi, kabul/red, iş birliği, kabulde açılan e-postalar; yetenek kartı görünümüne gencin adı
 5. Bildirimler
-6. Frontend: kayıt, giriş, çıkış, rol menüsü, yönlendirmeler
-7. Frontend: genç ve kurum panelleri, bildirim sayfası, GİRVAK sayı sayfası
-8. Yerel sıfırlama ve demo hesabı betikleri; README ve belgeler; iki tarayıcıda kabul denemesi
+6. Yerel sıfırlama ve demo hesabı betikleri (tarayıcı denemesi eski, gencin onayı olmadan `kabul_edildi` olmuş kayıtlarla değil, temiz veriyle başlasın diye öne alındı)
+7. Frontend: kayıt, giriş, çıkış, rol menüsü, yönlendirmeler
+8. Frontend: genç ve kurum panelleri, bildirim sayfası, GİRVAK sayı sayfası
+9. README ve belgeler; iki tarayıcıda kabul denemesi

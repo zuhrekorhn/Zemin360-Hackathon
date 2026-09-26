@@ -11,11 +11,14 @@ Sabitlenenler:
   e-postalar `iletisim`'de yalnızca iki tarafa açılır, GİRVAK'a değil.
 """
 
+import datetime as dt
+
 from sqlalchemy import func, select
 
 from app.models.eslesme import Eslesme
 from app.models.isbirligi import Isbirligi
-from tests.test_sahiplik import durumlar, senaryo
+from app.models.yetenek_karti import YetenekKarti
+from tests.test_sahiplik import _hesap, durumlar, senaryo
 
 
 def _epostalar(d):
@@ -184,5 +187,45 @@ def test_bana_gelenler_ve_isbirliklerim_rolleri():
             "/isbirliklerim",
             {None: 401, d.girvak: 403, d.genc1: 200, d.kurum1: 200},
         )
+
+    senaryo(adimlar)
+
+
+def test_isbirliklerim_son_aktiviteye_gore_siralanir():
+    """Başlangıç tarihi değil eşleşmenin son hareketi belirler (en yeni önce)."""
+
+    async def adimlar(istemci, d):
+        simdi = dt.datetime.now(dt.UTC)
+        genc3 = await _hesap(d.oturum, "genc", "Deniz")
+        k3 = YetenekKarti(
+            kullanici_id=genc3.profil.id, rol_alani="tasarımcı", deneyim_seviyesi="orta"
+        )
+        d.oturum.add(k3)
+        await d.oturum.flush()
+        # Eski başlamış ama yeni hareketli (E3) ile yeni başlamış ama eski hareketli (E1).
+        d.E1.durum = "kabul_edildi"
+        d.E1.son_aktivite_tarihi = simdi - dt.timedelta(days=3)
+        e3 = Eslesme(
+            ihtiyac_karti_id=d.I1.id,
+            yetenek_karti_id=k3.id,
+            skor=0.5,
+            durum="kabul_edildi",
+            son_aktivite_tarihi=simdi,
+        )
+        d.oturum.add(e3)
+        await d.oturum.flush()
+        bugun = dt.date.today()
+        d.oturum.add_all(
+            [
+                Isbirligi(eslesme_id=d.E1.id, baslangic_tarihi=bugun, durum="aktif"),
+                Isbirligi(
+                    eslesme_id=e3.id, baslangic_tarihi=bugun - dt.timedelta(days=10), durum="aktif"
+                ),
+            ]
+        )
+        await d.oturum.commit()
+
+        liste = (await istemci.get("/isbirliklerim", headers=d.kurum1.baslik)).json()
+        assert [i["genc_adi"] for i in liste] == ["Deniz", "Elif"]
 
     senaryo(adimlar)
