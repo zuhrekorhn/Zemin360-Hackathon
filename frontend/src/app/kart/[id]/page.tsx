@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
+import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { BelgeKarti, CiktiOzeti, EtiketSatiri } from "@/components/kart";
 import { KanitBolumu } from "@/components/kanit";
 import { HataKutusu } from "@/components/sohbet";
@@ -18,6 +19,7 @@ import {
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
+import { panelYolu } from "@/lib/yonlendirme";
 
 /**
  * Yetenek kartı + Doğrulama Ajanı ekranı (docs/agent-specs.md § 1 ve § 4).
@@ -25,11 +27,28 @@ import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
  * Kartın kendisi Keşif'te oluşuyor; burada her somut çıktıya kanıt ve
  * referans eklenip dört bileşenli güven göstergesi okunuyor. Kart sahibinin
  * e-postası hiçbir yerde gösterilmiyor (§ 1.5).
+ *
+ * Kimin gördüğüne göre iki hâl (docs/faz-b-kimlik-ve-dongu.md § 3):
+ *   - Kartın sahibi genç: kanıt durumu, kanıt/referans ekleme, itiraz.
+ *   - Kurum (kart ona önerilmişse) ve GİRVAK: kartı salt okunur görür;
+ *     kanıt ayrıntısı (referans e-postaları, yanıt linkleri) kuruma hiç
+ *     gitmez — rubrik zaten çıktıların güven göstergesinde.
+ * Genç yalnızca kendi kartını açabildiği için "genç" rolü sahiplik demek.
  */
 
 export default function KartSayfasi() {
+  return (
+    <GirisKapisi>
+      <KartIcerigi />
+    </GirisKapisi>
+  );
+}
+
+function KartIcerigi() {
   const parametreler = useParams<{ id: string }>();
   const kartId = parametreler.id;
+  const hesap = useGirisliHesap();
+  const sahibi = hesap.rol === "genc";
 
   const [kart, setKart] = useState<YetenekKartiYaniti | null>(null);
   // Çıktı başına kanıt durumu: referans listesi ve zaman aşımı yalnızca
@@ -40,29 +59,33 @@ export default function KartSayfasi() {
   const [hata, setHata] = useState<Hata | null>(null);
   const okundu = useRef(false);
 
-  const kartiGetir = useCallback(async (kimlik: string) => {
-    setHata(null);
-    setYukleniyor(true);
-    try {
-      const gelen = await yetenekKartiGetir(kimlik);
-      setKart(gelen);
+  const kartiGetir = useCallback(
+    async (kimlik: string) => {
+      setHata(null);
+      setYukleniyor(true);
+      try {
+        const gelen = await yetenekKartiGetir(kimlik);
+        setKart(gelen);
+        if (!sahibi) return;
 
-      // Zaman aşımı (bekliyor → yanit_yok) bu okuma anında hesaplanıyor;
-      // ayrı bir zamanlayıcı yok (bilinçli, bkz. CLAUDE.md).
-      const durumlar = await Promise.all(
-        gelen.somut_ciktilar.map((cikti) => kanitDurumu(cikti.id)),
-      );
-      setKanitlar(
-        Object.fromEntries(
-          durumlar.map((durum) => [durum.somut_cikti_id, durum]),
-        ),
-      );
-    } catch (sebep) {
-      setHata(hatayaCevir(sebep));
-    } finally {
-      setYukleniyor(false);
-    }
-  }, []);
+        // Zaman aşımı (bekliyor → yanit_yok) bu okuma anında hesaplanıyor;
+        // ayrı bir zamanlayıcı yok (bilinçli, bkz. CLAUDE.md).
+        const durumlar = await Promise.all(
+          gelen.somut_ciktilar.map((cikti) => kanitDurumu(cikti.id)),
+        );
+        setKanitlar(
+          Object.fromEntries(
+            durumlar.map((durum) => [durum.somut_cikti_id, durum]),
+          ),
+        );
+      } catch (sebep) {
+        setHata(hatayaCevir(sebep));
+      } finally {
+        setYukleniyor(false);
+      }
+    },
+    [sahibi],
+  );
 
   useEffect(() => {
     if (okundu.current || !kartId) return;
@@ -98,12 +121,14 @@ export default function KartSayfasi() {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
       <header className="flex flex-col gap-2">
         <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Yetenek kartın
+          {sahibi
+            ? "Yetenek kartın"
+            : `${kart?.genc_adi ?? "Genç"} · yetenek kartı`}
         </h1>
         <p className="text-sm text-pretty text-muted-foreground">
-          Her somut çıktıya kanıt ekleyip referans isteyebilirsin. Doğrulama
-          Ajanı kanıtı dört ayrı başlıkta puanlar — tek bir “güven puanı”na
-          indirmez.
+          {sahibi
+            ? "Her somut çıktıya kanıt ekleyip referans isteyebilirsin. Doğrulama Ajanı kanıtı dört ayrı başlıkta puanlar — tek bir “güven puanı”na indirmez."
+            : "Doğrulama Ajanı her somut çıktıyı dört ayrı başlıkta puanlar — tek bir “güven puanı”na indirmez."}
         </p>
       </header>
 
@@ -147,12 +172,15 @@ export default function KartSayfasi() {
               etiket="Sektör ilgisi"
               degerler={kart.sektor_ilgi_alani}
             />
-            <p className="text-xs text-muted-foreground">
-              Bu görünüm iletişim bilgisi taşımaz; kurumlar kartı böyle görür.
-            </p>
+            {sahibi ? (
+              <p className="text-xs text-muted-foreground">
+                Kurumlar kartı adınla ({kart.genc_adi}) birlikte böyle görür.
+                E-postan yalnızca bir kurumun ilgisini kabul edince paylaşılır.
+              </p>
+            ) : null}
           </BelgeKarti>
 
-          {!kart.embedding_var ? (
+          {sahibi && !kart.embedding_var ? (
             <EslestirmeyeHazirla
               hazirla={async () => {
                 const guncel = await yetenekKartiHazirla(kart.id);
@@ -179,13 +207,15 @@ export default function KartSayfasi() {
               kart.somut_ciktilar.map((cikti) => (
                 <div key={cikti.id} className="flex flex-col gap-3">
                   <CiktiOzeti cikti={cikti} />
-                  <KanitBolumu
-                    somutCiktiId={cikti.id}
-                    mevcutLink={cikti.kanit_linki}
-                    durum={kanitlar[cikti.id]}
-                    onDurum={kanidiGuncelle}
-                    onHata={setHata}
-                  />
+                  {sahibi ? (
+                    <KanitBolumu
+                      somutCiktiId={cikti.id}
+                      mevcutLink={cikti.kanit_linki}
+                      durum={kanitlar[cikti.id]}
+                      onDurum={kanidiGuncelle}
+                      onHata={setHata}
+                    />
+                  ) : null}
                 </div>
               ))
             )}
@@ -195,7 +225,7 @@ export default function KartSayfasi() {
 
       <footer className="mt-auto flex flex-wrap gap-3 border-t border-kenar pt-6">
         <Button asChild variant="outline" size="lg">
-          <Link href="/">Ana sayfaya dön</Link>
+          <Link href={panelYolu(hesap.rol)}>Panele dön</Link>
         </Button>
       </footer>
     </main>

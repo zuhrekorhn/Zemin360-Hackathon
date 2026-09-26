@@ -81,8 +81,8 @@ Gemini içinde çalışmaya devam eder. Her çağrının token kullanımı log'a
 
 **Döngü:**
 
-- [ ] Kayıt ve giriş sayfaları; rol seçimi kayıtta.
-- [ ] `Kullanici` / `Kurum` kayıtları hesaba bağlanır; onaydaki "e-postayla bul
+- [x] Kayıt ve giriş sayfaları; rol seçimi kayıtta.
+- [x] `Kullanici` / `Kurum` kayıtları hesaba bağlanır; onaydaki "e-postayla bul
       veya oluştur" mantığı kaldırılır.
 - [ ] Genç paneli: kartım, kanıtlarım, bana gelen ilgiler, iş birliklerim.
 - [ ] Kurum paneli: ihtiyaç kartlarım, önerilerim, iş birliklerim.

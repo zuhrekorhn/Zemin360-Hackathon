@@ -205,7 +205,7 @@ Onaydan sonra, her adım ayrı commit ve testli:
 3. Onayın hesaba bağlanması; e-posta upsert'inin kalkması; `lib/yerel.ts` yerine `/me`
 4. Eşleşme durum makinesi, kabul/red, iş birliği, kabulde açılan e-postalar; yetenek kartı görünümüne gencin adı
 5. Bildirimler
-6. Yerel sıfırlama ve demo hesabı betikleri (tarayıcı denemesi eski, gencin onayı olmadan `kabul_edildi` olmuş kayıtlarla değil, temiz veriyle başlasın diye öne alındı)
-7. Frontend: kayıt, giriş, çıkış, rol menüsü, yönlendirmeler
-8. Frontend: genç ve kurum panelleri, bildirim sayfası, GİRVAK sayı sayfası
-9. README ve belgeler; iki tarayıcıda kabul denemesi
+   - Ardından 8. adımın betikleri (yerel sıfırlama, demo hesapları) öne alındı: tarayıcı denemesi eski, gencin onayı olmadan `kabul_edildi` olmuş kayıtlarla değil, temiz veriyle başlasın.
+6. Frontend: kayıt, giriş, çıkış, rol menüsü, yönlendirmeler
+7. Frontend: genç ve kurum panelleri, bildirim sayfası, GİRVAK sayı sayfası
+8. Kalanı: README ve belgeler; iki tarayıcıda kabul denemesi

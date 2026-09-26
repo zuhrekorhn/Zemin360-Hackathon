@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { GirisKapisi } from "@/components/giris-kapisi";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
   CevapAlani,
@@ -47,6 +48,14 @@ import {
 type Asama = "baslatiliyor" | "sohbet" | "taslak" | "kaydedildi";
 
 export default function KesifSayfasi() {
+  return (
+    <GirisKapisi roller={["genc"]}>
+      <KesifSohbeti />
+    </GirisKapisi>
+  );
+}
+
+function KesifSohbeti() {
   const [asama, setAsama] = useState<Asama>("baslatiliyor");
   const [oturumId, setOturumId] = useState<string | null>(null);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);

@@ -96,7 +96,7 @@ export default function AnaSayfa() {
             yüklemek yok.
           </p>
           <Button asChild size="lg" className="mt-2">
-            <Link href="/kesif">Genç olarak başla</Link>
+            <Link href="/kayit?rol=genc">Genç olarak başla</Link>
           </Button>
         </div>
 
@@ -108,10 +108,17 @@ export default function AnaSayfa() {
             çevirirsiniz.
           </p>
           <Button asChild size="lg" variant="outline" className="mt-2">
-            <Link href="/tanimlama">Kurum olarak başla</Link>
+            <Link href="/kayit?rol=kurum">Kurum olarak başla</Link>
           </Button>
         </div>
       </section>
+
+      <p className="-mt-8 text-sm text-muted-foreground">
+        Hesabın var mı?{" "}
+        <Link href="/giris" className="text-baglanti underline">
+          Giriş yap
+        </Link>
+      </p>
 
       <section className="flex flex-col gap-4 border-t border-kenar pt-10">
         <h2 className="font-heading text-xl font-semibold text-ana">

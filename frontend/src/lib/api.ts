@@ -116,6 +116,56 @@ export function me(): Promise<MeYaniti> {
   return apiIstek<MeYaniti>("/me", { cache: "no-store" });
 }
 
+/** POST /auth/kayit — 201 + token; kayıtla birlikte giriş yapılmış olur.
+ *  E-posta kayıtlıysa 409. GİRVAK açık kayıtla açılamaz. */
+export function kayitOl(girdi: {
+  email: string;
+  sifre: string;
+  rol: "genc" | "kurum";
+  ad: string;
+}): Promise<TokenYaniti> {
+  return apiIstek<TokenYaniti>("/auth/kayit", {
+    method: "POST",
+    body: JSON.stringify(girdi),
+  });
+}
+
+/** POST /auth/giris — yanlış e-posta ya da şifre için tek bir 401 cümlesi. */
+export function girisYap(email: string, sifre: string): Promise<TokenYaniti> {
+  return apiIstek<TokenYaniti>("/auth/giris", {
+    method: "POST",
+    body: JSON.stringify({ email, sifre }),
+  });
+}
+
+/* --- Bildirimler (docs/faz-b-kimlik-ve-dongu.md § 6) ---------------------- */
+
+export type BildirimTuru =
+  "yeni_oneri" | "ilgi" | "kabul" | "red" | "referans_yaniti";
+
+export type Bildirim = {
+  id: string;
+  tur: BildirimTuru | string;
+  metin: string;
+  eslesme_id: string | null;
+  olusturma_tarihi: string;
+  okundu_tarihi: string | null;
+};
+
+export function bildirimler(): Promise<Bildirim[]> {
+  return apiIstek<Bildirim[]>("/bildirimler", { cache: "no-store" });
+}
+
+export function bildirimOkundu(id: string): Promise<Bildirim> {
+  return apiIstek<Bildirim>(`/bildirimler/${id}/okundu`, { method: "POST" });
+}
+
+export function hepsiniOku(): Promise<{ okunan: number }> {
+  return apiIstek<{ okunan: number }>("/bildirimler/hepsini-oku", {
+    method: "POST",
+  });
+}
+
 /** GET /health — backend ayakta mı? */
 export function saglikKontrol(): Promise<SaglikYaniti> {
   return apiIstek<SaglikYaniti>("/health", { cache: "no-store" });

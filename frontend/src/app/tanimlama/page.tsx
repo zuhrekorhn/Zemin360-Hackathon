@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { GirisKapisi } from "@/components/giris-kapisi";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
   CevapAlani,
@@ -45,6 +46,14 @@ import {
 type Asama = "sohbet" | "taslak" | "kaydedildi";
 
 export default function TanimlamaSayfasi() {
+  return (
+    <GirisKapisi roller={["kurum"]}>
+      <TanimlamaSohbeti />
+    </GirisKapisi>
+  );
+}
+
+function TanimlamaSohbeti() {
   const [asama, setAsama] = useState<Asama>("sohbet");
   const [oturumId, setOturumId] = useState<string | null>(null);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);

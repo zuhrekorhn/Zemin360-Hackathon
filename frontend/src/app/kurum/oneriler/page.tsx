@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { GirisKapisi } from "@/components/giris-kapisi";
 import {
   BelgeKarti,
   CiktiOzeti,
@@ -47,6 +48,14 @@ const DURUM_ACIKLAMALARI: Record<string, string> = {
 };
 
 export default function OnerilerSayfasi() {
+  return (
+    <GirisKapisi roller={["kurum"]}>
+      <OnerilerIcerigi />
+    </GirisKapisi>
+  );
+}
+
+function OnerilerIcerigi() {
   const [kurumId, setKurumId] = useState<string | null>(null);
   const [veri, setVeri] = useState<Oneriler | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);

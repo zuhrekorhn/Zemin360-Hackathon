@@ -7,9 +7,19 @@
  *
  * localStorage gizli sekmede ya da kapalı depolamada hata fırlatabilir; o
  * durumda token yokmuş gibi davranılır (kullanıcı girişe yönlenir).
+ *
+ * Token değişince `TOKEN_DEGISTI` olayı yayılır: 401 yüzünden silinen token
+ * da dahil. Oturum sağlayıcısı (lib/oturum.tsx) bunu dinleyip menüyü ve
+ * yönlendirmeyi hemen günceller; başka sekmedeki değişiklik `storage`
+ * olayıyla gelir.
  */
 
 const ANAHTAR = "zemin360.token";
+export const TOKEN_DEGISTI = "zemin360:token-degisti";
+
+function haberVer(): void {
+  window.dispatchEvent(new Event(TOKEN_DEGISTI));
+}
 
 export function tokenOku(): string | null {
   if (typeof window === "undefined") return null;
@@ -27,6 +37,7 @@ export function tokenYaz(token: string): void {
   } catch {
     // Yazılamadıysa oturum bu sekmede kalıcı olmaz; akış bozulmaz.
   }
+  haberVer();
 }
 
 export function tokenSil(): void {
@@ -36,4 +47,10 @@ export function tokenSil(): void {
   } catch {
     // Silinemiyorsa zaten okunamıyordur.
   }
+  haberVer();
+}
+
+/** Başka sekmede giriş/çıkış yapıldıysa `storage` olayı bu anahtar için gelir. */
+export function tokenAnahtariMi(anahtar: string | null): boolean {
+  return anahtar === ANAHTAR;
 }

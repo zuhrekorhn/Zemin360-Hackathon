@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { UstMenu } from "@/components/ust-menu";
+import { OturumSaglayici } from "@/lib/oturum";
+
 import "./globals.css";
 
 // docs/design-language.md § Tipografi
@@ -36,7 +39,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="tr"
       className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Oturum (/me) tek yerde; menü ve giriş kapısı ondan okur. */}
+        <OturumSaglayici>
+          <UstMenu />
+          {children}
+        </OturumSaglayici>
+      </body>
     </html>
   );
 }
