@@ -125,18 +125,18 @@ reddeder; sayfa görünür ama düğmeler çalışmaz. Yerel denemede `http://lo
 
 **Canlılık:**
 
-- [ ] Periyodik tarama (uygulama içi zamanlayıcı ya da platform cron'u) +
+- [x] Periyodik tarama (uygulama içi zamanlayıcı ya da platform cron'u) +
       GİRVAK panelinde "taramayı şimdi çalıştır" butonu.
-- [ ] Belirli süredir hareketsiz eşleşme/iş birliği → kişiye özel hatırlatma (LLM).
-- [ ] Yeni ihtiyaç kartı → eski yetenek kartları yeniden taranır → "sana uygun
+- [x] Belirli süredir hareketsiz eşleşme/iş birliği → kişiye özel hatırlatma (LLM).
+- [x] Yeni ihtiyaç kartı → eski yetenek kartları yeniden taranır → "sana uygun
       yeni ihtiyaç" fırsatı.
-- [ ] Her olay `canlilik_olayi` tablosuna yazılır.
+- [x] Her olay `canlilik_olayi` tablosuna yazılır.
 
 **GİRVAK paneli:**
 
-- [ ] Program hedefleri gerçek sayılarla: başvuru (80), kurum (20), eşleşme (10),
+- [x] Program hedefleri gerçek sayılarla: başvuru (80), kurum (20), eşleşme (10),
       pilot (5).
-- [ ] Pasifleşen bağlantılar listesi, son Canlılık olayları.
+- [x] Pasifleşen bağlantılar listesi, son Canlılık olayları.
 
 **Demo notu:** Tohum verinin bir kısmının `son_aktivite_tarihi` geriye çekilir;
 pasifleşme günlerce beklemeden gösterilebilir.

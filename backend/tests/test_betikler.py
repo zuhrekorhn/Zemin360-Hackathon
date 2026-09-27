@@ -142,3 +142,66 @@ def test_oneri_durumu_iki_siniri_da_kontrol_eder():
     assert "alt sınırın" in demo_hesaplari.oneri_durumu(0.40)
     assert "skor eşiğinin" in demo_hesaplari.oneri_durumu(0.52)
     assert "görecek" in demo_hesaplari.oneri_durumu(0.60)
+
+
+# --- zamani_geri_al ------------------------------------------------------------------------
+
+
+def test_zaman_kaydirma_uretimde_calismaz_ve_gun_siniri():
+    from scripts import zamani_geri_al as z
+
+    with pytest.raises(z.UretimdeCalismaz):
+        z.calistirilabilir_mi("production")
+    for yanlis in (0, -3, 366):
+        with pytest.raises(ValueError):
+            z.gun_dogrula(yanlis)
+    assert z.kaydirma_ifadeleri(8)[0] == (
+        "UPDATE eslesme SET son_aktivite_tarihi = son_aktivite_tarihi - INTERVAL '8 days'"
+    )
+
+
+def test_zaman_kaydirma_butun_tarih_kolonlarini_kapsar():
+    """Yeni bir tarih kolonu eklenirse ya kaydırılmalı ya bilerek dışarıda bırakılmalı."""
+    from sqlalchemy import Date, DateTime
+
+    from app.db.base import Base
+    from scripts import zamani_geri_al as z
+
+    tum = {
+        (t.name, c.name)
+        for t in Base.metadata.sorted_tables
+        for c in t.columns
+        if isinstance(c.type, DateTime | Date)
+    }
+    assert tum == set(z.ZAMAN_ALANLARI) | set(z.KAYDIRILMAYANLAR)
+
+
+def test_zaman_kaydirma_pasiflesmeyi_gosterir(monkeypatch):
+    """8 gün geri: yeni öneri 'bakılmayan öneri' olur; sıralar korunur."""
+    import datetime as dt
+
+    from app.api import canlilik as canlilik_api
+    from app.models.canlilik_olayi import CanlilikOlayi
+    from scripts import zamani_geri_al as z
+    from tests.test_sahiplik import senaryo
+
+    async def adimlar(istemci, d):
+        once = d.E1.son_aktivite_tarihi
+
+        @contextlib.asynccontextmanager
+        async def ayni_oturum():
+            yield d.oturum
+
+        await z.kaydir(8, fabrika=ayni_oturum)
+        await d.oturum.refresh(d.E1)
+        assert once - d.E1.son_aktivite_tarihi == dt.timedelta(days=8)
+
+        await canlilik_api.tarama_yap(d.oturum)
+        olaylar = list(
+            await d.oturum.scalars(
+                select(CanlilikOlayi.tur).where(CanlilikOlayi.eslesme_id == d.E1.id)
+            )
+        )
+        assert olaylar == ["oneri_bekliyor"]
+
+    senaryo(adimlar)
