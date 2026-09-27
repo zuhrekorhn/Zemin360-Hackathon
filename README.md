@@ -141,9 +141,11 @@ alembic check                                 # modeller ile migration arasında
 
 **Kimlik (Faz B):** `POST /auth/kayit`, `POST /auth/giris`, `GET /me`. `/health`, kayıt/giriş ve token'lı referans uçları dışında her uç `Authorization: Bearer <token>` ister; 401 token yok/geçersiz, 403 rol uygun değil, 404 başkasının kaynağı. Bildirimler `GET /bildirimler`, `POST /bildirimler/{id}/okundu`, `POST /bildirimler/hepsini-oku`; GİRVAK `GET /girvak/sayilar`.
 
+**Takip (Faz C):** `GET /isbirligi/{id}`, `POST /isbirligi/{id}/plan-oner`, `POST /isbirligi/{id}/milestone-ekle`, `PATCH|DELETE /isbirligi/{id}/milestone/{mid}`, `POST /isbirligi/{id}/plan-onayla`, `POST /isbirligi/{id}/milestone/{mid}/isaretle|isareti-geri-al`.
+
 **Ajan uç noktaları:** Doğrulama `POST /dogrulama/kanit-ekle`, `POST /dogrulama/referans-yaniti` (girişsiz, token ile), `POST /dogrulama/itiraz`, `GET /dogrulama/kanit/{somut_cikti_id}` · Keşif `/kesif/sohbet/baslat|cevap`, `/kesif/kart/onayla`, `GET /yetenek-kartlari/{id}` · Tanımlama `/tanimlama/sohbet/baslat|cevap`, `/tanimlama/kart/onayla`, `GET /ihtiyac-kartlari/{id}` · Eşleştirme `POST /eslestirme/calistir`, `GET /eslestirme/oneriler/{kurum_id}`, `POST /eslestirme/ilgileniyorum`, `POST /eslestirme/{id}/kabul|red`, `GET /eslestirme/bana-gelenler`, `GET /eslestirme/onerilerim`, `GET /isbirliklerim`. Tam liste: [`docs/api-contracts.md`](docs/api-contracts.md).
 
-**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak sohbet motoru + `kesif.py`, `tanimlama.py`, `eslestirme.py`, `dogrulama.py`; `eslesme_durumu.py` eşleşme durum makinesi) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
+**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak sohbet motoru + `kesif.py`, `tanimlama.py`, `eslestirme.py`, `dogrulama.py`, `takip.py`; `eslesme_durumu.py` ve `takip_durumu.py` durum makineleri) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
 
 ## Frontend'i Çalıştırma
 
@@ -179,6 +181,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 - shadcn/ui, **Radix** tabanlı kurulumla (`nova` preset, Lucide ikonları) eklendi — `components.json` bunu kaydeder. Şu an sadece `button`, `input`, `card` kurulu. Yeni bileşenler shadcn'in varsayılan renkleriyle değil, paletteki değişkenlerle gelir.
 - **Kimlik:** `/giris` ve `/kayit` (rol kayıtta seçilir). Token tarayıcıda (`src/lib/token.ts`), her istekte `Authorization: Bearer` ile gidiyor. Oturumun tek kaynağı `GET /me` (`src/lib/oturum.tsx`): token değişince, sayfa değişince ve 60 sn'de bir tazelenir, üst menüdeki bildirim rozeti de buradan. Giriş gerektiren sayfalar `GirisKapisi`'yle sarılı (`src/components/giris-kapisi.tsx`): girişsizse `/giris?sonra=…`, rolü uymuyorsa kendi paneli. Yönlendirme kuralları `src/lib/yonlendirme.ts`'de (testli).
 - **Paneller:** `/genc` (kartlarım, kanıt bekleyenler, bana gelen ilgiler — Kabul et / Reddet, iş birliklerim), `/kurum` (ihtiyaç kartlarım, önerilerim, iş birliklerim), `/girvak` (sayılar), `/bildirimler`. Ortak parçalar `src/components/panel.tsx`.
+- **İş birliği (Faz C):** `/isbirligi/{id}` iki tarafa aynı sayfa — taslak planda ajanın önerisi, düzenleme ve iki taraflı onay; sonra zaman çizelgesi (gecikme etiketi, iki taraflı işaret, kanıt linki); tamamlanınca bant ve gencin kartında "tamamlanmış pilot" rozeti (`PilotRozeti`, `src/components/kart.tsx`). Görünüm cümleleri `src/lib/takip.ts`'de (testli).
 - `/kesif` ve `/tanimlama` sayfaları çalışan sohbet arayüzleri: sohbet → taslak → onay formu → kaydedilen kart. Ortak görsel parçalar `src/components/sohbet.tsx` içinde.
 - `/kart/{id}` yetenek kartı ve Doğrulama ekranı: kartın sahibi genç için çıktı başına dört bileşenli güven göstergesi, kanıt ekleme, referans isteği ve itiraz (`src/components/kanit.tsx`); kurum ve GİRVAK kartı salt okunur görür.
 - `/kurum/oneriler?ihtiyac=<id>` eşleştirme önerileri: skor, gerekçe, gencin adı ve "İlgileniyorum". Eşik ve "az sonuç" uyarısı backend yanıtından geliyor, arayüzde sabit değil.
@@ -187,7 +190,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 
 ## Proje Durumu
 
-🟢 **Faz B tamamlandı, Faz C (Takip Ajanı) başlıyor.** Üç rol (genç, kurum, GİRVAK) kendi paneliyle giriyor; iki taraflı döngü iletişim açılmasına kadar çalışıyor. Altı ajandan dördü çalışıyor:
+🟢 **Faz C tamamlandı, Faz D (Canlılık + GİRVAK paneli) başlıyor.** Üç rol (genç, kurum, GİRVAK) kendi paneliyle giriyor; döngü kapalı: genç kart oluşturur → kurum ilgilenir → genç kabul eder → plan iki tarafça onaylanır → adımlar iki taraflı tamamlanır → tamamlanmış pilot sinyali kartına ve eşleşme skoruna geri döner. Altı ajandan beşi çalışıyor:
 
 | Ajan | Durum |
 |---|---|
@@ -195,7 +198,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 | **Tanımlama** | Çalışıyor — sokratik sohbet → ihtiyaç kartı taslağı → onay → kayıt + embedding |
 | **Eşleştirme** | Çalışıyor — sert filtre → benzerlik alt sınırı → pgvector skoru → gerekçe. Kurum ilgilenir, genç kabul eder, iş birliği açılır. Arayüz: `/kurum`, `/kurum/oneriler`, `/genc` |
 | **Doğrulama** | Çalışıyor — kanıt kontrolü + rubrik → referans akışı → itiraz. Arayüz: `/kart/{id}` ve `/referans` |
-| Takip | Faz C (29-30 Eyl) |
+| **Takip** | Çalışıyor — kabulde plan önerisi → iki taraflı onay → iki taraflı işaretleme, gecikme → otomatik tamamlanma → tamamlanmış pilot sinyali; kısa durum özeti. Arayüz: `/isbirligi/{id}` |
 | Canlılık | Faz D (1-2 Eki) |
 
 **Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında ve kart ekranında tam adres olarak gösteriliyor, referans kişiye elle iletilir. **Referans güvenliği (Faz B):** referans yanıt uç noktası yalnızca iddianın başlığını ve durumu dönüyor; kanıt durumu (`GET /dogrulama/kanit/{id}`, referans e-postaları ve yanıt linkleri) artık yalnızca çıktının sahibi gence ve GİRVAK'a açık, kurum ve başkaları göremiyor. Kalan sınırlama: SMTP olmadığı için yanıt linkini genç kendisi iletiyor, yani ilke olarak kendi referansını doldurabilir. Gerçek kullanımda token yalnızca referans kişiye e-postayla gitmeli. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
@@ -204,7 +207,9 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 
 İki sohbet ajanı aynı motoru paylaşıyor (`backend/app/agents/sohbet_motoru.py`): grafik iskeleti, taslak birleştirme ve yedek modele düşen LLM zinciri orada; soru seti, çıkarım şeması ve ajana özel dallar ajan dosyasında.
 
-Sırada: Takip Ajanı (milestone planı, iki taraflı işaretleme, tamamlanma sinyali), ardından Canlılık Ajanı ve GİRVAK panelinin hedefleri.
+**Takip kapsamı:** ajan plan ve özet önerir, karar vermez; tamamlanma bir kuraldır (son adım iki tarafça tamamlanınca). Onaylanan plan kilitlidir. Tamamlanmış pilot, Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125; pilotsuz kartın skoru değişmez, alakayı yaratmaz). Durum özeti kesilebilir iş: çökerse ya da kesilirse döngü aynen çalışır.
+
+Sırada: Canlılık Ajanı (pasifleşen bağlantılar, hatırlatma, yeni fırsat) ve GİRVAK panelinin program hedefleri.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım

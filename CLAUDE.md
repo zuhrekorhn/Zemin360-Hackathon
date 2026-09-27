@@ -25,7 +25,9 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 
 ## Şu An Neredeyiz
 
-Faz A (sağlamlaştırma) ve **Faz B (kimlik ve iki taraflı döngü) tamamlandı**; sırada **Faz C — Takip Ajanı**, ardından Faz D (Canlılık + GİRVAK paneli). Takvim ve faz planı: `docs/roadmap.md` (her oturumda önce onu oku). Keşif, Tanımlama, Eşleştirme ve Doğrulama ajanları çalışıyor; Takip ve Canlılık henüz yok.
+Faz A (sağlamlaştırma), **Faz B (kimlik ve iki taraflı döngü)** ve **Faz C (Takip Ajanı) tamamlandı**; sırada **Faz D — Canlılık Ajanı + GİRVAK paneli**. Takvim ve faz planı: `docs/roadmap.md` (her oturumda önce onu oku). Keşif, Tanımlama, Eşleştirme, Doğrulama ve Takip çalışıyor; Canlılık henüz yok.
+
+**Takip (Faz C, ayrıntı `docs/faz-c-takip.md`):** ajan plan ve özet önerir, **karar vermez**. Kurallar iki saf fonksiyonda (`app/agents/takip_durumu.py`): `plan_gecisi` (düzenleme iki onayı sıfırlar, iki onay → `aktif`, onaylı plan kilitli) ve `isaret_gecisi` (iki işaret → adım tamamlandı, tamamlanan adım geri açılmaz); son adımla iş birliği kendiliğinden `tamamlandi`. Gecikme ve tamamlanmış pilot **saklanmaz**, okuma anında hesaplanır. Pilot, doğrulama bonusuna toplamsal girer (`matching-algorithm.md` § 4). Kabuldeki plan önerisi ve durum özeti yanıttan sonra arka planda (`BackgroundTasks`); testlerde `tests/conftest.py` ikisini sahteyle değiştirir — yeni bir arka plan işi eklersen oraya da ekle, yoksa testler gerçek LLM çağırır. Durum özeti kesilebilir: hiçbir kural ona bakmaz.
 
 **Kimlik ve sahiplik (Faz B, ayrıntı `docs/faz-b-kimlik-ve-dongu.md`):** e-posta + şifre, JWT (Bearer, localStorage). Kimlik `hesap` tablosunda, profil `kullanici`/`kurum`'da (1-1). Her uç `mevcut_hesap` / `rol_gerekli` bağımlılığıyla korunur; sahiplik kuralları tek yerde, `app/api/sahiplik.py`. Hata sözleşmesi: 401 token yok/geçersiz, 403 rol uygun değil, **404 başkasının kaynağı** (varlık sızmasın). Yeni bir uç yazarken bu üçlüyü test et (`tests/test_sahiplik.py` deseni).
 

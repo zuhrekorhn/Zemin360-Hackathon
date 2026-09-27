@@ -27,7 +27,7 @@ takvime girmez.
 |---|---|---|
 | 25-26 Eyl | A — Sağlamlaştırma ✓ | İnceleme bulguları kapandı, Gemini ücretli anahtara geçildi |
 | 26-27 Eyl | B — Kimlik ve iki taraflı döngü ✓ | JWT, üç rol, paneller, karşılıklı onay, bildirimler |
-| 29-30 Eyl | C — Takip Ajanı | Milestone planı, ilerleme, tamamlanma sinyali |
+| 27 Eyl | C — Takip Ajanı ✓ | Milestone planı, ilerleme, tamamlanma sinyali |
 | 1-2 Eki | D — Canlılık Ajanı + GİRVAK paneli | Tarama, hatırlatma, fırsat, KPI'lar |
 | 3 Eki | Gözden geçirme ve düzeltme | Profil alanları, profil düzenleme sayfası, arayüz düzeltmeleri |
 | 3 Eki akşam | **Özellik dondurma** | Bundan sonra yalnızca hata düzeltme |
@@ -102,7 +102,7 @@ hesaplarıyla (`scripts/yerel_sifirla.py` + `scripts/demo_hesaplari.py`).
 açılırsa Next.js 16 geliştirme dosyalarını engeller ve backend CORS'u isteği
 reddeder; sayfa görünür ama düğmeler çalışmaz. Yerel denemede `http://localhost:3000`.
 
-## Faz C — Takip Ajanı (29-30 Eyl)
+## Faz C — Takip Ajanı (27 Eyl) ✓
 
 Özellik notu ve kararlar: [`faz-c-takip.md`](faz-c-takip.md). Durum özeti
 (Kesim çizgisi (3)) kesilebilir; döngü onsuz tam çalışır.
@@ -116,6 +116,8 @@ reddeder; sayfa görünür ama düğmeler çalışmaz. Yerel denemede `http://lo
       ve Eşleştirme'nin doğrulama bonusuna girer. **Geri besleme döngüsü burada kapanır.**
 
 **Sınır:** Ajan karar vermez, milestone'u kendisi kapatmaz; öneri ve özet üretir.
+
+**Kabul:** ✓ Tarayıcıda iki pencereyle doğrulandı (27 Eyl): plan önerisi, düzenleme ve iki taraflı onay, gecikme etiketi, iki taraflı işaretleme, otomatik tamamlanma; pilot rozeti kartta görünüyor, yeniden hesaplamada skor %44'ten %56'ya çıktı.
 
 ## Faz D — Canlılık Ajanı + GİRVAK paneli (1-2 Eki)
 
@@ -158,6 +160,10 @@ eksikliği görülen profil işleri ile arayüz düzeltmeleri. Akşam özellik d
 - [ ] Tohum veriye **son adımı kalmış ve bir adımı gecikmiş** hazır bir iş birliği
       eklenir: demoda gecikme etiketi ve tamamlanma (→ tamamlanmış pilot sinyali)
       beklemeden gösterilebilsin (Faz C notu).
+- [ ] Tohum veride **aynı ihtiyaca uyan iki benzer genç kartı**: birinin tamamlanmış
+      pilotu var, diğerinin yok. Demoda yeni bir kurumun öneri listesinde pilotlu
+      kartın öne geçtiği gösterilir (pilot bonusu en çok +0.125; iki kartın
+      benzerliği yakın seçilmeli ki fark sıralamayı çevirsin).
 - [ ] Demo hesapları (genç, kurum, GİRVAK) hazır.
 
 ## Faz F — Uçtan uca prova (5 Eki)

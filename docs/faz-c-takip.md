@@ -1,6 +1,9 @@
 # Faz C — Takip Ajanı (özellik notu)
 
-> Durum: **onaylandı (27 Eyl).** § 9'daki üç kararda öneriler seçildi; § 7'deki
+> Durum: **tamamlandı (27 Eyl)**, tarayıcıda iki pencereyle doğrulandı. Aşağıda
+> § 12 uygulamada netleşen ayrıntıları topluyor.
+>
+> Önceki durum: **onaylandı (27 Eyl).** § 9'daki üç kararda öneriler seçildi; § 7'deki
 > iki sözleşme sapması kabul edildi. Roadmap § Faz C'nin kabul ölçütü ve sınırı
 > bu notun çerçevesi; yeni özellik eklenmez.
 
@@ -226,3 +229,16 @@ Onaydan sonra; her adım ayrı commit, en az bir test, adım sonunda kısa özet
 6. Durum özeti (hızlı katman, arka plan). **Kesilebilir:** süre daralırsa atlanır. Döngü onsuz da tam çalışır; diğer adımlar ona bağımlı değildir (özet alanı boş kalabilir, arayüz onsuz da eksiksiz).
 7. Frontend: `/isbirligi/[id]`, panel bağlantıları, pilot rozeti, GİRVAK sayısı.
 8. Belgeler (api-contracts, data-schema, agent-specs § 6, README, CLAUDE.md) ve iki tarayıcıda deneme listesi.
+
+## 12. Uygulamada netleşenler
+
+Notun kararlarından sapma yok; notta yazmayan ama uygulamada gereken ayrıntılar:
+
+- **Kurala uymayan plan:** § 4'te "yedek modele gidilir" dendi; uygulamada yedek model yalnızca sağlayıcı arızasında devreye giriyor (Faz A deseni). Kurala uymayan çıktı aynı zincirden bir kez **düzeltme notuyla** yeniden isteniyor (Eşleştirme gerekçesinin deseni); yine uymazsa plan boş kalıyor.
+- **Bildirim tekilleştirme:** Karşı tarafta okunmamış bir "plan düzenlendi" bildirimi varken yenisi yazılmıyor; art arda beş düzenleme beş bildirim olmuyor.
+- **Bildirimden sayfaya:** `GET /bildirimler` satırı iş birliği varsa `isbirligi_id` taşıyor; Takip bildirimleri ve "kabul" doğrudan `/isbirligi/{id}`'ye gidiyor.
+- **Plan beklerken:** Kabulden hemen sonra açılan sayfa, plan henüz gelmediyse 4 sn'de bir, en çok 8 kez yokluyor; sonra "Ajandan plan iste" düğmesi.
+- **Satır kilidi:** Yazan her uç iş birliği satırını `FOR UPDATE` ile okuyor; çift tıklama iki kez uygulanmıyor. Plan önerisi LLM beklenirken de kilidi tutuyor (eşzamanlı düzenleme sıraya giriyor).
+- **Özet yalnız kendi alanlarını yazar:** arka plan işi `UPDATE … SET durum_ozeti, ozet_tarihi`; LLM beklenirken yapılan başka bir değişikliği ezmiyor.
+- **Bildirim zamanı:** `olusturma_tarihi` INSERT anında `clock_timestamp()` ile atanıyor (aynı işlemdeki bildirimlerin sırası kararlı; `now()` işlem başlangıcını dönüyordu).
+- **Testlerde arka plan işleri:** kabulün plan önerisi ve özet `tests/conftest.py`'de sahteyle değiştiriliyor; gerçek işi sınayan testler fonksiyonu içe aktarma anında yakalıyor.

@@ -63,8 +63,15 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 
 ## 6. Takip Ajanı
 
-**Ne sağlayacak:** Eşleşme kabul edilince oluşan iş birliğinin milestone bazlı, iki tarafa da görünür takibi.
+**Ne sağlayacak:** Genç kabul edince açılan iş birliğinin milestone bazlı, iki tarafa da birebir aynı görünen takibi; tamamlanan iş birliğinin gencin kartına **"tamamlanmış pilot"** sinyali olarak geri dönmesi (geri besleme döngüsü).
 
-**Ne sağlamayacak:** Karmaşık bir proje yönetimi aracı değil — çoğunlukla yapılandırılmış CRUD, üstüne ince bir LLM katmanı (durum özeti üretimi).
+**Ne sağlamayacak:** Karar vermez: planı onaylamaz, milestone'u işaretlemez, iş birliğini bitirmez; yalnızca plan ve özet **önerir**. Karmaşık bir proje yönetimi aracı değil — yapılandırılmış CRUD, üstüne iki ince LLM çağrısı. Kimseyi değerlendirmez, puanlamaz. Milestone kanıtını puanlamaz (Doğrulama'nın işi değil, kapsam dışı).
 
-**Nasıl sağlayacak:** Eşleşme kabul edilince `ISBIRLIGI` kaydı otomatik oluşur; milestone'lar iki taraflı onay + kanıt ekiyle işaretlenir; LLM periyodik olarak kısa bir durum özeti üretir ("bu iş birliği şu an sağlıklı ilerliyor, X milestone'ı geçti").
+**Nasıl sağlayacak** (ayrıntı `faz-c-takip.md`):
+1. **Plan önerisi** — genç kabul edince, yanıttan sonra arka planda: ihtiyaç kartının başarı kriterinden 3-5 adım, her biri "ne olunca tamam" tanımı ve hafta cinsinden hedefle (güçlü katman, yapılandırılmış çıktı). Kurala uymayan çıktı bir kez düzeltme notuyla yeniden istenir; yine uymazsa plan boş kalır, taraflar elle ekler ya da yeniden ister.
+2. **İki taraflı onay** — taraflar planı düzenler; her düzenleme iki onayı sıfırlar; iki onayla iş birliği `aktif` olur ve plan kilitlenir.
+3. **İki taraflı işaretleme** — her adım genç ve kurum ayrı ayrı "tamamlandı" deyince tamamlanır; gecikme okuma anında hesaplanır. Son adımla iş birliği kendiliğinden `tamamlandi` (kural).
+4. **Durum özeti** — plan onaylanınca ve adım tamamlanınca, en fazla iki cümle, nötr dil (hızlı katman). **Kesilebilir:** döngü onsuz tam çalışır.
+5. **Tamamlanmış pilot** — Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125); pilotsuz kartın skoru değişmez, alakayı yaratmaz.
+
+Kurallar iki saf fonksiyonda (`app/agents/takip_durumu.py`), ajan `app/agents/takip.py`, uçlar `app/api/takip.py`. Sohbet ajanı değil; `sohbet_motoru.py`'yi kullanmaz.

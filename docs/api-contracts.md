@@ -38,9 +38,16 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | **GİRVAK** | `/girvak/sayilar` | GET | Yalnızca GİRVAK. Hesap (role göre), kart, eşleşme (duruma göre), iş birliği sayıları; kişisel veri yok |
 | **Canlılık** | `/canlilik/tarama` | Arka plan iş (günlük cron) | Pasif `ESLESME` kayıtlarını tarar |
 | | `/canlilik/hatirlatma/{eslesme_id}` | GET | Üretilen mesajı gösterir |
-| **Takip** | `/isbirligi/{id}/milestone-ekle` | POST | |
-| | `/isbirligi/{id}/milestone/{mid}` | PATCH | Durum günceller, kanıt ekler |
-| | `/isbirligi/{id}/zaman-cizelgesi` | GET | İki tarafa da aynı görünüm |
+| **Takip** | `/isbirligi/{id}` | GET | İki tarafa **birebir aynı** görünüm: plan, zaman çizelgesi (gecikme okuma anında), onaylar, ilerleme, durum özeti, `iletisim`. GİRVAK okur, e-postasız; başkasının iş birliği 404. (Sözleşmedeki ayrı `/zaman-cizelgesi` ucunun yerine, Faz C notu § 7) |
+| | `/isbirligi/{id}/plan-oner` | POST | Taraflar. Ajandan (yeniden) plan: 3-5 adım; mevcut adımları siler, iki onayı sıfırlar. Yalnızca `plan_bekliyor`, onaylı planda 409; LLM yoksa 503 ve plan değişmez. Genç kabul edince arka planda da çalışır |
+| | `/isbirligi/{id}/milestone-ekle` | POST | Taraflar, yalnızca `plan_bekliyor`; iki onay sıfırlanır. 201 |
+| | `/isbirligi/{id}/milestone/{mid}` | PATCH | Taslakta başlık/açıklama/hedef tarih (iki onay sıfırlanır); `aktif`'te yalnızca `kanit_linki`. Gönderilmeyen alan değişmez; onaylı planda içerik 409 |
+| | `/isbirligi/{id}/milestone/{mid}` | DELETE | Taslaktan siler, sıra yeniden numaralanır |
+| | `/isbirligi/{id}/plan-onayla` | POST | Çağıranın tarafı onaylar; iki onay → `aktif` (plan kilitlenir). Boş plan 409, tekrar 200 yan etkisiz |
+| | `/isbirligi/{id}/milestone/{mid}/isaretle` | POST | Çağıranın tarafı "tamamlandı" der; iki taraf da derse adım tamamlanır, **son adımla iş birliği kendiliğinden `tamamlandi`** (kural). Plan onaylanmadan 409 |
+| | `/isbirligi/{id}/milestone/{mid}/isareti-geri-al` | POST | Kendi işaretini geri alır; iki tarafça tamamlanmış adım geri açılmaz (409) |
+
+**Takip (Faz C, `faz-c-takip.md`):** Yazan uçlar yalnızca iki taraf (genç ve kurum): GİRVAK 403, başkası 404. Kurallar tek yerde, `app/agents/takip_durumu.py` (`plan_gecisi`, `isaret_gecisi`). Yazma istekleri iş birliği satırını kilitler (çift tıklama iki kez uygulanmaz). Bildirimler karşı tarafa; okunmamış "plan düzenlendi" varken yenisi yazılmaz. `GET /bildirimler` satırı iş birliği varsa `isbirligi_id` taşır.
 
 **Eşleşme durumları** (docs/faz-b-kimlik-ve-dongu.md § 5): kural tek yerde, `app/agents/eslesme_durumu.py` › `gecis()`. Tablo dışı geçiş 409 ve mevcut durumu söyler; aynı geçişin tekrarı 200, yan etkisiz. Gencin adı kart görünümünde (`genc_adi`) baştan var; e-postalar yalnızca `kabul_edildi`'de, yalnızca iki tarafa, ayrı `iletisim` alanında döner (GİRVAK'a da `null`).
 
