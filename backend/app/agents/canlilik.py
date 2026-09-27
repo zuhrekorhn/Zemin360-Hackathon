@@ -7,7 +7,14 @@ kaybolmaz. Metinde ad olabilir, e-posta olmaz; dil nötr ve destekleyici.
 
 from __future__ import annotations
 
+import logging
+import re
 from dataclasses import dataclass
+from functools import lru_cache
+
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable
 
 from app.agents.canlilik_kurallari import (
     ADIM_GECIKTI,
@@ -18,7 +25,10 @@ from app.agents.canlilik_kurallari import (
     PLAN_ONAYSIZ,
     YENI_FIRSAT,
 )
+from app.core.llm import yedekli_zincir
 from app.models.hesap import ROL_GENC
+
+logger = logging.getLogger("zemin360.canlilik")
 
 
 @dataclass(frozen=True)
@@ -76,3 +86,85 @@ def sablon_metni(b: HatirlatmaBaglami) -> str:
         alan = f" ({b.sektor})" if b.sektor else ""
         return f"Kartına uyan yeni bir ihtiyaç var{alan}. Kanıt eklemek kartını öne çıkarır."
     raise ValueError(f"Bilinmeyen Canlılık türü: {b.tur}")
+
+
+# --- Kişiye özel metin (§ 5) — kesilebilir -------------------------------------------------
+#
+# Hızlı katman, tek çağrı. Girdi tamamen yapılandırılmış; çıktı şablonun
+# anlamını koruyan, daha kişisel en fazla iki cümle. Kurala uymayan çıktı
+# (boş, uzun, e-posta, girdide olmayan sayı) kullanılmaz: şablon gider.
+
+KISISEL_EN_UZUN = 280
+
+KISISEL_TALIMAT = """Sen Zemin360'ın Canlılık Ajanı'sın. Bir kurum ile genç yetenekler arasındaki
+bağlantıların sessizce ölmemesi için kısa, kişiye özel hatırlatmalar yazıyorsun.
+
+Sana bir hatırlatmanın yapılandırılmış bilgisi ve anlamı aynı olan sade bir taslak veriliyor.
+Taslağı alıcıya hitap eden, sıcak ama resmî olmayan bir dille EN FAZLA İKİ CÜMLEYLE yeniden yaz.
+
+Kurallar:
+- Taslaktaki bilgileri (adlar, gün sayısı, adım adı, öneri sayısı) AYNEN koru; yeni bilgi,
+  sayı, tarih ya da söz EKLEME.
+- Taslağın ANLAMINI değiştirme: "hedef tarihi N gün geçti" ile "N gün geçti" aynı şey değildir;
+  kimin neyi beklediğini ve neyin geciktiğini taslaktaki gibi söyle.
+- Dolgu cümlesi yazma ("sistem üzerinden", "süreci kolayca ilerletebilirsin" gibi).
+- Suçlama, baskı ya da ceza dili kullanma ("ihmal", "hâlâ", "maalesef" gibi); destekleyici ol.
+- Bir sonraki adımı açıkça söyle (onayla, işaretle, göz at gibi).
+- E-posta adresi, bağlantı, emoji, başlık ya da madde işareti kullanma.
+- "Sen" diye hitap et; düz, sade Türkçe."""
+
+KISISEL_SABLON = ChatPromptTemplate.from_messages(
+    [
+        ("system", KISISEL_TALIMAT),
+        (
+            "human",
+            "Tür: {tur}\nAlıcı: {alici}\nKarşı taraf: {karsi_ad}\nGün: {gun}\n"
+            "Adım: {adim}\nÖneri sayısı: {sayi}\n\nTaslak: {taslak}",
+        ),
+    ]
+)
+
+_SAYI = re.compile(r"\d+")
+
+
+def kisisel_metin_gecerli_mi(metin: str, girdi: str) -> bool:
+    """Boş değil, kısa, e-posta yok; çıktıdaki her sayı girdide de var."""
+    if not metin or len(metin) > KISISEL_EN_UZUN or "@" in metin:
+        return False
+    return set(_SAYI.findall(metin)) <= set(_SAYI.findall(girdi))
+
+
+@lru_cache
+def _kisisel_zincir() -> Runnable:
+    return yedekli_zincir(
+        "hizli", "canlilik_hatirlatma", lambda m: KISISEL_SABLON | m | StrOutputParser()
+    )
+
+
+async def kisisel_metin(b: HatirlatmaBaglami) -> str | None:
+    """Kişiye özel metin; kullanılamazsa None (çağıran şablona düşer). Hata yutulur."""
+    taslak = sablon_metni(b)
+    girdiler = {
+        "tur": b.tur,
+        "alici": "genç" if b.alici == ROL_GENC else "kurum",
+        "karsi_ad": b.karsi_ad,
+        "gun": b.gun,
+        "adim": b.adim or "-",
+        "sayi": b.sayi,
+        "taslak": taslak,
+    }
+    try:
+        metin = await _kisisel_zincir().ainvoke(girdiler)
+    except Exception:
+        logger.warning("Canlılık metni üretilemedi (%s); şablon kullanılacak", b.tur, exc_info=True)
+        return None
+    metin = " ".join(metin.split())
+    if not kisisel_metin_gecerli_mi(metin, " ".join(str(v) for v in girdiler.values())):
+        logger.info("Canlılık metni kurala uymadı (%s); şablon kullanılacak: %s", b.tur, metin)
+        return None
+    return metin
+
+
+async def metin_uret(b: HatirlatmaBaglami) -> str:
+    """Hatırlatma metni: önce kişiye özel, olmazsa şablon. Asla boş dönmez."""
+    return await kisisel_metin(b) or sablon_metni(b)

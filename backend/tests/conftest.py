@@ -37,3 +37,16 @@ def ozet_arka_plan_isi_yok(monkeypatch):
 
     monkeypatch.setattr(takip, "ozeti_arka_planda_yaz", kaydet)
     return cagrilar
+
+
+@pytest.fixture(autouse=True)
+def canlilik_llm_yok(monkeypatch):
+    """Canlılık taraması hatırlatma metnini LLM'e yazdırıyor; testlerde şablon
+    kullanılsın (kişisel metin None → şablon). Kişiselleştirmeyi sınayan test
+    zinciri kendisi değiştirir."""
+    from app.agents import canlilik
+
+    async def yok(_baglam):
+        return None
+
+    monkeypatch.setattr(canlilik, "kisisel_metin", yok)

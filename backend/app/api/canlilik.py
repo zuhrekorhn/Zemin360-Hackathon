@@ -14,6 +14,7 @@ ikincisinde sıfır olay (tekrar kuralı, § 3).
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 import hmac
 import logging
@@ -282,10 +283,22 @@ async def adaylari_topla(
     return yazilacaklar
 
 
+# Bir taramada en çok bu kadar LLM çağrısı aynı anda (§ 5).
+ESZAMANLI_METIN = 4
+
+
 async def metinleri_uret(yazilacaklar: list[_Yazilacak]) -> list[str]:
-    """Her bildirim için metin. 3. adımda LLM kişiselleştirmesi buraya gelir;
-    şimdilik (ve LLM kesilirse) türün şablon metni."""
-    return [canlilik.sablon_metni(y.baglam) for y in yazilacaklar]
+    """Her bildirim için metin: kişiye özel (LLM), olmazsa türün şablonu.
+
+    Kesilebilir iş (§ 5): LLM'siz de her hatırlatma şablonla gider.
+    """
+    sinir = asyncio.Semaphore(ESZAMANLI_METIN)
+
+    async def tek(y: _Yazilacak) -> str:
+        async with sinir:
+            return await canlilik.metin_uret(y.baglam)
+
+    return list(await asyncio.gather(*(tek(y) for y in yazilacaklar)))
 
 
 async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> TaramaSonucu:
