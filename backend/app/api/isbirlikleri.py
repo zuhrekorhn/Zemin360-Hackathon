@@ -15,6 +15,7 @@ from sqlalchemy.orm import selectinload
 from app.api.eslestirme import iletisim
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import kullanici_id, kurum_id
+from app.api.takip import ilerleme_hesapla
 from app.db.session import get_session
 from app.models.eslesme import Eslesme
 from app.models.hesap import ROL_GENC, ROL_KURUM, Hesap
@@ -57,6 +58,7 @@ async def isbirliklerim(
             selectinload(Isbirligi.eslesme)
             .selectinload(Eslesme.ihtiyac_karti)
             .selectinload(IhtiyacKarti.kurum),
+            selectinload(Isbirligi.milestonelar),
         )
         .where(_taraf_kosulu(hesap))
         .order_by(Eslesme.son_aktivite_tarihi.desc())
@@ -80,6 +82,7 @@ async def isbirliklerim(
                 rol_alani=eslesme.yetenek_karti.rol_alani,
                 problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
                 iletisim=acik,
+                ilerleme=ilerleme_hesapla(isbirligi.milestonelar),
             )
         )
     return ozetler

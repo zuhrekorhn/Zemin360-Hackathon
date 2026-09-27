@@ -7,7 +7,7 @@ import uuid
 
 from pydantic import BaseModel, Field
 
-from app.schemas.eslestirme import Iletisim
+from app.schemas.eslestirme import Ilerleme, Iletisim
 
 
 class MilestoneYaniti(BaseModel):
@@ -23,12 +23,6 @@ class MilestoneYaniti(BaseModel):
     kanit_linki: str | None
     # Okuma anında hesaplanır (hedef tarih geçti, adım tamamlanmadı); saklanmaz.
     gecikmis: bool
-
-
-class Ilerleme(BaseModel):
-    tamamlanan: int
-    toplam: int
-    geciken: int
 
 
 class IsbirligiDetayi(BaseModel):

@@ -16,6 +16,11 @@ from app.agents.eslestirme import (
     DURUM_ONERILDI,
     DURUM_REDDEDILDI,
 )
+from app.agents.takip_durumu import (
+    ISBIRLIGI_AKTIF,
+    ISBIRLIGI_PLAN_BEKLIYOR,
+    ISBIRLIGI_TAMAMLANDI,
+)
 from app.api.kimlik import rol_gerekli
 from app.db.session import get_session
 from app.models.eslesme import Eslesme
@@ -23,7 +28,7 @@ from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
 from app.models.yetenek_karti import YetenekKarti
-from app.schemas.girvak import EslesmeSayilari, HesapSayilari, Sayilar
+from app.schemas.girvak import EslesmeSayilari, HesapSayilari, IsbirligiSayilari, Sayilar
 
 router = APIRouter(prefix="/girvak", tags=["girvak"])
 
@@ -44,6 +49,7 @@ async def sayilar(
 ) -> Sayilar:
     roller = await _gruplu(oturum, Hesap.rol)
     durumlar = await _gruplu(oturum, Eslesme.durum)
+    isbirlikleri = await _gruplu(oturum, Isbirligi.durum)
     return Sayilar(
         hesap=HesapSayilari(
             genc=roller.get(ROL_GENC, 0),
@@ -59,4 +65,9 @@ async def sayilar(
             reddedildi=durumlar.get(DURUM_REDDEDILDI, 0),
         ),
         isbirligi=await _say(oturum, Isbirligi),
+        isbirligi_durumlari=IsbirligiSayilari(
+            plan_bekliyor=isbirlikleri.get(ISBIRLIGI_PLAN_BEKLIYOR, 0),
+            aktif=isbirlikleri.get(ISBIRLIGI_AKTIF, 0),
+            tamamlandi=isbirlikleri.get(ISBIRLIGI_TAMAMLANDI, 0),
+        ),
     )

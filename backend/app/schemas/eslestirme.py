@@ -103,6 +103,14 @@ class KurumOnerisi(BaseModel):
     iletisim: Iletisim | None = None
 
 
+class Ilerleme(BaseModel):
+    """İş birliği planının ilerlemesi; gecikme okuma anında hesaplanır."""
+
+    tamamlanan: int
+    toplam: int
+    geciken: int
+
+
 class IsbirligiOzeti(BaseModel):
     """`GET /isbirliklerim` satırı — iki tarafa da aynı görünüm."""
 
@@ -115,3 +123,5 @@ class IsbirligiOzeti(BaseModel):
     rol_alani: str
     problem_tanimi: str
     iletisim: Iletisim
+    # Takip (Faz C): plan_bekliyor | aktif | tamamlandi ve adım ilerlemesi.
+    ilerleme: Ilerleme

@@ -18,9 +18,17 @@ class EslesmeSayilari(BaseModel):
     reddedildi: int
 
 
+class IsbirligiSayilari(BaseModel):
+    plan_bekliyor: int
+    aktif: int
+    tamamlandi: int
+
+
 class Sayilar(BaseModel):
     hesap: HesapSayilari
     yetenek_karti: int
     ihtiyac_karti: int
     eslesme: EslesmeSayilari
     isbirligi: int
+    # Faz C: duruma göre; `tamamlandi` = tamamlanmış pilot (Faz D hedefi: 5).
+    isbirligi_durumlari: IsbirligiSayilari

@@ -21,6 +21,8 @@ from sqlalchemy.orm import selectinload
 
 from app.agents import takip
 from app.agents.takip_durumu import (
+    ISARETI_GERI_AL,
+    ISARETLE,
     ISBIRLIGI_AKTIF,
     ISBIRLIGI_PLAN_BEKLIYOR,
     ISBIRLIGI_TAMAMLANDI,
@@ -30,14 +32,17 @@ from app.agents.takip_durumu import (
     PLAN_KILITLI,
     PLAN_ONAYLA,
     GecersizTakipGecisi,
+    Isaretler,
     PlanDurumu,
     PlanSonucu,
     RolUygunDegil,
     gecikmis_mi,
+    isaret_gecisi,
+    isbirligi_tamamlandi_mi,
     plan_gecisi,
 )
 from app.api.bildirimler import bildirim_ekle
-from app.api.kimlik import rol_gerekli
+from app.api.kimlik import mevcut_hesap, rol_gerekli
 from app.api.sahiplik import (
     bulunamadi,
     girvak_mi,
@@ -46,6 +51,9 @@ from app.api.sahiplik import (
 )
 from app.db.session import get_session, get_sessionmaker
 from app.models.bildirim import (
+    TUR_ADIM_ISARETLENDI,
+    TUR_ADIM_TAMAMLANDI,
+    TUR_ISBIRLIGI_TAMAMLANDI,
     TUR_PLAN_DUZENLENDI,
     TUR_PLAN_ONAYI,
     TUR_PLAN_ONAYLANDI,
@@ -211,6 +219,19 @@ def plani_yaz(isbirligi: Isbirligi, adimlar: list[takip.AdimOnerisi]) -> None:
     isbirligi.kurum_plan_onayi = None
 
 
+def ilerleme_hesapla(milestonelar, bugun: dt.date | None = None) -> Ilerleme:
+    """Tamamlanan / toplam / geciken — gecikme okuma anında (saklanmaz)."""
+    bugun = bugun or dt.date.today()
+    tamam = [m.durum == MILESTONE_TAMAMLANDI for m in milestonelar]
+    return Ilerleme(
+        tamamlanan=sum(tamam),
+        toplam=len(tamam),
+        geciken=sum(
+            gecikmis_mi(m.hedef_tarih, t, bugun) for m, t in zip(milestonelar, tamam, strict=True)
+        ),
+    )
+
+
 def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> IsbirligiDetayi:
     # eslestirme.py bu modülü yalnızca fonksiyon içinde içe aktarıyor; döngü yok.
     from app.api.eslestirme import iletisim
@@ -249,11 +270,7 @@ def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> I
         kurum_plan_onayi=isbirligi.kurum_plan_onayi,
         plan_onerildi_mi=isbirligi.plan_onerildi_mi,
         milestonelar=adimlar,
-        ilerleme=Ilerleme(
-            tamamlanan=sum(a.durum == MILESTONE_TAMAMLANDI for a in adimlar),
-            toplam=len(adimlar),
-            geciken=sum(a.gecikmis for a in adimlar),
-        ),
+        ilerleme=ilerleme_hesapla(isbirligi.milestonelar, bugun),
         durum_ozeti=isbirligi.durum_ozeti,
         ozet_tarihi=isbirligi.ozet_tarihi,
         iletisim=iletisim(eslesme, hesap),
@@ -495,3 +512,124 @@ async def plan_onayla(
             )
     await oturum.commit()
     return detay(isbirligi, hesap)
+
+
+@router.get("/{isbirligi_id}", response_model=IsbirligiDetayi)
+async def isbirligi_getir(
+    isbirligi_id: uuid.UUID,
+    hesap: Hesap = Depends(mevcut_hesap),
+    oturum: AsyncSession = Depends(get_session),
+) -> IsbirligiDetayi:
+    """İki tarafa aynı görünüm: plan, zaman çizelgesi (gecikme hesaplı), onaylar,
+    özet. GİRVAK okur ama e-postaları görmez; başkasının iş birliği 404."""
+    return detay(await okunabilir_isbirligi(oturum, hesap, isbirligi_id), hesap)
+
+
+@router.post("/{isbirligi_id}/milestone/{milestone_id}/isaretle", response_model=IsbirligiDetayi)
+async def isaretle(
+    isbirligi_id: uuid.UUID,
+    milestone_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> IsbirligiDetayi:
+    """Çağıranın tarafı adımı "tamamlandı" der. İki taraf da derse adım tamamlanır;
+    son adım da tamamlanınca iş birliği kendiliğinden `tamamlandi` olur (kural)."""
+    return await _isaret(oturum, hesap, isbirligi_id, milestone_id, ISARETLE)
+
+
+@router.post(
+    "/{isbirligi_id}/milestone/{milestone_id}/isareti-geri-al",
+    response_model=IsbirligiDetayi,
+)
+async def isareti_geri_al(
+    isbirligi_id: uuid.UUID,
+    milestone_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> IsbirligiDetayi:
+    """Kendi işaretini geri alır; iki tarafça tamamlanmış adım geri açılmaz (409)."""
+    return await _isaret(oturum, hesap, isbirligi_id, milestone_id, ISARETI_GERI_AL)
+
+
+async def _isaret(
+    oturum: AsyncSession,
+    hesap: Hesap,
+    isbirligi_id: uuid.UUID,
+    milestone_id: uuid.UUID,
+    olay: str,
+) -> IsbirligiDetayi:
+    isbirligi, rol = await yazilabilir_isbirligi(oturum, hesap, isbirligi_id)
+    milestone = adimi_bul(isbirligi, milestone_id)
+    mevcut = Isaretler(
+        genc=milestone.genc_isaret is not None, kurum=milestone.kurum_isaret is not None
+    )
+    try:
+        sonuc = isaret_gecisi(isbirligi.durum, mevcut, olay, rol)
+    except GecersizTakipGecisi as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
+    except RolUygunDegil as hata:
+        raise HTTPException(
+            status_code=403, detail="Bu işlemi yalnızca iki taraf yapabilir."
+        ) from hata
+
+    if sonuc.degisti:
+        simdi = _simdi()
+        milestone.genc_isaret = (milestone.genc_isaret or simdi) if sonuc.isaretler.genc else None
+        milestone.kurum_isaret = (
+            (milestone.kurum_isaret or simdi) if sonuc.isaretler.kurum else None
+        )
+        milestone.durum = MILESTONE_TAMAMLANDI if sonuc.tamamlandi else MILESTONE_BEKLIYOR
+        aktivite(isbirligi)
+        if olay == ISARETLE:
+            _isaret_bildirimleri(oturum, isbirligi, milestone, rol, sonuc.tamamlandi, simdi)
+    await oturum.commit()
+    return detay(isbirligi, hesap)
+
+
+def _isaret_bildirimleri(
+    oturum: AsyncSession,
+    isbirligi: Isbirligi,
+    milestone: Milestone,
+    rol: str,
+    adim_tamamlandi: bool,
+    simdi: dt.datetime,
+) -> None:
+    """İşaretin yan etkileri: bildirim ve (son adımsa) tamamlanma kuralı."""
+    if not adim_tamamlandi:
+        bildirim_ekle(
+            oturum,
+            taraf_hesabi(isbirligi, karsi_rol(rol)),
+            TUR_ADIM_ISARETLENDI,
+            f"{taraf_adi(isbirligi, rol)} “{milestone.baslik}” adımını tamamlandı olarak "
+            "işaretledi; sen de onayla.",
+            isbirligi.eslesme_id,
+        )
+        return
+
+    if isbirligi_tamamlandi_mi([m.durum == MILESTONE_TAMAMLANDI for m in isbirligi.milestonelar]):
+        # Kural karar verir, ajan değil: her adım iki tarafça onaylandı.
+        isbirligi.durum = ISBIRLIGI_TAMAMLANDI
+        isbirligi.tamamlanma_tarihi = simdi
+        metinler = {
+            ROL_GENC: f"{taraf_adi(isbirligi, ROL_KURUM)} ile iş birliğin tamamlandı; "
+            "kartına tamamlanmış pilot olarak eklendi.",
+            ROL_KURUM: f"{taraf_adi(isbirligi, ROL_GENC)} ile iş birliğiniz tamamlandı.",
+        }
+        for taraf, metin in metinler.items():
+            bildirim_ekle(
+                oturum,
+                taraf_hesabi(isbirligi, taraf),
+                TUR_ISBIRLIGI_TAMAMLANDI,
+                metin,
+                isbirligi.eslesme_id,
+            )
+        return
+
+    for taraf in (ROL_GENC, ROL_KURUM):
+        bildirim_ekle(
+            oturum,
+            taraf_hesabi(isbirligi, taraf),
+            TUR_ADIM_TAMAMLANDI,
+            f"“{milestone.baslik}” adımı iki tarafça tamamlandı.",
+            isbirligi.eslesme_id,
+        )
