@@ -77,7 +77,7 @@ function GirvakSayfasi() {
 
           <PanelBolumu
             baslik="Eşleşmeler ve iş birlikleri"
-            aciklama="Öneriden iş birliğine: kurum ilgilenir, genç kabul eder ya da etmez."
+            aciklama="Öneriden tamamlanmış pilota: kurum ilgilenir, genç kabul eder, plan iki tarafça onaylanır ve adım adım tamamlanır."
           >
             <SayiIzgarasi
               ogeler={[
@@ -89,6 +89,18 @@ function GirvakSayfasi() {
                 { etiket: "Kabul edildi", sayi: sayilar.eslesme.kabul_edildi },
                 { etiket: "Reddedildi", sayi: sayilar.eslesme.reddedildi },
                 { etiket: "İş birliği", sayi: sayilar.isbirligi },
+                {
+                  etiket: "Planı bekleyen",
+                  sayi: sayilar.isbirligi_durumlari.plan_bekliyor,
+                },
+                {
+                  etiket: "Süren iş birliği",
+                  sayi: sayilar.isbirligi_durumlari.aktif,
+                },
+                {
+                  etiket: "Tamamlanmış pilot",
+                  sayi: sayilar.isbirligi_durumlari.tamamlandi,
+                },
               ]}
             />
           </PanelBolumu>

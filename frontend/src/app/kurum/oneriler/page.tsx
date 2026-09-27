@@ -8,6 +8,7 @@ import {
   BelgeKarti,
   CiktiOzeti,
   EtiketSatiri,
+  PilotRozeti,
   SkorRozeti,
 } from "@/components/kart";
 import { HataKutusu } from "@/components/sohbet";
@@ -263,7 +264,12 @@ function OneriKarti({
     <BelgeKarti
       baslik={kart.rol_alani}
       altbaslik={`${kart.genc_adi} · Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
-      rozet={<SkorRozeti skor={oneri.skor} />}
+      rozet={
+        <span className="flex flex-wrap gap-2">
+          <PilotRozeti sayi={kart.tamamlanan_pilot} />
+          <SkorRozeti skor={oneri.skor} />
+        </span>
+      }
     >
       <section className="flex flex-col gap-1.5">
         <h4 className="font-heading text-sm font-semibold text-ana">

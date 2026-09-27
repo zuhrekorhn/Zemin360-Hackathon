@@ -107,12 +107,12 @@ reddeder; sayfa görünür ama düğmeler çalışmaz. Yerel denemede `http://lo
 Özellik notu ve kararlar: [`faz-c-takip.md`](faz-c-takip.md). Durum özeti
 (Kesim çizgisi (3)) kesilebilir; döngü onsuz tam çalışır.
 
-- [ ] İş birliği açılınca ajan ihtiyaç kartının başarı kriterinden 3-5
+- [x] İş birliği açılınca ajan ihtiyaç kartının başarı kriterinden 3-5
       milestone'luk plan önerir (LLM, yapılandırılmış çıktı).
-- [ ] İki taraf planı onaylar ya da düzenler.
-- [ ] Her milestone iki tarafça işaretlenir; iki taraf da aynı zaman çizelgesini görür.
-- [ ] Ajan kısa durum özeti yazar; tarihi geçen milestone'u işaretler.
-- [ ] İş birliği tamamlanınca gencin kartına "tamamlanmış pilot" sinyali yazılır
+- [x] İki taraf planı onaylar ya da düzenler.
+- [x] Her milestone iki tarafça işaretlenir; iki taraf da aynı zaman çizelgesini görür.
+- [x] Ajan kısa durum özeti yazar; tarihi geçen milestone'u işaretler.
+- [x] İş birliği tamamlanınca gencin kartına "tamamlanmış pilot" sinyali yazılır
       ve Eşleştirme'nin doğrulama bonusuna girer. **Geri besleme döngüsü burada kapanır.**
 
 **Sınır:** Ajan karar vermez, milestone'u kendisi kapatmaz; öneri ve özet üretir.

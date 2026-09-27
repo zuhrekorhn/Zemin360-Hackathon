@@ -60,7 +60,7 @@ function BildirimListesi() {
     } catch {
       // Okundu işaretlenemese de kullanıcı gitmek istediği yere gitsin.
     }
-    router.push(bildirimHedefi(bildirim.tur));
+    router.push(bildirimHedefi(bildirim.tur, bildirim.isbirligi_id));
   }
 
   async function hepsiniOkunduSay() {

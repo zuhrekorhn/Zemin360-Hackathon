@@ -23,6 +23,7 @@ import {
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
+import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 import {
   CALISMA_MODELI_ETIKETLERI,
   DENEYIM_ETIKETLERI,
@@ -249,6 +250,30 @@ function GencPaneliIcerigi() {
                   iletisim={isbirligi.iletisim}
                   karsiTaraf="kurum"
                 />
+                <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-2">
+                  <DurumEtiketi
+                    metin={
+                      ISBIRLIGI_DURUM_ETIKETLERI[isbirligi.durum] ??
+                      isbirligi.durum
+                    }
+                    baglanti={isbirligi.durum === "tamamlandi"}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {ilerlemeMetni(isbirligi.durum, isbirligi.ilerleme)}
+                  </span>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto"
+                  >
+                    <Link href={`/isbirligi/${isbirligi.isbirligi_id}`}>
+                      {isbirligi.durum === "plan_bekliyor"
+                        ? "Planı gör"
+                        : "İş birliğini aç"}
+                    </Link>
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
@@ -335,7 +360,17 @@ function IlgiKaydi({
             </span>
           </>
         ) : ilgi.durum === "kabul_edildi" ? (
-          <DurumEtiketi metin="Kabul ettin, iş birliği açıldı" baglanti />
+          <>
+            <DurumEtiketi metin="Kabul ettin, iş birliği açıldı" baglanti />
+            {ilgi.isbirligi_id ? (
+              <Link
+                href={`/isbirligi/${ilgi.isbirligi_id}`}
+                className="text-sm text-baglanti underline"
+              >
+                İş birliğine git
+              </Link>
+            ) : null}
+          </>
         ) : (
           <DurumEtiketi metin="Reddettin" />
         )}

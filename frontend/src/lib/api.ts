@@ -148,6 +148,8 @@ export type Bildirim = {
   tur: BildirimTuru | string;
   metin: string;
   eslesme_id: string | null;
+  /** Eşleşmenin iş birliği varsa: bildirim doğrudan iş birliği sayfasına gider. */
+  isbirligi_id: string | null;
   olusturma_tarihi: string;
   okundu_tarihi: string | null;
 };
@@ -230,6 +232,8 @@ export type YetenekKartiYaniti = {
   versiyon: number;
   embedding_var: boolean;
   somut_ciktilar: SomutCiktiYaniti[];
+  /** Tamamlanmış iş birliği sayısı (Faz C); eşleşme skoruna bonus olarak girer. */
+  tamamlanan_pilot: number;
 };
 
 /** GET /yetenek-kartlari/{id} — kartın dışarıya açılan hali. */
@@ -638,6 +642,7 @@ export type IsbirligiOzeti = {
   rol_alani: string;
   problem_tanimi: string;
   iletisim: Iletisim;
+  ilerleme: Ilerleme;
 };
 
 export function isbirliklerim(): Promise<IsbirligiOzeti[]> {
@@ -655,10 +660,141 @@ export type GirvakSayilari = {
     reddedildi: number;
   };
   isbirligi: number;
+  /** `tamamlandi` = tamamlanmış pilot (Faz D hedefi: 5). */
+  isbirligi_durumlari: {
+    plan_bekliyor: number;
+    aktif: number;
+    tamamlandi: number;
+  };
 };
 
 export function girvakSayilari(): Promise<GirvakSayilari> {
   return apiIstek<GirvakSayilari>("/girvak/sayilar", { cache: "no-store" });
+}
+
+/* --- Takip Ajanı (docs/faz-c-takip.md § 7) --------------------------------
+   Tipler backend'deki app/schemas/takip.py ile birebir eşleşir. */
+
+export type Ilerleme = { tamamlanan: number; toplam: number; geciken: number };
+
+export type MilestoneYaniti = {
+  id: string;
+  sira: number;
+  baslik: string;
+  aciklama: string | null;
+  hedef_tarih: string | null;
+  /** "bekliyor" | "tamamlandi" */
+  durum: string;
+  genc_isaret: string | null;
+  kurum_isaret: string | null;
+  kanit_linki: string | null;
+  /** Okuma anında hesaplanır: hedef tarih geçti, adım tamamlanmadı. */
+  gecikmis: boolean;
+};
+
+/** "plan_bekliyor" | "aktif" | "tamamlandi" */
+export type IsbirligiDurumu = "plan_bekliyor" | "aktif" | "tamamlandi";
+
+export type IsbirligiDetayi = {
+  id: string;
+  durum: IsbirligiDurumu;
+  baslangic_tarihi: string | null;
+  tamamlanma_tarihi: string | null;
+  eslesme_id: string;
+  yetenek_karti_id: string;
+  ihtiyac_karti_id: string;
+  genc_adi: string;
+  kurum_adi: string;
+  rol_alani: string;
+  problem_tanimi: string;
+  basari_kriteri: string | null;
+  genc_plan_onayi: string | null;
+  kurum_plan_onayi: string | null;
+  plan_onerildi_mi: boolean;
+  milestonelar: MilestoneYaniti[];
+  ilerleme: Ilerleme;
+  durum_ozeti: string | null;
+  ozet_tarihi: string | null;
+  /** İki tarafa dolu, GİRVAK'a null. */
+  iletisim: Iletisim | null;
+};
+
+export type MilestoneGirdisi = {
+  baslik?: string;
+  aciklama?: string | null;
+  hedef_tarih?: string | null;
+  kanit_linki?: string | null;
+};
+
+const isbirligiYolu = (id: string) => `/isbirligi/${id}`;
+
+export function isbirligiGetir(id: string): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(isbirligiYolu(id), { cache: "no-store" });
+}
+
+/** Ajandan (yeniden) plan ister; mevcut adımları siler, iki onayı sıfırlar. */
+export function planOner(id: string): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(`${isbirligiYolu(id)}/plan-oner`, {
+    method: "POST",
+  });
+}
+
+export function milestoneEkle(
+  id: string,
+  girdi: MilestoneGirdisi & { baslik: string },
+): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(`${isbirligiYolu(id)}/milestone-ekle`, {
+    method: "POST",
+    body: JSON.stringify(girdi),
+  });
+}
+
+/** Yalnızca gönderilen alanlar değişir (PATCH). */
+export function milestoneGuncelle(
+  id: string,
+  milestoneId: string,
+  girdi: MilestoneGirdisi,
+): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(
+    `${isbirligiYolu(id)}/milestone/${milestoneId}`,
+    { method: "PATCH", body: JSON.stringify(girdi) },
+  );
+}
+
+export function milestoneSil(
+  id: string,
+  milestoneId: string,
+): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(
+    `${isbirligiYolu(id)}/milestone/${milestoneId}`,
+    { method: "DELETE" },
+  );
+}
+
+export function planOnayla(id: string): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(`${isbirligiYolu(id)}/plan-onayla`, {
+    method: "POST",
+  });
+}
+
+export function milestoneIsaretle(
+  id: string,
+  milestoneId: string,
+): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(
+    `${isbirligiYolu(id)}/milestone/${milestoneId}/isaretle`,
+    { method: "POST" },
+  );
+}
+
+export function milestoneIsaretiGeriAl(
+  id: string,
+  milestoneId: string,
+): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(
+    `${isbirligiYolu(id)}/milestone/${milestoneId}/isareti-geri-al`,
+    { method: "POST" },
+  );
 }
 
 export { API_URL };

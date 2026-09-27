@@ -13,11 +13,13 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.kimlik import mevcut_hesap
 from app.api.sahiplik import bulunamadi
 from app.db.session import get_session
 from app.models.bildirim import Bildirim
+from app.models.eslesme import Eslesme
 from app.models.hesap import Hesap
 from app.schemas.bildirim import BildirimYaniti, HepsiniOkuYaniti
 
@@ -56,15 +58,25 @@ async def okunmamis_sayisi(oturum: AsyncSession, hesap_id: uuid.UUID) -> int:
 @router.get("", response_model=list[BildirimYaniti])
 async def bildirimler(
     hesap: Hesap = Depends(mevcut_hesap), oturum: AsyncSession = Depends(get_session)
-) -> list[Bildirim]:
-    """Hesabın bildirimleri, en yeni önce."""
+) -> list[BildirimYaniti]:
+    """Hesabın bildirimleri, en yeni önce; iş birliği varsa kimliğiyle."""
     satirlar = await oturum.scalars(
         select(Bildirim)
+        .options(selectinload(Bildirim.eslesme).selectinload(Eslesme.isbirligi))
         .where(Bildirim.hesap_id == hesap.id)
         .order_by(Bildirim.olusturma_tarihi.desc(), Bildirim.id)
         .limit(LISTE_SINIRI)
     )
-    return list(satirlar)
+    return [
+        BildirimYaniti.model_validate(bildirim).model_copy(
+            update={
+                "isbirligi_id": bildirim.eslesme.isbirligi.id
+                if bildirim.eslesme is not None and bildirim.eslesme.isbirligi is not None
+                else None
+            }
+        )
+        for bildirim in satirlar.all()
+    ]
 
 
 @router.post("/hepsini-oku", response_model=HepsiniOkuYaniti)

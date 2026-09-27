@@ -59,3 +59,16 @@ describe("bildirimHedefi", () => {
     expect(bildirimHedefi("canlilik")).toBe("/bildirimler");
   });
 });
+
+describe("bildirimHedefi — iş birliği", () => {
+  it("Takip bildirimi ve kabul, iş birliği sayfasına götürür", () => {
+    expect(bildirimHedefi("adim_isaretlendi", "abc")).toBe("/isbirligi/abc");
+    expect(bildirimHedefi("plan_onerildi", "abc")).toBe("/isbirligi/abc");
+    expect(bildirimHedefi("kabul", "abc")).toBe("/isbirligi/abc");
+  });
+
+  it("iş birliği kimliği yoksa eski hedefler geçerli", () => {
+    expect(bildirimHedefi("kabul", null)).toBe("/kurum#isbirlikleri");
+    expect(bildirimHedefi("ilgi", "abc")).toBe("/genc#ilgiler");
+  });
+});

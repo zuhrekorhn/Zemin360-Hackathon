@@ -21,6 +21,7 @@ import {
   onerilerim,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 
 /**
  * Kurum paneli (docs/faz-b-kimlik-ve-dongu.md § 7): ihtiyaç kartlarım (her
@@ -228,6 +229,30 @@ function KurumPaneliIcerigi() {
                   iletisim={isbirligi.iletisim}
                   karsiTaraf="genc"
                 />
+                <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-2">
+                  <DurumEtiketi
+                    metin={
+                      ISBIRLIGI_DURUM_ETIKETLERI[isbirligi.durum] ??
+                      isbirligi.durum
+                    }
+                    baglanti={isbirligi.durum === "tamamlandi"}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {ilerlemeMetni(isbirligi.durum, isbirligi.ilerleme)}
+                  </span>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto"
+                  >
+                    <Link href={`/isbirligi/${isbirligi.isbirligi_id}`}>
+                      {isbirligi.durum === "plan_bekliyor"
+                        ? "Planı gör"
+                        : "İş birliğini aç"}
+                    </Link>
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

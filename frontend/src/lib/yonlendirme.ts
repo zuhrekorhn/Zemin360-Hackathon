@@ -14,6 +14,17 @@ export function panelYolu(rol: Rol): string {
 
 const GIRIS_SAYFALARI = ["/giris", "/kayit"];
 
+/** Takip Ajanı'nın bildirim türleri (backend app/models/bildirim.py). */
+const TAKIP_TURLERI = new Set([
+  "plan_onerildi",
+  "plan_duzenlendi",
+  "plan_onayi",
+  "plan_onaylandi",
+  "adim_isaretlendi",
+  "adim_tamamlandi",
+  "isbirligi_tamamlandi",
+]);
+
 /**
  * `?sonra=` güvenli mi? Yalnızca bu sitenin içindeki bir yol kabul edilir:
  * `//baska.site`, `/\baska.site` ya da `https://…` ile açık yönlendirme
@@ -35,10 +46,17 @@ export function giristenSonra(rol: Rol, sonra: string | null): string {
 /**
  * Bildirime tıklayınca nereye (docs/faz-b-kimlik-ve-dongu.md § 6).
  * Gence gidenler (ilgi, referans yanıtı) genç paneline; kuruma gidenler
- * (yeni öneri, kabul, red) kurum paneline. Bilinmeyen tür (Faz C/D'de
- * eklenecekler) bildirim sayfasında kalır.
+ * (yeni öneri, red) kurum paneline. İş birliği olan bildirim (kabul ve
+ * Takip'in bütün türleri, Faz C) doğrudan iş birliği sayfasına. Bilinmeyen
+ * tür (Faz D'de eklenecekler) bildirim sayfasında kalır.
  */
-export function bildirimHedefi(tur: string): string {
+export function bildirimHedefi(
+  tur: string,
+  isbirligiId: string | null = null,
+): string {
+  if (isbirligiId && (tur === "kabul" || TAKIP_TURLERI.has(tur))) {
+    return `/isbirligi/${isbirligiId}`;
+  }
   switch (tur) {
     case "ilgi":
       return "/genc#ilgiler";

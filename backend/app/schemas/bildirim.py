@@ -15,6 +15,9 @@ class BildirimYaniti(BaseModel):
     tur: str
     metin: str
     eslesme_id: uuid.UUID | None
+    # Eşleşmenin iş birliği varsa (Faz C): arayüz bildirimi doğrudan iş
+    # birliği sayfasına bağlar.
+    isbirligi_id: uuid.UUID | None = None
     olusturma_tarihi: dt.datetime
     okundu_tarihi: dt.datetime | None
 

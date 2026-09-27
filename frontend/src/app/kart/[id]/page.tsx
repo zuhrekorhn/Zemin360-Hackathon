@@ -6,7 +6,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
-import { BelgeKarti, CiktiOzeti, EtiketSatiri } from "@/components/kart";
+import {
+  BelgeKarti,
+  CiktiOzeti,
+  EtiketSatiri,
+  PilotRozeti,
+} from "@/components/kart";
 import { KanitBolumu } from "@/components/kanit";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
@@ -157,11 +162,14 @@ function KartIcerigi() {
             baslik={kart.rol_alani}
             altbaslik={`Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
             rozet={
-              kart.kanit_bekleyen ? (
-                <span className="rounded-sm border border-kenar px-2.5 py-1 text-xs text-muted-foreground">
-                  Kanıt bekliyor
-                </span>
-              ) : null
+              <span className="flex flex-wrap gap-2">
+                <PilotRozeti sayi={kart.tamamlanan_pilot} />
+                {kart.kanit_bekleyen ? (
+                  <span className="rounded-sm border border-kenar px-2.5 py-1 text-xs text-muted-foreground">
+                    Kanıt bekliyor
+                  </span>
+                ) : null}
+              </span>
             }
           >
             <EtiketSatiri

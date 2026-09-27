@@ -154,3 +154,16 @@ export function CiktiOzeti({
     </div>
   );
 }
+
+/**
+ * Tamamlanmış pilot rozeti (docs/faz-c-takip.md § 6): iki tarafın her adımı
+ * onayladığı iş birliği. Bağlantı rengi — "bağlantı anı". Sıfırsa çizilmez.
+ */
+export function PilotRozeti({ sayi }: { sayi: number }) {
+  if (sayi < 1) return null;
+  return (
+    <span className="rounded-sm border border-baglanti px-2.5 py-1 text-xs text-baglanti">
+      {sayi} tamamlanmış pilot
+    </span>
+  );
+}

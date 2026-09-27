@@ -197,3 +197,15 @@ def test_yetki():
         assert yanit.status_code == 404
 
     senaryo(adimlar)
+
+
+def test_bildirim_is_birligi_kimligini_tasir():
+    """Arayüz takip bildirimini doğrudan iş birliği sayfasına bağlayabilsin."""
+
+    async def adimlar(istemci, d):
+        isb = await isbirligi_ac(d, adimlar=1)
+        await istemci.post(_yol(isb, "/plan-onayla"), headers=d.genc1.baslik)
+        liste = (await istemci.get("/bildirimler", headers=d.kurum1.baslik)).json()
+        assert [(b["tur"], b["isbirligi_id"]) for b in liste] == [("plan_onayi", str(isb.id))]
+
+    senaryo(adimlar)
