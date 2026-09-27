@@ -14,6 +14,13 @@ export function panelYolu(rol: Rol): string {
 
 const GIRIS_SAYFALARI = ["/giris", "/kayit"];
 
+/** Canlılık'ın iş birliğine bağlı hatırlatmaları (Faz D): iş birliği sayfasına. */
+const CANLILIK_ISBIRLIGI = new Set([
+  "plan_onaysiz",
+  "isbirligi_hareketsiz",
+  "adim_gecikti",
+]);
+
 /** Takip Ajanı'nın bildirim türleri (backend app/models/bildirim.py). */
 const TAKIP_TURLERI = new Set([
   "plan_onerildi",
@@ -53,11 +60,25 @@ export function giristenSonra(rol: Rol, sonra: string | null): string {
 export function bildirimHedefi(
   tur: string,
   isbirligiId: string | null = null,
+  rol: Rol | null = null,
 ): string {
-  if (isbirligiId && (tur === "kabul" || TAKIP_TURLERI.has(tur))) {
+  if (
+    isbirligiId &&
+    (tur === "kabul" || TAKIP_TURLERI.has(tur) || CANLILIK_ISBIRLIGI.has(tur))
+  ) {
     return `/isbirligi/${isbirligiId}`;
   }
   switch (tur) {
+    // Canlılık (Faz D). Yanıtsız ilginin son hatırlatması iki tarafa aynı
+    // türle gider: genç ilgiler bölümüne, kurum önerilerine.
+    case "oneri_bekliyor":
+      return "/kurum#ihtiyaclar";
+    case "ilgi_yanitsiz_1":
+      return "/genc#ilgiler";
+    case "ilgi_yanitsiz_2":
+      return rol === "kurum" ? "/kurum#oneriler" : "/genc#ilgiler";
+    case "yeni_firsat":
+      return "/genc#kartlar";
     case "ilgi":
       return "/genc#ilgiler";
     case "referans_yaniti":

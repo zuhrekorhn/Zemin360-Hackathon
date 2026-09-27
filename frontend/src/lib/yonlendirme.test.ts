@@ -72,3 +72,27 @@ describe("bildirimHedefi — iş birliği", () => {
     expect(bildirimHedefi("ilgi", "abc")).toBe("/genc#ilgiler");
   });
 });
+
+describe("bildirimHedefi — Canlılık", () => {
+  it("iş birliği hatırlatmaları iş birliği sayfasına", () => {
+    expect(bildirimHedefi("adim_gecikti", "abc")).toBe("/isbirligi/abc");
+    expect(bildirimHedefi("plan_onaysiz", "abc")).toBe("/isbirligi/abc");
+    expect(bildirimHedefi("isbirligi_hareketsiz", "abc")).toBe(
+      "/isbirligi/abc",
+    );
+  });
+
+  it("yanıtsız ilginin son hatırlatması alıcının rolüne göre", () => {
+    expect(bildirimHedefi("ilgi_yanitsiz_2", null, "genc")).toBe(
+      "/genc#ilgiler",
+    );
+    expect(bildirimHedefi("ilgi_yanitsiz_2", null, "kurum")).toBe(
+      "/kurum#oneriler",
+    );
+  });
+
+  it("öneri ve fırsat", () => {
+    expect(bildirimHedefi("oneri_bekliyor")).toBe("/kurum#ihtiyaclar");
+    expect(bildirimHedefi("yeni_firsat")).toBe("/genc#kartlar");
+  });
+});

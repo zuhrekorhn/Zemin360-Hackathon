@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { GirisKapisi } from "@/components/giris-kapisi";
+import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { BosDurum, tarihYaz } from "@/components/panel";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ export default function BildirimlerSayfasi() {
 function BildirimListesi() {
   const router = useRouter();
   const { tazele } = useOturum();
+  const hesap = useGirisliHesap();
   const [liste, setListe] = useState<Bildirim[] | null>(null);
   const [hata, setHata] = useState<Hata | null>(null);
   const [bekleniyor, setBekleniyor] = useState(false);
@@ -60,7 +61,7 @@ function BildirimListesi() {
     } catch {
       // Okundu işaretlenemese de kullanıcı gitmek istediği yere gitsin.
     }
-    router.push(bildirimHedefi(bildirim.tur, bildirim.isbirligi_id));
+    router.push(bildirimHedefi(bildirim.tur, bildirim.isbirligi_id, hesap.rol));
   }
 
   async function hepsiniOkunduSay() {

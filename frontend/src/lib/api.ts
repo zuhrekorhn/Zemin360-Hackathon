@@ -666,6 +666,16 @@ export type GirvakSayilari = {
     aktif: number;
     tamamlandi: number;
   };
+  /** Faz D: programın adı + platformda ne sayıldığı (fark gizlenmez). */
+  hedefler: ProgramHedefi[];
+};
+
+export type ProgramHedefi = {
+  anahtar: "basvuru" | "kurum" | "eslesme" | "pilot";
+  program_adi: string;
+  olcum: string;
+  sayi: number;
+  hedef: number;
 };
 
 export function girvakSayilari(): Promise<GirvakSayilari> {
@@ -795,6 +805,53 @@ export function milestoneIsaretiGeriAl(
     `${isbirligiYolu(id)}/milestone/${milestoneId}/isareti-geri-al`,
     { method: "POST" },
   );
+}
+
+/* --- Canlılık (docs/faz-d-canlilik.md § 8) — yalnızca GİRVAK ---------------- */
+
+export type TaramaSonucu = {
+  tarih: string;
+  /** tür → yazılan olay sayısı */
+  olaylar: Record<string, number>;
+  bildirim: number;
+  sure_sn: number;
+};
+
+export type PasifBaglanti = {
+  tur: string;
+  eslesme_id: string;
+  isbirligi_id: string | null;
+  genc_adi: string;
+  kurum_adi: string;
+  gun: number;
+  adim: string | null;
+  alicilar: string[];
+  son_hatirlatma: string | null;
+};
+
+export type CanlilikOlayi = {
+  id: string;
+  tur: string;
+  mesaj_metni: string | null;
+  tetiklenme_tarihi: string;
+  alici_adi: string | null;
+  alici_rol: Rol | null;
+  eslesme_id: string;
+};
+
+/** POST /canlilik/tarama — "Taramayı şimdi çalıştır". İdempotent. */
+export function taramaCalistir(): Promise<TaramaSonucu> {
+  return apiIstek<TaramaSonucu>("/canlilik/tarama", { method: "POST" });
+}
+
+export function pasifBaglantilar(): Promise<PasifBaglanti[]> {
+  return apiIstek<PasifBaglanti[]>("/canlilik/pasifler", { cache: "no-store" });
+}
+
+export function canlilikOlaylari(limit = 20): Promise<CanlilikOlayi[]> {
+  return apiIstek<CanlilikOlayi[]>(`/canlilik/olaylar?limit=${limit}`, {
+    cache: "no-store",
+  });
 }
 
 export { API_URL };
