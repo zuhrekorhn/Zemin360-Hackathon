@@ -111,7 +111,8 @@ Kurallar:
 - Suçlama, baskı ya da ceza dili kullanma ("ihmal", "hâlâ", "maalesef" gibi); destekleyici ol.
 - Bir sonraki adımı açıkça söyle (onayla, işaretle, göz at gibi).
 - E-posta adresi, bağlantı, emoji, başlık ya da madde işareti kullanma.
-- "Sen" diye hitap et; düz, sade Türkçe."""
+- "Sen" diye hitap et; düz, sade Türkçe.
+- Yeni fırsat hatırlatmasında kurumun adını bilmiyorsun ve tahmin etme; yalnızca sektörü söyle."""
 
 KISISEL_SABLON = ChatPromptTemplate.from_messages(
     [
@@ -119,7 +120,7 @@ KISISEL_SABLON = ChatPromptTemplate.from_messages(
         (
             "human",
             "Tür: {tur}\nAlıcı: {alici}\nKarşı taraf: {karsi_ad}\nGün: {gun}\n"
-            "Adım: {adim}\nÖneri sayısı: {sayi}\n\nTaslak: {taslak}",
+            "Adım: {adim}\nÖneri sayısı: {sayi}\nSektör: {sektor}\n\nTaslak: {taslak}",
         ),
     ]
 )
@@ -147,10 +148,12 @@ async def kisisel_metin(b: HatirlatmaBaglami) -> str | None:
     girdiler = {
         "tur": b.tur,
         "alici": "genç" if b.alici == ROL_GENC else "kurum",
-        "karsi_ad": b.karsi_ad,
+        # Yeni fırsat anonim: karşı taraf (kurum) adı yok, "-" gider.
+        "karsi_ad": b.karsi_ad or "-",
         "gun": b.gun,
         "adim": b.adim or "-",
         "sayi": b.sayi,
+        "sektor": b.sektor or "-",
         "taslak": taslak,
     }
     try:

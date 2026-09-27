@@ -32,11 +32,15 @@ from sqlalchemy.orm import selectinload
 from app.agents import canlilik
 from app.agents.canlilik_kurallari import (
     ESIKLER,
+    FIRSAT_ESKI_KART_GUN,
+    FIRSAT_YENI_IHTIYAC_GUN,
     ILGI_YANITSIZ_1,
     ONERI_BEKLIYOR,
+    YENI_FIRSAT,
     AdimBilgisi,
     Hatirlatma,
     eslesme_hatirlatmalari,
+    firsat_mi,
     gecen_gun,
     gecikme_gunu,
     isbirligi_hatirlatmalari,
@@ -262,6 +266,8 @@ async def adaylari_topla(
                 )
             )
 
+    adaylar.extend(await firsat_adaylari(oturum, simdi))
+
     son_olaylar = await _son_olaylar(oturum, {e.id for e, _, _ in adaylar})
     yazilacaklar: list[_Yazilacak] = []
     for eslesme, h, baglam in adaylar:
@@ -285,6 +291,45 @@ async def adaylari_topla(
 
 # Bir taramada en çok bu kadar LLM çağrısı aynı anda (§ 5).
 ESZAMANLI_METIN = 4
+
+
+async def firsat_adaylari(
+    oturum: AsyncSession, simdi: dt.datetime
+) -> list[tuple[Eslesme, Hatirlatma, canlilik.HatirlatmaBaglami]]:
+    """Yeni fırsat (§ 2) — kesilebilir dal.
+
+    Son 7 günde açılmış ihtiyaç kartlarının `onerildi` önerileri; önerilen
+    kart en az 14 gün önce oluşturulmuşsa kartın sahibine anonim fırsat.
+    Kurumun adı bağlama hiç girmez: ne şablon ne LLM onu görebilir.
+    """
+    eslesmeler = await oturum.scalars(
+        select(Eslesme)
+        .options(*_iliskiler())
+        .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
+        .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
+        .where(
+            Eslesme.durum == DURUM_ONERILDI,
+            IhtiyacKarti.olusturma_tarihi > simdi - dt.timedelta(days=FIRSAT_YENI_IHTIYAC_GUN),
+            YetenekKarti.olusturma_tarihi <= simdi - dt.timedelta(days=FIRSAT_ESKI_KART_GUN),
+        )
+    )
+    return [
+        (
+            eslesme,
+            Hatirlatma(YENI_FIRSAT, ROL_GENC),
+            canlilik.HatirlatmaBaglami(
+                tur=YENI_FIRSAT,
+                alici=ROL_GENC,
+                gun=0,
+                karsi_ad="",
+                sektor=eslesme.ihtiyac_karti.kurum.sektor,
+            ),
+        )
+        for eslesme in eslesmeler.all()
+        if firsat_mi(
+            eslesme.ihtiyac_karti.olusturma_tarihi, eslesme.yetenek_karti.olusturma_tarihi, simdi
+        )
+    ]
 
 
 async def metinleri_uret(yazilacaklar: list[_Yazilacak]) -> list[str]:
@@ -348,8 +393,15 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
                 )
             )
             olaylar[y.hatirlatma.tur] += 1
+        # Yeni fırsat anonim (§ 2): genç, kurum ilgilenmeden eşleşmeyi göremez;
+        # bildirim eşleşme kimliği taşısaydı varlığını sızdırırdı.
+        firsat = temsilci.hatirlatma.tur == YENI_FIRSAT
         bildirim_ekle(
-            oturum, temsilci.alici_hesap_id, temsilci.hatirlatma.tur, metin, temsilci.eslesme.id
+            oturum,
+            temsilci.alici_hesap_id,
+            temsilci.hatirlatma.tur,
+            metin,
+            None if firsat else temsilci.eslesme.id,
         )
     await oturum.commit()
 

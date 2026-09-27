@@ -8,6 +8,7 @@ yalnızca bu dünyanın kayıtlarına bakar.
 
 import datetime as dt
 
+import pytest
 from sqlalchemy import select
 
 from app.api import canlilik as canlilik_api
@@ -236,3 +237,76 @@ def test_tarama_anahtari_ayari_bos_ya_da_uzun():
     assert Settings(**ortak, tarama_anahtari=ANAHTAR).tarama_anahtari == ANAHTAR
     with pytest.raises(ValidationError):
         Settings(**ortak, tarama_anahtari="kisa")
+
+
+# --- Yeni fırsat (§ 2) -----------------------------------------------------------------------
+
+
+async def _firsat_dunyasi(d, *, kart_gun, ihtiyac_gun):
+    """E1: kurum1'in ihtiyacı (sektör 'eğitim') genc1'in kartına önerildi; son hareket şimdi."""
+    simdi = SIMDI()
+    d.kurum1.profil.sektor = "eğitim"
+    d.K1.olusturma_tarihi = simdi - dt.timedelta(days=kart_gun)
+    d.I1.olusturma_tarihi = simdi - dt.timedelta(days=ihtiyac_gun)
+    d.E1.son_aktivite_tarihi = simdi  # öneri yeni: oneri_bekliyor tetiklenmesin
+    await d.oturum.commit()
+
+
+def test_yeni_ihtiyac_eski_karta_anonim_firsat_bir_kez():
+    async def adimlar(istemci, d):
+        await _firsat_dunyasi(d, kart_gun=20, ihtiyac_gun=2)
+        await _tara(d)
+        assert [(o.tur, o.alici_hesap_id) for o in await _olaylar(d, d.E1)] == [
+            ("yeni_firsat", d.genc1.hesap.id)
+        ]
+        [bildirim] = await bildirimleri(d, d.genc1)
+        assert bildirim.tur == "yeni_firsat"
+        assert "eğitim" in bildirim.metin
+        assert "Koop" not in bildirim.metin  # kurum adı yok
+        assert bildirim.eslesme_id is None  # eşleşmenin varlığı sızmaz
+
+        # İkinci tarama ve araya giren hareket: fırsat bir kez gider.
+        d.E1.son_aktivite_tarihi = SIMDI()
+        await d.oturum.commit()
+        await _tara(d)
+        assert len(await _olaylar(d, d.E1)) == 1
+
+        # Gencin bildirim listesi de eşleşme kimliği taşımıyor.
+        liste = (await istemci.get("/bildirimler", headers=d.genc1.baslik)).json()
+        assert liste[0]["eslesme_id"] is None and liste[0]["isbirligi_id"] is None
+
+    senaryo(adimlar)
+
+
+def test_firsat_llm_girdisinde_kurum_adi_yok(monkeypatch):
+    from app.agents import canlilik
+
+    gorulen = []
+
+    async def kisisel(b):
+        gorulen.append(b)
+        return None
+
+    monkeypatch.setattr(canlilik, "kisisel_metin", kisisel)
+
+    async def adimlar(istemci, d):
+        await _firsat_dunyasi(d, kart_gun=20, ihtiyac_gun=2)
+        await _tara(d)
+        firsatlar = [b for b in gorulen if b.tur == "yeni_firsat" and b.sektor == "eğitim"]
+        assert firsatlar and all(b.karsi_ad == "" for b in firsatlar)
+
+    senaryo(adimlar)
+
+
+@pytest.mark.parametrize(
+    "kart_gun,ihtiyac_gun",
+    [(5, 2), (20, 8)],
+    ids=["kart-yeni", "ihtiyac-eski"],
+)
+def test_firsat_kosulu_disinda_bildirim_yok(kart_gun, ihtiyac_gun):
+    async def adimlar(istemci, d):
+        await _firsat_dunyasi(d, kart_gun=kart_gun, ihtiyac_gun=ihtiyac_gun)
+        await _tara(d)
+        assert await _olaylar(d, d.E1) == []
+
+    senaryo(adimlar)
