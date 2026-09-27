@@ -30,12 +30,24 @@ sequenceDiagram
   E->>DB: Kartları okur
   E->>E: Taksonomi eşleme ve skor hesabı
   E->>DB: Eşleşme kaydını yazar
-  E->>Ku: Sıralı öneri ve gerekçe gösterir
+  E->>Ku: Sıralı öneri ve gerekçe gösterir (gencin adı görünür, e-posta yok)
   Ku->>E: İlgileniyorum der
-  E->>G: Eşleşme bildirimi gönderir
+  E->>DB: Eşleşme onerildi → ilgileniliyor
+  E->>G: Uygulama içi bildirim ("X kartınla ilgileniyor")
+  alt Genç kabul ederse
+    G->>E: Kabul eder
+    E->>DB: kabul_edildi + ISBIRLIGI açılır
+    E->>Ku: Bildirim; iki tarafa e-postalar açılır
+  else Genç reddederse
+    G->>E: Reddeder
+    E->>DB: reddedildi
+    E->>Ku: Bildirim (nötr dil)
+  end
 ```
 
 **Mimari sonucu:** Eşleştirme Ajanı senkron bir endpoint değil, ayrı bir arka plan işi (background job / cron) olarak yazılmalı.
+
+**Karşılıklı onay (Faz B):** iş birliği yalnızca gencin kabulüyle açılır; geçiş kuralı tek fonksiyonda (`app/agents/eslesme_durumu.py`). Ayrıntı: `faz-b-kimlik-ve-dongu.md` § 5-6.
 
 ## Akış 2 — Doğrulama (referans + zaman aşımı dalı)
 

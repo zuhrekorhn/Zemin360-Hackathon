@@ -25,10 +25,11 @@ takvime girmez.
 
 | Tarih | Faz | Çıktı |
 |---|---|---|
-| 25-26 Eyl | A — Sağlamlaştırma | İnceleme bulguları kapandı, Gemini ücretli anahtara geçildi |
-| 27-29 Eyl | B — Kimlik ve iki taraflı döngü | JWT, üç rol, genç paneli, karşılıklı onay |
-| 30 Eyl-1 Eki | C — Takip Ajanı | Milestone planı, ilerleme, tamamlanma sinyali |
-| 2-3 Eki | D — Canlılık Ajanı + GİRVAK paneli | Tarama, hatırlatma, fırsat, KPI'lar |
+| 25-26 Eyl | A — Sağlamlaştırma ✓ | İnceleme bulguları kapandı, Gemini ücretli anahtara geçildi |
+| 26-27 Eyl | B — Kimlik ve iki taraflı döngü ✓ | JWT, üç rol, paneller, karşılıklı onay, bildirimler |
+| 29-30 Eyl | C — Takip Ajanı | Milestone planı, ilerleme, tamamlanma sinyali |
+| 1-2 Eki | D — Canlılık Ajanı + GİRVAK paneli | Tarama, hatırlatma, fırsat, KPI'lar |
+| 3 Eki | Gözden geçirme ve düzeltme | Profil alanları, profil düzenleme sayfası, arayüz düzeltmeleri |
 | 3 Eki akşam | **Özellik dondurma** | Bundan sonra yalnızca hata düzeltme |
 | 4 Eki | E — Yayına alma + tohum veri | Canlı adres, gerçekçi havuz |
 | 5 Eki | F — Uçtan uca prova | Demo senaryosu, belgeler, yedek video |
@@ -66,7 +67,9 @@ Gemini içinde çalışmaya devam eder. Her çağrının token kullanımı log'a
 
 **Kabul:** Tüm testler geçer; her bulgu için en az bir yeni test var.
 
-## Faz B — Kimlik ve iki taraflı döngü (27-29 Eyl)
+## Faz B — Kimlik ve iki taraflı döngü (26-27 Eyl) ✓
+
+Özellik notu ve kararlar: [`faz-b-kimlik-ve-dongu.md`](faz-b-kimlik-ve-dongu.md).
 
 **Kimlik kararı:** E-posta + şifre, JWT. Karmaşıklık bilinçli olarak düşük tutulur.
 
@@ -92,9 +95,14 @@ Gemini içinde çalışmaya devam eder. Her çağrının token kullanımı log'a
 - [x] Uygulama içi bildirimler (tablo + panelde sayaç). Gerçek e-posta yok.
 
 **Kabul:** İki ayrı tarayıcıda genç ve kurum olarak döngü, iletişim açılmasına
-kadar çıkmaz sokak olmadan yürür.
+kadar çıkmaz sokak olmadan yürür. ✓ Tarayıcıda doğrulandı (27 Eyl), demo
+hesaplarıyla (`scripts/yerel_sifirla.py` + `scripts/demo_hesaplari.py`).
 
-## Faz C — Takip Ajanı (30 Eyl-1 Eki)
+**Not:** Sayfa `localhost` yerine makinenin ağ adresinden (ör. `192.168.x.x:3000`)
+açılırsa Next.js 16 geliştirme dosyalarını engeller ve backend CORS'u isteği
+reddeder; sayfa görünür ama düğmeler çalışmaz. Yerel denemede `http://localhost:3000`.
+
+## Faz C — Takip Ajanı (29-30 Eyl)
 
 - [ ] İş birliği açılınca ajan ihtiyaç kartının başarı kriterinden 3-5
       milestone'luk plan önerir (LLM, yapılandırılmış çıktı).
@@ -106,7 +114,7 @@ kadar çıkmaz sokak olmadan yürür.
 
 **Sınır:** Ajan karar vermez, milestone'u kendisi kapatmaz; öneri ve özet üretir.
 
-## Faz D — Canlılık Ajanı + GİRVAK paneli (2-3 Eki)
+## Faz D — Canlılık Ajanı + GİRVAK paneli (1-2 Eki)
 
 **Canlılık:**
 
@@ -125,6 +133,16 @@ kadar çıkmaz sokak olmadan yürür.
 
 **Demo notu:** Tohum verinin bir kısmının `son_aktivite_tarihi` geriye çekilir;
 pasifleşme günlerce beklemeden gösterilebilir.
+
+## Gözden geçirme ve düzeltme günü (3 Eki)
+
+Yeni özellik değil; Faz B'de bilinçli olarak dışarıda bırakılan ve denemede
+eksikliği görülen profil işleri ile arayüz düzeltmeleri. Akşam özellik dondurma.
+
+- [ ] Profil alanları (kayıttan sonra doldurulan şehir, çalışma modeli, müsaitlik,
+      sektör) gözden geçirilir.
+- [ ] Profil düzenleme sayfası (genç ve kurum).
+- [ ] Arayüz düzeltmeleri (C ve D'den biriken küçük işler).
 
 ## Faz E — Yayına alma + tohum veri (4 Eki)
 

@@ -106,9 +106,18 @@ LLM çağrıları iki katmana ayrılıyor ve model adları `.env`'den okunuyor: 
 **3. Migration ve sunucu.**
 
 ```bash
-alembic upgrade head            # 11 tabloyu + pgvector eklentisini oluşturur
+alembic upgrade head            # tüm tabloları + pgvector eklentisini oluşturur
 python run.py --reload          # http://localhost:8000
 ```
+
+**Demo hesaplarıyla temiz başlangıç.** `.env`'e `DEMO_SIFRESI` (en az 8 karakter) ekle, sonra:
+
+```bash
+python scripts/yerel_sifirla.py      # yerel DB'yi boşaltır; onay için veritabanı adını sorar
+python scripts/demo_hesaplari.py     # genc@ / kurum@ / girvak@demo.zemin360.example + birer kart
+```
+
+Demo genç kartı ile kurumun ihtiyaç kartı birbirine önerilecek şekilde seçildi; betik benzerliği ve skoru yazdırır. Üç hesabın şifresi `DEMO_SIFRESI`.
 
 `run.py` yerine `uvicorn app.main:app` da çalışır — ama **Windows'ta `--reload` olmadan çalışmaz**: LangGraph'ın checkpointer'ı psycopg kullanıyor, psycopg de Windows'un varsayılan ProactorEventLoop'uyla uyumsuz. `run.py` döngüyü doğru olanla sabitliyor, sebebini de dosyanın başında anlatıyor.
 
@@ -130,9 +139,11 @@ alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni mi
 alembic check                                 # modeller ile migration arasında fark var mı?
 ```
 
-**Ajan uç noktaları:** Doğrulama `POST /dogrulama/kanit-ekle`, `POST /dogrulama/referans-yaniti` (girişsiz, token ile), `POST /dogrulama/itiraz`, `GET /dogrulama/kanit/{somut_cikti_id}` · Keşif `/kesif/sohbet/baslat|cevap`, `/kesif/kart/onayla`, `GET /yetenek-kartlari/{id}` · Tanımlama `/tanimlama/sohbet/baslat|cevap`, `/tanimlama/kart/onayla`, `GET /ihtiyac-kartlari/{id}` · Eşleştirme `POST /eslestirme/calistir`, `GET /eslestirme/oneriler/{kurum_id}`, `POST /eslestirme/ilgileniyorum`, `POST /eslestirme/{id}/kabul|red`, `GET /eslestirme/bana-gelenler`, `GET /isbirliklerim`. Tam liste: [`docs/api-contracts.md`](docs/api-contracts.md).
+**Kimlik (Faz B):** `POST /auth/kayit`, `POST /auth/giris`, `GET /me`. `/health`, kayıt/giriş ve token'lı referans uçları dışında her uç `Authorization: Bearer <token>` ister; 401 token yok/geçersiz, 403 rol uygun değil, 404 başkasının kaynağı. Bildirimler `GET /bildirimler`, `POST /bildirimler/{id}/okundu`, `POST /bildirimler/hepsini-oku`; GİRVAK `GET /girvak/sayilar`.
 
-**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak sohbet motoru + `kesif.py`, `tanimlama.py`, `eslestirme.py`, `dogrulama.py`) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
+**Ajan uç noktaları:** Doğrulama `POST /dogrulama/kanit-ekle`, `POST /dogrulama/referans-yaniti` (girişsiz, token ile), `POST /dogrulama/itiraz`, `GET /dogrulama/kanit/{somut_cikti_id}` · Keşif `/kesif/sohbet/baslat|cevap`, `/kesif/kart/onayla`, `GET /yetenek-kartlari/{id}` · Tanımlama `/tanimlama/sohbet/baslat|cevap`, `/tanimlama/kart/onayla`, `GET /ihtiyac-kartlari/{id}` · Eşleştirme `POST /eslestirme/calistir`, `GET /eslestirme/oneriler/{kurum_id}`, `POST /eslestirme/ilgileniyorum`, `POST /eslestirme/{id}/kabul|red`, `GET /eslestirme/bana-gelenler`, `GET /eslestirme/onerilerim`, `GET /isbirliklerim`. Tam liste: [`docs/api-contracts.md`](docs/api-contracts.md).
+
+**Klasör yapısı:** `app/models/` (SQLAlchemy modelleri, tablo başına bir dosya) · `app/api/` (FastAPI router'ları) · `app/agents/` (`sohbet_motoru.py` ortak sohbet motoru + `kesif.py`, `tanimlama.py`, `eslestirme.py`, `dogrulama.py`; `eslesme_durumu.py` eşleşme durum makinesi) · `scripts/` (elle çalıştırılan denemeler) · `app/schemas/` (Pydantic şemaları) · `app/core/` (ayarlar) · `app/db/` (engine/session) · `alembic/` (migration'lar).
 
 ## Frontend'i Çalıştırma
 
@@ -146,6 +157,8 @@ npm run dev
 ```
 
 Arayüz: <http://localhost:3000>
+
+**Adres çubuğunda `localhost` kullan.** `npm run dev` bir de "Network" adresi (`http://192.168.x.x:3000`) yazar; sayfa o adresten açılırsa Next.js 16 geliştirme dosyalarını engeller ve backend CORS'u (`CORS_ORIGINS=http://localhost:3000`) isteği reddeder. Sayfa görünür ama düğmeler çalışmaz, giriş ilerlemez.
 
 `.env.local` içindeki `NEXT_PUBLIC_API_URL`, backend'in adresidir (varsayılan `http://localhost:8000`). Ana sayfanın altındaki gösterge bu adrese `/health` isteği atar — **yeşilse** iki taraf konuşuyor, **kırmızıysa** backend kapalı ya da CORS ayarı eksik demektir. Backend'i de çalıştırmayı unutma.
 
@@ -164,32 +177,34 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 **Notlar:**
 - **Tema** [`docs/design-language.md`](docs/design-language.md)'den geliyor: palet `src/app/globals.css` içindeki CSS değişkenlerinde, fontlar (Fraunces + IBM Plex Sans) `src/app/layout.tsx` içinde tanımlı. Renk veya font değiştireceksen önce o belgeye bak.
 - shadcn/ui, **Radix** tabanlı kurulumla (`nova` preset, Lucide ikonları) eklendi — `components.json` bunu kaydeder. Şu an sadece `button`, `input`, `card` kurulu. Yeni bileşenler shadcn'in varsayılan renkleriyle değil, paletteki değişkenlerle gelir.
+- **Kimlik:** `/giris` ve `/kayit` (rol kayıtta seçilir). Token tarayıcıda (`src/lib/token.ts`), her istekte `Authorization: Bearer` ile gidiyor. Oturumun tek kaynağı `GET /me` (`src/lib/oturum.tsx`): token değişince, sayfa değişince ve 60 sn'de bir tazelenir, üst menüdeki bildirim rozeti de buradan. Giriş gerektiren sayfalar `GirisKapisi`'yle sarılı (`src/components/giris-kapisi.tsx`): girişsizse `/giris?sonra=…`, rolü uymuyorsa kendi paneli. Yönlendirme kuralları `src/lib/yonlendirme.ts`'de (testli).
+- **Paneller:** `/genc` (kartlarım, kanıt bekleyenler, bana gelen ilgiler — Kabul et / Reddet, iş birliklerim), `/kurum` (ihtiyaç kartlarım, önerilerim, iş birliklerim), `/girvak` (sayılar), `/bildirimler`. Ortak parçalar `src/components/panel.tsx`.
 - `/kesif` ve `/tanimlama` sayfaları çalışan sohbet arayüzleri: sohbet → taslak → onay formu → kaydedilen kart. Ortak görsel parçalar `src/components/sohbet.tsx` içinde.
-- `/kart/{id}` yetenek kartı ve Doğrulama ekranı: çıktı başına dört bileşenli güven göstergesi, kanıt ekleme, referans isteği ve itiraz (`src/components/kanit.tsx`).
-- `/kurum/oneriler` eşleştirme önerileri: skor, gerekçe ve "İlgileniyorum". Eşik ve "az sonuç" uyarısı backend yanıtından geliyor, arayüzde sabit değil.
+- `/kart/{id}` yetenek kartı ve Doğrulama ekranı: kartın sahibi genç için çıktı başına dört bileşenli güven göstergesi, kanıt ekleme, referans isteği ve itiraz (`src/components/kanit.tsx`); kurum ve GİRVAK kartı salt okunur görür.
+- `/kurum/oneriler?ihtiyac=<id>` eşleştirme önerileri: skor, gerekçe, gencin adı ve "İlgileniyorum". Eşik ve "az sonuç" uyarısı backend yanıtından geliyor, arayüzde sabit değil.
 - `/referans?token=…` referans kişinin girişsiz yanıt sayfası: iddia formun üstünde gösterilir, harcanmış ya da süresi geçmiş link form açmaz.
 - Kart ve gerekçe görünümünün paylaşılan parçaları `src/components/kart.tsx` içinde; ana sayfadaki örnek blok da bunları kullanıyor (statik veriyle, backend kapalıyken de çizilsin diye).
-- Kimlik Faz B'de: token tarayıcıda (`src/lib/token.ts`), her istekte `Authorization: Bearer` ile gidiyor; kart ve kurum kimliği `GET /me`'den. Giriş/kayıt ekranları henüz yok (Faz B 6. adım), o zamana kadar arayüz token'sız 401 alır.
 
 ## Proje Durumu
 
-🟢 **Faz 2 sürüyor** — altı ajandan dördü çalışıyor, dördünün de arayüzü bağlı:
+🟢 **Faz B tamamlandı, Faz C (Takip Ajanı) başlıyor.** Üç rol (genç, kurum, GİRVAK) kendi paneliyle giriyor; iki taraflı döngü iletişim açılmasına kadar çalışıyor. Altı ajandan dördü çalışıyor:
 
 | Ajan | Durum |
 |---|---|
 | **Keşif** | Çalışıyor — sohbet → yetenek kartı taslağı → onay → kayıt + embedding |
 | **Tanımlama** | Çalışıyor — sokratik sohbet → ihtiyaç kartı taslağı → onay → kayıt + embedding |
-| **Eşleştirme** | Çalışıyor — sert filtre → benzerlik alt sınırı → pgvector skoru → gerekçe → iş birliği. Arayüz: `/kurum/oneriler` |
+| **Eşleştirme** | Çalışıyor — sert filtre → benzerlik alt sınırı → pgvector skoru → gerekçe. Kurum ilgilenir, genç kabul eder, iş birliği açılır. Arayüz: `/kurum`, `/kurum/oneriler`, `/genc` |
 | **Doğrulama** | Çalışıyor — kanıt kontrolü + rubrik → referans akışı → itiraz. Arayüz: `/kart/{id}` ve `/referans` |
-| Canlılık, Takip | Faz 3 |
+| Takip | Faz C (29-30 Eyl) |
+| Canlılık | Faz D (1-2 Eki) |
 
 **Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında ve kart ekranında tam adres olarak gösteriliyor, referans kişiye elle iletilir. **Referans güvenliği (Faz B):** referans yanıt uç noktası yalnızca iddianın başlığını ve durumu dönüyor; kanıt durumu (`GET /dogrulama/kanit/{id}`, referans e-postaları ve yanıt linkleri) artık yalnızca çıktının sahibi gence ve GİRVAK'a açık, kurum ve başkaları göremiyor. Kalan sınırlama: SMTP olmadığı için yanıt linkini genç kendisi iletiyor, yani ilke olarak kendi referansını doldurabilir. Gerçek kullanımda token yalnızca referans kişiye e-postayla gitmeli. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
 
-**Eşleştirme döngüsü:** kurum "ilgileniyorum" der (`ilgileniliyor`), genç kabul ederse iş birliği açılır ve e-postalar iki tarafa görünür; reddederse `reddedildi`. Gencin adı baştan görünür, yalnızca e-postalar kabulle açılır. Öneri listesi iki sınırla eleniyor ve ikisi farklı şeyi ölçüyor: benzerlik alt sınırı 0.45 ("bu aday konuyla ilgili mi", skordan önce) ve skor eşiği %40 ("ilgili adaylar arasında gösterilmeye değer mi"). Gerekçe LLM'den gelmiyorsa öneri gerekçesiz gösterilir, skor yine de geçerlidir. Gencin kabul/red ekranı Faz B'nin panel adımında geliyor; uç noktalar hazır. Skor formülünün ESCO taksonomi bileşeni de MVP dışında (bkz. `docs/matching-algorithm.md`).
+**Eşleştirme döngüsü:** kurum "ilgileniyorum" der (`ilgileniliyor`), genç kabul ederse iş birliği açılır ve e-postalar iki tarafa görünür; reddederse `reddedildi`. Gencin adı baştan görünür, yalnızca e-postalar kabulle açılır. Öneri listesi iki sınırla eleniyor ve ikisi farklı şeyi ölçüyor: benzerlik alt sınırı 0.45 ("bu aday konuyla ilgili mi", skordan önce) ve skor eşiği %40 ("ilgili adaylar arasında gösterilmeye değer mi"). Gerekçe LLM'den gelmiyorsa öneri gerekçesiz gösterilir, skor yine de geçerlidir. Her geçişte ilgili tarafa uygulama içi bildirim gider (gerçek e-posta yok). Skor formülünün ESCO taksonomi bileşeni de MVP dışında (bkz. `docs/matching-algorithm.md`).
 
 İki sohbet ajanı aynı motoru paylaşıyor (`backend/app/agents/sohbet_motoru.py`): grafik iskeleti, taslak birleştirme ve yedek modele düşen LLM zinciri orada; soru seti, çıkarım şeması ve ajana özel dallar ajan dosyasında.
 
-Sırada: Canlılık ve Takip ajanları, bir de Eşleştirme/Doğrulama'nın arayüzü.
+Sırada: Takip Ajanı (milestone planı, iki taraflı işaretleme, tamamlanma sinyali), ardından Canlılık Ajanı ve GİRVAK panelinin hedefleri.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım

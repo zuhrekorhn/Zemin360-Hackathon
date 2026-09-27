@@ -25,7 +25,15 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 
 ## Şu An Neredeyiz
 
-Faz 0 ve Faz 1 tamamlandı, **Faz 2 sürüyor**: Keşif, Tanımlama, Eşleştirme ve Doğrulama ajanları çalışıyor ve dördünün de arayüzü bağlı (`/kesif`, `/tanimlama`, `/kurum/oneriler`, `/kart/{id}`, `/referans`). Eşleştirme'de sadece kurum tarafı var (öneri + "ilgileniyorum"), Genç'in bildirimi Faz 3+. Giriş/kayıt akışı da Faz 3: kimlikler şimdilik tarayıcıda tutuluyor. Sırada Canlılık ve Takip ajanları. Detaylı takvim: `docs/roadmap.md`.
+Faz A (sağlamlaştırma) ve **Faz B (kimlik ve iki taraflı döngü) tamamlandı**; sırada **Faz C — Takip Ajanı**, ardından Faz D (Canlılık + GİRVAK paneli). Takvim ve faz planı: `docs/roadmap.md` (her oturumda önce onu oku). Keşif, Tanımlama, Eşleştirme ve Doğrulama ajanları çalışıyor; Takip ve Canlılık henüz yok.
+
+**Kimlik ve sahiplik (Faz B, ayrıntı `docs/faz-b-kimlik-ve-dongu.md`):** e-posta + şifre, JWT (Bearer, localStorage). Kimlik `hesap` tablosunda, profil `kullanici`/`kurum`'da (1-1). Her uç `mevcut_hesap` / `rol_gerekli` bağımlılığıyla korunur; sahiplik kuralları tek yerde, `app/api/sahiplik.py`. Hata sözleşmesi: 401 token yok/geçersiz, 403 rol uygun değil, **404 başkasının kaynağı** (varlık sızmasın). Yeni bir uç yazarken bu üçlüyü test et (`tests/test_sahiplik.py` deseni).
+
+**Eşleşme durumları tek fonksiyonda:** `app/agents/eslesme_durumu.py` › `gecis(durum, olay, rol)`. `onerildi → ilgileniliyor` (kurum) `→ kabul_edildi | reddedildi` (genç). Geçersiz geçiş 409, aynı geçişin tekrarı 200 ve yan etkisiz. İş birliği yalnızca gencin kabulüyle açılır. **Gencin adı baştan görünür; e-postalar yalnızca `kabul_edildi`'de, yalnızca iki tarafa, ayrı `iletisim` alanında döner** (GİRVAK'a da `null`).
+
+**Bildirimler:** olayı yazan kod bildirimi de aynı işlemde yazar (`app/api/bildirimler.py` › `bildirim_ekle`); tekrar ya da geçersiz geçiş bildirim yazmaz; metinde e-posta olmaz. Canlılık ve Takip de aynı tabloya kendi `tur`'larıyla yazacak.
+
+**Frontend oturumu:** tek kaynak `GET /me` (`src/lib/oturum.tsx`). Giriş gerektiren sayfa `GirisKapisi` ile sarılır; kapı açılmadan sayfanın açılış efektleri çalışmaz. Yerel denemede adres `http://localhost:3000` (ağ adresinden açılırsa Next.js 16 dev dosyalarını, backend CORS'u isteği engeller). Temiz veri: `scripts/yerel_sifirla.py` + `scripts/demo_hesaplari.py`.
 
 **Eşleştirmede iki ayrı sınır var, karıştırma:** benzerlik alt sınırı (0.45) "bu aday konuyla ilgili mi" sorusunu skordan ÖNCE yanıtlar; skor eşiği (%40) "ilgili adaylar arasında gösterilmeye değer mi" sorusunu sonra. Doğrulama bonusu sıralamayı etkiler, alakayı yaratmaz (`docs/matching-algorithm.md` § 5).
 
