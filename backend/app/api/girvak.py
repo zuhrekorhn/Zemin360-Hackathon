@@ -22,13 +22,22 @@ from app.agents.takip_durumu import (
     ISBIRLIGI_TAMAMLANDI,
 )
 from app.api.kimlik import rol_gerekli
+from app.core.program import HEDEFLER
 from app.db.session import get_session
 from app.models.eslesme import Eslesme
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
+from app.models.kullanici import Kullanici
+from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
-from app.schemas.girvak import EslesmeSayilari, HesapSayilari, IsbirligiSayilari, Sayilar
+from app.schemas.girvak import (
+    EslesmeSayilari,
+    HedefSayisi,
+    HesapSayilari,
+    IsbirligiSayilari,
+    Sayilar,
+)
 
 router = APIRouter(prefix="/girvak", tags=["girvak"])
 
@@ -70,4 +79,41 @@ async def sayilar(
             aktif=isbirlikleri.get(ISBIRLIGI_AKTIF, 0),
             tamamlandi=isbirlikleri.get(ISBIRLIGI_TAMAMLANDI, 0),
         ),
+        hedefler=await hedef_sayilari(oturum, durumlar, isbirlikleri),
     )
+
+
+async def hedef_sayilari(
+    oturum: AsyncSession, eslesme_durumlari: dict[str, int], isbirligi_durumlari: dict[str, int]
+) -> list[HedefSayisi]:
+    """Program hedefleri, platformdaki ölçümleriyle (docs/faz-d-canlilik.md § 7).
+
+    Yalnızca hesabı olan profiller sayılır (Faz B öncesi profil programın
+    katılımcısı değil).
+    """
+    basvuru = await oturum.scalar(
+        select(func.count(func.distinct(YetenekKarti.kullanici_id)))
+        .join(Kullanici, Kullanici.id == YetenekKarti.kullanici_id)
+        .where(Kullanici.hesap_id.isnot(None))
+    )
+    kurum = await oturum.scalar(
+        select(func.count(func.distinct(IhtiyacKarti.kurum_id)))
+        .join(Kurum, Kurum.id == IhtiyacKarti.kurum_id)
+        .where(Kurum.hesap_id.isnot(None))
+    )
+    sayilar = {
+        "basvuru": basvuru,
+        "kurum": kurum,
+        "eslesme": eslesme_durumlari.get(DURUM_KABUL_EDILDI, 0),
+        "pilot": isbirligi_durumlari.get(ISBIRLIGI_TAMAMLANDI, 0),
+    }
+    return [
+        HedefSayisi(
+            anahtar=h.anahtar,
+            program_adi=h.program_adi,
+            olcum=h.olcum,
+            sayi=sayilar[h.anahtar],
+            hedef=h.hedef,
+        )
+        for h in HEDEFLER
+    ]

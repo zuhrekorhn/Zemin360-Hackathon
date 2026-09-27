@@ -24,6 +24,16 @@ class IsbirligiSayilari(BaseModel):
     tamamlandi: int
 
 
+class HedefSayisi(BaseModel):
+    """Program hedefi: programın adı + platformda ne sayıldığı (fark gizlenmez)."""
+
+    anahtar: str
+    program_adi: str
+    olcum: str
+    sayi: int
+    hedef: int
+
+
 class Sayilar(BaseModel):
     hesap: HesapSayilari
     yetenek_karti: int
@@ -32,3 +42,5 @@ class Sayilar(BaseModel):
     isbirligi: int
     # Faz C: duruma göre; `tamamlandi` = tamamlanmış pilot (Faz D hedefi: 5).
     isbirligi_durumlari: IsbirligiSayilari
+    # Faz D: program hedefleri (app/core/program.py), sabit sırayla.
+    hedefler: list[HedefSayisi]

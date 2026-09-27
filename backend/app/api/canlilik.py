@@ -53,16 +53,16 @@ from app.agents.takip_durumu import (
     MILESTONE_TAMAMLANDI,
 )
 from app.api.bildirimler import bildirim_ekle
-from app.api.kimlik import _bearer, _yetkisiz, mevcut_hesap
+from app.api.kimlik import _bearer, _yetkisiz, mevcut_hesap, rol_gerekli
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.models.canlilik_olayi import CanlilikOlayi
 from app.models.eslesme import Eslesme
-from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM
+from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
 from app.models.yetenek_karti import YetenekKarti
-from app.schemas.canlilik import TaramaSonucu
+from app.schemas.canlilik import CanlilikOlayiYaniti, PasifBaglanti, TaramaSonucu
 
 logger = logging.getLogger("zemin360.canlilik")
 
@@ -180,10 +180,15 @@ async def _son_olaylar(oturum: AsyncSession, eslesme_idler: set) -> dict[tuple, 
     return {_anahtar(*satir[:4]): satir[4] for satir in satirlar.all()}
 
 
-async def adaylari_topla(
-    oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date
-) -> list[_Yazilacak]:
-    """Kurallara göre hatırlatılması gerekenler, tekrar kuralından geçirilmiş."""
+Aday = tuple[Eslesme, Hatirlatma, "canlilik.HatirlatmaBaglami"]
+
+
+async def pasif_adaylar(oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date) -> list[Aday]:
+    """Şu an eşiği aşmış kayıtlar ve kime ne hatırlatılmalı — tekrar kuralından ÖNCE.
+
+    Hiçbir şey yazmaz: hem tarama hem GİRVAK'ın "pasifleşen bağlantılar"
+    listesi bunu kullanır; ikisi aynı kuralı görür.
+    """
     esik = simdi - dt.timedelta(days=min(ESIKLER[ILGI_YANITSIZ_1], ESIKLER[ONERI_BEKLIYOR]))
     eslesmeler = list(
         await oturum.scalars(
@@ -212,7 +217,7 @@ async def adaylari_topla(
     )
 
     # (eşleşme, hatırlatma, bağlam) üçlüleri — henüz tekrar kuralına sorulmadı
-    adaylar: list[tuple[Eslesme, Hatirlatma, canlilik.HatirlatmaBaglami]] = []
+    adaylar: list[Aday] = []
     for eslesme in eslesmeler:
         gun = gecen_gun(eslesme.son_aktivite_tarihi, simdi)
         for h in eslesme_hatirlatmalari(eslesme.durum, gun):
@@ -266,6 +271,14 @@ async def adaylari_topla(
                 )
             )
 
+    return adaylar
+
+
+async def adaylari_topla(
+    oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date
+) -> list[_Yazilacak]:
+    """Kurallara göre hatırlatılması gerekenler, tekrar kuralından geçirilmiş."""
+    adaylar = await pasif_adaylar(oturum, simdi, bugun)
     adaylar.extend(await firsat_adaylari(oturum, simdi))
 
     son_olaylar = await _son_olaylar(oturum, {e.id for e, _, _ in adaylar})
@@ -293,9 +306,7 @@ async def adaylari_topla(
 ESZAMANLI_METIN = 4
 
 
-async def firsat_adaylari(
-    oturum: AsyncSession, simdi: dt.datetime
-) -> list[tuple[Eslesme, Hatirlatma, canlilik.HatirlatmaBaglami]]:
+async def firsat_adaylari(oturum: AsyncSession, simdi: dt.datetime) -> list[Aday]:
     """Yeni fırsat (§ 2) — kesilebilir dal.
 
     Son 7 günde açılmış ihtiyaç kartlarının `onerildi` önerileri; önerilen
@@ -411,3 +422,101 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
         bildirim=len(bildirimlik),
         sure_sn=round(time.perf_counter() - baslangic, 2),
     )
+
+
+# --- GİRVAK: pasifleşen bağlantılar ve son olaylar (§ 7) ------------------------------------
+
+OLAY_LISTESI_VARSAYILAN = 20
+
+
+@router.get("/pasifler", response_model=list[PasifBaglanti])
+async def pasifler(
+    _hesap: Hesap = Depends(rol_gerekli(ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[PasifBaglanti]:
+    """Şu an eşiği aşmış kayıtlar, en uzun süredir hareketsiz olan önce.
+
+    Taramayla aynı kurallar (`pasif_adaylar`), ama hiçbir şey yazmaz. Aynı
+    kayıt ve türün alıcıları tek satırda birleşir. Kişisel veri yalnızca ad.
+    """
+    simdi = dt.datetime.now(dt.UTC)
+    adaylar = await pasif_adaylar(oturum, simdi, dt.date.today())
+    eslesme_idler = {e.id for e, _, _ in adaylar}
+    son_olaylar = await _son_olay_turlere_gore(oturum, eslesme_idler)
+    isbirligi_idleri: dict = {}
+    if eslesme_idler:
+        isbirlikleri = await oturum.execute(
+            select(Isbirligi.eslesme_id, Isbirligi.id).where(
+                Isbirligi.eslesme_id.in_(eslesme_idler)
+            )
+        )
+        isbirligi_idleri = dict(isbirlikleri.all())
+
+    satirlar: dict[tuple, PasifBaglanti] = {}
+    for eslesme, h, baglam in adaylar:
+        anahtar = (eslesme.id, h.tur, h.milestone_id)
+        if anahtar in satirlar:
+            satirlar[anahtar].alicilar.append(h.alici)
+            continue
+        isb = isbirligi_idleri.get(eslesme.id)
+        satirlar[anahtar] = PasifBaglanti(
+            tur=h.tur,
+            eslesme_id=str(eslesme.id),
+            isbirligi_id=str(isb) if isb else None,
+            genc_adi=eslesme.yetenek_karti.kullanici.ad,
+            kurum_adi=eslesme.ihtiyac_karti.kurum.ad,
+            gun=baglam.gun,
+            adim=baglam.adim,
+            alicilar=[h.alici],
+            son_hatirlatma=son_olaylar.get((eslesme.id, h.tur)),
+        )
+    return sorted(satirlar.values(), key=lambda s: s.gun, reverse=True)
+
+
+async def _son_olay_turlere_gore(
+    oturum: AsyncSession, eslesme_idler: set
+) -> dict[tuple, dt.datetime]:
+    if not eslesme_idler:
+        return {}
+    satirlar = await oturum.execute(
+        select(
+            CanlilikOlayi.eslesme_id,
+            CanlilikOlayi.tur,
+            func.max(CanlilikOlayi.tetiklenme_tarihi),
+        )
+        .where(CanlilikOlayi.eslesme_id.in_(eslesme_idler))
+        .group_by(CanlilikOlayi.eslesme_id, CanlilikOlayi.tur)
+    )
+    return {(e, t): an for e, t, an in satirlar.all()}
+
+
+@router.get("/olaylar", response_model=list[CanlilikOlayiYaniti])
+async def olaylar(
+    limit: int = OLAY_LISTESI_VARSAYILAN,
+    _hesap: Hesap = Depends(rol_gerekli(ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[CanlilikOlayiYaniti]:
+    """Son Canlılık olayları, en yeni önce (en çok 100)."""
+    limit = max(1, min(limit, 100))
+    satirlar = await oturum.execute(
+        select(CanlilikOlayi, Hesap)
+        .outerjoin(Hesap, Hesap.id == CanlilikOlayi.alici_hesap_id)
+        .options(selectinload(Hesap.kullanici), selectinload(Hesap.kurum))
+        .order_by(CanlilikOlayi.tetiklenme_tarihi.desc())
+        .limit(limit)
+    )
+    sonuc = []
+    for olay, hesap in satirlar.all():
+        profil = (hesap.kullanici or hesap.kurum) if hesap is not None else None
+        sonuc.append(
+            CanlilikOlayiYaniti(
+                id=str(olay.id),
+                tur=olay.tur,
+                mesaj_metni=olay.mesaj_metni,
+                tetiklenme_tarihi=olay.tetiklenme_tarihi,
+                alici_adi=profil.ad if profil else None,
+                alici_rol=hesap.rol if hesap else None,
+                eslesme_id=str(olay.eslesme_id),
+            )
+        )
+    return sonuc
