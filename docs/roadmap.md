@@ -121,6 +121,8 @@ reddeder; sayfa görünür ama düğmeler çalışmaz. Yerel denemede `http://lo
 
 ## Faz D — Canlılık Ajanı + GİRVAK paneli (1-2 Eki)
 
+Özellik notu ve kararlar: [`faz-d-canlilik.md`](faz-d-canlilik.md).
+
 **Canlılık:**
 
 - [ ] Periyodik tarama (uygulama içi zamanlayıcı ya da platform cron'u) +
@@ -154,6 +156,9 @@ eksikliği görülen profil işleri ile arayüz düzeltmeleri. Akşam özellik d
 - [ ] Frontend: Vercel. Backend: Railway ya da Render. Postgres: pgvector
       destekleyen yönetilen servis (Neon ya da Supabase).
 - [ ] Canlı frontend adresi backend'in CORS_ORIGINS ayarına eklenecek.
+- [ ] **Railway cron'u ve `TARAMA_ANAHTARI`:** canlıda zamanlanmış görev günde iki
+      kez (09:00, 18:00 İstanbul) `POST /canlilik/tarama`'yı `X-Tarama-Anahtari`
+      başlığıyla çağırır; anahtar `.env`'de, kullanıcı token'ı değil (Faz D notu § 4).
 - [ ] Migration'lar canlı veritabanında sıfırdan çalışır.
 - [ ] Tohum veri: 30-50 yetenek kartı, 8-10 kurum, birkaç tamamlanmış ve
       pasifleşmiş iş birliği. Demo senaryosuyla aynı hikâyeden beslenir.
