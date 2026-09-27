@@ -22,3 +22,18 @@ def plan_arka_plan_isi_yok(monkeypatch):
 
     monkeypatch.setattr(takip, "plani_arka_planda_oner", kaydet)
     return cagrilar
+
+
+@pytest.fixture(autouse=True)
+def ozet_arka_plan_isi_yok(monkeypatch):
+    """Plan onayı ve adım tamamlanması yanıttan sonra durum özetini yazdırıyor
+    (gerçek oturum, gerçek LLM). Testlerde çalışmasın; kayıt tutulur."""
+    from app.api import takip
+
+    cagrilar: list = []
+
+    async def kaydet(isbirligi_id):
+        cagrilar.append(isbirligi_id)
+
+    monkeypatch.setattr(takip, "ozeti_arka_planda_yaz", kaydet)
+    return cagrilar

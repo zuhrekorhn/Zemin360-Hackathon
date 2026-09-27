@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+from dataclasses import dataclass
 from functools import lru_cache
 
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
@@ -162,3 +164,98 @@ async def plan_oner(
         return oneri.adimlar
     logger.warning("Plan önerisi iki denemede de kurala uymadı; plan boş bırakılıyor: %s", oneri)
     return None
+
+
+# --- Durum özeti (docs/faz-c-takip.md § 5) — kesilebilir iş --------------------------------
+#
+# Döngü onsuz da tam çalışır: özet yalnızca `isbirligi.durum_ozeti`'ne yazılır,
+# hiçbir kural ona bakmaz. LLM yoksa alan boş kalır, arayüz zaman çizelgesini
+# yine eksiksiz gösterir.
+
+OZET_EN_UZUN = 400
+
+OZET_TALIMATI = """Sen Zemin360'ın Takip Ajanı'sın. Bir kurum ile bir genç arasındaki pilot iş
+birliğinin durumunu EN FAZLA İKİ CÜMLEYLE özetliyorsun; iki taraf da bu özeti görecek.
+
+Kurallar:
+- Yalnızca verilen bilgileri kullan; sayı, tarih ya da olay UYDURMA.
+- Nötr ve destekleyici dil: kimseyi suçlama, "ihmal etti" gibi yargı cümleleri kurma.
+- Gecikmiş adım varsa adını söyle; karşı tarafın onayını bekleyen adım varsa kimin onayı
+  beklendiğini söyle.
+- İş birliği tamamlandıysa bunu ve kaç adımda tamamlandığını söyle.
+- Madde işareti, başlık ya da emoji kullanma; düz, sade Türkçe."""
+
+OZET_SABLONU = ChatPromptTemplate.from_messages(
+    [("system", OZET_TALIMATI), ("human", "{durum_bilgisi}")]
+)
+
+
+@dataclass(frozen=True)
+class AdimDurumu:
+    baslik: str
+    hedef_tarih: dt.date | None
+    genc_isaretledi: bool
+    kurum_isaretledi: bool
+
+    @property
+    def tamamlandi(self) -> bool:
+        return self.genc_isaretledi and self.kurum_isaretledi
+
+
+def ozet_girdisi(
+    *,
+    durum: str,
+    genc_adi: str,
+    kurum_adi: str,
+    adimlar: list[AdimDurumu],
+    son_hareket: dt.date | None,
+    bugun: dt.date,
+) -> str:
+    """Özet istemine giden, tamamen yapılandırılmış durum bilgisi (saf)."""
+    tamam = sum(a.tamamlandi for a in adimlar)
+    satirlar = [
+        f"Taraflar: genç {genc_adi}, kurum {kurum_adi}.",
+        f"İş birliği durumu: {DURUM_ADLARI.get(durum, durum)}.",
+        f"Adımlar: {len(adimlar)} adımın {tamam} tanesi iki tarafça tamamlandı.",
+    ]
+    for adim in adimlar:
+        if adim.tamamlandi:
+            ne = "tamamlandı"
+        elif adim.genc_isaretledi:
+            ne = f"{genc_adi} tamamlandı dedi; {kurum_adi} tarafının onayı bekleniyor"
+        elif adim.kurum_isaretledi:
+            ne = f"{kurum_adi} tamamlandı dedi; {genc_adi} tarafının onayı bekleniyor"
+        else:
+            ne = "sürüyor"
+        if not adim.tamamlandi and adim.hedef_tarih and adim.hedef_tarih < bugun:
+            ne += f"; hedef tarihi {(bugun - adim.hedef_tarih).days} gün geçti (gecikmiş)"
+        satirlar.append(f"- {adim.baslik}: {ne}.")
+    if son_hareket is not None:
+        satirlar.append(f"Son hareketten bu yana {(bugun - son_hareket).days} gün geçti.")
+    return "\n".join(satirlar)
+
+
+DURUM_ADLARI = {
+    "plan_bekliyor": "plan henüz iki tarafça onaylanmadı",
+    "aktif": "plan onaylandı, çalışma sürüyor",
+    "tamamlandi": "tamamlandı",
+}
+
+
+@lru_cache
+def _ozet_zinciri() -> Runnable:
+    # Hızlı katman: kısa, sık; girdisi tamamen yapılandırılmış sayılar.
+    return yedekli_zincir("hizli", "takip_ozet", lambda m: OZET_SABLONU | m | StrOutputParser())
+
+
+async def durum_ozeti_yaz(durum_bilgisi: str) -> str | None:
+    """En fazla iki cümle; boş ya da aşırı uzun çıktı None (özet boş kalır)."""
+    try:
+        metin = await _ozet_zinciri().ainvoke({"durum_bilgisi": durum_bilgisi})
+    except Exception as hata:
+        raise llm_hatasini_cevir(hata) from hata
+    metin = " ".join(metin.split())
+    if not metin or len(metin) > OZET_EN_UZUN:
+        logger.warning("Durum özeti kullanılamadı (%d karakter)", len(metin))
+        return None
+    return metin

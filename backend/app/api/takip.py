@@ -14,8 +14,8 @@ import datetime as dt
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -481,6 +481,7 @@ async def milestone_sil(
 @router.post("/{isbirligi_id}/plan-onayla", response_model=IsbirligiDetayi)
 async def plan_onayla(
     isbirligi_id: uuid.UUID,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> IsbirligiDetayi:
@@ -493,6 +494,7 @@ async def plan_onayla(
     if sonuc.degisti:
         aktivite(isbirligi)
         if isbirligi.durum == ISBIRLIGI_AKTIF:
+            ozeti_sirala(arka_plan, isbirligi)
             for taraf in (ROL_GENC, ROL_KURUM):
                 bildirim_ekle(
                     oturum,
@@ -529,12 +531,13 @@ async def isbirligi_getir(
 async def isaretle(
     isbirligi_id: uuid.UUID,
     milestone_id: uuid.UUID,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> IsbirligiDetayi:
     """Çağıranın tarafı adımı "tamamlandı" der. İki taraf da derse adım tamamlanır;
     son adım da tamamlanınca iş birliği kendiliğinden `tamamlandi` olur (kural)."""
-    return await _isaret(oturum, hesap, isbirligi_id, milestone_id, ISARETLE)
+    return await _isaret(oturum, hesap, isbirligi_id, milestone_id, ISARETLE, arka_plan)
 
 
 @router.post(
@@ -557,6 +560,7 @@ async def _isaret(
     isbirligi_id: uuid.UUID,
     milestone_id: uuid.UUID,
     olay: str,
+    arka_plan: BackgroundTasks | None = None,
 ) -> IsbirligiDetayi:
     isbirligi, rol = await yazilabilir_isbirligi(oturum, hesap, isbirligi_id)
     milestone = adimi_bul(isbirligi, milestone_id)
@@ -582,6 +586,8 @@ async def _isaret(
         aktivite(isbirligi)
         if olay == ISARETLE:
             _isaret_bildirimleri(oturum, isbirligi, milestone, rol, sonuc.tamamlandi, simdi)
+        if sonuc.tamamlandi and arka_plan is not None:
+            ozeti_sirala(arka_plan, isbirligi)
     await oturum.commit()
     return detay(isbirligi, hesap)
 
@@ -633,3 +639,54 @@ def _isaret_bildirimleri(
             f"“{milestone.baslik}” adımı iki tarafça tamamlandı.",
             isbirligi.eslesme_id,
         )
+
+
+# --- Durum özeti (§ 5) — kesilebilir iş --------------------------------------------------
+#
+# Yalnızca iki yerden sıraya konur (plan onaylanınca, adım tamamlanınca) ve
+# yanıttan sonra çalışır. Başarısız olursa `durum_ozeti` boş ya da eski kalır;
+# hiçbir kural ona bakmaz. Bu bölüm silinirse döngü aynen çalışır.
+
+
+def ozeti_sirala(arka_plan: BackgroundTasks, isbirligi: Isbirligi) -> None:
+    arka_plan.add_task(ozeti_arka_planda_yaz, isbirligi.id)
+
+
+async def ozeti_arka_planda_yaz(isbirligi_id: uuid.UUID) -> None:
+    async with get_sessionmaker()() as oturum:
+        try:
+            isbirligi = await isbirligini_getir(oturum, isbirligi_id)
+            if isbirligi is None:
+                return
+            eslesme = isbirligi.eslesme
+            girdi = takip.ozet_girdisi(
+                durum=isbirligi.durum,
+                genc_adi=eslesme.yetenek_karti.kullanici.ad,
+                kurum_adi=eslesme.ihtiyac_karti.kurum.ad,
+                adimlar=[
+                    takip.AdimDurumu(
+                        baslik=m.baslik,
+                        hedef_tarih=m.hedef_tarih,
+                        genc_isaretledi=m.genc_isaret is not None,
+                        kurum_isaretledi=m.kurum_isaret is not None,
+                    )
+                    for m in sorted(isbirligi.milestonelar, key=lambda m: m.sira)
+                ],
+                son_hareket=eslesme.son_aktivite_tarihi.date()
+                if eslesme.son_aktivite_tarihi
+                else None,
+                bugun=dt.date.today(),
+            )
+            metin = await takip.durum_ozeti_yaz(girdi)
+            if metin is None:
+                return
+            # Yalnızca özet alanları: LLM beklenirken yapılan başka bir
+            # değişikliği ezmesin diye satırın geri kalanına dokunulmuyor.
+            await oturum.execute(
+                update(Isbirligi)
+                .where(Isbirligi.id == isbirligi_id)
+                .values(durum_ozeti=metin, ozet_tarihi=_simdi())
+            )
+            await oturum.commit()
+        except Exception:
+            logger.exception("Durum özeti yazılamadı (%s)", isbirligi_id)
