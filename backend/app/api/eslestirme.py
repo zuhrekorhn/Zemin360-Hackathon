@@ -14,7 +14,7 @@ import datetime as dt
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -194,12 +194,17 @@ async def ilgileniyorum(
 @router.post("/{eslesme_id}/kabul", response_model=EslesmeDurumYaniti)
 async def kabul(
     eslesme_id: uuid.UUID,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> EslesmeDurumYaniti:
-    """Genç kurumun ilgisini kabul eder: iş birliği açılır, e-postalar görünür."""
+    """Genç kurumun ilgisini kabul eder: iş birliği açılır, e-postalar görünür.
+
+    Yanıttan sonra Takip Ajanı planı önerir (docs/faz-c-takip.md § 4).
+    """
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
-    if _gecisi_uygula(eslesme, OLAY_KABUL, hesap):
+    degisti = _gecisi_uygula(eslesme, OLAY_KABUL, hesap)
+    if degisti:
         if eslesme.isbirligi is None:
             eslesme.isbirligi = Isbirligi(
                 baslangic_tarihi=dt.date.today(), durum=ISBIRLIGI_PLAN_BEKLIYOR
@@ -213,6 +218,11 @@ async def kabul(
         )
     # Durum, iş birliği ve bildirim aynı işlemde: biri yazılıp öbürü kaybolmasın.
     await oturum.commit()
+    if degisti and eslesme.isbirligi is not None:
+        # takip.py bu modülü içe aktarıyor (iletisim); döngü olmasın.
+        from app.api import takip
+
+        arka_plan.add_task(takip.plani_arka_planda_oner, eslesme.isbirligi.id)
     return _durum_yaniti(eslesme, hesap)
 
 

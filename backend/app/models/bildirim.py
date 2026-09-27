@@ -21,6 +21,14 @@ TUR_ILGI = "ilgi"
 TUR_KABUL = "kabul"
 TUR_RED = "red"
 TUR_REFERANS_YANITI = "referans_yaniti"
+# Takip (docs/faz-c-takip.md § 7)
+TUR_PLAN_ONERILDI = "plan_onerildi"
+TUR_PLAN_DUZENLENDI = "plan_duzenlendi"
+TUR_PLAN_ONAYI = "plan_onayi"
+TUR_PLAN_ONAYLANDI = "plan_onaylandi"
+TUR_ADIM_ISARETLENDI = "adim_isaretlendi"
+TUR_ADIM_TAMAMLANDI = "adim_tamamlandi"
+TUR_ISBIRLIGI_TAMAMLANDI = "isbirligi_tamamlandi"
 
 
 class Bildirim(UUIDPrimaryKeyMixin, Base):

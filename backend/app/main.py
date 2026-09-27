@@ -19,6 +19,7 @@ from app.api import (
     ihtiyac_kartlari,
     isbirlikleri,
     kesif,
+    takip,
     tanimlama,
     yetenek_kartlari,
 )
@@ -87,3 +88,4 @@ app.include_router(eslestirme.router)
 app.include_router(dogrulama.router)
 app.include_router(isbirlikleri.router)
 app.include_router(girvak.router)
+app.include_router(takip.router)

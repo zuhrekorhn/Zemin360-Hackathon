@@ -1,0 +1,164 @@
+"""Takip Ajanı — plan önerisi (docs/faz-c-takip.md § 4).
+
+Sohbet ajanı değil: tek seferlik hesap (kartlar → istem → tek LLM çağrısı),
+Eşleştirme gerekçesi ve Doğrulama rubriğiyle aynı desen. Ajan plan önerir;
+onaylamaz, adım kapatmaz, iş birliğini bitirmez.
+
+Çıktı kurala uymazsa (3-5 adım, 1-12 hafta, haftalar artan) düzeltme notuyla
+bir kez yeniden istenir; yine uymazsa None döner ve plan boş kalır — taraflar
+adımları elle ekleyebilir, çıkmaz sokak yok.
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+import logging
+from functools import lru_cache
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable
+from pydantic import BaseModel, Field
+
+from app.core import calisma_modeli, musaitlik
+from app.core.llm import llm_hatasini_cevir, yedekli_zincir
+from app.models.ihtiyac_karti import IhtiyacKarti
+from app.models.yetenek_karti import YetenekKarti
+
+logger = logging.getLogger("zemin360.takip")
+
+EN_AZ_ADIM = 3
+EN_COK_ADIM = 5
+EN_COK_HAFTA = 12
+
+
+class AdimOnerisi(BaseModel):
+    baslik: str = Field(description="Kısa, eylem bildiren başlık (en çok 8 kelime).")
+    aciklama: str = Field(
+        description="Ne olunca tamam sayılır: gözlemlenebilir, ölçülebilir tek cümle."
+    )
+    hafta: int = Field(description="Başlangıçtan itibaren kaçıncı haftanın sonunda biter (1-12).")
+
+
+class PlanOnerisi(BaseModel):
+    adimlar: list[AdimOnerisi] = Field(
+        description="3-5 adım, zaman sırasıyla; son adım başarı kriterine bağlanır."
+    )
+
+
+SISTEM_TALIMATI = """Sen Zemin360'ın Takip Ajanı'sın. Bir kurum ile genç bir yetenek arasında
+yeni açılan bir pilot iş birliği için 3-5 adımlık (milestone) bir plan ÖNERİYORSUN.
+Planı iki taraf gözden geçirip düzenleyecek ve onaylayacak; sen karar vermiyorsun.
+
+Kurallar:
+- 3 ile 5 arasında adım yaz, zaman sırasıyla.
+- Her adımın "hafta" değeri başlangıçtan itibaren kaçıncı haftanın sonunda bittiğidir:
+  1 ile 12 arası, her adımda bir öncekinden BÜYÜK.
+- Son adım, ihtiyaç kartındaki başarı kriterine doğrudan bağlanmalı.
+- Her adımın açıklaması "ne olunca tamam sayılır" sorusunu tek cümleyle, gözlemlenebilir
+  biçimde yanıtlamalı (ör. "Kayıt ekranı gönüllülerle denendi, 10 kayıt hatasız girildi").
+- Kartlarda OLMAYAN bir sayı, araç, kişi ya da tarih UYDURMA. Başarı kriterindeki sayıları
+  kullanabilirsin; başka sayı gerekiyorsa sayı yazma.
+- Müsaitliği ve çalışma modelini hesaba kat: yarı zamanlı bir gence 2 haftada büyük iş verme.
+- Teknik rol ve araç adlarını Türkçeleştirme (backend, API, FastAPI gibi yaygın adları koru).
+- Düz, sade Türkçe; başlıklar kısa ve eylem bildiren."""
+
+PLAN_SABLONU = ChatPromptTemplate.from_messages(
+    [
+        ("system", SISTEM_TALIMATI),
+        (
+            "human",
+            """İhtiyaç kartı (kurum: {kurum_adi})
+- Problem: {problem_tanimi}
+- Başarı kriteri: {basari_kriteri}
+- Kısıtlar: {kisitlar}
+- Müsaitlik tercihi: {musaitlik}
+- Çalışma modeli: {calisma_modeli}
+
+Yetenek kartı
+- Rol: {rol_alani} ({deneyim_seviyesi})
+- Araçlar: {araclar}
+- Daha önce yaptığı somut işler: {ciktilar}
+{ek_not}""",
+        ),
+    ]
+)
+
+DUZELTME_NOTU = (
+    "\nÖNCEKİ DENEME KURALA UYMADI: tam olarak 3-5 adım yaz, her adımın haftası 1-12 arası "
+    "ve bir öncekinden büyük olsun, başlık ve açıklama boş kalmasın."
+)
+
+
+def plan_girdileri(
+    ihtiyac: IhtiyacKarti, kart: YetenekKarti, kurum_adi: str, ek_not: str = ""
+) -> dict:
+    """İstem girdileri. İletişim bilgisi (e-posta) hiç girmez."""
+    return {
+        "kurum_adi": kurum_adi,
+        "problem_tanimi": ihtiyac.problem_tanimi,
+        "basari_kriteri": ihtiyac.basari_kriteri or "(yazılmamış)",
+        "kisitlar": ihtiyac.kisitlar or "(yok)",
+        "musaitlik": musaitlik.ETIKETLER.get(ihtiyac.musaitlik_tercihi or "", "(belirtilmemiş)"),
+        "calisma_modeli": calisma_modeli.ETIKETLER.get(
+            ihtiyac.calisma_modeli or "", "(belirtilmemiş)"
+        ),
+        "rol_alani": kart.rol_alani,
+        "deneyim_seviyesi": kart.deneyim_seviyesi,
+        "araclar": ", ".join(kart.araclar_teknolojiler or []) or "(belirtilmemiş)",
+        "ciktilar": "; ".join(c.baslik for c in kart.somut_ciktilar) or "(yok)",
+        "ek_not": ek_not,
+    }
+
+
+def plan_gecerli_mi(oneri: PlanOnerisi) -> bool:
+    """Kural: 3-5 adım, dolu başlık ve açıklama, hafta 1-12 ve kesin artan."""
+    adimlar = oneri.adimlar
+    if not EN_AZ_ADIM <= len(adimlar) <= EN_COK_ADIM:
+        return False
+    onceki = 0
+    for adim in adimlar:
+        if not adim.baslik.strip() or not adim.aciklama.strip():
+            return False
+        if not onceki < adim.hafta <= EN_COK_HAFTA:
+            return False
+        onceki = adim.hafta
+    return True
+
+
+def hedef_tarihi(baslangic: dt.date, hafta: int) -> dt.date:
+    return baslangic + dt.timedelta(weeks=hafta)
+
+
+@lru_cache
+def _plan_zinciri() -> Runnable:
+    # Güçlü katman: tek seferlik, nüans önemli (başarı kriterine bağlı,
+    # ölçülebilir ara hedefler, uydurma yok).
+    return yedekli_zincir(
+        "guclu", "takip_plan", lambda m: PLAN_SABLONU | m.with_structured_output(PlanOnerisi)
+    )
+
+
+async def _plan_cagir(girdiler: dict) -> PlanOnerisi:
+    try:
+        return await _plan_zinciri().ainvoke(girdiler)
+    except Exception as hata:
+        raise llm_hatasini_cevir(hata) from hata
+
+
+async def plan_oner(
+    ihtiyac: IhtiyacKarti, kart: YetenekKarti, kurum_adi: str
+) -> list[AdimOnerisi] | None:
+    """3-5 adımlık plan; kurala uymayan çıktı bir kez düzeltme notuyla yeniden istenir.
+
+    LLM hataları (hız sınırı 429, arıza 503) çağırana çıkar; kurala iki kez
+    uymayan çıktıda None döner.
+    """
+    oneri = await _plan_cagir(plan_girdileri(ihtiyac, kart, kurum_adi))
+    if plan_gecerli_mi(oneri):
+        return oneri.adimlar
+    logger.info("Plan önerisi kurala uymadı; düzeltme notuyla yeniden isteniyor")
+    oneri = await _plan_cagir(plan_girdileri(ihtiyac, kart, kurum_adi, ek_not=DUZELTME_NOTU))
+    if plan_gecerli_mi(oneri):
+        return oneri.adimlar
+    logger.warning("Plan önerisi iki denemede de kurala uymadı; plan boş bırakılıyor: %s", oneri)
+    return None
