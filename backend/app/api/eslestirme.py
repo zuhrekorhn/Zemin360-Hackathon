@@ -39,6 +39,7 @@ from app.agents.eslestirme import (
     siralayip_ele,
     temizlenecekler,
 )
+from app.agents.takip_durumu import ISBIRLIGI_PLAN_BEKLIYOR
 from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import (
@@ -75,7 +76,6 @@ logger = logging.getLogger("zemin360.eslestirme")
 
 router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
-ISBIRLIGI_AKTIF = "aktif"
 IHTIYAC_YOK = "Kuruma ait ihtiyaç kartı yok"
 ESLESME_BULUNAMADI = "Eşleşme bulunamadı"
 
@@ -201,7 +201,9 @@ async def kabul(
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
     if _gecisi_uygula(eslesme, OLAY_KABUL, hesap):
         if eslesme.isbirligi is None:
-            eslesme.isbirligi = Isbirligi(baslangic_tarihi=dt.date.today(), durum=ISBIRLIGI_AKTIF)
+            eslesme.isbirligi = Isbirligi(
+                baslangic_tarihi=dt.date.today(), durum=ISBIRLIGI_PLAN_BEKLIYOR
+            )
         bildirim_ekle(
             oturum,
             eslesme.ihtiyac_karti.kurum.hesap_id,

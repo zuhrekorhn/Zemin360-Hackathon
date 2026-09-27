@@ -8,6 +8,7 @@ işlem içinde, embedding sahte vektörle çalıştırılıyor.
 
 import asyncio
 import contextlib
+import uuid
 
 import pytest
 from sqlalchemy import func, select
@@ -19,6 +20,7 @@ from app.db.base import EMBEDDING_DIM
 from app.models.hesap import Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kullanici import Kullanici
+from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.auth import GirisIstegi
 from scripts import demo_hesaplari, yerel_sifirla
@@ -73,6 +75,12 @@ def test_benzerlik():
 
 
 def test_demo_hesaplari_acilir_tekrar_calismasi_guvenli_ve_kartlar_eslesir(monkeypatch):
+    # Yerel veritabanında gerçek demo hesapları zaten olabilir (betik çalıştırıldıysa);
+    # test onlara bağlı kalmasın diye her çalışmada benzersiz adresler.
+    ek = uuid.uuid4().hex[:8]
+    monkeypatch.setattr(demo_hesaplari, "GENC_EPOSTA", f"genc-{ek}@demo.zemin360.example")
+    monkeypatch.setattr(demo_hesaplari, "KURUM_EPOSTA", f"kurum-{ek}@demo.zemin360.example")
+    monkeypatch.setattr(demo_hesaplari, "GIRVAK_EPOSTA", f"girvak-{ek}@demo.zemin360.example")
     vektor = [0.0] * EMBEDDING_DIM
     vektor[7] = 1.0
 
@@ -115,11 +123,13 @@ def test_demo_hesaplari_acilir_tekrar_calismasi_guvenli_ve_kartlar_eslesir(monke
 
             # Çıkmaz sokak yok: demo ihtiyacı, demo gencin kartını sert filtrelerden
             # (şehir, çalışma modeli, müsaitlik, hesap) geçirerek aday görüyor.
+            kurum_hesabi = await oturum.scalar(
+                select(Hesap).where(Hesap.email == demo_hesaplari.KURUM_EPOSTA)
+            )
             ihtiyac = await oturum.scalar(
                 select(IhtiyacKarti)
                 .join(IhtiyacKarti.kurum)
-                .where(IhtiyacKarti.problem_tanimi.like("Kooperatifin gıda bankasında%"))
-                .order_by(IhtiyacKarti.olusturma_tarihi.desc())
+                .where(Kurum.hesap_id == kurum_hesabi.id)
             )
             adaylar = {a.yetenek_karti.kullanici_id for a in await adaylari_getir(oturum, ihtiyac)}
             assert genc.id in adaylar
