@@ -101,5 +101,8 @@ class YetenekKartiYaniti(BaseModel):
     versiyon: int
     embedding_var: bool
     somut_ciktilar: list[SomutCiktiYaniti]
+    # Faz C: iki tarafın her adımı onayladığı tamamlanmış iş birliği sayısı.
+    # Kurum adı taşımaz; eşleşme skoruna doğrulama bonusu olarak girer.
+    tamamlanan_pilot: int = 0
 
     model_config = {"from_attributes": True}

@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.agents.eslestirme import tamamlanan_pilot_sayilari
 from app.api.kimlik import mevcut_hesap
 from app.api.sahiplik import (
     bulunamadi,
@@ -69,6 +70,7 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiY
         versiyon=kart.versiyon,
         embedding_var=kart.embedding is not None,
         somut_ciktilar=kart.somut_ciktilar,
+        tamamlanan_pilot=(await tamamlanan_pilot_sayilari(oturum, [kart.id])).get(kart.id, 0),
     )
 
 

@@ -32,6 +32,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.agents.takip_durumu import ISBIRLIGI_TAMAMLANDI
 from app.core.calisma_modeli import sehir_eslesmeli_mi
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 from app.core.metin import turkce_kucult
@@ -39,6 +40,7 @@ from app.core.sehir import sehir_kanonik
 from app.models.eslesme import Eslesme
 from app.models.guven_skoru import GuvenSkoru
 from app.models.ihtiyac_karti import IhtiyacKarti
+from app.models.isbirligi import Isbirligi
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -50,6 +52,11 @@ BENZERLIK_AGIRLIGI = 0.75
 DOGRULAMA_AGIRLIGI = 0.25
 TOP_N = 5
 SKOR_ESIGI = 0.40
+# Tamamlanmış pilot (Faz C, docs/faz-c-takip.md § 6): doğrulama bonusuna
+# toplamsal eklenir, tavan 1.0. Pilotu olmayan kartın skoru değişmez; pilot
+# skora en çok 0.25 × 0.5 = +0.125 ekler. Alakayı yaratmaz: benzerlik alt
+# sınırı skordan önce uygulanmaya devam ediyor.
+PILOT_BONUSU = 0.5
 # Konu alakası için ayrı bir alt sınır (docs/matching-algorithm.md § 5).
 # Doğrulama bonusu sıralamayı etkiler, alakayı YARATMAZ: iyi doğrulanmış bir
 # kart tek başına +0.19 getirdiği için 0.34 benzerlikli alakasız bir aday
@@ -113,6 +120,8 @@ class Aday:
     yetenek_karti: YetenekKarti
     benzerlik: float
     dogrulama_bonus: float
+    # İki tarafın her adımı onayladığı, tamamlanmış iş birliği sayısı.
+    tamamlanan_pilot: int = 0
 
     @property
     def skor(self) -> float:
@@ -122,16 +131,21 @@ class Aday:
 # --- Saf hesap (LLM ve DB olmadan test edilebilir) -------------------------
 
 
-def dogrulama_bonusu(guven_skorlari: Sequence[Sequence[int]]) -> float:
-    """Kartın güven skorlarını 0-1 aralığına indirger.
+def dogrulama_bonusu(guven_skorlari: Sequence[Sequence[int]], tamamlanan_pilot: int = 0) -> float:
+    """Kartın güven skorlarını ve tamamlanmış pilotunu 0-1 aralığına indirger.
 
     Skor kaydı olmayan kart 0 alır — **ceza değil, sadece bonus yok**
     (docs/matching-algorithm.md § 4). Kanıtsız kart elenmez.
+
+    Tamamlanmış pilot (en az bir) `PILOT_BONUSU` ekler, toplam 1.0'ı geçmez.
+    Pilotu olmayan kart için sonuç Faz C öncesiyle birebir aynı.
     """
-    if not guven_skorlari:
-        return 0.0
-    oranlar = [sum(bilesenler) / GUVEN_TAM_PUAN for bilesenler in guven_skorlari]
-    return sum(oranlar) / len(oranlar)
+    guven = 0.0
+    if guven_skorlari:
+        oranlar = [sum(bilesenler) / GUVEN_TAM_PUAN for bilesenler in guven_skorlari]
+        guven = sum(oranlar) / len(oranlar)
+    pilot = PILOT_BONUSU if tamamlanan_pilot >= 1 else 0.0
+    return min(1.0, guven + pilot)
 
 
 def skor_hesapla(benzerlik: float, dogrulama_bonus: float) -> float:
@@ -265,6 +279,16 @@ def kart_guclu_kanitli_mi(kart: YetenekKarti) -> bool:
     )
 
 
+def pilot_ozeti(tamamlanan_pilot: int) -> str:
+    """Gerekçe istemine giden tamamlanmış pilot satırı (Faz C)."""
+    if tamamlanan_pilot < 1:
+        return "Tamamlanmış pilot: yok."
+    return (
+        f"Tamamlanmış pilot: {tamamlanan_pilot} — platformda bir kurumla iş birliğini, "
+        "iki tarafın her adımı onaylayarak tamamladı."
+    )
+
+
 def dogrulama_ozeti(kart: YetenekKarti) -> str:
     """Gerekçe istemine giden dürüst doğrulama durumu.
 
@@ -356,11 +380,13 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
     # Eşik ve Top-N skordan sonra uygulanıyor (doğrulama bonusu sıralamayı
     # değiştirebilir), ama yine de makul bir üst sınırla getiriyoruz.
     satirlar = (await oturum.execute(sorgu.order_by("uzaklik").limit(50))).all()
+    pilotlar = await tamamlanan_pilot_sayilari(oturum, [kart.id for kart, _ in satirlar])
 
     return [
         Aday(
             yetenek_karti=kart,
             benzerlik=1.0 - float(uzaklik_degeri),
+            tamamlanan_pilot=pilotlar.get(kart.id, 0),
             dogrulama_bonus=dogrulama_bonusu(
                 [
                     (
@@ -371,11 +397,34 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
                     )
                     for cikti in kart.somut_ciktilar
                     if cikti.guven_skoru is not None
-                ]
+                ],
+                tamamlanan_pilot=pilotlar.get(kart.id, 0),
             ),
         )
         for kart, uzaklik_degeri in satirlar
     ]
+
+
+async def tamamlanan_pilot_sayilari(
+    oturum: AsyncSession, kart_idler: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, int]:
+    """Kart başına tamamlanmış iş birliği sayısı (Faz C sinyali).
+
+    Saklanmıyor, hesaplanıyor: tek doğruluk kaynağı `isbirligi.durum`; kartta
+    ayrıca bir sayaç tutulsaydı iki kaynak ayrışabilirdi.
+    """
+    if not kart_idler:
+        return {}
+    satirlar = await oturum.execute(
+        select(Eslesme.yetenek_karti_id, func.count(Isbirligi.id))
+        .join(Isbirligi, Isbirligi.eslesme_id == Eslesme.id)
+        .where(
+            Eslesme.yetenek_karti_id.in_(list(kart_idler)),
+            Isbirligi.durum == ISBIRLIGI_TAMAMLANDI,
+        )
+        .group_by(Eslesme.yetenek_karti_id)
+    )
+    return {kart_id: sayi for kart_id, sayi in satirlar.all()}
 
 
 # --- Gerekçe (tek LLM çağrısı) ---------------------------------------------
@@ -397,7 +446,9 @@ DUZELTME_NOTU = (
 )
 
 
-def gerekce_girdileri(ihtiyac: IhtiyacKarti, kart: YetenekKarti, ek_not: str = "") -> dict:
+def gerekce_girdileri(
+    ihtiyac: IhtiyacKarti, kart: YetenekKarti, ek_not: str = "", tamamlanan_pilot: int = 0
+) -> dict:
     """Gerekçe şablonunun değişkenleri (canlı test de bunu kullanıyor)."""
     ciktilar = (
         "; ".join(
@@ -415,7 +466,7 @@ def gerekce_girdileri(ihtiyac: IhtiyacKarti, kart: YetenekKarti, ek_not: str = "
         "sektorler": ", ".join(kart.sektor_ilgi_alani) or "belirtilmedi",
         "araclar": ", ".join(kart.araclar_teknolojiler) or "belirtilmedi",
         "ciktilar": ciktilar,
-        "dogrulama": dogrulama_ozeti(kart),
+        "dogrulama": f"{dogrulama_ozeti(kart)}\n{pilot_ozeti(tamamlanan_pilot)}",
         "ek_not": ek_not,
     }
 
@@ -438,12 +489,15 @@ async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str | None:
     skor geçerli kalır, sonraki hesapta gerekçe yeniden denenir.
     """
     kart = aday.yetenek_karti
-    metin = await _gerekce_cagir(gerekce_girdileri(ihtiyac, kart))
+    pilot = aday.tamamlanan_pilot
+    metin = await _gerekce_cagir(gerekce_girdileri(ihtiyac, kart, tamamlanan_pilot=pilot))
     if kart_guclu_kanitli_mi(kart) or not dogrulama_iddiasi_var_mi(metin):
         return metin
 
     logger.info("Gerekçe güçlü kanıt yokken 'doğrulanmış' dedi; yeniden üretiliyor (%s)", kart.id)
-    metin = await _gerekce_cagir(gerekce_girdileri(ihtiyac, kart, ek_not=DUZELTME_NOTU))
+    metin = await _gerekce_cagir(
+        gerekce_girdileri(ihtiyac, kart, ek_not=DUZELTME_NOTU, tamamlanan_pilot=pilot)
+    )
     if not dogrulama_iddiasi_var_mi(metin):
         return metin
 

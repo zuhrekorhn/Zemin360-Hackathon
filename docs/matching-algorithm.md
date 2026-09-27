@@ -58,6 +58,14 @@ skor = 0.75 * cosine_similarity(yetenek.embedding, ihtiyac.embedding)
 - `GUVEN_SKORU` kaydı varsa: `(kanit_orijinalligi + sonuc_olculebilirligi + rol_netligi + ucuncu_taraf_onayi) / 12` (0-1 arası normalize)
 - Kayıt yoksa (henüz doğrulanmamış): `0` — **ceza değil**, sadece bonus yok. Doğrulanmamış kart elenmez, listede kalır.
 
+**Tamamlanmış pilot (Faz C, `faz-c-takip.md` § 6):** kartın en az bir tamamlanmış iş birliği varsa bonusa toplamsal eklenir, tavan 1.0:
+
+```
+dogrulama_bonus = min(1.0, guven_orani + 0.5 × [tamamlanan_pilot ≥ 1])
+```
+
+Pilotu olmayan kartın skoru Faz C öncesiyle birebir aynı (demo kalibrasyonu bozulmaz); pilot skora en çok `0.25 × 0.5 = +0.125` ekler. Sayı değil varlık sayılır: bir pilot yeter. Sinyal saklanmaz, `isbirligi.durum = tamamlandi` kayıtlarından hesaplanır (`tamamlanan_pilot_sayilari`). Alakayı yaratmaz: benzerlik alt sınırı (§ 5) skordan önce uygulanmaya devam eder. Gerekçe istemine de "Tamamlanmış pilot: N" satırı gider.
+
 ## 5. Eşik ve Sıralama
 
 Mutlak bir eşik yerine (havuz küçükken saçmalar) **Top-N** yaklaşımı: en yüksek skorlu **5 sonuç** gösterilir. Ek güvenlik: skor %40'ın altındaysa hiç gösterilmez (tamamen alakasız sonuçları filtrelemek için).
