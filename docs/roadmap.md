@@ -104,6 +104,9 @@ reddeder; sayfa görünür ama düğmeler çalışmaz. Yerel denemede `http://lo
 
 ## Faz C — Takip Ajanı (29-30 Eyl)
 
+Özellik notu ve kararlar: [`faz-c-takip.md`](faz-c-takip.md). Durum özeti
+(Kesim çizgisi (3)) kesilebilir; döngü onsuz tam çalışır.
+
 - [ ] İş birliği açılınca ajan ihtiyaç kartının başarı kriterinden 3-5
       milestone'luk plan önerir (LLM, yapılandırılmış çıktı).
 - [ ] İki taraf planı onaylar ya da düzenler.
@@ -152,6 +155,9 @@ eksikliği görülen profil işleri ile arayüz düzeltmeleri. Akşam özellik d
 - [ ] Migration'lar canlı veritabanında sıfırdan çalışır.
 - [ ] Tohum veri: 30-50 yetenek kartı, 8-10 kurum, birkaç tamamlanmış ve
       pasifleşmiş iş birliği. Demo senaryosuyla aynı hikâyeden beslenir.
+- [ ] Tohum veriye **son adımı kalmış ve bir adımı gecikmiş** hazır bir iş birliği
+      eklenir: demoda gecikme etiketi ve tamamlanma (→ tamamlanmış pilot sinyali)
+      beklemeden gösterilebilsin (Faz C notu).
 - [ ] Demo hesapları (genç, kurum, GİRVAK) hazır.
 
 ## Faz F — Uçtan uca prova (5 Eki)
