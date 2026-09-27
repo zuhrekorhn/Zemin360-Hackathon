@@ -175,3 +175,20 @@ def test_pipeline_yalnizca_yeni_oneri_icin_bildirim_yazar(monkeypatch):
         assert len(await _bildirimler(d, kurum)) == 1
 
     senaryo(adimlar)
+
+
+def test_ayni_islemde_yazilan_bildirimler_en_yeni_once_siralanir():
+    """`now()` işlem başlangıcını döndüğü için aynı işlemdeki bildirimler eşit
+    zamanlı kalıyor, sıra belirsizleşiyordu; zaman damgası INSERT anında
+    `clock_timestamp()` ile atanıyor."""
+    from app.api.bildirimler import bildirim_ekle
+
+    async def adimlar(istemci, d):
+        for metin in ("birinci", "ikinci", "üçüncü"):
+            bildirim_ekle(d.oturum, d.genc1.hesap.id, "ilgi", metin)
+            await d.oturum.flush()
+        await d.oturum.commit()
+        liste = (await istemci.get("/bildirimler", headers=d.genc1.baslik)).json()
+        assert [b["metin"] for b in liste] == ["üçüncü", "ikinci", "birinci"]
+
+    senaryo(adimlar)
