@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func, text
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -40,6 +41,11 @@ class YetenekKarti(UUIDPrimaryKeyMixin, Base):
     # yeni kart açılmaz, bu kart döner (çift tıklama, embedding hatası sonrası
     # yeniden deneme). Sohbet dışından gelen kartlarda NULL.
     oturum_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), unique=True)
+    # Faz D: Canlılık'ın "eski kart" kuralı (yeni fırsat) bu tarihe bakar.
+    # Faz D öncesi kartlar migration anının tarihini aldı.
+    olusturma_tarihi: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
     kullanici: Mapped[Kullanici] = relationship(back_populates="yetenek_kartlari")
     somut_ciktilar: Mapped[list[SomutCikti]] = relationship(
