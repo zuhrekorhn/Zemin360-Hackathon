@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     # Demo hesaplarının ortak şifresi (scripts/demo_hesaplari.py). Yalnızca betik
     # okur; repoda şifre yok. Boşsa betik çalışmaz.
     demo_sifresi: str = ""
+    # Canlılık taraması için cron kimliği (docs/faz-d-canlilik.md § 4). Canlıdaki
+    # zamanlanmış görev `POST /canlilik/tarama`'yı `X-Tarama-Anahtari` başlığıyla
+    # çağırır — kullanıcı token'ı değil: GİRVAK'ın token'ı 7 günde düşer ve tarama
+    # sessizce durur. Boşsa başlık yolu kapalıdır, uç yalnızca GİRVAK token'ıyla.
+    tarama_anahtari: str = ""
 
     # LLM: Gemini, ücretli katman (docs/architecture.md § Teknoloji Kararları).
     # İki katman var; hangi işin hangisini kullandığı app/core/llm.py'de.
@@ -85,6 +90,17 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"JWT_GIZLI_ANAHTAR en az {JWT_ANAHTAR_EN_AZ} karakter olmalı. Üretmek için: "
                 'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+            )
+        return v
+
+    @field_validator("tarama_anahtari")
+    @classmethod
+    def _tarama_anahtari_bos_ya_da_uzun(cls, v: str) -> str:
+        v = v.strip()
+        if v and len(v) < JWT_ANAHTAR_EN_AZ:
+            raise ValueError(
+                f"TARAMA_ANAHTARI ya boş olmalı ya da en az {JWT_ANAHTAR_EN_AZ} karakter. "
+                'Üretmek için: python -c "import secrets; print(secrets.token_urlsafe(48))"'
             )
         return v
 

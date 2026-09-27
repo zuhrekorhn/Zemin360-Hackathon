@@ -12,6 +12,7 @@ from app.agents.tanimlama import grafik_derle as tanimlama_grafigi_derle
 from app.api import (
     auth,
     bildirimler,
+    canlilik,
     dogrulama,
     eslestirme,
     girvak,
@@ -89,3 +90,4 @@ app.include_router(dogrulama.router)
 app.include_router(isbirlikleri.router)
 app.include_router(girvak.router)
 app.include_router(takip.router)
+app.include_router(canlilik.router)
