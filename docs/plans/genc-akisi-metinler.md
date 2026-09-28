@@ -1,9 +1,8 @@
 # Genç akışı — yeni arayüz metinleri (toplu denetim listesi)
 
-Plan § 0, karar 15: 7. adımdan itibaren yazılan kullanıcıya görünen her metin
-burada. Hitap: gence "sen", kuruma "siz". Teknik terim yok ("ajan", "pipeline",
-"embedding", "rubrik", "skor eşiği"…). İçerik rehberi gelince
-(`docs/icerik-rehberi.md`) bu liste onunla denetlenecek.
+Plan § 0, karar 15: yazılan ve değişen her kullanıcı metni burada. Kurallar
+`docs/icerik-rehberi.md`'de (28 Eyl'de onaylandı). Toplu denetim genç akışı
+bittikten sonra bu listeyle yapılacak.
 
 Sütunlar: **Dosya** · **Bileşen / yer** · **Metin** · **Kime** (genç / kurum / herkes).
 
@@ -25,6 +24,9 @@ Karar 15 gereği şimdi değiştirilmiyor; toplu denetimde ele alınacak.
 | `frontend/src/app/kurum/page.tsx` | "· eşleştirmeye hazır değil" | Terim yok ama nedeni söylemiyor; denetimde bakılsın |
 
 ## 7. adım — Kart düzenleme
+
+> **Rehberden önce yazıldı**; denetimde rehbere göre düzeltilecek. Bilinen uyumsuzluklar:
+> "iş" / "iş kalemi" → "çalışma" ("İş ekle" → "Çalışma ekle", "İşi ekle", "Bu kartta henüz iş yok", "Değişen işin kanıtı", "Bu iş daha önce değerlendirildi", "Bu yanıt işin önceki hâline…"); tür seçeneği "İş" → "İş deneyimi"; "Senin payın" ve "Sonuç (sayıyla)" etiketleri (§ 5.3 isim öbeği, sorun yok ama "Rol" başlığıyla tutarlılık bakılsın); bekleme notuna "Sayfayı yenileyerek görebilirsin." eklenmeli (§ 5.8); silme onayı "kartından silinsin mi" → "silinsin mi" (§ 5.6); "Kaydedildi." tek başına. Yer tutucularda "ör." var, uzun tire yok.
 
 | Dosya | Bileşen / yer | Metin | Kime |
 |---|---|---|---|

@@ -47,6 +47,10 @@ Faz A (sağlamlaştırma), **Faz B (kimlik ve iki taraflı döngü)** ve **Faz C
 
 İki sohbet ajanı **aynı motoru** paylaşıyor (`app/agents/sohbet_motoru.py`); yeni bir sohbet ajanı gerekirse grafik iskeletini kopyalama, bir `AjanTanimi` yaz. Ajana özel olan şey soru seti, çıkarım şeması ve varsa ek dalıdır.
 
+## Arayüz metinleri
+
+Kullanıcıya görünen her metin (başlık, buton, etiket, hata, boş durum, bildirim, sohbet sorusu, arayüzde gösterilen backend hata cümleleri) [`docs/icerik-rehberi.md`](docs/icerik-rehberi.md)'ye uyar. Özet: gence "sen", firmaya "siz"; "ajan" ve teknik terimler (pipeline, embedding, rubrik, skor, eşik…) kullanıcıya gösterilmez; terimler rehberin sözlüğünden (ör. "çalışma", "güven göstergesi", "uyum", "firma"). Rehberde olmayan terim uydurulmaz. Kod içindeki alan ve değişken adları (`somut_cikti`, `kurum`…) değişmez; rehber yalnızca kullanıcı metni için.
+
 ## Teknoloji Yığını (hızlı referans)
 
 Backend: Python, FastAPI · Orkestrasyon: LangGraph (supervisor pattern) · Veritabanı: PostgreSQL + pgvector · Frontend: Next.js, Tailwind, shadcn/ui

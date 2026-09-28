@@ -43,10 +43,8 @@
       - (a) Genç ilgi gösterir, sonra daha güçlü 5 kart gelir ve yeniden hesaplanır: kayıt silinmez ve kurum yanıtında görünür.
       - (b) Genç ilgi gösterir, sonra kartını ihtiyaca uymayacak biçimde düzenler: kayıt silinmez.
       - (c) Mevcut `onerildi` temizlik davranışı değişmez.
-15. **Arayüz metinleri** (28 Eyl, geçici kural; içerik rehberi gelince `docs/icerik-rehberi.md`):
-    - **Hitap:** Gence "sen", kuruma "siz". Mevcut kurum ekranlarında "sen" geçen yerler şimdi değiştirilmez, listeye not düşülür.
-    - **Teknik terim yok:** Kullanıcıya görünen metinde "ajan", "pipeline", "embedding", "rubrik", "skor eşiği" gibi terimler geçmez; kavram, kullanıcının göreceği sonuçla anlatılır ("rubrik" değil "güven göstergesi").
-    - **Liste:** 7. adımdan itibaren yazılan her yeni kullanıcı metni `docs/plans/genc-akisi-metinler.md`'de toplanır (dosya, bileşen, metin).
+15. **Arayüz metinleri:** `docs/icerik-rehberi.md`'ye bakınız (28 Eyl'de onaylandı; bu kararın geçici kuralının yerini aldı). Yeni ya da değişen her kullanıcı metni `docs/plans/genc-akisi-metinler.md` listesine eklenir; rehberde karşılığı olmayan terim uydurulmaz, listeye not düşülür. Mevcut metinlere genç akışı bitene kadar dokunulmaz; toplu denetim ayrı bir adım. Kod içindeki alan ve değişken adları (`somut_cikti`, `kurum`…) değişmez.
+16. **8. adım ertelendi** (28 Eyl): "Yeni iş ekle" mini sohbeti özellik dondurmasından sonraya kaldı. Gerekçe: 7. adımdaki formla ekleme (`POST /yetenek-kartlari/{id}/ciktilar`) aynı ihtiyacı karşılıyor; mini sohbet üçüncü bir sohbet grafiği, yeni uçlar ve checkpointer kaydı istiyor, takvimde karşılığı yok. `somut_cikti.oturum_id` sütunu (1. adım) yerinde duruyor; ileride tekrar kuralı için kullanılacak.
 
 **Uygulama sırası** (§ 10'un güncel hâli). Her adım ayrı commit; her adımda backend ve frontend testlerinin tamamı:
 
@@ -57,7 +55,7 @@
 5. **`karti_hazirla`:** otomatik puanlama ve yeniden eşleştirme; Keşif onayına bağlanır.
 6. **Keşif sohbeti:** bağlam, iş kalemi alanları, referans; onboarding yönlendirmesi.
 7. **Kart düzenleme:** versiyon, doğrulama sıfırlama, referans geçmişi ve yeniden iste.
-8. **"Yeni iş ekle"** mini sohbeti.
+8. ~~**"Yeni iş ekle"** mini sohbeti.~~ **Ertelendi** (karar 16).
 9. **İlgi durum makinesi** ve ihtiyaç kapanma kuralı.
 10. **Genç ana sayfası** ve kurum tarafındaki en küçük değişiklikler; Tanımlama onay notu.
 11. **Canlılık `genc_ilgisi_yanitsiz`.**
