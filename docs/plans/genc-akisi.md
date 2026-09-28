@@ -34,6 +34,20 @@
 12. **Referans kişi Keşif sohbetinde de sorulur** (§ 5.4). E-posta, mevcut `ReferansIstegi` mekanizmasıyla ilgili iş kalemine bağlanır.
 13. **Belge düzeltmesi:** `agent-specs.md`'de Doğrulama'nın linkin yalnızca başlık ve açıklamasını okuduğu açıkça yazılır; "içerik analizi" izlenimi veren ifadeler düzeltilir.
 
+14. **İlgi gösterilmiş eşleşme korunur** (28 Eyl, ek kural; 9. adımı etkiler):
+    - Pipeline'ın temizlik kuralı yalnızca `onerildi` kayıtlarını silebilir. `genc_ilgilendi`, genç ilgisini gösterdiği için "karar verilmiş kayıt" sayılır.
+    - Pipeline bu kaydı **asla silmez**, skorunu ve gerekçesini de **değiştirmez**. (Kurumun karar verdiği `ilgileniliyor`/`kabul_edildi`/`reddedildi` kayıtlarında bugün skor tazeleniyor; `genc_ilgilendi`'de o da yok.)
+    - Kayıt, yeniden hesaplamada en iyi 5'in dışına düşse bile kurum yanıtında "İlgi gösterenler" bölümünde görünür. En iyi 5 sınırı yalnızca `onerildi` kayıtlarına uygulanır.
+    - Kart düzenlemesinden sonra kart ihtiyaca artık uymasa bile kayıt kalır. Kaydı yalnızca üç şey kapatır: kurumun "Şimdilik değil" demesi, gencin ilgisini geri çekmesi, ihtiyacın kapanması.
+    - **Testler (gerçek veritabanı):**
+      - (a) Genç ilgi gösterir, sonra daha güçlü 5 kart gelir ve yeniden hesaplanır: kayıt silinmez ve kurum yanıtında görünür.
+      - (b) Genç ilgi gösterir, sonra kartını ihtiyaca uymayacak biçimde düzenler: kayıt silinmez.
+      - (c) Mevcut `onerildi` temizlik davranışı değişmez.
+15. **Arayüz metinleri** (28 Eyl, geçici kural; içerik rehberi gelince `docs/icerik-rehberi.md`):
+    - **Hitap:** Gence "sen", kuruma "siz". Mevcut kurum ekranlarında "sen" geçen yerler şimdi değiştirilmez, listeye not düşülür.
+    - **Teknik terim yok:** Kullanıcıya görünen metinde "ajan", "pipeline", "embedding", "rubrik", "skor eşiği" gibi terimler geçmez; kavram, kullanıcının göreceği sonuçla anlatılır ("rubrik" değil "güven göstergesi").
+    - **Liste:** 7. adımdan itibaren yazılan her yeni kullanıcı metni `docs/plans/genc-akisi-metinler.md`'de toplanır (dosya, bileşen, metin).
+
 **Uygulama sırası** (§ 10'un güncel hâli). Her adım ayrı commit; her adımda backend ve frontend testlerinin tamamı:
 
 1. **Eklemeli migration'lar ve modeller.** Yalnızca yeni sütunlar ve varsayılanlar; davranış değişmez.
