@@ -16,8 +16,8 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | | `/bildirimler/hepsini-oku` | POST | `{okunan}` döner |
 | **Keşif** | `/kesif/sohbet/baslat` | POST | Yeni sohbet oturumu açar |
 | | `/kesif/sohbet/cevap` | POST | Kullanıcı cevabını işler, sıradaki soruyu döner |
-| | `/kesif/kart/onayla` | POST | Taslağı `YETENEK_KARTI`'na yazar. Tekrarlanabilir: aynı `oturum_id` ikinci kez gelirse yeni kart açılmaz, mevcut kart 200 ile döner. Embedding hesaplanamazsa kart yine 201 ile döner, `embedding_var: false` |
-| | `/yetenek-kartlari/{id}/embedding` | POST | Embedding'i yeniden hesaplar (onayda vektör servisine ulaşılamadıysa). Servis yine yoksa 503 |
+| | `/kesif/kart/onayla` | POST | Taslağı `YETENEK_KARTI`'na yazar. Tekrarlanabilir: aynı `oturum_id` ikinci kez gelirse yeni kart açılmaz, mevcut kart 200 ile döner. Embedding hesaplanamazsa kart yine 201 ile döner, `embedding_var: false`. Yanıttan sonra kart **arka planda hazırlanır** (`app/servisler/kart_hazirlama.py`): linki olan iş kalemleri otomatik puanlanır (linksiz kalem nötr kalır), kart benzerlik alt sınırını geçen açık ihtiyaç kartlarıyla mevcut pipeline'dan eşleştirilir. Tekrarda da sıraya girer; iş idempotent |
+| | `/yetenek-kartlari/{id}/embedding` | POST | Embedding'i yeniden hesaplar (onayda vektör servisine ulaşılamadıysa); başarılıysa kart hazırlanır (puanlama ve eşleştirme). Servis yine yoksa 503 |
 | | `/yetenek-kartlari/{id}` | GET | İletişim bilgisi döndürmez (agent-specs.md § 1.5). Her somut çıktı, varsa Doğrulama rubriğini (`guven_skoru`) birlikte taşır — kanıt eklenmemişse `null` |
 | **Tanımlama** | `/tanimlama/sohbet/baslat` | POST | Keşif ile aynı motoru kullanır, farklı soru seti |
 | | `/tanimlama/sohbet/cevap` | POST | Kullanıcı (kurum) cevabını işler, sıradaki soruyu döner |

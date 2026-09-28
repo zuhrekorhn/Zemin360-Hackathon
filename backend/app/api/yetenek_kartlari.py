@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -115,13 +115,16 @@ async def yetenek_karti_getir(
 @router.post("/yetenek-kartlari/{kart_id}/embedding", response_model=YetenekKartiYaniti)
 async def yetenek_karti_embedding(
     kart_id: uuid.UUID,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(mevcut_hesap),
     oturum: AsyncSession = Depends(get_session),
 ) -> YetenekKartiYaniti:
     """Embedding'i yeniden hesaplar — onay sırasında Voyage'a ulaşılamadıysa.
 
     Kart zaten embedding'liyse de yeniden hesaplanır; zararsız ve temsil
-    şablonu değiştiğinde tek tek tazelemenin yolu bu.
+    şablonu değiştiğinde tek tek tazelemenin yolu bu. Başarılıysa kart
+    hazırlanır (puanlama ve mevcut ihtiyaçlarla eşleştirme): onayda embedding
+    hesaplanamamışsa kart eşleştirmeye ancak şimdi girebiliyor.
     """
     kart = await oturum.scalar(
         select(YetenekKarti)
@@ -133,4 +136,8 @@ async def yetenek_karti_embedding(
         raise bulunamadi(KART_BULUNAMADI)
     if not await embedding_hesapla(oturum, kart):
         raise HTTPException(status_code=503, detail=EMBEDDING_HATA_MESAJI)
+    # kart_hazirlama bu modülü içe aktarıyor (embedding_hesapla); döngü olmasın.
+    from app.servisler import kart_hazirlama
+
+    arka_plan.add_task(kart_hazirlama.karti_hazirla, kart.id, kart.versiyon)
     return await kart_yaniti(oturum, kart.id)

@@ -162,6 +162,16 @@ def ucuncu_taraf_onayi_hesapla(puanlar: Sequence[int]) -> int:
     return math.floor(sum(cevrilmis) / len(cevrilmis) + 0.5)
 
 
+def otomatik_puanlanir_mi(kanit_linki: str | None, puanlanmis: bool) -> bool:
+    """Kart onayı ya da düzenlemesinden sonra bu iş kalemi arka planda puanlanır mı?
+
+    Yalnızca linki olan ve henüz puanı olmayan (ya da içeriği değişip puanı
+    sıfırlanan) kalem. Linksiz kalem puanlanmaz, "doğrulanmamış" nötr durumda
+    kalır: kanıtsız kalem ceza almaz, bonus da almaz (plan § 0, karar 7).
+    """
+    return bool(kanit_linki and kanit_linki.strip()) and not puanlanmis
+
+
 def zaman_asimina_ugradi_mi(
     olusturma_tarihi: dt.datetime, durum: str, simdi: dt.datetime | None = None
 ) -> bool:

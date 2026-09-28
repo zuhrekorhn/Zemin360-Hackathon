@@ -23,7 +23,6 @@ from app.agents.dogrulama import (
     DURUM_YANITLANDI,
     LinkKontrolu,
     linki_kontrol_et,
-    rubrik_puanla,
     ucuncu_taraf_onayi_hesapla,
     zaman_asimina_ugradi_mi,
 )
@@ -50,6 +49,7 @@ from app.schemas.dogrulama import (
     ReferansYanitiIstegi,
     ReferansYanitiSonucu,
 )
+from app.servisler.dogrulama import rubrigi_yaz
 
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
 
@@ -292,38 +292,18 @@ async def _ciktiyi_getir(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> Som
 async def _rubrigi_yaz(
     cikti: SomutCikti, kontrol: LinkKontrolu, itiraz_notu: str | None = None
 ) -> None:
-    """Ön rubriği üretip kaydeder; üçüncü taraf onayı korunur.
+    """Rubriği yazar (app/servisler/dogrulama.py); hız sınırı 429 olur.
 
-    Dil modeli hız sınırına takılırsa 429 döner — burada sessizce puansız devam etmek
-    yanlış olurdu, kullanıcı kanıtının değerlendirilmediğini bilmeli.
+    Burada sessizce puansız devam etmek yanlış olurdu: kullanıcı kanıtının
+    değerlendirilmediğini bilmeli.
     """
     try:
-        puan = await rubrik_puanla(
-            baslik=cikti.baslik,
-            aciklama=cikti.aciklama,
-            kanit_linki=cikti.kanit_linki,
-            kontrol=kontrol,
-            itiraz_notu=itiraz_notu,
-        )
+        await rubrigi_yaz(cikti, kontrol, itiraz_notu=itiraz_notu)
     except HizSinirHatasi as hata:
         raise HTTPException(
             status_code=429,
             detail=f"Kanıt değerlendirilemedi. {HIZ_SINIRI_MESAJI}",
         ) from hata
-
-    if cikti.guven_skoru is None:
-        cikti.guven_skoru = GuvenSkoru(
-            kanit_orijinalligi=puan.kanit_orijinalligi,
-            sonuc_olculebilirligi=puan.sonuc_olculebilirligi,
-            rol_netligi=puan.rol_netligi,
-            ucuncu_taraf_onayi=0,  # referans gelene kadar 0
-            gerekce_metni=puan.gerekce_metni,
-        )
-    else:
-        cikti.guven_skoru.kanit_orijinalligi = puan.kanit_orijinalligi
-        cikti.guven_skoru.sonuc_olculebilirligi = puan.sonuc_olculebilirligi
-        cikti.guven_skoru.rol_netligi = puan.rol_netligi
-        cikti.guven_skoru.gerekce_metni = puan.gerekce_metni
 
 
 async def _kanit_bekleyen_guncelle(oturum: AsyncSession, yetenek_karti_id: uuid.UUID) -> None:

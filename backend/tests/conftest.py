@@ -50,3 +50,19 @@ def canlilik_llm_yok(monkeypatch):
         return None
 
     monkeypatch.setattr(canlilik, "kisisel_metin", yok)
+
+
+@pytest.fixture(autouse=True)
+def kart_hazirlama_arka_plani_yok(monkeypatch):
+    """Kart onayı ve düzenlemesi yanıttan sonra kartı hazırlıyor (gerçek oturum,
+    embedding, LLM rubriği, pipeline). Testlerde çalışmasın; çağrılar kaydedilir,
+    o işi sınayan test çekirdeği (`karti_hazirla_oturumla`) doğrudan çağırır."""
+    from app.servisler import kart_hazirlama
+
+    cagrilar: list = []
+
+    async def kaydet(kart_id, versiyon, embedding_yenile=False):
+        cagrilar.append((kart_id, versiyon, embedding_yenile))
+
+    monkeypatch.setattr(kart_hazirlama, "karti_hazirla", kaydet)
+    return cagrilar

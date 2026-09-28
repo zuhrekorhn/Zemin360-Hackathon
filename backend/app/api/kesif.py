@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,6 +32,7 @@ from app.schemas.kesif import (
     SohbetYaniti,
     YetenekKartiYaniti,
 )
+from app.servisler import kart_hazirlama
 
 router = APIRouter(prefix="/kesif", tags=["kesif"])
 
@@ -99,6 +100,7 @@ async def kart_onayla(
     istek: KartOnaylaIstegi,
     request: Request,
     yanit: Response,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> YetenekKartiYaniti:
@@ -107,6 +109,10 @@ async def kart_onayla(
     Tekrarlanabilir: aynı `oturum_id` ikinci kez onaylanırsa (çift tıklama,
     embedding hatası sonrası yeniden deneme) yeni kart açılmaz, mevcut kart
     200 ile döner — embedding'i eksikse bu sırada yeniden denenir.
+
+    Yanıttan sonra kart hazırlanır (app/servisler/kart_hazirlama.py): linkli iş
+    kalemleri puanlanır, kart mevcut ihtiyaç kartlarıyla eşleştirilir. Tekrarda
+    da sıraya girer; iş idempotent.
     """
     config = {"configurable": {"thread_id": str(istek.oturum_id)}}
     mevcut = await _grafik(request).aget_state(config)
@@ -116,7 +122,7 @@ async def kart_onayla(
     onceki = await _oturumun_karti(oturum, istek.oturum_id)
     if onceki is not None:
         yanit.status_code = 200
-        return await _mevcut_karti_don(oturum, onceki)
+        return await _mevcut_karti_don(oturum, onceki, arka_plan)
 
     if not mevcut.values.get("taslak_hazir"):
         raise HTTPException(status_code=409, detail="Taslak henüz hazır değil")
@@ -166,12 +172,13 @@ async def kart_onayla(
         if onceki is None:
             raise
         yanit.status_code = 200
-        return await _mevcut_karti_don(oturum, onceki)
+        return await _mevcut_karti_don(oturum, onceki, arka_plan)
 
     # Kart kaydedildikten SONRA embedding (docs/matching-algorithm.md § 1-2).
     # Voyage'a ulaşılamazsa kart kaybolmaz: embedding NULL kalır, yanıtta
     # `embedding_var: false` döner ve arayüz yeniden hesaplatmayı önerir.
     await embedding_hesapla(oturum, kart)
+    arka_plan.add_task(kart_hazirlama.karti_hazirla, kart.id, kart.versiyon)
 
     return await kart_yaniti(oturum, kart.id)
 
@@ -184,8 +191,11 @@ async def _oturumun_karti(oturum: AsyncSession, oturum_id: uuid.UUID) -> Yetenek
     )
 
 
-async def _mevcut_karti_don(oturum: AsyncSession, kart: YetenekKarti) -> YetenekKartiYaniti:
+async def _mevcut_karti_don(
+    oturum: AsyncSession, kart: YetenekKarti, arka_plan: BackgroundTasks
+) -> YetenekKartiYaniti:
     """Daha önce onaylanmış kartı döner; embedding'i eksikse bir kez daha dener."""
     if kart.embedding is None:
         await embedding_hesapla(oturum, kart)
+    arka_plan.add_task(kart_hazirlama.karti_hazirla, kart.id, kart.versiyon)
     return await kart_yaniti(oturum, kart.id)
