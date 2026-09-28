@@ -105,7 +105,7 @@ async def karti_onayla(istemci: httpx.AsyncClient, oturum_id: str) -> dict:
         f"{API}/kesif/kart/onayla",
         json={
             "oturum_id": oturum_id,
-            "profil": {"sehir": "İstanbul", "musaitlik": "yarim_zamanli"},
+            "profil": {"sehir": "İstanbul", "musaitlikler": ["yarim_zamanli"]},
         },
         timeout=60,
     )

@@ -205,7 +205,8 @@ export type GencProfili = {
   sehir?: string | null;
   /** Kabul ettiği çalışma modelleri — çoklu seçim. */
   calisma_modelleri?: string[];
-  musaitlik?: string | null;
+  /** Kabul ettiği çalışma tipleri — çoklu seçim (staj dahil). */
+  musaitlikler?: string[];
 };
 
 export type SomutCiktiYaniti = {

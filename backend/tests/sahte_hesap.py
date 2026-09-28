@@ -33,7 +33,7 @@ def sahte_hesap(rol: str) -> SimpleNamespace:
                 email=f"{rol}@ornek.com",
                 sehir="İstanbul",
                 calisma_modelleri=[],
-                musaitlik=None,
+                musaitlikler=[],
             )
             if rol == "genc"
             else None

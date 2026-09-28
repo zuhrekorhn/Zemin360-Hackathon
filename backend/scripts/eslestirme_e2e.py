@@ -70,7 +70,7 @@ async def demo_karti_ekle() -> uuid.UUID:
             )
             kullanici = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
             kullanici.sehir = DEMO["sehir"]
-            kullanici.musaitlik = DEMO["musaitlik"]
+            kullanici.musaitlikler = [DEMO["musaitlik"]]
             await oturum.flush()
 
         mevcut = await oturum.scalar(

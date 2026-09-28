@@ -93,9 +93,35 @@ def musaitlik_dogrula(deger: object) -> str | None:
     return kod
 
 
-# Şemalarda kullanılan iki tip — hangi okumanın nerede geçerli olduğu
-# alan tanımında görünsün diye.
+def musaitlikleri_dogrula(degerler: object) -> list[str]:
+    """Gencin çoklu seçimi, katı okuma: her değer tanınmalı; sıra sabit, tekrarsız.
+
+    Boş ya da None boş liste döner ("belirtilmedi"; filtrede elenmez).
+    """
+    if degerler is None:
+        return []
+    if isinstance(degerler, str) or not isinstance(degerler, list | tuple):
+        raise ValueError("Müsaitlik bir liste olmalı")
+    secilenler = {kod for kod in (musaitlik_dogrula(d) for d in degerler) if kod}
+    return [kod for kod in MUSAITLIKLER if kod in secilenler]
+
+
+def musaitlik_uyar_mi(ihtiyac_tercihi: str | None, gencin_musaitlikleri: list[str]) -> bool:
+    """Eşleştirmenin müsaitlik filtresi (SQL karşılığı app/agents/eslestirme.py).
+
+    İhtiyacın tercihi yoksa filtre yok. Gencin listesi boşsa (belirtmemiş) aday
+    elenmez: bilinmeyeni "hayır" saymak sessiz eleme olurdu (çalışma modelindeki
+    kural). Aksi halde tercih gencin listesinde olmalı.
+    """
+    if ihtiyac_tercihi is None or not gencin_musaitlikleri:
+        return True
+    return ihtiyac_tercihi in gencin_musaitlikleri
+
+
+# Şemalarda kullanılan tipler — hangi okumanın nerede geçerli olduğu alan
+# tanımında görünsün diye.
 #   HOŞGÖRÜLÜ: checkpoint'ten okunan taslak; eski serbest metin None olur.
-#   KATI:      istemcinin gönderdiği onay; tanınmayan değer 422 döner.
+#   KATI:      istemcinin gönderdiği değer; tanınmayan değer 422 döner.
 HosgoruluMusaitlik = Annotated[Musaitlik | None, BeforeValidator(musaitlik_kanonik)]
 KatiMusaitlik = Annotated[Musaitlik | None, BeforeValidator(musaitlik_dogrula)]
+KatiMusaitlikler = Annotated[list[Musaitlik], BeforeValidator(musaitlikleri_dogrula)]

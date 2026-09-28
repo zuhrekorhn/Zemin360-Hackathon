@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { CokluSecim } from "@/components/coklu-secim";
 import { GirisKapisi } from "@/components/giris-kapisi";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
@@ -29,7 +30,7 @@ import { hatayaCevir } from "@/lib/hata";
 import {
   CALISMA_MODELLERI,
   DENEYIM_ETIKETLERI,
-  MUSAITLIK_SECENEKLERI,
+  MUSAITLIKLER,
   SEHIR_SECENEKLERI,
   etiketle,
 } from "@/lib/sabitler";
@@ -238,7 +239,8 @@ function TaslakBolumu({
   const [sehir, setSehir] = useState("");
   // Kabul ettiği çalışma modelleri — çoklu. Konumdan ayrı bir şey.
   const [calismaModelleri, setCalismaModelleri] = useState<string[]>([]);
-  const [musaitlik, setMusaitlik] = useState("");
+  // Kabul ettiği çalışma tipleri — çoklu (staj dahil).
+  const [musaitlikler, setMusaitlikler] = useState<string[]>([]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -285,7 +287,7 @@ function TaslakBolumu({
               {
                 sehir,
                 calisma_modelleri: calismaModelleri,
-                musaitlik: musaitlik || null,
+                musaitlikler,
               },
               { ...taslak, somut_ciktilar: ciktilar },
             );
@@ -310,61 +312,22 @@ function TaslakBolumu({
               </select>
             </FormAlani>
 
-            <fieldset className="flex flex-col gap-1.5 sm:col-span-2">
-              <legend className="text-sm font-medium">
-                Çalışma modeli
-                <span className="ml-1 font-normal text-muted-foreground">
-                  (kabul ettiklerini işaretle)
-                </span>
-              </legend>
-              <div className="flex flex-wrap gap-2">
-                {CALISMA_MODELLERI.map((model) => {
-                  const secili = calismaModelleri.includes(model.deger);
-                  return (
-                    <label
-                      key={model.deger}
-                      className={
-                        secili
-                          ? "flex cursor-pointer items-center gap-2 rounded-sm border border-baglanti bg-muted px-3 py-2 text-sm"
-                          : "flex cursor-pointer items-center gap-2 rounded-sm border border-kenar bg-card px-3 py-2 text-sm"
-                      }
-                    >
-                      <input
-                        type="checkbox"
-                        checked={secili}
-                        onChange={() =>
-                          setCalismaModelleri((oncekiler) =>
-                            secili
-                              ? oncekiler.filter((m) => m !== model.deger)
-                              : [...oncekiler, model.deger],
-                          )
-                        }
-                        className="accent-baglanti"
-                      />
-                      {model.etiket}
-                    </label>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Nerede çalışacağın. Müsaitlik ayrı bir şey: ne kadar süreyle.
-              </p>
-            </fieldset>
+            <CokluSecim
+              baslik="Çalışma modeli"
+              ipucu="(kabul ettiklerini işaretle)"
+              aciklama="Nerede çalışacağın. Müsaitlik ayrı bir şey: ne kadar süreyle."
+              secenekler={CALISMA_MODELLERI}
+              secili={calismaModelleri}
+              onDegis={setCalismaModelleri}
+            />
 
-            <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istegeBagli>
-              <select
-                id="musaitlik"
-                value={musaitlik}
-                onChange={(olay) => setMusaitlik(olay.target.value)}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
-              >
-                {MUSAITLIK_SECENEKLERI.map((secenek) => (
-                  <option key={secenek.deger} value={secenek.deger}>
-                    {secenek.etiket}
-                  </option>
-                ))}
-              </select>
-            </FormAlani>
+            <CokluSecim
+              baslik="Müsaitlik"
+              ipucu="(uygun olanların hepsini işaretle; boş bırakabilirsin)"
+              secenekler={MUSAITLIKLER}
+              secili={musaitlikler}
+              onDegis={setMusaitlikler}
+            />
           </div>
 
           <Button

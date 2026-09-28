@@ -132,7 +132,12 @@ export const MUSAITLIK_ETIKETLERI: Record<string, string> = {
   staj: "Staj",
 };
 
-/** Açılır listeler için: boş seçenek + etiketli değerler. */
+/** Gencin çoklu seçimi için (sıra backend'deki kod sırasıyla aynı). */
+export const MUSAITLIKLER = Object.entries(MUSAITLIK_ETIKETLERI).map(
+  ([deger, etiket]) => ({ deger, etiket }),
+);
+
+/** Açılır listeler için (ihtiyaç kartının tek tercihi): boş seçenek + etiketli değerler. */
 export const MUSAITLIK_SECENEKLERI = [
   { deger: "", etiket: "Belirtmek istemiyorum" },
   ...Object.entries(MUSAITLIK_ETIKETLERI).map(([deger, etiket]) => ({

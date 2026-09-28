@@ -25,8 +25,8 @@ def gencin_profilini_guncelle(kullanici: Kullanici, profil: GencProfili) -> None
     modeller = calisma_modeli.temizle(profil.calisma_modelleri)
     if modeller:
         kullanici.calisma_modelleri = modeller
-    if profil.musaitlik:
-        kullanici.musaitlik = profil.musaitlik
+    if profil.musaitlikler:
+        kullanici.musaitlikler = list(profil.musaitlikler)
 
 
 def kurumun_profilini_guncelle(kurum: Kurum, profil: KurumProfili) -> None:

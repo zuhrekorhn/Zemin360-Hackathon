@@ -375,7 +375,14 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
             )
         )
     if ihtiyac.musaitlik_tercihi:
-        sorgu = sorgu.where(Kullanici.musaitlik == ihtiyac.musaitlik_tercihi)
+        # Kural app/core/musaitlik.py › musaitlik_uyar_mi: tercih gencin
+        # listesinde olmalı; listesi boş (belirtmemiş) genç elenmez.
+        sorgu = sorgu.where(
+            or_(
+                func.cardinality(Kullanici.musaitlikler) == 0,
+                Kullanici.musaitlikler.any(ihtiyac.musaitlik_tercihi),
+            )
+        )
 
     # Eşik ve Top-N skordan sonra uygulanıyor (doğrulama bonusu sıralamayı
     # değiştirebilir), ama yine de makul bir üst sınırla getiriyoruz.

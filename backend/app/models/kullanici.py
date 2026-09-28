@@ -36,7 +36,12 @@ class Kullanici(UUIDPrimaryKeyMixin, Base):
     calisma_modelleri: Mapped[list[str]] = mapped_column(
         ARRAY(Text), default=list, server_default=text("'{}'")
     )
-    musaitlik: Mapped[str | None] = mapped_column(String)
+    # Kabul ettiği çalışma tipleri, çoklu (app/core/musaitlik.py kodları:
+    # tam_zamanli | yarim_zamanli | proje_bazli | staj). Boş liste "belirtilmedi":
+    # eşleştirmede elenmez (docs/plans/genc-akisi.md § 0, karar 2).
+    musaitlikler: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), default=list, server_default=text("'{}'")
+    )
     # Kayıt formunun yapısal alanları (docs/plans/genc-akisi.md § 3.2). Eşleştirme
     # bunlara bakmaz: yalnızca yetkinliğe dayanıyor. Fotoğraf, yaş, cinsiyet gibi
     # alanlar bilinçli olarak YOK. Bu alanlardan önce açılmış profillerde NULL.

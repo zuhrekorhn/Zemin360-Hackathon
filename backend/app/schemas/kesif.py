@@ -6,7 +6,7 @@ import uuid
 
 from pydantic import BaseModel, Field
 
-from app.core.musaitlik import KatiMusaitlik
+from app.core.musaitlik import KatiMusaitlikler
 from app.schemas.dogrulama import GuvenSkoruYaniti
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
 
@@ -51,9 +51,9 @@ class GencProfili(BaseModel):
     # Kabul ettiği çalışma modelleri (is_yerinde | hibrit | uzaktan).
     # Müsaitlikten ayrı: o çalışma tipi, bu çalışma yeri.
     calisma_modelleri: list[str] = Field(default_factory=list)
-    # Kod olarak saklanır (app/core/musaitlik.py); eşleştirme filtresi düz
-    # eşitlikle çalıştığı için serbest metin sessiz elemeye yol açıyordu.
-    musaitlik: KatiMusaitlik = None
+    # Çoklu seçim, kod olarak saklanır (app/core/musaitlik.py): serbest metin
+    # eşleştirme filtresinde sessiz elemeye yol açıyordu. Tanınmayan değer 422.
+    musaitlikler: KatiMusaitlikler = Field(default_factory=list)
 
 
 class KartOnaylaIstegi(BaseModel):

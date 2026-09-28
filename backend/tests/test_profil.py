@@ -49,16 +49,16 @@ def test_eposta_normalize_edilir():
 
 
 def _genc():
-    return SimpleNamespace(sehir="İzmir", calisma_modelleri=["hibrit"], musaitlik="staj")
+    return SimpleNamespace(sehir="İzmir", calisma_modelleri=["hibrit"], musaitlikler=["staj"])
 
 
 def test_bos_gelen_alan_kayitli_degeri_silmez():
     kullanici = _genc()
     gencin_profilini_guncelle(kullanici, GencProfili())
-    assert (kullanici.sehir, kullanici.calisma_modelleri, kullanici.musaitlik) == (
+    assert (kullanici.sehir, kullanici.calisma_modelleri, kullanici.musaitlikler) == (
         "İzmir",
         ["hibrit"],
-        "staj",
+        ["staj"],
     )
 
 
@@ -67,12 +67,15 @@ def test_dolu_gelen_alan_gunceller_ve_kanoniklesir():
     gencin_profilini_guncelle(
         kullanici,
         GencProfili(
-            sehir="istanbul", calisma_modelleri=["uzaktan", "evden"], musaitlik="Tam zamanlı"
+            sehir="istanbul",
+            calisma_modelleri=["uzaktan", "evden"],
+            musaitlikler=["Staj", "Tam zamanlı", "tam_zamanli"],
         ),
     )
     assert kullanici.sehir == "İstanbul"
     assert kullanici.calisma_modelleri == ["uzaktan"]  # tanınmayan atıldı
-    assert kullanici.musaitlik == "tam_zamanli"
+    # kanonik koda çevrildi, tekrar silindi, sıra sabit
+    assert kullanici.musaitlikler == ["tam_zamanli", "staj"]
 
 
 def test_kurum_profili_bos_sektorle_silinmez():
@@ -138,7 +141,7 @@ def test_yetenek_karti_hesabin_profiline_baglanir_ve_profil_bosla_silinmez(monke
                         "profil": {
                             "sehir": "izmir",
                             "calisma_modelleri": ["hibrit"],
-                            "musaitlik": "yarim_zamanli",
+                            "musaitlikler": ["yarim_zamanli", "staj"],
                         },
                     },
                 )
@@ -154,10 +157,10 @@ def test_yetenek_karti_hesabin_profiline_baglanir_ve_profil_bosla_silinmez(monke
             assert ilk.status_code == ikinci.status_code == 201
             profil = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
             await oturum.refresh(profil)
-            assert (profil.sehir, profil.calisma_modelleri, profil.musaitlik) == (
+            assert (profil.sehir, profil.calisma_modelleri, profil.musaitlikler) == (
                 "İzmir",
                 ["hibrit"],
-                "yarim_zamanli",
+                ["yarim_zamanli", "staj"],
             )
             assert profil.email == hesap.email  # iletişim e-postası kayıttaki
             kartlar = (

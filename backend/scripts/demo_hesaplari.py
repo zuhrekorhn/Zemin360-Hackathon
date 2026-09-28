@@ -153,7 +153,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
             kullanici = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
             kullanici.sehir = "İstanbul"
             kullanici.calisma_modelleri = ["hibrit", "uzaktan"]
-            kullanici.musaitlik = "yarim_zamanli"
+            kullanici.musaitlikler = ["yarim_zamanli"]
             genc_karti = gencin_karti(kullanici.id)
             oturum.add(genc_karti)
             await oturum.commit()

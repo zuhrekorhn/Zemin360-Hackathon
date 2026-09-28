@@ -41,7 +41,9 @@ Başarı kriteri: {basari_kriteri}
 ```sql
 SELECT yk.* FROM yetenek_karti yk
 JOIN kullanici k ON k.id = yk.kullanici_id
-WHERE (ih.musaitlik_tercihi IS NULL OR k.musaitlik = ih.musaitlik_tercihi)
+WHERE (ih.musaitlik_tercihi IS NULL
+       OR cardinality(k.musaitlikler) = 0          -- genç belirtmemiş: elenmez
+       OR ih.musaitlik_tercihi = ANY(k.musaitlikler))
   AND (ih.sehir_tercihi IS NULL OR k.sehir = ih.sehir_tercihi)
 ```
 

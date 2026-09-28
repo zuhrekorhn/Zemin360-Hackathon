@@ -164,6 +164,6 @@ def _onayla_genc():
         "/kesif/kart/onayla",
         json={
             "oturum_id": str(uuid.uuid4()),
-            "profil": {"sehir": "İstanbul", "musaitlik": "haftasonu"},
+            "profil": {"sehir": "İstanbul", "musaitlikler": ["haftasonu"]},
         },
     )
