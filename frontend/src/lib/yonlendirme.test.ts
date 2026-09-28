@@ -4,6 +4,7 @@ import {
   bildirimHedefi,
   giristenSonra,
   guvenliSonra,
+  kayittanSonra,
   panelYolu,
 } from "@/lib/yonlendirme";
 
@@ -94,5 +95,18 @@ describe("bildirimHedefi — Canlılık", () => {
   it("öneri ve fırsat", () => {
     expect(bildirimHedefi("oneri_bekliyor")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("yeni_firsat")).toBe("/genc#kartlar");
+  });
+});
+
+describe("kayittanSonra", () => {
+  it("genç onboarding için Keşif sohbetine gider", () => {
+    expect(kayittanSonra("genc", null)).toBe("/kesif?ilk=1");
+  });
+  it("kurum paneline gider", () => {
+    expect(kayittanSonra("kurum", null)).toBe("/kurum");
+  });
+  it("güvenli sonra öncelikli, güvensiz olan yok sayılır", () => {
+    expect(kayittanSonra("genc", "/kart/1")).toBe("/kart/1");
+    expect(kayittanSonra("genc", "//kotu.site")).toBe("/kesif?ilk=1");
   });
 });

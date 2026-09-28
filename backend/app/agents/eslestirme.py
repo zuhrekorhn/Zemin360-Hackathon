@@ -34,6 +34,7 @@ from sqlalchemy.orm import selectinload
 
 from app.agents.takip_durumu import ISBIRLIGI_TAMAMLANDI
 from app.core.calisma_modeli import sehir_eslesmeli_mi
+from app.core.is_kalemi import is_kalemi_metni
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 from app.core.metin import turkce_kucult
 from app.core.sehir import sehir_kanonik
@@ -459,7 +460,7 @@ def gerekce_girdileri(
     """Gerekçe şablonunun değişkenleri (canlı test de bunu kullanıyor)."""
     ciktilar = (
         "; ".join(
-            f"{cikti.baslik}" + (f" — {cikti.aciklama}" if cikti.aciklama else "")
+            f"{cikti.baslik}" + (f" — {metin}" if (metin := is_kalemi_metni(cikti)) else "")
             for cikti in kart.somut_ciktilar
         )
         or "yok"

@@ -1,4 +1,5 @@
 import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
+import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
 /**
  * Kart ve gerekçe görünümünün paylaşılan parçaları.
@@ -117,13 +118,26 @@ export function CiktiOzeti({
     <div className="flex flex-col gap-2 rounded-sm border border-kenar">
       <div className="flex flex-col gap-1 px-4 py-3">
         <div className="flex items-start justify-between gap-3">
-          <p className="font-medium">{cikti.baslik}</p>
+          <p className="font-medium">
+            {cikti.baslik}
+            {cikti.is_turu ? (
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                {etiketle(IS_TURU_ETIKETLERI, cikti.is_turu)}
+              </span>
+            ) : null}
+          </p>
           {eylem ? <div className="shrink-0">{eylem}</div> : null}
         </div>
         {cikti.aciklama ? (
           <p className="text-sm text-pretty text-muted-foreground">
             {cikti.aciklama}
           </p>
+        ) : null}
+        {cikti.olculebilir_sonuc ? (
+          <p className="text-sm text-pretty">Sonuç: {cikti.olculebilir_sonuc}</p>
+        ) : null}
+        {cikti.kendi_rolu ? (
+          <p className="text-sm text-pretty">Payı: {cikti.kendi_rolu}</p>
         ) : null}
         {cikti.kanit_linki ? (
           <a

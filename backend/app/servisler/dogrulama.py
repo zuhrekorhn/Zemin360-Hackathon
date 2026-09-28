@@ -8,6 +8,7 @@ kalemi puansız bırakır.
 from __future__ import annotations
 
 from app.agents.dogrulama import LinkKontrolu, linki_kontrol_et, rubrik_puanla
+from app.core.is_kalemi import is_kalemi_metni
 from app.models.guven_skoru import GuvenSkoru
 from app.models.somut_cikti import SomutCikti
 
@@ -21,7 +22,8 @@ async def rubrigi_yaz(
     """
     puan = await rubrik_puanla(
         baslik=cikti.baslik,
-        aciklama=cikti.aciklama,
+        # Sonuç ve rol ayrı alanlarda; rubrik işi tek metin olarak okur.
+        aciklama=is_kalemi_metni(cikti),
         kanit_linki=cikti.kanit_linki,
         kontrol=kontrol,
         itiraz_notu=itiraz_notu,

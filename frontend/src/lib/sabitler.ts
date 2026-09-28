@@ -142,6 +142,15 @@ export const KARIYER_DURUMLARI = Object.entries(KARIYER_DURUMU_ETIKETLERI).map(
   ([deger, etiket]) => ({ deger, etiket }),
 );
 
+/** İş kaleminin türü (backend app/core/is_kalemi.py). */
+export const IS_TURU_ETIKETLERI: Record<string, string> = {
+  proje: "Proje",
+  staj: "Staj",
+  is: "İş",
+  gonulluluk: "Gönüllülük",
+  yarisma: "Yarışma",
+};
+
 /** Gencin çoklu seçimi için (sıra backend'deki kod sırasıyla aynı). */
 export const MUSAITLIKLER = Object.entries(MUSAITLIK_ETIKETLERI).map(
   ([deger, etiket]) => ({ deger, etiket }),

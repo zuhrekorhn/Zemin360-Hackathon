@@ -352,6 +352,9 @@ def test_yeni_sohbet_acanin_kimligini_checkpointe_yazar():
         finally:
             del app.state.kesif_grafigi
         assert yanit.status_code == 200
-        assert girdiler == [{"sahip_hesap_id": str(d.genc1.hesap.id)}]
+        assert len(girdiler) == 1
+        assert girdiler[0]["sahip_hesap_id"] == str(d.genc1.hesap.id)
+        # Kayıt formunun bilgileri bağlam olarak gider (plan § 5.3); profil boşsa None.
+        assert "profil_baglami" in girdiler[0]
 
     senaryo(adimlar)

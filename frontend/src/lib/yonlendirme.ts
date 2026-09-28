@@ -51,6 +51,17 @@ export function giristenSonra(rol: Rol, sonra: string | null): string {
 }
 
 /**
+ * Kayıttan sonra nereye (docs/plans/genc-akisi.md § 5.2): genç doğrudan Keşif
+ * sohbetine (onboarding; "Şimdilik atla" oradan panele), diğerleri panele.
+ * Güvenli bir `sonra` varsa o öncelikli.
+ */
+export function kayittanSonra(rol: Rol, sonra: string | null): string {
+  const hedef = guvenliSonra(sonra);
+  if (hedef) return hedef;
+  return rol === "genc" ? "/kesif?ilk=1" : panelYolu(rol);
+}
+
+/**
  * Bildirime tıklayınca nereye (docs/faz-b-kimlik-ve-dongu.md § 6).
  * Gence gidenler (ilgi, referans yanıtı) genç paneline; kuruma gidenler
  * (yeni öneri, red) kurum paneline. İş birliği olan bildirim (kabul ve

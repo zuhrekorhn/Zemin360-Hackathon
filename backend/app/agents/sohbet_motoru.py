@@ -33,9 +33,9 @@ from app.core.metin import sade_anahtar
 
 __all__ = ["HizSinirHatasi"]
 
-# Kısa tavan (agent-specs.md § 1.2): Keşif'te ajana özel ek sorular (çıktı
-# başına ölçüt/rol) en fazla bu kadar sorulur, kendi sayacıyla; Tanımlama
-# zorunlu alanları için de bu tavanı kullanır.
+# Kısa tavan (agent-specs.md § 1.2): ajana özel ek soruların varsayılan tavanı
+# (Keşif kendi tavanını `maks_ek_turu` ile veriyor); Tanımlama zorunlu alanları
+# için de bu tavanı kullanır.
 MAKS_TAKIP_TURU = 2
 # Zorunlu alanlar için ayrı ve daha yüksek bir tavan: eksik alanla kart
 # kapatmak, sohbeti bir tur uzatmaktan kötü (boş "sektör ilgisi" eşleştirmede
@@ -70,6 +70,10 @@ class SohbetDurumu(TypedDict, total=False):
     # şemasındaki `takip_konusu`). Karar düğümü soruyu yalnızca konusu eksik
     # bir zorunlu alansa kullanır — bkz. `zorunlu_alan_sorusu`.
     son_takip_konusu: str | None
+    # Sohbetin başında bilinen, SORULMAYACAK bilgiler (Keşif'te kayıt formunun
+    # profil alanları). Çıkarımda sistem talimatının ardından ayrı bir sistem
+    # mesajı olarak gider; boşsa hiç gitmez (docs/plans/genc-akisi.md § 5.3).
+    profil_baglami: str | None
 
 
 @dataclass(frozen=True)
@@ -88,6 +92,8 @@ class AjanTanimi:
     zorunlu_alanlar: tuple[str, ...] = ()
     # Zorunlu alan eksikken kaç tur soru sorulabilir (ajana göre değişir).
     maks_zorunlu_turu: int = MAKS_ZORUNLU_TURU
+    # Ajana özel ek sorular en fazla kaç tur (kendi sayacıyla).
+    maks_ek_turu: int = MAKS_TAKIP_TURU
     # Ajana özel eksikler: (anahtar, soru) listesi. Zorunlu alanlar
     # tamamlandıktan SONRA sorulur — örn. Keşif'te her çıktının sayısal
     # sonucu ve kullanıcının kendi payı.
@@ -207,8 +213,13 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
     async def cikar(durum: dict[str, Any]) -> dict[str, Any]:
         """Konuşmanın tamamını yapılandırılmış alanlara döker (function calling)."""
         try:
+            baglam = durum.get("profil_baglami")
             cikarim = await zincir_uret().ainvoke(
-                [SystemMessage(content=tanim.sistem_talimati), *durum["mesajlar"]]
+                [
+                    SystemMessage(content=tanim.sistem_talimati),
+                    *([SystemMessage(content=baglam)] if baglam else []),
+                    *durum["mesajlar"],
+                ]
             )
         except Exception as hata:
             # Sağlayıcı anlık hız sınırı (429) ya da 5xx/zaman aşımı
@@ -272,7 +283,7 @@ async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
     #    Sorulmuş bir soru bir daha sorulmaz — kullanıcı bilmiyorsa ısrar yok,
     #    sıradaki eksiğe geçilir.
     ek_takip_turu = durum.get("ek_takip_turu", 0)
-    if tanim.ek_eksikler is not None and ek_takip_turu < MAKS_TAKIP_TURU:
+    if tanim.ek_eksikler is not None and ek_takip_turu < tanim.maks_ek_turu:
         sorulanlar = list(durum.get("sorulan_ekler") or [])
         sorulmamislar = [
             (anahtar, soru)

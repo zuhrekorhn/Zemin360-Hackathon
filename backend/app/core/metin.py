@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import unicodedata
 
+from email_validator import EmailNotValidError, validate_email
+
 # Türkçe'de büyük/küçük eşleniği ASCII'den farklı olan iki harf.
 _BUYUK_ESLEME = str.maketrans({"I": "ı", "İ": "i"})
 _BIRLESEN_NOKTA = "̇"
@@ -41,3 +43,19 @@ def sade_anahtar(metin: str) -> str:
     """
     kucuk = turkce_kucult(metin)
     return "".join(harf for harf in kucuk if harf.isalnum())
+
+
+def gecerli_eposta(deger: str | None) -> str | None:
+    """Geçerli e-posta ise normalize edilmiş hâli, değilse None (hoşgörülü okuma).
+
+    Sohbetten çıkarılan referans e-postası gibi değerler için: geçersiz bir
+    değer işi düşürmemeli, yalnızca atılmalı. Doğrulama pydantic'in EmailStr
+    kuralıyla aynı (email-validator).
+    """
+    if not deger or not deger.strip():
+        return None
+    try:
+        sonuc = validate_email(deger.strip(), check_deliverability=False)
+    except EmailNotValidError:
+        return None
+    return eposta_normalize(sonuc.normalized)

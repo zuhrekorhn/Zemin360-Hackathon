@@ -243,10 +243,17 @@ export function saglikKontrol(): Promise<SaglikYaniti> {
 /* --- Keşif Ajanı (docs/api-contracts.md § Keşif) --------------------------
    Tipler backend'deki app/schemas/kesif.py ile birebir eşleşir. */
 
+/** İş kalemi taslağı. Sonuç ve rol ayrı alanlar; referans e-postası onayda
+ *  iş kalemine referans isteği olarak bağlanır (docs/plans/genc-akisi.md § 5.4). */
 export type SomutCiktiTaslagi = {
   baslik: string;
   aciklama: string | null;
   kanit_linki: string | null;
+  /** proje | staj | is | gonulluluk | yarisma */
+  is_turu?: string | null;
+  olculebilir_sonuc?: string | null;
+  kendi_rolu?: string | null;
+  referans_email?: string | null;
 };
 
 export type KartTaslagi = {
@@ -254,6 +261,8 @@ export type KartTaslagi = {
   deneyim_seviyesi: string | null;
   sektor_ilgi_alani: string[];
   araclar_teknolojiler: string[];
+  sertifikalar?: string[];
+  diller?: string[];
   somut_ciktilar: SomutCiktiTaslagi[];
 };
 
@@ -281,6 +290,9 @@ export type SomutCiktiYaniti = {
   baslik: string;
   aciklama: string | null;
   kanit_linki: string | null;
+  is_turu?: string | null;
+  olculebilir_sonuc?: string | null;
+  kendi_rolu?: string | null;
   /** Doğrulama rubriği; hiç kanıt eklenmemişse null ("doğrulanmamış"). */
   guven_skoru: GuvenSkoru | null;
 };
@@ -296,6 +308,8 @@ export type YetenekKartiYaniti = {
   deneyim_seviyesi: string;
   sektor_ilgi_alani: string[];
   araclar_teknolojiler: string[];
+  sertifikalar: string[];
+  diller: string[];
   kanit_bekleyen: boolean;
   versiyon: number;
   embedding_var: boolean;

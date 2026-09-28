@@ -5,10 +5,12 @@ verdiğinden bağımsız olarak tutmaları gerekiyor.
 """
 
 import asyncio
+from types import SimpleNamespace
 
 from app.agents import sohbet_motoru as motor
 from app.agents.kesif import (
     FALLBACK_SORULARI,
+    MAKS_EK_TURU,
     MAKS_TAKIP_TURU,
     SomutCiktiTaslak,
     TaslakCikarimi,
@@ -16,6 +18,7 @@ from app.agents.kesif import (
     _karar,
     bos_taslak,
 )
+from app.core.is_kalemi import is_kalemi_metni
 
 
 def karar(durum: dict) -> dict:
@@ -28,6 +31,8 @@ def dolu_taslak(**degisiklikler) -> dict:
         "deneyim_seviyesi": "orta",
         "sektor_ilgi_alani": ["eğitim"],
         "araclar_teknolojiler": ["Python"],
+        "sertifikalar": [],
+        "diller": [],
         "somut_ciktilar": [{"baslik": "Kütüphane sistemi", "aciklama": None, "kanit_linki": None}],
     }
     taslak.update(degisiklikler)
@@ -95,6 +100,7 @@ def test_zorunlu_tavaninda_kart_yine_de_kapanir():
             "baslik": "Kütüphane sistemi",
             "olculebilir_sonuc": "400 kitap",
             "kendi_rolu": "hepsini ben yazdım",
+            "kanit_linki": "https://github.com/elif/kutuphane",
         }
     ]
     sonuc = karar(
@@ -147,6 +153,7 @@ def test_cikti_detaylari_tamsa_kart_kapanir():
                         "aciklama": "Ödünç takibi",
                         "olculebilir_sonuc": "400 kitap, 120 üye",
                         "kendi_rolu": "backend'i ben yazdım",
+                        "kanit_linki": "https://github.com/elif/kutuphane",
                     }
                 ]
             ),
@@ -201,16 +208,20 @@ def test_hepsi_sorulduysa_kart_kapanir_ve_israr_edilmez():
         {
             "taslak": dolu_taslak(somut_ciktilar=OLCUTSUZ_ROLSUZ),
             "takip_turu": 0,
-            "ek_takip_turu": 2,
-            "sorulan_ekler": ["olcut:Kütüphane sistemi", "rol:Kütüphane sistemi"],
+            "ek_takip_turu": 3,
+            "sorulan_ekler": [
+                "olcut:Kütüphane sistemi",
+                "rol:Kütüphane sistemi",
+                "kanit:Kütüphane sistemi",
+            ],
             "fallback_indeksi": 0,
         }
     )
     assert sonuc["taslak_hazir"] is True
 
 
-def test_ek_soru_tavani_iki():
-    """İki çıktı → dört eksik; yine de en fazla iki ek soru sorulur."""
+def test_ek_soru_tavani():
+    """İki çıktı → altı eksik; yine de en fazla dört ek soru sorulur."""
     iki_cikti = [
         {"baslik": "Kütüphane sistemi", "aciklama": None, "kanit_linki": None},
         {"baslik": "Kulüp sitesi", "aciklama": None, "kanit_linki": None},
@@ -219,16 +230,22 @@ def test_ek_soru_tavani_iki():
         {
             "taslak": dolu_taslak(somut_ciktilar=iki_cikti),
             "takip_turu": 0,
-            "ek_takip_turu": motor.MAKS_TAKIP_TURU,
-            "sorulan_ekler": ["olcut:Kütüphane sistemi", "rol:Kütüphane sistemi"],
+            "ek_takip_turu": MAKS_EK_TURU,
+            "sorulan_ekler": [
+                "olcut:Kütüphane sistemi",
+                "rol:Kütüphane sistemi",
+                "kanit:Kütüphane sistemi",
+                "olcut:Kulüp sitesi",
+            ],
             "fallback_indeksi": 0,
         }
     )
     assert sonuc["taslak_hazir"] is True
 
 
-def test_olcut_ve_rol_aciklamaya_giriyor():
-    """Doğrulama Ajanı yalnızca açıklamayı okuyor; bilgi oraya taşınmalı."""
+def test_olcut_ve_rol_ayri_kalir_rubrik_birlesik_okur():
+    """Sonuç ve rol düzenlenebilsin diye ayrı alanlarda kalır; Doğrulama
+    Ajanı, embedding ve gerekçe işi birleşik metin olarak okur (is_kalemi_metni)."""
     sonuc = karar(
         {
             "taslak": dolu_taslak(
@@ -238,6 +255,7 @@ def test_olcut_ve_rol_aciklamaya_giriyor():
                         "aciklama": "Ödünç takip sistemi yazdım.",
                         "olculebilir_sonuc": "400 kitap ve 120 üye takip ediliyor.",
                         "kendi_rolu": "Backend'i ben yazdım.",
+                        "kanit_linki": "https://github.com/elif/kutuphane",
                     }
                 ]
             ),
@@ -245,9 +263,12 @@ def test_olcut_ve_rol_aciklamaya_giriyor():
             "fallback_indeksi": 0,
         }
     )
-    aciklama = sonuc["taslak"]["somut_ciktilar"][0]["aciklama"]
-    assert "400 kitap" in aciklama
-    assert "Backend'i ben yazdım" in aciklama
+    cikti = sonuc["taslak"]["somut_ciktilar"][0]
+    assert cikti["aciklama"] == "Ödünç takip sistemi yazdım."
+    assert cikti["olculebilir_sonuc"] == "400 kitap ve 120 üye takip ediliyor."
+    metin = is_kalemi_metni(SimpleNamespace(**cikti))
+    assert "400 kitap" in metin
+    assert "Backend'i ben yazdım" in metin
 
 
 def test_cikti_yoksa_once_fallback_sorulur():

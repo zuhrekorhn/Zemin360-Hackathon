@@ -162,3 +162,23 @@ export function profilBandi(hesap: MeYaniti): string | null {
   if (parcalar.length === 0) return null;
   return `Profilini tamamla: ${parcalar.join("; ")}.`;
 }
+
+/** Eşleştirmenin sert filtreleri; kart onayında profilde yoksa sorulur. */
+const FILTRE_ALANLARI = ["sehir", "calisma_modelleri", "musaitlikler"];
+
+/**
+ * Kart onay formunda "nerede ve nasıl çalışabilirsin" soruları gösterilsin mi?
+ * Kayıtta alındıkları için yalnızca eksikse (bu alanlardan önce açılmış hesap).
+ */
+export function onaydaProfilSorulmali(eksikAlanlar: string[]): boolean {
+  return eksikAlanlar.some((alan) => FILTRE_ALANLARI.includes(alan));
+}
+
+/**
+ * Onaylı kartı olmayan genç eşleştirmeye girmez: panelin en üstünde çağrı.
+ * Kartı varsa null.
+ */
+export function kartTamamlamaCagrisi(hesap: MeYaniti): string | null {
+  if (hesap.rol !== "genc" || hesap.yetenek_kartlari.length > 0) return null;
+  return "Kartını tamamla, kurumlar seni görebilsin.";
+}

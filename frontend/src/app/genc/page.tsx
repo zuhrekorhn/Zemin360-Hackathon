@@ -23,7 +23,7 @@ import {
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
-import { profilBandi } from "@/lib/profil";
+import { kartTamamlamaCagrisi, profilBandi } from "@/lib/profil";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 import {
   CALISMA_MODELI_ETIKETLERI,
@@ -108,6 +108,7 @@ function GencPaneliIcerigi() {
 
   const kartlar = hesap.yetenek_kartlari;
   const bant = profilBandi(hesap);
+  const kartCagrisi = kartTamamlamaCagrisi(hesap);
   const kanitBekleyenler = kartlar.filter((kart) => kart.kanit_bekleyen);
   const bekleyenIlgi =
     ilgiler?.filter((ilgi) => ilgi.durum === "ilgileniliyor").length ?? 0;
@@ -124,6 +125,16 @@ function GencPaneliIcerigi() {
             : "Kartların, kanıtların ve sana gelen ilgiler burada."}
         </p>
       </header>
+
+      {kartCagrisi ? (
+        // Onaylı kartı olmayan genç eşleştirmeye girmez (plan § 5.2).
+        <div className="flex flex-wrap items-center gap-3 rounded-sm border border-baglanti bg-card px-4 py-3">
+          <span className="font-medium text-ana">{kartCagrisi}</span>
+          <Button asChild size="sm">
+            <Link href="/kesif">Kartını oluştur</Link>
+          </Button>
+        </div>
+      ) : null}
 
       {bant ? (
         // Engellemez: eşleştirme sürer, bant yalnızca eksikleri hatırlatır.

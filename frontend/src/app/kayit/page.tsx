@@ -18,7 +18,7 @@ import {
 } from "@/lib/profil";
 import { tokenYaz } from "@/lib/token";
 import { cn } from "@/lib/utils";
-import { giristenSonra } from "@/lib/yonlendirme";
+import { giristenSonra, kayittanSonra } from "@/lib/yonlendirme";
 
 /**
  * Kayıt (docs/faz-b-kimlik-ve-dongu.md § 2, § 7).
@@ -108,7 +108,8 @@ function KayitFormu() {
           : {}),
       });
       tokenYaz(yanit.token);
-      router.replace(giristenSonra(yanit.rol, sonra));
+      // Genç doğrudan Keşif sohbetine (onboarding), kurum paneline.
+      router.replace(kayittanSonra(yanit.rol, sonra));
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
       setBekleniyor(false);
@@ -126,7 +127,9 @@ function KayitFormu() {
           Kayıt ol
         </h1>
         <p className="text-sm text-pretty text-muted-foreground">
-          Kayıttan sonra doğrudan paneline geçersin.
+          {rol === "genc"
+            ? "Kayıttan sonra kısa bir sohbetle yetenek kartını oluşturacağız."
+            : "Kayıttan sonra doğrudan paneline geçersin."}
         </p>
       </header>
 

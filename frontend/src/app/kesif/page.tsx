@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { CokluSecim } from "@/components/coklu-secim";
-import { GirisKapisi } from "@/components/giris-kapisi";
+import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
+import { IsKalemiFormu } from "@/components/is-kalemi-formu";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
   CevapAlani,
@@ -15,7 +17,6 @@ import {
   type SohbetHatasi,
 } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   type KartTaslagi,
   type SomutCiktiTaslagi,
@@ -27,9 +28,11 @@ import {
   yetenekKartiHazirla,
 } from "@/lib/api";
 import { hatayaCevir } from "@/lib/hata";
+import { onaydaProfilSorulmali } from "@/lib/profil";
 import {
   CALISMA_MODELLERI,
   DENEYIM_ETIKETLERI,
+  IS_TURU_ETIKETLERI,
   MUSAITLIKLER,
   SEHIR_SECENEKLERI,
   etiketle,
@@ -39,6 +42,10 @@ import {
  * Keşif Ajanı sohbeti (docs/agent-specs.md § 1).
  *
  * Akış: sohbet → taslak gözden geçirme → onay formu → kaydedilen kart.
+ * Kayıttan hemen sonra buraya gelinir (`?ilk=1`, docs/plans/genc-akisi.md
+ * § 5.2); "Şimdilik atla" panele götürür, kartı olmayan genç eşleştirmeye
+ * girmez ve panel onu kart tamamlamaya çağırır. Kayıt formundaki bilgiler
+ * sohbette sorulmaz.
  * Taslak onaylanana kadar hiçbir şey veritabanına yazılmaz; insan onayı
  * zorunlu (spec madde 3).
  *
@@ -50,13 +57,17 @@ type Asama = "baslatiliyor" | "sohbet" | "taslak" | "kaydedildi";
 
 export default function KesifSayfasi() {
   return (
-    <GirisKapisi roller={["genc"]}>
-      <KesifSohbeti />
-    </GirisKapisi>
+    <Suspense fallback={null}>
+      <GirisKapisi roller={["genc"]}>
+        <KesifSohbeti />
+      </GirisKapisi>
+    </Suspense>
   );
 }
 
 function KesifSohbeti() {
+  // Kayıttan hemen sonra (onboarding): "Şimdilik atla" görünür.
+  const ilkKez = useSearchParams().get("ilk") === "1";
   const [asama, setAsama] = useState<Asama>("baslatiliyor");
   const [oturumId, setOturumId] = useState<string | null>(null);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);
@@ -161,7 +172,19 @@ function KesifSohbeti() {
         <p className="text-sm text-pretty text-muted-foreground">
           Kısa bir sohbet. Ne yaptığını birlikte bir yetenek kartına
           dönüştüreceğiz. Kart sen onaylamadan kaydedilmez.
+          {ilkKez
+            ? " Kayıtta verdiğin bilgileri tekrar sormayacağız."
+            : null}
         </p>
+        {ilkKez && asama !== "kaydedildi" ? (
+          <p className="text-sm text-pretty text-muted-foreground">
+            Şimdi vaktin yoksa sonra da yapabilirsin; ama kartı olmayan genç
+            kurumlara önerilmez.{" "}
+            <Link href="/genc" className="text-baglanti underline">
+              Şimdilik atla
+            </Link>
+          </p>
+        ) : null}
       </header>
 
       {asama === "sohbet" || asama === "baslatiliyor" ? (
@@ -241,6 +264,10 @@ function TaslakBolumu({
   const [calismaModelleri, setCalismaModelleri] = useState<string[]>([]);
   // Kabul ettiği çalışma tipleri — çoklu (staj dahil).
   const [musaitlikler, setMusaitlikler] = useState<string[]>([]);
+  // Kayıtta alındıysa sorulmaz; bu alanlardan önce açılmış hesapta eksikse sorulur.
+  const profilSor = onaydaProfilSorulmali(
+    useGirisliHesap().eksik_profil_alanlari,
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -270,11 +297,13 @@ function TaslakBolumu({
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-xl font-semibold text-ana">
-            Nerede ve nasıl çalışabilirsin
+            {profilSor ? "Nerede ve nasıl çalışabilirsin" : "Onay"}
           </h2>
           <p className="text-sm text-pretty text-muted-foreground">
-            Eşleştirme bu bilgilerle yapılır. E-postan kartta görünmez; iletişim
-            iki taraf da onaylayınca açılır.
+            {profilSor
+              ? "Eşleştirme bu bilgilerle yapılır. "
+              : "Çalışma tercihlerin profilinde; değiştirmek istersen Profilim sayfasından. "}
+            E-postan kartta görünmez; iletişim ancak karşılıklı ilgiyle açılır.
           </p>
         </div>
 
@@ -284,15 +313,15 @@ function TaslakBolumu({
             olay.preventDefault();
             if (bekleniyor) return;
             onOnayla(
-              {
-                sehir,
-                calisma_modelleri: calismaModelleri,
-                musaitlikler,
-              },
+              // Boş profil kayıtlı değerleri silmez (backend kuralı).
+              profilSor
+                ? { sehir, calisma_modelleri: calismaModelleri, musaitlikler }
+                : {},
               { ...taslak, somut_ciktilar: ciktilar },
             );
           }}
         >
+          {profilSor ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <FormAlani etiket="Şehir" htmlFor="sehir">
               {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
@@ -329,6 +358,7 @@ function TaslakBolumu({
               onDegis={setMusaitlikler}
             />
           </div>
+          ) : null}
 
           <Button
             type="submit"
@@ -378,6 +408,15 @@ function TaslakKarti({
           etiket="Araçlar"
           deger={taslak.araclar_teknolojiler.join(", ")}
         />
+        {taslak.sertifikalar?.length ? (
+          <KartSatiri
+            etiket="Sertifikalar"
+            deger={taslak.sertifikalar.join(", ")}
+          />
+        ) : null}
+        {taslak.diller?.length ? (
+          <KartSatiri etiket="Diller" deger={taslak.diller.join(", ")} />
+        ) : null}
       </dl>
 
       <div className="border-t border-kenar px-4 py-3">
@@ -395,13 +434,7 @@ function TaslakKarti({
                   key={sira}
                   className="flex flex-col gap-2 rounded-sm border border-kenar px-3 py-3"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <label
-                      htmlFor={`cikti-baslik-${sira}`}
-                      className="text-xs text-muted-foreground"
-                    >
-                      Başlık
-                    </label>
+                  <div className="flex justify-end">
                     <Button
                       type="button"
                       variant="outline"
@@ -411,48 +444,35 @@ function TaslakKarti({
                       Çıkar
                     </Button>
                   </div>
-                  <Input
-                    id={`cikti-baslik-${sira}`}
-                    value={cikti.baslik}
-                    onChange={(olay) =>
-                      onCiktiDegis(sira, "baslik", olay.target.value)
-                    }
-                  />
-                  <label
-                    htmlFor={`cikti-aciklama-${sira}`}
-                    className="text-xs text-muted-foreground"
-                  >
-                    Açıklama
-                  </label>
-                  <Input
-                    id={`cikti-aciklama-${sira}`}
-                    value={cikti.aciklama ?? ""}
-                    onChange={(olay) =>
-                      onCiktiDegis(sira, "aciklama", olay.target.value)
-                    }
-                  />
-                  <label
-                    htmlFor={`cikti-link-${sira}`}
-                    className="text-xs text-muted-foreground"
-                  >
-                    Kanıt linki
-                  </label>
-                  <Input
-                    id={`cikti-link-${sira}`}
-                    value={cikti.kanit_linki ?? ""}
-                    onChange={(olay) =>
-                      onCiktiDegis(sira, "kanit_linki", olay.target.value)
-                    }
+                  <IsKalemiFormu
+                    kimlik={`cikti-${sira}`}
+                    cikti={cikti}
+                    onDegis={(alan, deger) => onCiktiDegis(sira, alan, deger)}
                   />
                 </li>
               ) : (
                 <li key={sira} className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium break-words">
                     {cikti.baslik}
+                    {cikti.is_turu ? (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        {etiketle(IS_TURU_ETIKETLERI, cikti.is_turu)}
+                      </span>
+                    ) : null}
                   </span>
                   {cikti.aciklama ? (
                     <span className="text-sm text-pretty text-muted-foreground">
                       {cikti.aciklama}
+                    </span>
+                  ) : null}
+                  {cikti.olculebilir_sonuc ? (
+                    <span className="text-sm text-pretty">
+                      Sonuç: {cikti.olculebilir_sonuc}
+                    </span>
+                  ) : null}
+                  {cikti.kendi_rolu ? (
+                    <span className="text-sm text-pretty">
+                      Payın: {cikti.kendi_rolu}
                     </span>
                   ) : null}
                   {cikti.kanit_linki ? (
@@ -516,6 +536,8 @@ function KayitliKart({
           deneyim_seviyesi: kart.deneyim_seviyesi,
           sektor_ilgi_alani: kart.sektor_ilgi_alani,
           araclar_teknolojiler: kart.araclar_teknolojiler,
+          sertifikalar: kart.sertifikalar,
+          diller: kart.diller,
           somut_ciktilar: kart.somut_ciktilar,
         }}
       />

@@ -7,8 +7,11 @@ docs/agent-specs.md § 1. Sınırlar oradan geliyor; üç sayaç birbirinden ayr
   - Zorunlu alanlar (rol, deneyim, sektör, araçlar) eksikken en fazla 6 tur
     takip sorusu. Tavan yalnızca sonsuz döngüye karşı; gelinirse alanlar
     "belirtilmedi" ile dolar (madde 2).
-  - Çıktı başına ölçülebilir sonuç ve kişinin kendi payı: en fazla 2 soru,
-    her biri BİR kez. Kullanıcı bilmiyorsa ısrar edilmez, sıradakine geçilir.
+  - Çıktı başına ölçülebilir sonuç, kişinin kendi payı ve kanıt/referans:
+    en fazla 4 soru, her biri BİR kez. Kullanıcı bilmiyorsa ısrar edilmez,
+    sıradakine geçilir.
+  - Kayıt formunda alınan bilgiler (şehir, çalışma modeli, müsaitlik, durum,
+    okul) bağlam olarak verilir ve SORULMAZ (docs/plans/genc-akisi.md § 5.3).
   - "Hiç projem yok" → 2 soruluk fallback zinciri, hâlâ yoksa deneyim_seviyesi
     "potansiyel" ile kart oluşur (madde 4).
   - Kart taslağı kullanıcıya gösterilir, kaydetme onaydan sonra olur (madde 3).
@@ -34,6 +37,9 @@ from app.agents.sohbet_motoru import (  # noqa: F401 — dışarıya tek kapı b
     SohbetDurumu,
     kullanici_mesaji,
 )
+from app.core import calisma_modeli, musaitlik
+from app.core.genc_profili import KARIYER_ETIKETLERI
+from app.core.is_kalemi import IsTuru
 
 ACILIS_SORUSU = (
     "Merhaba! Seni tanımak istiyorum. Son bir yılda bitirdiğin, sonucunu "
@@ -71,12 +77,22 @@ Alanlar:
   Somut bir çıktısı yoksa "potansiyel".
 - sektor_ilgi_alani: ilgilendiği sektörler.
 - araclar_teknolojiler: kullandığı araç/teknoloji/yöntemler (yazılım olmak zorunda değil).
-- somut_ciktilar: bitirdiği, sonucu olan işler. Kanıt linkini söylediyse ekle.
+  Seviyeyi soyut sorma ("Python'da ne kadar iyisin?"); o araçla ne yaptığını
+  anlattırarak ortaya çıkar.
+- sertifikalar, diller: yalnızca kullanıcı kendisi söylediyse (opsiyonel; ayrıca sorma).
+- somut_ciktilar: bitirdiği, sonucu olan işler: proje, staj, iş, gönüllülük, yarışma.
+  * is_turu: proje | staj | is | gonulluluk | yarisma (anlatımdan açıksa).
+  * kanit_linki: kullanıcı bir link verdiyse.
+  * referans_email: işini doğrulayabilecek birinin e-postasını verdiyse. Uydurma.
   Her çıktı için iki şeyi de öğrenmeye çalış, ama tek seferde tek soru sor:
   * olculebilir_sonuc: sayıyla anlatılabilen bir sonuç ("kaç kişi kullandı?",
     "ne kadar zaman kazandırdı?", "kaç kayıt işliyor?").
   * kendi_rolu: ekip işiyse kullanıcının kendi payı ("hangi kısmını sen yaptın?").
   Kullanıcı bilmiyorsa ya da yoksa ISRAR ETME, boş bırak. Sayı UYDURMA.
+
+KULLANICININ PROFİLİ ayrı bir sistem mesajında verilebilir (şehir, çalışma
+modeli, müsaitlik, durum, okul). Bunları ASLA sorma; aradığı fırsat türünü
+(staj, yarı zamanlı…) da sorma, müsaitlik zaten profilde.
 
 Aynı işten ikinci kez bahsedilirse YENİ bir çıktı açma; aynı başlıkla yeniden
 döndür, eksik alanları doldur.
@@ -125,6 +141,13 @@ class SomutCiktiTaslak(BaseModel):
         ),
     )
     kanit_linki: str | None = Field(default=None, description="Kullanıcı bir link verdiyse")
+    is_turu: IsTuru | None = Field(
+        default=None, description="proje | staj | is | gonulluluk | yarisma; açıksa"
+    )
+    referans_email: str | None = Field(
+        default=None,
+        description="İşi doğrulayabilecek kişinin e-postası, kullanıcı verdiyse. Uydurma.",
+    )
 
 
 class TaslakCikarimi(BaseModel):
@@ -138,6 +161,8 @@ class TaslakCikarimi(BaseModel):
     deneyim_seviyesi: Literal["potansiyel", "baslangic", "orta", "ileri"] | None = None
     sektor_ilgi_alani: list[str] = Field(default_factory=list)
     araclar_teknolojiler: list[str] = Field(default_factory=list)
+    sertifikalar: list[str] = Field(default_factory=list)
+    diller: list[str] = Field(default_factory=list)
     somut_ciktilar: list[SomutCiktiTaslak] = Field(default_factory=list)
     somut_cikti_yok_dedi: bool = Field(
         default=False,
@@ -189,11 +214,17 @@ def _fallback_dali(durum: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+# Ajana özel ek sorular (ölçüt, rol, kanıt/referans) en fazla bu kadar tur.
+MAKS_EK_TURU = 4
+
+
 def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
-    """Çıktı başına eksik olan ölçüt/rol bilgisi için takip soruları.
+    """Çıktı başına eksik ölçüt, rol ve kanıt/referans için takip soruları.
 
     Zorunlu alan değiller: kullanıcı bilmiyorsa kart yine kurulur. Ama
-    sorulmazsa Doğrulama Ajanı'nın iki bileşeni kesin düşük kalıyor.
+    sorulmazsa Doğrulama Ajanı'nın bileşenleri kesin düşük kalıyor. Kanıt ve
+    referans tek soruda soruluyor ki sohbet uzamasın; kanıt iş kalemine bağlı
+    kaydedilir (plan § 5.4).
     """
     eksikler: list[tuple[str, str]] = []
     for cikti in taslak.get("somut_ciktilar") or []:
@@ -214,22 +245,15 @@ def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
                     "ekipçe miydi — hangi kısmı sen yaptın?",
                 )
             )
+        if not cikti.get("kanit_linki") and not cikti.get("referans_email"):
+            eksikler.append(
+                (
+                    f"kanit:{baslik}",
+                    f"“{baslik}” işini gösteren bir link var mı (repo, demo, yayın)? "
+                    "Ya da işini doğrulayabilecek birinin e-postası? İkisi de isteğe bağlı.",
+                )
+            )
     return eksikler
-
-
-def _cikti_aciklamasi(cikti: dict[str, Any]) -> str | None:
-    """Açıklama, ölçüt ve rol bilgisini tek metinde toplar.
-
-    Doğrulama Ajanı yalnızca `aciklama`'yı okuyor; bilgiyi ayrı alanlarda
-    bırakmak rubriğe ulaşmasını engellerdi.
-    """
-    parcalar = [
-        cikti.get("aciklama"),
-        cikti.get("olculebilir_sonuc"),
-        cikti.get("kendi_rolu"),
-    ]
-    metin = " ".join(p.strip() for p in parcalar if p and p.strip())
-    return metin or None
 
 
 POTANSIYEL = "potansiyel"
@@ -249,12 +273,15 @@ def potansiyel_kurali(deneyim_seviyesi: str | None, cikti_sayisi: int) -> str | 
 
 
 def _tamamla(taslak: dict[str, Any]) -> dict[str, Any]:
-    """Taslağı kapatmadan önceki son rötuş: açıklama birleştirme, potansiyel
-    kuralı, boş zorunlu alanlara yer tutucu."""
+    """Taslağı kapatmadan önceki son rötuş: potansiyel kuralı, boş zorunlu
+    alanlara yer tutucu.
+
+    Sonuç ve rol artık açıklamaya birleştirilmiyor: iş kaleminde ayrı alanlar
+    (düzenlenebilsinler diye). Rubrik ve embedding onları birleşik okuyor
+    (app/core/is_kalemi.py).
+    """
     son = dict(taslak)
-    son["somut_ciktilar"] = [
-        {**cikti, "aciklama": _cikti_aciklamasi(cikti)} for cikti in son.get("somut_ciktilar") or []
-    ]
+    son["somut_ciktilar"] = list(son.get("somut_ciktilar") or [])
     son["deneyim_seviyesi"] = potansiyel_kurali(
         son.get("deneyim_seviyesi"), len(son["somut_ciktilar"])
     )
@@ -269,11 +296,12 @@ KESIF = motor.AjanTanimi(
     sistem_talimati=SISTEM_TALIMATI,
     cikarim_semasi=TaslakCikarimi,
     skaler_alanlar=("rol_alani", "deneyim_seviyesi"),
-    liste_alanlari=("sektor_ilgi_alani", "araclar_teknolojiler"),
+    liste_alanlari=("sektor_ilgi_alani", "araclar_teknolojiler", "sertifikalar", "diller"),
     nesne_listeleri=(("somut_ciktilar", "baslik"),),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
     yedek_sorular=YEDEK_SORULAR,
     ek_eksikler=_cikti_eksikleri,
+    maks_ek_turu=MAKS_EK_TURU,
     ek_dal=_fallback_dali,
     ek_cikarim_alanlari=lambda cikarim: {"cikti_yok_dedi": cikarim.somut_cikti_yok_dedi},
     tamamla=_tamamla,
@@ -283,6 +311,36 @@ KESIF = motor.AjanTanimi(
 @lru_cache
 def _cikarim_zinciri() -> Runnable:
     return motor.cikarim_zinciri(TaslakCikarimi, "kesif_cikarim")
+
+
+def profil_baglami(kullanici: Any) -> str | None:
+    """Kayıt formundan bilinenler: ajana bağlam olarak gider, sorulmaz (saf).
+
+    Boş profilde (bu alanlardan önce açılmış hesap) None: bağlam mesajı gitmez.
+    """
+    satirlar = []
+    if kullanici.sehir:
+        satirlar.append(f"Şehir: {kullanici.sehir}")
+    if kullanici.calisma_modelleri:
+        modeller = ", ".join(
+            calisma_modeli.ETIKETLER.get(m, m) for m in kullanici.calisma_modelleri
+        )
+        satirlar.append(f"Çalışma modeli: {modeller}")
+    if kullanici.musaitlikler:
+        tipler = ", ".join(musaitlik.ETIKETLER.get(m, m) for m in kullanici.musaitlikler)
+        satirlar.append(f"Müsaitlik (aradığı fırsat türü): {tipler}")
+    if kullanici.kariyer_durumu:
+        satirlar.append(
+            f"Durum: {KARIYER_ETIKETLERI.get(kullanici.kariyer_durumu, kullanici.kariyer_durumu)}"
+        )
+    egitim = " – ".join(p for p in (kullanici.okul, kullanici.bolum) if p)
+    if egitim:
+        satirlar.append(f"Eğitim: {egitim}")
+    if not satirlar:
+        return None
+    return "KULLANICININ PROFİLİ (kayıt formundan; bunları SORMA, yalnızca bağlam):\n" + "\n".join(
+        f"- {satir}" for satir in satirlar
+    )
 
 
 def bos_taslak() -> dict[str, Any]:

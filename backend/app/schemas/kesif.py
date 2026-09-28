@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import uuid
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
 
+from app.core.is_kalemi import IsTuru, is_turu_hosgorulu
 from app.core.musaitlik import KatiMusaitlikler
 from app.schemas.dogrulama import GuvenSkoruYaniti
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
@@ -14,9 +16,17 @@ __all__ = ["SohbetBaslatIstegi", "SohbetCevapIstegi"]
 
 
 class SomutCiktiTaslagi(BaseModel):
+    """İş kalemi taslağı. Sonuç ve rol ayrı alanlar (düzenlenebilsinler diye);
+    referans e-postası onayda iş kalemine referans isteği olarak bağlanır."""
+
     baslik: str
     aciklama: str | None = None
     kanit_linki: str | None = None
+    # Hoşgörülü: checkpoint'teki eski taslaklarda yok; tanınmayan tür None olur.
+    is_turu: Annotated[IsTuru | None, BeforeValidator(is_turu_hosgorulu)] = None
+    olculebilir_sonuc: str | None = None
+    kendi_rolu: str | None = None
+    referans_email: str | None = None
 
 
 class KartTaslagi(BaseModel):
@@ -26,6 +36,8 @@ class KartTaslagi(BaseModel):
     deneyim_seviyesi: str | None = None
     sektor_ilgi_alani: list[str] = Field(default_factory=list)
     araclar_teknolojiler: list[str] = Field(default_factory=list)
+    sertifikalar: list[str] = Field(default_factory=list)
+    diller: list[str] = Field(default_factory=list)
     somut_ciktilar: list[SomutCiktiTaslagi] = Field(default_factory=list)
 
 
@@ -77,6 +89,9 @@ class SomutCiktiYaniti(BaseModel):
     baslik: str
     aciklama: str | None
     kanit_linki: str | None
+    is_turu: str | None = None
+    olculebilir_sonuc: str | None = None
+    kendi_rolu: str | None = None
     guven_skoru: GuvenSkoruYaniti | None = None
 
     model_config = {"from_attributes": True}
@@ -97,6 +112,8 @@ class YetenekKartiYaniti(BaseModel):
     deneyim_seviyesi: str
     sektor_ilgi_alani: list[str]
     araclar_teknolojiler: list[str]
+    sertifikalar: list[str] = Field(default_factory=list)
+    diller: list[str] = Field(default_factory=list)
     kanit_bekleyen: bool
     versiyon: int
     embedding_var: bool

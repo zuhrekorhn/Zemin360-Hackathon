@@ -14,14 +14,21 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.agents.kesif import HizSinirHatasi, kullanici_mesaji, potansiyel_kurali
+from app.agents.kesif import (
+    HizSinirHatasi,
+    kullanici_mesaji,
+    potansiyel_kurali,
+    profil_baglami,
+)
 from app.api.kimlik import rol_gerekli
 from app.api.profil import gencin_profilini_guncelle
 from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
 from app.core.hatalar import HIZ_SINIRI_MESAJI
+from app.core.metin import gecerli_eposta
 from app.db.session import get_session
 from app.models.hesap import ROL_GENC, Hesap
+from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import (
@@ -30,6 +37,7 @@ from app.schemas.kesif import (
     SohbetBaslatIstegi,
     SohbetCevapIstegi,
     SohbetYaniti,
+    SomutCiktiTaslagi,
     YetenekKartiYaniti,
 )
 from app.servisler import kart_hazirlama
@@ -63,8 +71,10 @@ async def sohbet_baslat(
 ) -> SohbetYaniti:
     oturum_id = uuid.uuid4()
     # Oturumu açan hesap checkpoint'e yazılır; cevap ve onay yalnızca ondan.
+    # Kayıt formundan bilinenler bağlam olarak gider ve sorulmaz (plan § 5.3).
+    baslangic = {**sohbet_baslangici(hesap), "profil_baglami": profil_baglami(hesap.kullanici)}
     durum = await _grafik(request).ainvoke(
-        sohbet_baslangici(hesap), config={"configurable": {"thread_id": str(oturum_id)}}
+        baslangic, config={"configurable": {"thread_id": str(oturum_id)}}
     )
     return _yanit(oturum_id, durum)
 
@@ -154,13 +164,11 @@ async def kart_onayla(
         deneyim_seviyesi=taslak.deneyim_seviyesi,
         sektor_ilgi_alani=taslak.sektor_ilgi_alani,
         araclar_teknolojiler=taslak.araclar_teknolojiler,
-        # Kanıt linki olmayan bir çıktı varsa kart "kanıt bekleyen" sayılır;
-        # Doğrulama Ajanı bunları Faz 2'de ele alacak.
+        sertifikalar=taslak.sertifikalar,
+        diller=taslak.diller,
+        # Kanıt linki olmayan bir çıktı varsa kart "kanıt bekleyen" sayılır.
         kanit_bekleyen=any(not c.kanit_linki for c in taslak.somut_ciktilar),
-        somut_ciktilar=[
-            SomutCikti(baslik=c.baslik, aciklama=c.aciklama, kanit_linki=c.kanit_linki)
-            for c in taslak.somut_ciktilar
-        ],
+        somut_ciktilar=[_is_kalemi(c) for c in taslak.somut_ciktilar],
     )
     oturum.add(kart)
     try:
@@ -181,6 +189,26 @@ async def kart_onayla(
     arka_plan.add_task(kart_hazirlama.karti_hazirla, kart.id, kart.versiyon)
 
     return await kart_yaniti(oturum, kart.id)
+
+
+def _is_kalemi(taslak: SomutCiktiTaslagi) -> SomutCikti:
+    """Taslaktaki iş kalemi; referans e-postası iş kalemine referans isteği olur.
+
+    Geçersiz e-posta sessizce atılır: sohbetten çıkarılan bir değer onayı
+    düşürmemeli; genç kart sayfasından referans ekleyebilir.
+    """
+    cikti = SomutCikti(
+        baslik=taslak.baslik,
+        aciklama=taslak.aciklama,
+        kanit_linki=taslak.kanit_linki,
+        is_turu=taslak.is_turu,
+        olculebilir_sonuc=taslak.olculebilir_sonuc,
+        kendi_rolu=taslak.kendi_rolu,
+    )
+    eposta = gecerli_eposta(taslak.referans_email)
+    if eposta:
+        cikti.referans_istekleri.append(ReferansIstegi(referans_email=eposta))
+    return cikti
 
 
 async def _oturumun_karti(oturum: AsyncSession, oturum_id: uuid.UUID) -> YetenekKarti | None:

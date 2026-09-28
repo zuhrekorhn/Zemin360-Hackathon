@@ -25,6 +25,7 @@ from app.api.sahiplik import (
     yetenek_kartinin_sahibi_mi,
 )
 from app.core.embeddings import EmbeddingHatasi, embedding_uret, yetenek_temsil_metni
+from app.core.is_kalemi import is_kalemi_metni
 from app.db.session import get_session
 from app.models.hesap import Hesap
 from app.models.somut_cikti import SomutCikti
@@ -66,6 +67,8 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiY
         deneyim_seviyesi=kart.deneyim_seviyesi,
         sektor_ilgi_alani=kart.sektor_ilgi_alani,
         araclar_teknolojiler=kart.araclar_teknolojiler,
+        sertifikalar=kart.sertifikalar,
+        diller=kart.diller,
         kanit_bekleyen=kart.kanit_bekleyen,
         versiyon=kart.versiyon,
         embedding_var=kart.embedding is not None,
@@ -88,7 +91,7 @@ async def embedding_hesapla(oturum: AsyncSession, kart: YetenekKarti) -> bool:
         deneyim_seviyesi=kart.deneyim_seviyesi,
         sektor_ilgi_alani=kart.sektor_ilgi_alani,
         araclar_teknolojiler=kart.araclar_teknolojiler,
-        somut_ciktilar=[(c.baslik, c.aciklama) for c in kart.somut_ciktilar],
+        somut_ciktilar=[(c.baslik, is_kalemi_metni(c)) for c in kart.somut_ciktilar],
     )
     try:
         kart.embedding = await embedding_uret(metin, girdi_turu="document")

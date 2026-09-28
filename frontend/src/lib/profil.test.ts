@@ -5,6 +5,8 @@ import {
   BOS_PROFIL_FORMU,
   type ProfilFormu,
   formuProfileCevir,
+  kartTamamlamaCagrisi,
+  onaydaProfilSorulmali,
   profilBandi,
   profilFormunuDogrula,
 } from "@/lib/profil";
@@ -80,5 +82,36 @@ describe("profilBandi", () => {
 
   it("kurumda bant yok", () => {
     expect(profilBandi(hesap({ rol: "kurum", kvkk_onayli: false }))).toBeNull();
+  });
+});
+
+describe("onaydaProfilSorulmali", () => {
+  it("filtre alanları kayıtta alındıysa sorulmaz", () => {
+    expect(onaydaProfilSorulmali([])).toBe(false);
+    expect(onaydaProfilSorulmali(["kariyer_durumu"])).toBe(false);
+  });
+  it("eski hesapta filtre alanı eksikse sorulur", () => {
+    expect(onaydaProfilSorulmali(["sehir"])).toBe(true);
+    expect(onaydaProfilSorulmali(["musaitlikler"])).toBe(true);
+  });
+});
+
+describe("kartTamamlamaCagrisi", () => {
+  const genc = (kartSayisi: number) =>
+    ({
+      rol: "genc",
+      yetenek_kartlari: Array.from({ length: kartSayisi }, (_, i) => ({ id: String(i) })),
+    }) as MeYaniti;
+
+  it("kartı olmayan gence çağrı", () => {
+    expect(kartTamamlamaCagrisi(genc(0))).toBe(
+      "Kartını tamamla, kurumlar seni görebilsin.",
+    );
+  });
+  it("kartı varsa ya da kurumsa yok", () => {
+    expect(kartTamamlamaCagrisi(genc(1))).toBeNull();
+    expect(
+      kartTamamlamaCagrisi({ rol: "kurum", yetenek_kartlari: [] } as unknown as MeYaniti),
+    ).toBeNull();
   });
 });
