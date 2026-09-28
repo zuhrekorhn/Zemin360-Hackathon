@@ -7,10 +7,39 @@ kalemi puansız bırakır.
 
 from __future__ import annotations
 
-from app.agents.dogrulama import LinkKontrolu, linki_kontrol_et, rubrik_puanla
+from app.agents.dogrulama import (
+    LinkKontrolu,
+    linki_kontrol_et,
+    rubrik_puanla,
+    ucuncu_taraf_onayi_hesapla,
+)
+from app.agents.kart_duzenleme import ReferansYaniti, gecerli_referans_puanlari, referans_gecerli_mi
 from app.core.is_kalemi import is_kalemi_metni
 from app.models.guven_skoru import GuvenSkoru
 from app.models.somut_cikti import SomutCikti
+
+
+def referans_guncel_mi(cikti: SomutCikti, referans) -> bool:
+    """Bu referans yanıtı iş kaleminin güncel hâli için mi? (plan § 0, karar 8)"""
+    return referans_gecerli_mi(
+        getattr(referans, "yanit_tarihi", None), getattr(cikti, "icerik_tarihi", None)
+    )
+
+
+def ucuncu_taraf_puani(cikti: SomutCikti) -> int:
+    """Yalnızca güncel referans yanıtlarından; iş değiştiyse eski yanıtlar girmez.
+
+    `cikti.referans_istekleri` yüklenmiş olmalı.
+    """
+    return ucuncu_taraf_onayi_hesapla(
+        gecerli_referans_puanlari(
+            [
+                ReferansYaniti(puan=r.puan, yanit_tarihi=getattr(r, "yanit_tarihi", None))
+                for r in cikti.referans_istekleri
+            ],
+            getattr(cikti, "icerik_tarihi", None),
+        )
+    )
 
 
 async def rubrigi_yaz(
@@ -34,7 +63,9 @@ async def rubrigi_yaz(
             kanit_orijinalligi=puan.kanit_orijinalligi,
             sonuc_olculebilirligi=puan.sonuc_olculebilirligi,
             rol_netligi=puan.rol_netligi,
-            ucuncu_taraf_onayi=0,  # referans gelene kadar 0
+            # Sıfırdan yazılıyor (ilk puan ya da iş değiştiği için sıfırlandı):
+            # değişiklikten sonra gelmiş referans yanıtı varsa o sayılır.
+            ucuncu_taraf_onayi=ucuncu_taraf_puani(cikti),
             gerekce_metni=puan.gerekce_metni,
         )
     else:

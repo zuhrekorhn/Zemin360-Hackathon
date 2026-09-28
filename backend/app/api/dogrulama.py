@@ -23,7 +23,7 @@ from app.agents.dogrulama import (
     DURUM_YANITLANDI,
     LinkKontrolu,
     linki_kontrol_et,
-    ucuncu_taraf_onayi_hesapla,
+    referans_yeniden_istenebilir_mi,
     zaman_asimina_ugradi_mi,
 )
 from app.api.bildirimler import bildirim_ekle
@@ -48,8 +48,9 @@ from app.schemas.dogrulama import (
     ReferansIstegiYaniti,
     ReferansYanitiIstegi,
     ReferansYanitiSonucu,
+    ReferansYenidenIsteIstegi,
 )
-from app.servisler.dogrulama import rubrigi_yaz
+from app.servisler.dogrulama import referans_guncel_mi, rubrigi_yaz, ucuncu_taraf_puani
 
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
 
@@ -128,9 +129,8 @@ async def referans_yaniti(
             gerekce_metni=None,
         )
     # Birden fazla referans yanıtlamış olabilir; son gelen öncekini ezmesin.
-    cikti.guven_skoru.ucuncu_taraf_onayi = ucuncu_taraf_onayi_hesapla(
-        [r.puan for r in cikti.referans_istekleri if r.puan is not None]
-    )
+    # İş kalemi sonradan değiştiyse, değişiklikten önceki yanıtlar sayılmaz.
+    cikti.guven_skoru.ucuncu_taraf_onayi = ucuncu_taraf_puani(cikti)
     bildirim_ekle(
         oturum,
         await oturum.scalar(
@@ -216,6 +216,40 @@ async def itiraz(
     await oturum.commit()
 
     return await _durum_yaniti(oturum, cikti.id, kontrol.erisilebilir)
+
+
+@router.post("/referans-yeniden-iste", response_model=KanitDurumuYaniti, status_code=201)
+async def referans_yeniden_iste(
+    istek: ReferansYenidenIsteIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> KanitDurumuYaniti:
+    """Aynı kişiye yeni bir istek açar (yeni token); eski yanıt geçmiş olarak kalır.
+
+    İş kalemi değişince eski yanıt puana girmiyor (plan § 0, karar 8); genç
+    referansı işin güncel hâli için yeniden isteyebilir. Yalnızca kalemin sahibi.
+    Rubrik yeniden çalışmaz: yalnızca referans isteği açılır.
+    """
+    referans = await oturum.get(ReferansIstegi, istek.referans_id)
+    if referans is None:
+        raise bulunamadi("Referans isteği bulunamadı")
+    cikti = await _sahibinin_ciktisi(oturum, hesap, referans.somut_cikti_id)
+    _zaman_asimini_isle(referans)
+    engel = referans_yeniden_istenebilir_mi(
+        durum=referans.durum,
+        guncel=referans_guncel_mi(cikti, referans),
+        ayni_kisiden_bekleyen_var=any(
+            r.id != referans.id
+            and r.referans_email == referans.referans_email
+            and r.durum == DURUM_BEKLIYOR
+            for r in cikti.referans_istekleri
+        ),
+    )
+    if engel:
+        raise HTTPException(status_code=409, detail=engel)
+    cikti.referans_istekleri.append(ReferansIstegi(referans_email=referans.referans_email))
+    await oturum.commit()
+    return await _durum_yaniti(oturum, cikti.id, None)
 
 
 # --- Ortak parçalar --------------------------------------------------------
@@ -361,6 +395,7 @@ async def _durum_yaniti(
                 yanit_metni=referans.yanit_metni,
                 olusturma_tarihi=referans.olusturma_tarihi,
                 yanit_linki=YANIT_YOLU.format(token=referans.token),
+                guncel=referans_guncel_mi(cikti, referans),
             )
             for referans in cikti.referans_istekleri
         ],

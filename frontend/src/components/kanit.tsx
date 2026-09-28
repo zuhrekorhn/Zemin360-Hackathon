@@ -10,8 +10,10 @@ import {
   type ReferansDurumu,
   itirazEt,
   kanitEkle,
+  referansYenidenIste,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { referansSatiri } from "@/lib/kart-duzenleme";
 
 /**
  * Bir somut çıktının kanıt/referans bölümü (docs/agent-specs.md § 4).
@@ -81,7 +83,13 @@ export function KanitBolumu({
             Referans istekleri
           </h4>
           {durum.referanslar.map((referans) => (
-            <ReferansSatiri key={referans.id} referans={referans} />
+            <ReferansSatiri
+              key={referans.id}
+              referans={referans}
+              onYenidenIste={() =>
+                void calistir(() => referansYenidenIste(referans.id))
+              }
+            />
           ))}
         </section>
       ) : null}
@@ -305,8 +313,16 @@ function yanitSayfasiLinki(yanitLinki: string | null): string | null {
   return `${koken}/referans?token=${encodeURIComponent(token)}`;
 }
 
-function ReferansSatiri({ referans }: { referans: ReferansDurumu }) {
+function ReferansSatiri({
+  referans,
+  onYenidenIste,
+}: {
+  referans: ReferansDurumu;
+  onYenidenIste: () => void;
+}) {
   const yanitSayfasi = yanitSayfasiLinki(referans.yanit_linki);
+  // İş değiştiyse eski yanıt geçmişte kalır (docs/plans/genc-akisi.md § 0, karar 8).
+  const { not, yenidenIstenebilir } = referansSatiri(referans);
 
   return (
     <div className="flex flex-col gap-1 rounded-sm border border-kenar px-3 py-2">
@@ -326,6 +342,19 @@ function ReferansSatiri({ referans }: { referans: ReferansDurumu }) {
 
       {referans.durum === "bekliyor" && yanitSayfasi ? (
         <YanitLinki adres={yanitSayfasi} />
+      ) : null}
+
+      {not ? <p className="text-xs text-pretty text-muted-foreground">{not}</p> : null}
+      {yenidenIstenebilir ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="w-fit"
+          onClick={onYenidenIste}
+        >
+          Referansı yeniden iste
+        </Button>
       ) : null}
     </div>
   );

@@ -19,6 +19,7 @@ from app.api import (
     health,
     ihtiyac_kartlari,
     isbirlikleri,
+    kart_duzenleme,
     kesif,
     profil,
     takip,
@@ -84,6 +85,7 @@ app.include_router(auth.router)
 app.include_router(bildirimler.router)
 app.include_router(kesif.router)
 app.include_router(yetenek_kartlari.router)
+app.include_router(kart_duzenleme.router)
 app.include_router(tanimlama.router)
 app.include_router(ihtiyac_kartlari.router)
 app.include_router(eslestirme.router)

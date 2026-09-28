@@ -162,6 +162,27 @@ def ucuncu_taraf_onayi_hesapla(puanlar: Sequence[int]) -> int:
     return math.floor(sum(cevrilmis) / len(cevrilmis) + 0.5)
 
 
+ZATEN_BEKLENIYOR = "Bu kişiden yanıt zaten bekleniyor."
+
+
+def referans_yeniden_istenebilir_mi(
+    *, durum: str, guncel: bool, ayni_kisiden_bekleyen_var: bool
+) -> str | None:
+    """ "Referansı yeniden iste" bu istek için anlamlı mı? Değilse nedeni (409).
+
+    Anlamlı olduğu durumlar: yanıt iş kaleminin önceki hâline verildi (geçmiş),
+    ya da süresi doldu (yanıt yok). Aynı kişiden güncel bir yanıt zaten
+    bekleniyorsa ikinci istek açılmaz.
+    """
+    if ayni_kisiden_bekleyen_var:
+        return ZATEN_BEKLENIYOR
+    if durum == DURUM_BEKLIYOR:
+        return ZATEN_BEKLENIYOR
+    if durum == DURUM_YANITLANDI and guncel:
+        return "Bu referans işin güncel hâli için zaten yanıt verdi."
+    return None
+
+
 def otomatik_puanlanir_mi(kanit_linki: str | None, puanlanmis: bool) -> bool:
     """Kart onayı ya da düzenlemesinden sonra bu iş kalemi arka planda puanlanır mı?
 

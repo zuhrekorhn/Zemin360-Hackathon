@@ -7,6 +7,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
+  IsKalemiEkleFormu,
+  IsKalemiEylemleri,
+  KartAlanlariFormu,
+} from "@/components/kart-duzenleme";
+import {
   BelgeKarti,
   CiktiOzeti,
   EtiketSatiri,
@@ -39,6 +44,10 @@ import { panelYolu } from "@/lib/yonlendirme";
  *     kanıt ayrıntısı (referans e-postaları, yanıt linkleri) kuruma hiç
  *     gitmez — rubrik zaten çıktıların güven göstergesinde.
  * Genç yalnızca kendi kartını açabildiği için "genç" rolü sahiplik demek.
+ *
+ * Sahibi kartı burada düzenler (docs/plans/genc-akisi.md § 6): kart alanları,
+ * iş kalemi düzenle/sil/ekle. İçerik ya da link değişen işin güven göstergesi
+ * sıfırlanır ve yeniden değerlendirilir; eski referans yanıtları geçmişte kalır.
  */
 
 export default function KartSayfasi() {
@@ -62,6 +71,9 @@ function KartIcerigi() {
   const [kanitlar, setKanitlar] = useState<Record<string, KanitDurumu>>({});
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState<Hata | null>(null);
+  const [kartDuzenleniyor, setKartDuzenleniyor] = useState(false);
+  const [isEkleniyor, setIsEkleniyor] = useState(false);
+  const [kayitNotu, setKayitNotu] = useState<string | null>(null);
   const okundu = useRef(false);
 
   const kartiGetir = useCallback(
@@ -97,6 +109,12 @@ function KartIcerigi() {
     okundu.current = true;
     void kartiGetir(kartId);
   }, [kartId, kartiGetir]);
+
+  /** Düzenleme sonrası: kanıt durumları (referans geçmişi dahil) da değişmiş olabilir. */
+  function duzenlendi(_kart: YetenekKartiYaniti, not?: string) {
+    setKayitNotu(not ?? "Kaydedildi.");
+    if (kartId) void kartiGetir(kartId);
+  }
 
   function kanidiGuncelle(durum: KanitDurumu) {
     setKanitlar((oncekiler) => ({
@@ -180,6 +198,8 @@ function KartIcerigi() {
               etiket="Sektör ilgisi"
               degerler={kart.sektor_ilgi_alani}
             />
+            <EtiketSatiri etiket="Sertifikalar" degerler={kart.sertifikalar} />
+            <EtiketSatiri etiket="Diller" degerler={kart.diller} />
             {sahibi ? (
               <p className="text-xs text-muted-foreground">
                 Kurumlar kartı adınla ({kart.genc_adi}) birlikte böyle görür.
@@ -187,6 +207,33 @@ function KartIcerigi() {
               </p>
             ) : null}
           </BelgeKarti>
+
+          {kayitNotu ? (
+            <p className="text-sm text-pretty text-muted-foreground" role="status">
+              {kayitNotu}
+            </p>
+          ) : null}
+
+          {sahibi ? (
+            kartDuzenleniyor ? (
+              <KartAlanlariFormu
+                kart={kart}
+                onGuncel={duzenlendi}
+                onHata={setHata}
+                onKapat={() => setKartDuzenleniyor(false)}
+              />
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-fit"
+                onClick={() => setKartDuzenleniyor(true)}
+              >
+                Kartı düzenle
+              </Button>
+            )
+          ) : null}
 
           {sahibi && !kart.embedding_var ? (
             <EslestirmeyeHazirla
@@ -209,12 +256,22 @@ function KartIcerigi() {
 
             {kart.somut_ciktilar.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Bu kartta somut çıktı yok. Keşif sohbetinde ekleyebilirsin.
+                {sahibi
+                  ? "Bu kartta henüz iş yok. Aşağıdan ekleyebilirsin."
+                  : "Bu kartta somut çıktı yok."}
               </p>
             ) : (
               kart.somut_ciktilar.map((cikti) => (
                 <div key={cikti.id} className="flex flex-col gap-3">
                   <CiktiOzeti cikti={cikti} />
+                  {sahibi ? (
+                    <IsKalemiEylemleri
+                      kartId={kart.id}
+                      cikti={cikti}
+                      onGuncel={duzenlendi}
+                      onHata={setHata}
+                    />
+                  ) : null}
                   {sahibi ? (
                     <KanitBolumu
                       somutCiktiId={cikti.id}
@@ -227,6 +284,26 @@ function KartIcerigi() {
                 </div>
               ))
             )}
+
+            {sahibi ? (
+              isEkleniyor ? (
+                <IsKalemiEkleFormu
+                  kartId={kart.id}
+                  onGuncel={duzenlendi}
+                  onHata={setHata}
+                  onKapat={() => setIsEkleniyor(false)}
+                />
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-fit"
+                  onClick={() => setIsEkleniyor(true)}
+                >
+                  İş ekle
+                </Button>
+              )
+            ) : null}
           </section>
         </>
       ) : null}

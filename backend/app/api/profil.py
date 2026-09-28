@@ -13,9 +13,11 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.kart_duzenleme import degisen_alanlar, yeniden_eslestirme_gerekir_mi
 from app.api.kimlik import rol_gerekli
 from app.core import calisma_modeli
 from app.core.genc_profili import ZORUNLU_ALANLAR, eksik_profil_alanlari
@@ -24,9 +26,11 @@ from app.db.session import get_session
 from app.models.hesap import ROL_GENC, Hesap
 from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
+from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import GencProfili
 from app.schemas.profil import GencProfilGuncelleme, GencProfilYaniti
 from app.schemas.tanimlama import KurumProfili
+from app.servisler import kart_hazirlama
 
 router = APIRouter(tags=["profil"])
 
@@ -103,12 +107,16 @@ async def profil_getir(hesap: Hesap = Depends(rol_gerekli(ROL_GENC))) -> GencPro
 @router.patch("/profil", response_model=GencProfilYaniti)
 async def profil_guncelle(
     istek: GencProfilGuncelleme,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> GencProfilYaniti:
     """Yalnızca gönderilen alan değişir; zorunlu alan boşaltılamaz (422).
 
     Başkasının profili diye bir yol yok: profil token'daki hesabın profili.
+
+    Filtre alanı (şehir, çalışma modeli, müsaitlik) değiştiyse gencin kartları
+    yanıttan sonra yeniden eşleşir; doğrulama gerekmez, kart versiyonu artmaz.
     """
     gonderilenler = {alan: getattr(istek, alan) for alan in istek.model_fields_set}
     bosalanlar = bosaltilan_zorunlular(gonderilenler)
@@ -117,10 +125,22 @@ async def profil_guncelle(
             status_code=422, detail=f"Bu alanlar boş bırakılamaz: {', '.join(bosalanlar)}"
         )
     kullanici = hesap.kullanici
+    oncesi = {alan: getattr(kullanici, alan) for alan in PROFIL_ALANLARI}
+    degisenler = degisen_alanlar(
+        oncesi, {a: d for a, d in gonderilenler.items() if a in PROFIL_ALANLARI}
+    )
     profili_uygula(kullanici, gonderilenler)
     if gonderilenler.get("kvkk_onay") and hesap.kvkk_onay_tarihi is None:
         hesap.kvkk_onay_tarihi = dt.datetime.now(dt.UTC)
     await oturum.commit()
+    if yeniden_eslestirme_gerekir_mi(degisenler):
+        kartlar = await oturum.execute(
+            select(YetenekKarti.id, YetenekKarti.versiyon).where(
+                YetenekKarti.kullanici_id == kullanici.id
+            )
+        )
+        for kart_id, versiyon in kartlar.all():
+            arka_plan.add_task(kart_hazirlama.karti_hazirla, kart_id, versiyon)
     return profil_yaniti(hesap, kullanici)
 
 

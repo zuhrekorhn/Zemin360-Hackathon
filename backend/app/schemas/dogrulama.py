@@ -43,6 +43,13 @@ class ReferansDurumuYaniti(BaseModel):
     # SMTP kurmuyoruz (MVP kararı): link yanıtta gösteriliyor ki referans
     # kişiye elle iletilebilsin.
     yanit_linki: str | None = None
+    # False: yanıt iş kaleminin önceki hâli için verildi; geçmiş olarak görünür,
+    # güven göstergesine girmez (plan § 0, karar 8). Genç yeniden isteyebilir.
+    guncel: bool = True
+
+
+class ReferansYenidenIsteIstegi(BaseModel):
+    referans_id: uuid.UUID
 
 
 class KanitDurumuYaniti(BaseModel):

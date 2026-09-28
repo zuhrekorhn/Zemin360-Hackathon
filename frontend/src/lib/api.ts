@@ -335,6 +335,73 @@ export function yetenekKartiHazirla(
   });
 }
 
+/* --- Kart düzenleme (docs/plans/genc-akisi.md § 6) ---------------------------
+   Yalnızca kartın sahibi. İçerik ya da link değişen iş kaleminin güven
+   göstergesi sıfırlanır ve yeniden değerlendirilir. */
+
+export type KartGuncelleme = Partial<{
+  rol_alani: string;
+  deneyim_seviyesi: string;
+  sektor_ilgi_alani: string[];
+  araclar_teknolojiler: string[];
+  sertifikalar: string[];
+  diller: string[];
+}>;
+
+export type IsKalemiGirdisi = {
+  baslik: string;
+  aciklama?: string | null;
+  olculebilir_sonuc?: string | null;
+  kendi_rolu?: string | null;
+  kanit_linki?: string | null;
+  is_turu?: string | null;
+};
+
+/** PATCH /yetenek-kartlari/{id} */
+export function kartGuncelle(
+  kartId: string,
+  girdi: KartGuncelleme,
+): Promise<YetenekKartiYaniti> {
+  return apiIstek<YetenekKartiYaniti>(`/yetenek-kartlari/${kartId}`, {
+    method: "PATCH",
+    body: JSON.stringify(girdi),
+  });
+}
+
+/** POST /yetenek-kartlari/{id}/ciktilar */
+export function isKalemiEkle(
+  kartId: string,
+  girdi: IsKalemiGirdisi,
+): Promise<YetenekKartiYaniti> {
+  return apiIstek<YetenekKartiYaniti>(`/yetenek-kartlari/${kartId}/ciktilar`, {
+    method: "POST",
+    body: JSON.stringify(girdi),
+  });
+}
+
+/** PATCH /yetenek-kartlari/{id}/ciktilar/{cid} — yalnızca gönderilen alan değişir. */
+export function isKalemiGuncelle(
+  kartId: string,
+  ciktiId: string,
+  girdi: Partial<IsKalemiGirdisi>,
+): Promise<YetenekKartiYaniti> {
+  return apiIstek<YetenekKartiYaniti>(
+    `/yetenek-kartlari/${kartId}/ciktilar/${ciktiId}`,
+    { method: "PATCH", body: JSON.stringify(girdi) },
+  );
+}
+
+/** DELETE /yetenek-kartlari/{id}/ciktilar/{cid} */
+export function isKalemiSil(
+  kartId: string,
+  ciktiId: string,
+): Promise<YetenekKartiYaniti> {
+  return apiIstek<YetenekKartiYaniti>(
+    `/yetenek-kartlari/${kartId}/ciktilar/${ciktiId}`,
+    { method: "DELETE" },
+  );
+}
+
 /** POST /kesif/sohbet/baslat — yeni oturum açar, açılış sorusunu döner. */
 export function sohbetBaslat(): Promise<SohbetYaniti> {
   return apiIstek<SohbetYaniti>("/kesif/sohbet/baslat", {
@@ -485,6 +552,8 @@ export type ReferansDurumu = {
   olusturma_tarihi: string;
   /** SMTP yok (MVP): link burada dönüyor, iddia sahibi elle iletiyor. */
   yanit_linki: string | null;
+  /** false: yanıt iş kaleminin önceki hâline verildi; güven göstergesine girmez. */
+  guncel: boolean;
 };
 
 export type KanitDurumu = {
@@ -528,6 +597,14 @@ export function kanitEkle(girdi: KanitEkleGirdisi): Promise<KanitDurumu> {
   return apiIstek<KanitDurumu>("/dogrulama/kanit-ekle", {
     method: "POST",
     body: JSON.stringify(girdi),
+  });
+}
+
+/** POST /dogrulama/referans-yeniden-iste — aynı kişiye yeni istek; eski yanıt geçmişte kalır. */
+export function referansYenidenIste(referansId: string): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>("/dogrulama/referans-yeniden-iste", {
+    method: "POST",
+    body: JSON.stringify({ referans_id: referansId }),
   });
 }
 

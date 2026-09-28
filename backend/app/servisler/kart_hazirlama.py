@@ -100,7 +100,8 @@ async def _ciktiyi_puanla_bir_kez(oturum: AsyncSession, cikti_id: uuid.UUID) -> 
     """
     cikti = await oturum.scalar(
         select(SomutCikti)
-        .options(selectinload(SomutCikti.guven_skoru))
+        # Referanslar: sıfırdan yazılan göstergede güncel yanıtlar sayılıyor.
+        .options(selectinload(SomutCikti.guven_skoru), selectinload(SomutCikti.referans_istekleri))
         .where(SomutCikti.id == cikti_id)
         .with_for_update(of=SomutCikti)
         .execution_options(populate_existing=True)
