@@ -132,6 +132,16 @@ export const MUSAITLIK_ETIKETLERI: Record<string, string> = {
   staj: "Staj",
 };
 
+export const KARIYER_DURUMU_ETIKETLERI: Record<string, string> = {
+  ogrenci: "Öğrenci",
+  mezun: "Mezun",
+  calisiyor: "Çalışıyor",
+};
+
+export const KARIYER_DURUMLARI = Object.entries(KARIYER_DURUMU_ETIKETLERI).map(
+  ([deger, etiket]) => ({ deger, etiket }),
+);
+
 /** Gencin çoklu seçimi için (sıra backend'deki kod sırasıyla aynı). */
 export const MUSAITLIKLER = Object.entries(MUSAITLIK_ETIKETLERI).map(
   ([deger, etiket]) => ({ deger, etiket }),

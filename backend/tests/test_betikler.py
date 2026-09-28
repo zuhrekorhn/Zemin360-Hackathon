@@ -69,6 +69,28 @@ def test_demo_adresleri_giris_formundan_gecer():
         assert GirisIstegi(email=email, sifre="x").email == email
 
 
+def test_demo_gencinin_profili_eksiksiz_ve_demo_ihtiyacina_uyar():
+    """Tohum veri yeni kayıt alanlarıyla dolu; demo önerisi filtrede elenmez."""
+    from app.core.calisma_modeli import sehir_eslesmeli_mi
+    from app.core.genc_profili import eksik_profil_alanlari
+    from app.core.musaitlik import musaitlik_uyar_mi
+
+    profil = demo_hesaplari.GENC_PROFILI
+    assert (
+        eksik_profil_alanlari(
+            sehir=profil.sehir,
+            calisma_modelleri=profil.calisma_modelleri,
+            musaitlikler=profil.musaitlikler,
+            kariyer_durumu=profil.kariyer_durumu,
+        )
+        == []
+    )
+    ihtiyac = demo_hesaplari.kurumun_karti(None)
+    assert musaitlik_uyar_mi(ihtiyac.musaitlik_tercihi, profil.musaitlikler)
+    assert ihtiyac.calisma_modeli in profil.calisma_modelleri
+    assert not sehir_eslesmeli_mi(ihtiyac.calisma_modeli) or profil.sehir == ihtiyac.sehir_tercihi
+
+
 def test_benzerlik():
     assert demo_hesaplari.benzerlik([1.0, 0.0], [2.0, 0.0]) == pytest.approx(1.0)
     assert demo_hesaplari.benzerlik([1.0, 0.0], [0.0, 1.0]) == pytest.approx(0.0)

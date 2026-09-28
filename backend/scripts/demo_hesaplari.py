@@ -43,6 +43,7 @@ from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+from app.schemas.profil import GencKayitProfili
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -117,6 +118,20 @@ def gencin_karti(kullanici_id) -> YetenekKarti:
     )
 
 
+# Kayıt formunun alanları (docs/plans/genc-akisi.md § 5.1); eşleştirme yalnızca
+# şehir, çalışma modeli ve müsaitliğe bakar, gerisi profilde görünür.
+GENC_PROFILI = GencKayitProfili(
+    sehir="İstanbul",
+    calisma_modelleri=["hibrit", "uzaktan"],
+    kariyer_durumu="ogrenci",
+    musaitlikler=["yarim_zamanli", "proje_bazli"],
+    okul="Marmara Üniversitesi",
+    bolum="Bilgisayar Mühendisliği",
+    sinif=3,
+    github_url="https://github.com/ornek-demo",
+)
+
+
 def kurumun_karti(kurum_id) -> IhtiyacKarti:
     return IhtiyacKarti(
         kurum_id=kurum_id,
@@ -148,12 +163,15 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
             genc_karti = None
         else:
             hesap = await hesap_olustur(
-                oturum, email=GENC_EPOSTA, sifre=sifre, rol=ROL_GENC, ad=GENC_ADI
+                oturum,
+                email=GENC_EPOSTA,
+                sifre=sifre,
+                rol=ROL_GENC,
+                ad=GENC_ADI,
+                genc_profili=GENC_PROFILI,
+                kvkk_onay=True,
             )
             kullanici = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
-            kullanici.sehir = "İstanbul"
-            kullanici.calisma_modelleri = ["hibrit", "uzaktan"]
-            kullanici.musaitlikler = ["yarim_zamanli"]
             genc_karti = gencin_karti(kullanici.id)
             oturum.add(genc_karti)
             await oturum.commit()

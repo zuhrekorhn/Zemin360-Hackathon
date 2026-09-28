@@ -6,9 +6,11 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 
 | Ajan | Uç nokta | Yöntem | Not |
 |---|---|---|---|
-| **Kimlik** | `/auth/kayit` | POST | `{email, sifre, rol: genc\|kurum, ad}` → 201 + token. GİRVAK açık kayıtla açılamaz (422), e-posta kayıtlıysa 409 (bkz. `faz-b-kimlik-ve-dongu.md`) |
+| **Kimlik** | `/auth/kayit` | POST | `{email, sifre, rol: genc\|kurum, ad}` → 201 + token. **Genç** ayrıca `genc_profili` (şehir, çalışma modelleri, durum `ogrenci\|mezun\|calisiyor`, müsaitlikler zorunlu; okul, bölüm, sınıf, mezuniyet yılı, başlangıç tarihi, GitHub/LinkedIn/portfolyo opsiyonel) ve `kvkk_onay: true` gönderir; yoksa 422. Kurum `genc_profili` göndermez. Toplanmayan bir alan (cinsiyet, doğum tarihi…) 422. GİRVAK açık kayıtla açılamaz (422), e-posta kayıtlıysa 409 (bkz. `faz-b-kimlik-ve-dongu.md`, `plans/genc-akisi.md` § 5.1) |
 | | `/auth/giris` | POST | `{email, sifre}` → token. Yanlış e-posta ve yanlış şifre aynı 401'i alır |
-| | `/me` | GET | Giriş gerekli (`Authorization: Bearer`). Hesap, profil özeti, kartlar, `okunmamis_bildirim` |
+| | `/me` | GET | Giriş gerekli (`Authorization: Bearer`). Hesap, profil özeti, kartlar, `okunmamis_bildirim`. Genç için `eksik_profil_alanlari` ve `kvkk_onayli` (eski hesaplara engellemeyen bant) |
+| **Profil** | `/profil` | GET | Yalnızca genç, kendi profili (token'ın profili; başkasının profili diye bir yol yok). Kayıt formunun alanları, `kvkk_onay_tarihi`, `eksik_alanlar` |
+| | `/profil` | PATCH | Yalnızca gönderilen alan değişir; opsiyonel alan `null` ya da `""` ile silinir, zorunlu alan (ad, şehir, çalışma modeli, müsaitlik, durum) boşaltılamaz (422). `kvkk_onay: true` onay tarihi yoksa yazar. Kurum/GİRVAK 403 |
 | **Bildirimler** | `/bildirimler` | GET | Kendi bildirimleri, en yeni önce (en çok 100). Her rol |
 | | `/bildirimler/{id}/okundu` | POST | Kendi bildirimi; başkasınınki 404. Tekrarında ilk okunma tarihi korunur |
 | | `/bildirimler/hepsini-oku` | POST | `{okunan}` döner |

@@ -4,12 +4,18 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { GencProfilAlanlari } from "@/components/genc-profil-alanlari";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { kayitOl } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
+import {
+  BOS_PROFIL_FORMU,
+  formuProfileCevir,
+  profilFormunuDogrula,
+} from "@/lib/profil";
 import { tokenYaz } from "@/lib/token";
 import { cn } from "@/lib/utils";
 import { giristenSonra } from "@/lib/yonlendirme";
@@ -18,8 +24,11 @@ import { giristenSonra } from "@/lib/yonlendirme";
  * Kayıt (docs/faz-b-kimlik-ve-dongu.md § 2, § 7).
  *
  * Rol kayıtta seçilir: genç ya da kurum. GİRVAK açık kayıtla açılamaz.
- * Kayıtla birlikte giriş yapılmış olur; şehir, sektör gibi profil alanları
- * kart onay formunda doldurulur. Ana sayfadaki düğmeler `?rol=` ile gelir.
+ * Kayıtla birlikte giriş yapılmış olur. Genç kayıtta yapısal profil alanlarını
+ * (şehir, çalışma modeli, müsaitlik, durum…) ve KVKK onayını verir
+ * (docs/plans/genc-akisi.md § 5.1); yetkinlikler Keşif sohbetinde toplanır.
+ * Kurumun şehir ve sektörü kart onay formunda. Ana sayfadaki düğmeler `?rol=`
+ * ile gelir.
  */
 
 const SIFRE_EN_AZ = 8;
@@ -64,6 +73,8 @@ function KayitFormu() {
   const [ad, setAd] = useState("");
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
+  const [profil, setProfil] = useState(BOS_PROFIL_FORMU);
+  const [kvkkOnay, setKvkkOnay] = useState(false);
   const [bekleniyor, setBekleniyor] = useState(false);
   const [hata, setHata] = useState<Hata | null>(null);
 
@@ -77,6 +88,14 @@ function KayitFormu() {
     olay.preventDefault();
     if (bekleniyor || !rol) return;
     setHata(null);
+    if (rol === "genc") {
+      const hatalar = profilFormunuDogrula(profil);
+      if (!kvkkOnay) hatalar.push("KVKK aydınlatma metnini onayla.");
+      if (hatalar.length > 0) {
+        setHata({ metin: hatalar.join(" "), kota: false });
+        return;
+      }
+    }
     setBekleniyor(true);
     try {
       const yanit = await kayitOl({
@@ -84,6 +103,9 @@ function KayitFormu() {
         sifre,
         rol,
         ad: ad.trim(),
+        ...(rol === "genc"
+          ? { genc_profili: formuProfileCevir(profil), kvkk_onay: kvkkOnay }
+          : {}),
       });
       tokenYaz(yanit.token);
       router.replace(giristenSonra(yanit.rol, sonra));
@@ -98,7 +120,7 @@ function KayitFormu() {
     : "/giris";
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
+    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
       <header className="flex flex-col gap-2">
         <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
           Kayıt ol
@@ -188,6 +210,32 @@ function KayitFormu() {
         <p className="-mt-3 text-xs text-muted-foreground">
           En az {SIFRE_EN_AZ} karakter.
         </p>
+
+        {rol === "genc" ? (
+          <>
+            <GencProfilAlanlari form={profil} onDegis={setProfil} />
+            <label className="flex items-start gap-2 text-sm text-pretty">
+              <input
+                type="checkbox"
+                checked={kvkkOnay}
+                onChange={(olay) => setKvkkOnay(olay.target.checked)}
+                required
+                className="mt-0.5 accent-ana"
+              />
+              <span>
+                <Link
+                  href="/kvkk"
+                  target="_blank"
+                  className="text-baglanti underline"
+                >
+                  KVKK aydınlatma metnini
+                </Link>{" "}
+                okudum; verilerimin bu metinde anlatılan amaçlarla işlenmesini
+                onaylıyorum.
+              </span>
+            </label>
+          </>
+        ) : null}
 
         {hata ? <HataKutusu hata={hata} /> : null}
 

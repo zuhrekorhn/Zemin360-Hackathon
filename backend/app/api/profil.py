@@ -1,21 +1,127 @@
-"""Kart onayıyla gelen profil güncellemesi (docs/faz-b-kimlik-ve-dongu.md § 4).
+"""Gencin profili: kayıt formu alanları, profil düzenleme ve kart onayıyla gelen güncelleme.
 
-Faz B'den önce onay, e-postayla profili bulup oluşturuyordu (upsert). Artık
-profil token'daki hesabın profili; onay yalnızca eşleştirmeyi etkileyen
-alanları günceller.
-
-Kural (Faz A'dan): boş gelen alan kayıtlı değeri SİLMEZ. İkinci kartını
-onaylayan genç şehrini ya da müsaitliğini yeniden yazmak zorunda değil.
+- `GET /profil`, `PATCH /profil` (genç, yalnızca kendisi): kayıt formundaki
+  alanlar (docs/plans/genc-akisi.md § 6.1). Yalnızca gönderilen alan değişir.
+- Kart onayıyla gelen güncelleme (docs/faz-b-kimlik-ve-dongu.md § 4): onay
+  yalnızca eşleştirmeyi etkileyen alanları günceller. Kural (Faz A'dan): boş
+  gelen alan kayıtlı değeri SİLMEZ. İkinci kartını onaylayan genç şehrini ya da
+  müsaitliğini yeniden yazmak zorunda değil.
 """
 
 from __future__ import annotations
 
+import datetime as dt
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.kimlik import rol_gerekli
 from app.core import calisma_modeli
+from app.core.genc_profili import ZORUNLU_ALANLAR, eksik_profil_alanlari
 from app.core.sehir import sehir_kanonik
+from app.db.session import get_session
+from app.models.hesap import ROL_GENC, Hesap
 from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.schemas.kesif import GencProfili
+from app.schemas.profil import GencProfilGuncelleme, GencProfilYaniti
 from app.schemas.tanimlama import KurumProfili
+
+router = APIRouter(tags=["profil"])
+
+# Profile yazılabilen alanlar (şemadaki adlarla birebir). `kvkk_onay` hesaba
+# yazılır, burada değil.
+PROFIL_ALANLARI: tuple[str, ...] = (
+    "ad",
+    "sehir",
+    "calisma_modelleri",
+    "kariyer_durumu",
+    "musaitlikler",
+    "musaitlik_baslangici",
+    "okul",
+    "bolum",
+    "sinif",
+    "mezuniyet_yili",
+    "github_url",
+    "linkedin_url",
+    "portfolyo_url",
+)
+# Boşaltılamayan alanlar: zorunlu profil alanları ve ad.
+BOSALTILAMAZ = frozenset({"ad", *ZORUNLU_ALANLAR})
+
+
+def profili_uygula(kullanici: Kullanici, degerler: dict[str, Any]) -> None:
+    """Doğrulanmış değerleri profile yazar (kayıt ve PATCH aynı yoldan)."""
+    for alan, deger in degerler.items():
+        if alan in PROFIL_ALANLARI:
+            setattr(kullanici, alan, list(deger) if isinstance(deger, list | tuple) else deger)
+
+
+def profilin_eksikleri(kullanici: Kullanici) -> list[str]:
+    return eksik_profil_alanlari(
+        sehir=kullanici.sehir,
+        calisma_modelleri=kullanici.calisma_modelleri,
+        musaitlikler=kullanici.musaitlikler,
+        kariyer_durumu=kullanici.kariyer_durumu,
+    )
+
+
+def bosaltilan_zorunlular(gonderilenler: dict[str, Any]) -> list[str]:
+    """PATCH'te boş gönderilmiş zorunlu alanlar (sabit sırada)."""
+    return sorted(
+        alan for alan, deger in gonderilenler.items() if alan in BOSALTILAMAZ and not deger
+    )
+
+
+def profil_yaniti(hesap: Hesap, kullanici: Kullanici) -> GencProfilYaniti:
+    return GencProfilYaniti(
+        ad=kullanici.ad,
+        email=kullanici.email,
+        sehir=kullanici.sehir,
+        calisma_modelleri=list(kullanici.calisma_modelleri or []),
+        kariyer_durumu=kullanici.kariyer_durumu,
+        musaitlikler=list(kullanici.musaitlikler or []),
+        musaitlik_baslangici=kullanici.musaitlik_baslangici,
+        okul=kullanici.okul,
+        bolum=kullanici.bolum,
+        sinif=kullanici.sinif,
+        mezuniyet_yili=kullanici.mezuniyet_yili,
+        github_url=kullanici.github_url,
+        linkedin_url=kullanici.linkedin_url,
+        portfolyo_url=kullanici.portfolyo_url,
+        kvkk_onay_tarihi=hesap.kvkk_onay_tarihi,
+        eksik_alanlar=profilin_eksikleri(kullanici),
+    )
+
+
+@router.get("/profil", response_model=GencProfilYaniti)
+async def profil_getir(hesap: Hesap = Depends(rol_gerekli(ROL_GENC))) -> GencProfilYaniti:
+    return profil_yaniti(hesap, hesap.kullanici)
+
+
+@router.patch("/profil", response_model=GencProfilYaniti)
+async def profil_guncelle(
+    istek: GencProfilGuncelleme,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> GencProfilYaniti:
+    """Yalnızca gönderilen alan değişir; zorunlu alan boşaltılamaz (422).
+
+    Başkasının profili diye bir yol yok: profil token'daki hesabın profili.
+    """
+    gonderilenler = {alan: getattr(istek, alan) for alan in istek.model_fields_set}
+    bosalanlar = bosaltilan_zorunlular(gonderilenler)
+    if bosalanlar:
+        raise HTTPException(
+            status_code=422, detail=f"Bu alanlar boş bırakılamaz: {', '.join(bosalanlar)}"
+        )
+    kullanici = hesap.kullanici
+    profili_uygula(kullanici, gonderilenler)
+    if gonderilenler.get("kvkk_onay") and hesap.kvkk_onay_tarihi is None:
+        hesap.kvkk_onay_tarihi = dt.datetime.now(dt.UTC)
+    await oturum.commit()
+    return profil_yaniti(hesap, kullanici)
 
 
 def gencin_profilini_guncelle(kullanici: Kullanici, profil: GencProfili) -> None:

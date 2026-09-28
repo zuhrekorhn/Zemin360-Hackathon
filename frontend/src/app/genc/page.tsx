@@ -23,6 +23,7 @@ import {
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
+import { profilBandi } from "@/lib/profil";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 import {
   CALISMA_MODELI_ETIKETLERI,
@@ -106,6 +107,7 @@ function GencPaneliIcerigi() {
   }
 
   const kartlar = hesap.yetenek_kartlari;
+  const bant = profilBandi(hesap);
   const kanitBekleyenler = kartlar.filter((kart) => kart.kanit_bekleyen);
   const bekleyenIlgi =
     ilgiler?.filter((ilgi) => ilgi.durum === "ilgileniliyor").length ?? 0;
@@ -122,6 +124,19 @@ function GencPaneliIcerigi() {
             : "Kartların, kanıtların ve sana gelen ilgiler burada."}
         </p>
       </header>
+
+      {bant ? (
+        // Engellemez: eşleştirme sürer, bant yalnızca eksikleri hatırlatır.
+        <div
+          role="note"
+          className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm text-pretty"
+        >
+          <span>{bant}</span>
+          <Link href="/profil" className="text-baglanti underline">
+            Profilime git
+          </Link>
+        </div>
+      ) : null}
 
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 

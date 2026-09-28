@@ -19,6 +19,18 @@ from types import SimpleNamespace
 from app.api.kimlik import mevcut_hesap
 from app.main import app
 
+# Genç kaydının geçerli ek alanları (docs/plans/genc-akisi.md § 5.1): kayıt
+# gövdesine `**GENC_KAYIT_EKI` ile eklenir.
+GENC_KAYIT_EKI = {
+    "genc_profili": {
+        "sehir": "İstanbul",
+        "calisma_modelleri": ["hibrit"],
+        "kariyer_durumu": "ogrenci",
+        "musaitlikler": ["yarim_zamanli"],
+    },
+    "kvkk_onay": True,
+}
+
 
 def sahte_hesap(rol: str) -> SimpleNamespace:
     """Profiliyle birlikte bir hesap: genç için `kullanici`, kurum için `kurum`."""

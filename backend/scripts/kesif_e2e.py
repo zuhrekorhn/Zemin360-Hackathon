@@ -62,6 +62,13 @@ async def genc_hesabi_ac(istemci: httpx.AsyncClient) -> None:
             "sifre": uuid.uuid4().hex,
             "rol": "genc",
             "ad": "Test Kullanıcı",
+            "genc_profili": {
+                "sehir": "İstanbul",
+                "calisma_modelleri": ["hibrit"],
+                "kariyer_durumu": "ogrenci",
+                "musaitlikler": ["yarim_zamanli"],
+            },
+            "kvkk_onay": True,
         },
     )
     yanit.raise_for_status()

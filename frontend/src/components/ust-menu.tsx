@@ -43,7 +43,12 @@ export function UstMenu() {
       rozet: okunmamis_bildirim,
     };
     if (rol === "genc") {
-      baglantilar = [panel, { yol: "/kesif", etiket: "Yeni kart" }, bildirim];
+      baglantilar = [
+        panel,
+        { yol: "/kesif", etiket: "Yeni kart" },
+        { yol: "/profil", etiket: "Profilim" },
+        bildirim,
+      ];
     } else if (rol === "kurum") {
       baglantilar = [
         panel,

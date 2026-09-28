@@ -8,6 +8,8 @@ aynı `hesap_olustur` fonksiyonunu kullanır.
 
 from __future__ import annotations
 
+import datetime as dt
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -16,6 +18,7 @@ from sqlalchemy.orm import selectinload
 
 from app.api.bildirimler import okunmamis_sayisi
 from app.api.kimlik import mevcut_hesap
+from app.api.profil import profili_uygula, profilin_eksikleri
 from app.core.kimlik import sifre_dogru_mu, sifre_hashle, token_uret
 from app.core.metin import eposta_normalize
 from app.db.session import get_session
@@ -31,6 +34,7 @@ from app.schemas.auth import (
     TokenYaniti,
     YetenekKartiOzeti,
 )
+from app.schemas.profil import GencKayitProfili
 
 router = APIRouter(tags=["kimlik"])
 
@@ -43,7 +47,14 @@ class EpostaKayitli(Exception):
 
 
 async def hesap_olustur(
-    oturum: AsyncSession, *, email: str, sifre: str, rol: str, ad: str | None
+    oturum: AsyncSession,
+    *,
+    email: str,
+    sifre: str,
+    rol: str,
+    ad: str | None,
+    genc_profili: GencKayitProfili | None = None,
+    kvkk_onay: bool = False,
 ) -> Hesap:
     """Hesabı ve (genç/kurum için) profilini açar, commit eder.
 
@@ -51,14 +62,25 @@ async def hesap_olustur(
     kalan hesapsız bir profilde varsa `EpostaKayitli`. Hesapsız profil
     sahiplenilmez: e-posta doğrulaması yok, başkasının eski kartlarını
     e-postasını yazarak almak mümkün olmamalı.
+
+    `genc_profili` ve `kvkk_onay` uçta zorunlu (şema); burada isteğe bağlı,
+    çünkü betikler ve testler profili ayrıca kuruyor.
     """
     email = eposta_normalize(email)
-    hesap = Hesap(email=email, sifre_hash=sifre_hashle(sifre), rol=rol)
+    hesap = Hesap(
+        email=email,
+        sifre_hash=sifre_hashle(sifre),
+        rol=rol,
+        kvkk_onay_tarihi=dt.datetime.now(dt.UTC) if kvkk_onay else None,
+    )
     oturum.add(hesap)
     try:
         await oturum.flush()
         if rol == ROL_GENC:
-            oturum.add(Kullanici(hesap_id=hesap.id, ad=ad, email=email))
+            kullanici = Kullanici(hesap_id=hesap.id, ad=ad, email=email)
+            if genc_profili is not None:
+                profili_uygula(kullanici, genc_profili.model_dump())
+            oturum.add(kullanici)
         elif rol == ROL_KURUM:
             oturum.add(Kurum(hesap_id=hesap.id, ad=ad, iletisim_email=email))
         await oturum.commit()
@@ -73,7 +95,13 @@ async def kayit(istek: KayitIstegi, oturum: AsyncSession = Depends(get_session))
     """Hesap açar; kayıtla birlikte giriş yapılmış olur (token döner)."""
     try:
         hesap = await hesap_olustur(
-            oturum, email=str(istek.email), sifre=istek.sifre, rol=istek.rol, ad=istek.ad
+            oturum,
+            email=str(istek.email),
+            sifre=istek.sifre,
+            rol=istek.rol,
+            ad=istek.ad,
+            genc_profili=istek.genc_profili,
+            kvkk_onay=istek.kvkk_onay,
         )
     except EpostaKayitli as hata:
         raise HTTPException(status_code=409, detail=EPOSTA_KAYITLI) from hata
@@ -115,6 +143,8 @@ async def me(
         )
         yanit.ad = kullanici.ad
         yanit.kullanici_id = kullanici.id
+        yanit.eksik_profil_alanlari = profilin_eksikleri(kullanici)
+        yanit.kvkk_onayli = hesap.kvkk_onay_tarihi is not None
         yanit.yetenek_kartlari = [
             YetenekKartiOzeti(
                 id=kart.id,

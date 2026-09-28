@@ -7,6 +7,7 @@
  * giriş yapmalı (docs/faz-b-kimlik-ve-dongu.md § 1).
  */
 
+import { ayrintiyiOku } from "@/lib/ayrinti";
 import { tokenOku, tokenSil } from "@/lib/token";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -55,7 +56,7 @@ export async function apiIstek<T>(
     let ayrinti: string | undefined;
     try {
       const govde = (await yanit.json()) as { detail?: unknown };
-      if (typeof govde.detail === "string") ayrinti = govde.detail;
+      ayrinti = ayrintiyiOku(govde.detail);
     } catch {
       // gövde JSON değil — durum koduyla yetin
     }
@@ -109,7 +110,69 @@ export type MeYaniti = {
   yetenek_kartlari: YetenekKartiOzeti[];
   ihtiyac_kartlari: IhtiyacKartiOzeti[];
   okunmamis_bildirim: number;
+  /** Genç: doldurulması gereken zorunlu profil alanları (eski hesaplar için bant). */
+  eksik_profil_alanlari: string[];
+  /** Genç: KVKK aydınlatma metni onaylı mı? Diğer rollerde true. */
+  kvkk_onayli: boolean;
 };
+
+/* --- Genç profili (docs/plans/genc-akisi.md § 5.1, § 6.1) ------------------
+   Tipler backend'deki app/schemas/profil.py ile birebir eşleşir. */
+
+export type KariyerDurumu = "ogrenci" | "mezun" | "calisiyor";
+
+/** Kayıt formunun genç kısmı. Fotoğraf, yaş, cinsiyet gibi alanlar bilinçli yok. */
+export type GencKayitProfili = {
+  sehir: string;
+  calisma_modelleri: string[];
+  kariyer_durumu: KariyerDurumu;
+  musaitlikler: string[];
+  musaitlik_baslangici?: string | null;
+  okul?: string | null;
+  bolum?: string | null;
+  sinif?: number | null;
+  mezuniyet_yili?: number | null;
+  github_url?: string | null;
+  linkedin_url?: string | null;
+  portfolyo_url?: string | null;
+};
+
+export type GencProfil = {
+  ad: string;
+  email: string;
+  sehir: string | null;
+  calisma_modelleri: string[];
+  kariyer_durumu: KariyerDurumu | null;
+  musaitlikler: string[];
+  musaitlik_baslangici: string | null;
+  okul: string | null;
+  bolum: string | null;
+  sinif: number | null;
+  mezuniyet_yili: number | null;
+  github_url: string | null;
+  linkedin_url: string | null;
+  portfolyo_url: string | null;
+  kvkk_onay_tarihi: string | null;
+  eksik_alanlar: string[];
+};
+
+/** PATCH /profil: yalnızca gönderilen alan değişir; opsiyonel alan null ya da "" ile silinir. */
+export type GencProfilGuncelleme = Partial<
+  Omit<GencProfil, "email" | "kvkk_onay_tarihi" | "eksik_alanlar">
+> & { kvkk_onay?: boolean };
+
+/** GET /profil — gencin kendi profili. */
+export function profilGetir(): Promise<GencProfil> {
+  return apiIstek<GencProfil>("/profil");
+}
+
+/** PATCH /profil — zorunlu alan boşaltılamaz (422). */
+export function profilGuncelle(girdi: GencProfilGuncelleme): Promise<GencProfil> {
+  return apiIstek<GencProfil>("/profil", {
+    method: "PATCH",
+    body: JSON.stringify(girdi),
+  });
+}
 
 /** GET /me — giriş yoksa 401 (token da silinir). */
 export function me(): Promise<MeYaniti> {
@@ -123,6 +186,10 @@ export function kayitOl(girdi: {
   sifre: string;
   rol: "genc" | "kurum";
   ad: string;
+  /** Genç için zorunlu; kurum göndermez. */
+  genc_profili?: GencKayitProfili;
+  /** Genç için zorunlu (KVKK aydınlatma metni onayı). */
+  kvkk_onay?: boolean;
 }): Promise<TokenYaniti> {
   return apiIstek<TokenYaniti>("/auth/kayit", {
     method: "POST",

@@ -24,6 +24,7 @@ from app.core.kimlik import (
     token_coz,
     token_uret,
 )
+from tests.sahte_hesap import GENC_KAYIT_EKI
 from tests.veritabani import api_istemcisi, geri_alinan_oturum
 
 # --- Şifre ---------------------------------------------------------------------------
@@ -134,7 +135,14 @@ def test_girvak_acik_kayitla_hesap_acamaz(istemci):
 
 def test_kisa_sifre_reddedilir(istemci):
     yanit = istemci.post(
-        "/auth/kayit", json={"email": "e@ornek.com", "sifre": "kisa", "rol": "genc", "ad": "Elif"}
+        "/auth/kayit",
+        json={
+            "email": "e@ornek.com",
+            "sifre": "kisa",
+            "rol": "genc",
+            "ad": "Elif",
+            **GENC_KAYIT_EKI,
+        },
     )
     assert yanit.status_code == 422
 
@@ -168,6 +176,7 @@ def test_genc_kaydi_hesap_ve_profil_acar_token_doner():
                     "sifre": "yeterince-uzun",
                     "rol": "genc",
                     "ad": "Elif",
+                    **GENC_KAYIT_EKI,
                 },
             )
             assert kayit.status_code == 201
@@ -207,7 +216,7 @@ def test_ayni_eposta_ikinci_kez_kayit_olamaz_buyuk_kucuk_harf_farkiyla_da():
     async def senaryo():
         async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
             email = _email()
-            govde = {"sifre": "yeterince-uzun", "rol": "genc", "ad": "Elif"}
+            govde = {"sifre": "yeterince-uzun", "rol": "genc", "ad": "Elif", **GENC_KAYIT_EKI}
             assert (
                 await istemci.post("/auth/kayit", json={**govde, "email": email})
             ).status_code == 201
@@ -224,7 +233,13 @@ def test_giris_dogru_sifreyle_token_yanlisla_ayni_401():
             email = _email()
             await istemci.post(
                 "/auth/kayit",
-                json={"email": email, "sifre": "yeterince-uzun", "rol": "genc", "ad": "Elif"},
+                json={
+                    "email": email,
+                    "sifre": "yeterince-uzun",
+                    "rol": "genc",
+                    "ad": "Elif",
+                    **GENC_KAYIT_EKI,
+                },
             )
             dogru = await istemci.post(
                 "/auth/giris", json={"email": email, "sifre": "yeterince-uzun"}
