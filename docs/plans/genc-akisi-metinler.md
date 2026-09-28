@@ -62,3 +62,19 @@ Karar 15 gereği şimdi değiştirilmiyor; toplu denetimde ele alınacak.
 | Dosya | Bileşen / yer | Metin | Kime |
 |---|---|---|---|
 | `backend/app/agents/guclendirme.py` | "Kartını güçlendir" satırı | "Bu çalışmaya kanıt eklersen {n} fırsatta öne çıkabilirsin." / "Kanıt eklemek, yeni fırsatlarda kartını güçlendirir." | genç |
+| `frontend/src/lib/ilgi.ts` | Durum etiketleri (rehber § 5.9 birebir) | Genç: "Sana uygun", "İlgin iletildi", "Firma seninle ilgileniyor", "Karşılıklı ilgi", "Kapandı". Firma: "Aday", "İlgi gösterdi", "Yanıt bekleniyor", "Karşılıklı ilgi", "Kapandı". Bilinmeyen kod: "Durumu güncelleniyor" | ikisi |
+| `frontend/src/lib/ilgi.ts` | Açıklama başlığı; uyum | "Neden uygun?"; "%{n} uyum" | ikisi |
+| `frontend/src/lib/ilgi.ts` | İletişim onayı (İlgileniyorum'dan sonra açılan alan) | "Firma da ilgilenirse e-posta adresin, sana ayrıca sorulmadan firmayla paylaşılır." · onay kutusu "Bunu onaylıyorum" | genç |
+| `frontend/src/components/firsatlar.tsx` | Fırsat kartı | "İlgileniyorum", "İlgimi ilet", "İletiliyor…", "Vazgeç", "Başarı ölçütü: …", "Açıklama henüz hazır değil." | genç |
+| `frontend/src/components/firsatlar.tsx` | İlgi satırı | "İlgimi geri çek", "İş birliğine git"; onay (confirm) "{firma adı} fırsatına gösterdiğin ilgi geri çekilsin mi?" | genç |
+| `frontend/src/app/genc/page.tsx` | "Sana uygun fırsatlar" bölümü | Başlık; açıklama "Kartına uyan firma ihtiyaçları. İlgilendiğin fırsatı firmaya bildirebilirsin; firma da ilgilenirse iletişim bilgileriniz paylaşılır."; boş durum "Şu an sana uygun bir fırsat yok. Kanıt eklemek ve kartını güncel tutmak, yeni fırsatlarda öne çıkmanı sağlar." [Kartına git] | genç |
+| `frontend/src/app/genc/page.tsx` | "Kartını güçlendir" bölümü | Başlık; açıklama "Kanıt eklediğin çalışmalar güven göstergeni güçlendirir."; düğme "Kanıt ekle" | genç |
+| `frontend/src/app/genc/page.tsx` | "İlgilerim" bölümü | Başlık; açıklama "İlgi gösterdiğin fırsatlar. Firma yanıt verene kadar ilgini geri çekebilirsin." | genç |
+| `frontend/src/app/genc/page.tsx` | "Bana gelen ilgiler" durumları (not 4 gereği değişti) | "Kabul ettin, iş birliği açıldı" → "Karşılıklı ilgi"; "Reddettin" → "Kapandı" | genç |
+| `frontend/src/app/kurum/oneriler/page.tsx` | İlgi gösterenler bölümü | Başlık "İlgi gösterenler", "Adaylar"; açıklama "Bu adaylar ihtiyacınızla ilgilendiklerini bildirdi. Siz de ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır ve iş birliği başlar." | firma |
+| `frontend/src/app/kurum/oneriler/page.tsx` | Aday kartı | Rozet "İlgi gösterdi"; düğmeler "İlgileniyorum", "Şimdilik değil"; yardım "İlgilenirseniz iletişim bilgileriniz paylaşılır ve iş birliği başlar."; "İş birliğine gidin"; durum açıklaması "Bu aday için süreç kapandı."; başlık "Neden eşleşti" → "Neden uygun?" (not 4) | firma |
+| `frontend/src/app/kurum/oneriler/page.tsx` | "Şimdilik değil" onayı (confirm) | "{genç adı} için “Şimdilik değil” demek istiyor musunuz? Adaya bu fırsatın kapandığı bildirilir; neden yazılmaz." | firma |
+| `frontend/src/app/kurum/oneriler/page.tsx`, `frontend/src/app/kurum/page.tsx` | Durum etiketleri (not 4 gereği değişti) | "Önerildi" → "Aday", "İlgini bildirdin"/"Gencin yanıtı bekleniyor" → "Yanıt bekleniyor", "Kabul edildi(, iş birliği açıldı)" → "Karşılıklı ilgi", "Aday şu an kabul etmedi" → "Kapandı" | firma |
+| `frontend/src/app/tanimlama/page.tsx` | Onay formu notu (karar 1) | "Onaylanan ihtiyaç, eşleşen adaylara gösterilir." | firma |
+
+> **Denetime not (10. adım):** Onay pencereleri (`window.confirm`) tarayıcının kendi düğmelerini ("Tamam/İptal") gösteriyor; rehber § 5.6 "Sil / Vazgeç" gibi eylem adı istiyor, bunun için özel bir onay bileşeni gerekir (mevcut ekranlarda da aynı). Firma öneriler sayfasında "Adaylar" / "İlgi gösterenler" dışındaki mevcut metinler ("Eşleştirme önerileri", "skoruyla", "Karar senin", "Yeniden hesapla", eşik açıklaması "%40 … eşik değerini") rehbere uymuyor ("skor", "eşik", "sen"); dokunulmadı.

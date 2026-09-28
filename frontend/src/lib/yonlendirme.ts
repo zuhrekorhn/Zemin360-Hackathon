@@ -75,7 +75,10 @@ export function bildirimHedefi(
 ): string {
   if (
     isbirligiId &&
-    (tur === "kabul" || TAKIP_TURLERI.has(tur) || CANLILIK_ISBIRLIGI.has(tur))
+    (tur === "kabul" ||
+      tur === "karsilikli_ilgi" ||
+      TAKIP_TURLERI.has(tur) ||
+      CANLILIK_ISBIRLIGI.has(tur))
   ) {
     return `/isbirligi/${isbirligiId}`;
   }
@@ -89,7 +92,13 @@ export function bildirimHedefi(
     case "ilgi_yanitsiz_2":
       return rol === "kurum" ? "/kurum#oneriler" : "/genc#ilgiler";
     case "yeni_firsat":
-      return "/genc#kartlar";
+      return "/genc#firsatlar";
+    // Gençten ilgi (docs/plans/genc-akisi.md § 7.1)
+    case "genc_ilgi":
+      return "/kurum#ihtiyaclar";
+    case "karsilikli_ilgi":
+    case "firsat_kapandi":
+      return "/genc#ilgilerim";
     case "ilgi":
       return "/genc#ilgiler";
     case "referans_yaniti":

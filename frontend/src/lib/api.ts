@@ -665,6 +665,10 @@ export type Oneri = {
   yetenek_karti: YetenekKartiYaniti;
   /** Yalnızca `kabul_edildi` durumunda ve yalnızca iki tarafa dolu. */
   iletisim: Iletisim | null;
+  /** Genç ilgi gösterdi, firmanın yanıtı bekleniyor. Skoru değiştirmez. */
+  genc_ilgi_gosterdi: boolean;
+  /** Karşılıklı ilgiden sonra arayüz yerel olarak doldurur (iş birliği bağlantısı). */
+  isbirligi_id?: string | null;
 };
 
 /** Gencin kabulüyle açılan e-postalar (docs/faz-b-kimlik-ve-dongu.md § 5). */
@@ -730,6 +734,71 @@ export function ilgileniyorum(eslesmeId: string): Promise<EslesmeDurumYaniti> {
     method: "POST",
     body: JSON.stringify({ eslesme_id: eslesmeId }),
   });
+}
+
+/* --- Gencin ana sayfası ve gençten ilgi (docs/plans/genc-akisi.md § 7) ----- */
+
+/** Fırsat ya da gencin kendi ilgisi. `uyum` 0-1 ("%72 uyum" olarak yazılır). */
+export type GencEslesmesi = {
+  eslesme_id: string;
+  durum: string;
+  uyum: number;
+  /** "Neden uygun?" metni; firmaya yazılanın aynısı. Yoksa null. */
+  gerekce_metni: string | null;
+  son_aktivite_tarihi: string;
+  yetenek_karti_id: string;
+  rol_alani: string;
+  ihtiyac_karti: IhtiyacKartiYaniti;
+  isbirligi_id: string | null;
+  /** Yalnızca karşılıklı ilgide dolu. */
+  iletisim: Iletisim | null;
+};
+
+/** "Kartını güçlendir" satırı. Sayı gerçek skorlardan; metin şablon. */
+export type Guclendirme = {
+  somut_cikti_id: string;
+  baslik: string;
+  one_cikacagi_firsat: number;
+  metin: string;
+};
+
+/** GET /eslestirme/firsatlarim — "Sana uygun fırsatlar". */
+export function firsatlarim(): Promise<GencEslesmesi[]> {
+  return apiIstek<GencEslesmesi[]>("/eslestirme/firsatlarim");
+}
+
+/** GET /eslestirme/ilgilerim — gencin kendi gösterdiği ilgiler. */
+export function ilgilerim(): Promise<GencEslesmesi[]> {
+  return apiIstek<GencEslesmesi[]>("/eslestirme/ilgilerim");
+}
+
+/** GET /yetenek-kartlari/{id}/guclendir */
+export function kartGuclendir(kartId: string): Promise<Guclendirme[]> {
+  return apiIstek<Guclendirme[]>(`/yetenek-kartlari/${kartId}/guclendir`);
+}
+
+/** POST /eslestirme/{id}/genc-ilgi — iletişim onayı zorunlu. */
+export function gencIlgi(eslesmeId: string): Promise<EslesmeDurumYaniti> {
+  return apiIstek<EslesmeDurumYaniti>(`/eslestirme/${eslesmeId}/genc-ilgi`, {
+    method: "POST",
+    body: JSON.stringify({ iletisim_onayi: true }),
+  });
+}
+
+/** POST /eslestirme/{id}/ilgiyi-geri-cek — karşılıklı hâle gelmeden önce. */
+export function ilgiyiGeriCek(eslesmeId: string): Promise<EslesmeDurumYaniti> {
+  return apiIstek<EslesmeDurumYaniti>(
+    `/eslestirme/${eslesmeId}/ilgiyi-geri-cek`,
+    { method: "POST" },
+  );
+}
+
+/** POST /eslestirme/{id}/simdilik-degil — firma, ilgi gösteren gence. */
+export function simdilikDegil(eslesmeId: string): Promise<EslesmeDurumYaniti> {
+  return apiIstek<EslesmeDurumYaniti>(
+    `/eslestirme/${eslesmeId}/simdilik-degil`,
+    { method: "POST" },
+  );
 }
 
 /* --- Paneller (docs/faz-b-kimlik-ve-dongu.md § 5, § 7) -------------------- */

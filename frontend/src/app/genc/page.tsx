@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { FirsatKarti, IlgiSatiri } from "@/components/firsatlar";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
   BosDurum,
@@ -15,14 +16,22 @@ import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import {
   type BanaGelenIlgi,
+  type GencEslesmesi,
+  type Guclendirme,
   type IsbirligiOzeti,
   banaGelenler,
   eslesmeyiKabulEt,
   eslesmeyiReddet,
+  firsatlarim,
+  gencIlgi,
+  ilgilerim,
+  ilgiyiGeriCek,
   isbirliklerim,
+  kartGuclendir,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
+import { gencDurumEtiketi } from "@/lib/ilgi";
 import { kartTamamlamaCagrisi, profilBandi } from "@/lib/profil";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 import {
@@ -39,6 +48,10 @@ import {
  *
  * Kabulden önce kurum gencin e-postasını görmez; kabul edince iki tarafın
  * e-postası açılır ve iş birliği başlar (§ 5).
+ *
+ * Genç akışı (docs/plans/genc-akisi.md § 7): açık ilan panosu yok. Sana uygun
+ * fırsatlar (kendi kartına önerilmiş, eşik üstü ihtiyaçlar), kartını güçlendir
+ * (sayılar gerçek skorlardan), ilgilerim. Gencin ilgisi açık onayla gider.
  */
 
 export default function GencPaneli() {
@@ -57,22 +70,64 @@ function GencPaneliIcerigi() {
   const [isbirlikleri, setIsbirlikleri] = useState<IsbirligiOzeti[] | null>(
     null,
   );
+  const [firsatlar, setFirsatlar] = useState<GencEslesmesi[] | null>(null);
+  const [benimIlgilerim, setBenimIlgilerim] = useState<GencEslesmesi[] | null>(
+    null,
+  );
+  const [guclendirmeler, setGuclendirmeler] = useState<
+    { kartId: string; satir: Guclendirme }[]
+  >([]);
   const [hata, setHata] = useState<Hata | null>(null);
   const okundu = useRef(false);
+  const kartIdleri = hesap.yetenek_kartlari.map((kart) => kart.id).join(",");
+
+  const firsatlariOku = useCallback(async () => {
+    const [yeni, benim] = await Promise.all([firsatlarim(), ilgilerim()]);
+    setFirsatlar(yeni);
+    setBenimIlgilerim(benim);
+  }, []);
 
   const oku = useCallback(async () => {
     setHata(null);
     try {
-      const [gelen, acik] = await Promise.all([
+      const idler = kartIdleri ? kartIdleri.split(",") : [];
+      const [gelen, acik, guclendir] = await Promise.all([
         banaGelenler(),
         isbirliklerim(),
+        Promise.all(
+          idler.map(async (kartId) =>
+            (await kartGuclendir(kartId)).map((satir) => ({ kartId, satir })),
+          ),
+        ),
+        firsatlariOku(),
       ]);
       setIlgiler(gelen);
       setIsbirlikleri(acik);
+      setGuclendirmeler(guclendir.flat());
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
     }
-  }, []);
+  }, [kartIdleri, firsatlariOku]);
+
+  async function ilgiGoster(firsat: GencEslesmesi) {
+    setHata(null);
+    try {
+      await gencIlgi(firsat.eslesme_id);
+      await firsatlariOku();
+    } catch (sebep) {
+      setHata(hatayaCevir(sebep));
+    }
+  }
+
+  async function ilgiyiCek(ilgi: GencEslesmesi) {
+    setHata(null);
+    try {
+      await ilgiyiGeriCek(ilgi.eslesme_id);
+      await firsatlariOku();
+    } catch (sebep) {
+      setHata(hatayaCevir(sebep));
+    }
+  }
 
   useEffect(() => {
     if (okundu.current) return;
@@ -150,6 +205,80 @@ function GencPaneliIcerigi() {
       ) : null}
 
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
+
+      {kartlar.length > 0 ? (
+        <PanelBolumu
+          id="firsatlar"
+          baslik="Sana uygun fırsatlar"
+          aciklama="Kartına uyan firma ihtiyaçları. İlgilendiğin fırsatı firmaya bildirebilirsin; firma da ilgilenirse iletişim bilgileriniz paylaşılır."
+        >
+          {firsatlar === null ? (
+            <p className="text-sm text-muted-foreground" role="status">
+              Yükleniyor…
+            </p>
+          ) : firsatlar.length === 0 ? (
+            <BosDurum
+              metin="Şu an sana uygun bir fırsat yok. Kanıt eklemek ve kartını güncel tutmak, yeni fırsatlarda öne çıkmanı sağlar."
+              eylem={{ href: `/kart/${kartlar[0].id}`, etiket: "Kartına git" }}
+            />
+          ) : (
+            <ul className="flex flex-col gap-4">
+              {firsatlar.map((firsat) => (
+                <FirsatKarti
+                  key={firsat.eslesme_id}
+                  firsat={firsat}
+                  onIlgi={() => ilgiGoster(firsat)}
+                />
+              ))}
+            </ul>
+          )}
+        </PanelBolumu>
+      ) : null}
+
+      {guclendirmeler.length > 0 ? (
+        <PanelBolumu
+          id="guclendir"
+          baslik="Kartını güçlendir"
+          aciklama="Kanıt eklediğin çalışmalar güven göstergeni güçlendirir."
+        >
+          <ul className="flex flex-col gap-3">
+            {guclendirmeler.map(({ kartId, satir }) => (
+              <li
+                key={satir.somut_cikti_id}
+                className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar px-4 py-3"
+              >
+                <div className="flex flex-1 flex-col gap-0.5">
+                  <span className="text-sm font-medium">{satir.baslik}</span>
+                  <span className="text-sm text-pretty text-muted-foreground">
+                    {satir.metin}
+                  </span>
+                </div>
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/kart/${kartId}`}>Kanıt ekle</Link>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </PanelBolumu>
+      ) : null}
+
+      {benimIlgilerim && benimIlgilerim.length > 0 ? (
+        <PanelBolumu
+          id="ilgilerim"
+          baslik="İlgilerim"
+          aciklama="İlgi gösterdiğin fırsatlar. Firma yanıt verene kadar ilgini geri çekebilirsin."
+        >
+          <ul className="flex flex-col gap-4">
+            {benimIlgilerim.map((ilgi) => (
+              <IlgiSatiri
+                key={ilgi.eslesme_id}
+                ilgi={ilgi}
+                onGeriCek={() => ilgiyiCek(ilgi)}
+              />
+            ))}
+          </ul>
+        </PanelBolumu>
+      ) : null}
 
       <PanelBolumu id="kartlar" baslik="Kartlarım">
         {kartlar.length === 0 ? (
@@ -387,7 +516,7 @@ function IlgiKaydi({
           </>
         ) : ilgi.durum === "kabul_edildi" ? (
           <>
-            <DurumEtiketi metin="Kabul ettin, iş birliği açıldı" baglanti />
+            <DurumEtiketi metin={gencDurumEtiketi(ilgi.durum)} baglanti />
             {ilgi.isbirligi_id ? (
               <Link
                 href={`/isbirligi/${ilgi.isbirligi_id}`}
@@ -398,7 +527,7 @@ function IlgiKaydi({
             ) : null}
           </>
         ) : (
-          <DurumEtiketi metin="Reddettin" />
+          <DurumEtiketi metin={gencDurumEtiketi(ilgi.durum)} />
         )}
       </div>
 

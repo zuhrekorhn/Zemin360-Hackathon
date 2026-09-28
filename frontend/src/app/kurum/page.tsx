@@ -21,6 +21,7 @@ import {
   onerilerim,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { firmaDurumEtiketi } from "@/lib/ilgi";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 
 /**
@@ -32,12 +33,6 @@ import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
  * öneriler sayfasının işi.
  */
 
-const DURUMLAR: Record<string, { metin: string; baglanti?: boolean }> = {
-  onerildi: { metin: "Önerildi" },
-  ilgileniliyor: { metin: "Gencin yanıtı bekleniyor" },
-  kabul_edildi: { metin: "Kabul edildi", baglanti: true },
-  reddedildi: { metin: "Aday şu an kabul etmedi" },
-};
 
 export default function KurumPaneli() {
   return (
@@ -149,7 +144,13 @@ function KurumPaneliIcerigi() {
         ) : (
           <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
             {oneriler.map((oneri) => {
-              const durum = DURUMLAR[oneri.durum] ?? { metin: oneri.durum };
+              // Etiketler docs/icerik-rehberi.md § 5.9 (lib/ilgi.ts).
+              const durum = {
+                metin: firmaDurumEtiketi(oneri.durum),
+                baglanti:
+                  oneri.durum === "kabul_edildi" ||
+                  oneri.durum === "genc_ilgilendi",
+              };
               return (
                 <li
                   key={oneri.eslesme_id}

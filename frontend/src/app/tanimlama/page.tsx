@@ -380,6 +380,12 @@ function TaslakBolumu({
             şehir filtresi hiç uygulanmaz.
           </p>
 
+          {/* Genç akışı (docs/plans/genc-akisi.md § 0 karar 1): eşik üstü
+              adaylar ihtiyacı fırsat olarak görür. */}
+          <p className="text-sm text-pretty text-muted-foreground">
+            Onaylanan ihtiyaç, eşleşen adaylara gösterilir.
+          </p>
+
           <Button
             type="submit"
             size="lg"

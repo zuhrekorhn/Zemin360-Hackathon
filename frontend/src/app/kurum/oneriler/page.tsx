@@ -19,8 +19,15 @@ import {
   eslestirmeCalistir,
   eslestirmeOnerileri,
   ilgileniyorum,
+  simdilikDegil,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import {
+  NEDEN_UYGUN,
+  firmaDurumEtiketi,
+  firmaEylemleri,
+  ilgiGosterenleriAyir,
+} from "@/lib/ilgi";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
 /**
@@ -31,20 +38,19 @@ import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
  *
  * Skor ve gerekçe birlikte gösteriliyor — matching-algorithm.md § 6'nın
  * kararı: kuruma "şu yüzden" denmeden bir isim listesi sunulmuyor.
+ *
+ * Genç akışı (docs/plans/genc-akisi.md § 7.1): ilgi gösteren adaylar ayrı
+ * bölümde, uyum sırası değişmeden; firma onlara "İlgileniyorum" (karşılıklı
+ * ilgi, iş birliği açılır) ya da "Şimdilik değil" der. Durum etiketleri
+ * docs/icerik-rehberi.md § 5.9 (lib/ilgi.ts).
  */
-
-const DURUM_ETIKETLERI: Record<string, string> = {
-  onerildi: "Önerildi",
-  ilgileniliyor: "İlgini bildirdin",
-  kabul_edildi: "Kabul edildi, iş birliği açıldı",
-  reddedildi: "Aday şu an kabul etmedi",
-};
 
 const DURUM_ACIKLAMALARI: Record<string, string> = {
   ilgileniliyor:
     "Gencin yanıtı bekleniyor; kabul ederse iletişim bilgileri açılır.",
   kabul_edildi: "İletişim bilgileri aşağıda.",
   reddedildi: "Bu eşleşme kapandı.",
+  kapandi: "Bu aday için süreç kapandı.",
 };
 
 export default function OnerilerSayfasi() {
@@ -101,17 +107,26 @@ function OnerilerIcerigi() {
     void onerileriGetir(kart);
   }, [kartVar, onerileriGetir]);
 
-  async function ilgilendigimiSoyle(oneri: Oneri) {
+  async function durumuYaz(
+    oneri: Oneri,
+    istek: (eslesmeId: string) => ReturnType<typeof ilgileniyorum>,
+  ) {
     setHata(null);
     try {
-      const yanit = await ilgileniyorum(oneri.eslesme_id);
+      const yanit = await istek(oneri.eslesme_id);
       setVeri((onceki) =>
         onceki
           ? {
               ...onceki,
               oneriler: onceki.oneriler.map((kayit) =>
                 kayit.eslesme_id === oneri.eslesme_id
-                  ? { ...kayit, durum: yanit.durum, iletisim: yanit.iletisim }
+                  ? {
+                      ...kayit,
+                      durum: yanit.durum,
+                      iletisim: yanit.iletisim,
+                      isbirligi_id: yanit.isbirligi_id,
+                      genc_ilgi_gosterdi: yanit.durum === "genc_ilgilendi",
+                    }
                   : kayit,
               ),
             }
@@ -120,6 +135,19 @@ function OnerilerIcerigi() {
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
     }
+  }
+
+  const ilgilendigimiSoyle = (oneri: Oneri) => durumuYaz(oneri, ilgileniyorum);
+
+  function simdilikDegilDe(oneri: Oneri) {
+    if (
+      !window.confirm(
+        `${oneri.yetenek_karti.genc_adi} için “Şimdilik değil” demek istiyor musunuz? Adaya bu fırsatın kapandığı bildirilir; neden yazılmaz.`,
+      )
+    ) {
+      return;
+    }
+    void durumuYaz(oneri, simdilikDegil);
   }
 
   const gosterilenKart = veri
@@ -163,7 +191,11 @@ function OnerilerIcerigi() {
       {!kartVar ? <KurumYok /> : null}
 
       {!yukleniyor && veri ? (
-        <OneriListesi veri={veri} onIlgileniyorum={ilgilendigimiSoyle} />
+        <OneriListesi
+          veri={veri}
+          onIlgileniyorum={ilgilendigimiSoyle}
+          onSimdilikDegil={simdilikDegilDe}
+        />
       ) : null}
 
       <footer className="mt-auto flex flex-wrap gap-3 border-t border-kenar pt-6">
@@ -208,10 +240,13 @@ function KurumYok() {
 function OneriListesi({
   veri,
   onIlgileniyorum,
+  onSimdilikDegil,
 }: {
   veri: Oneriler;
   onIlgileniyorum: (oneri: Oneri) => void;
+  onSimdilikDegil: (oneri: Oneri) => void;
 }) {
+  const { ilgiGosterenler, digerleri } = ilgiGosterenleriAyir(veri.oneriler);
   if (veri.oneriler.length === 0) {
     return (
       <div className="flex flex-col gap-2 rounded-sm border border-kenar bg-card px-5 py-4">
@@ -239,11 +274,40 @@ function OneriListesi({
         </p>
       ) : null}
 
-      {veri.oneriler.map((oneri) => (
+      {ilgiGosterenler.length > 0 ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-heading text-xl font-semibold text-ana">
+              İlgi gösterenler
+            </h2>
+            <p className="text-sm text-pretty text-muted-foreground">
+              Bu adaylar ihtiyacınızla ilgilendiklerini bildirdi. Siz de
+              ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır ve iş
+              birliği başlar.
+            </p>
+          </div>
+          {ilgiGosterenler.map((oneri) => (
+            <OneriKarti
+              key={oneri.eslesme_id}
+              oneri={oneri}
+              onIlgileniyorum={() => onIlgileniyorum(oneri)}
+              onSimdilikDegil={() => onSimdilikDegil(oneri)}
+            />
+          ))}
+        </section>
+      ) : null}
+
+      {digerleri.length > 0 && ilgiGosterenler.length > 0 ? (
+        <h2 className="font-heading text-xl font-semibold text-ana">
+          Adaylar
+        </h2>
+      ) : null}
+      {digerleri.map((oneri) => (
         <OneriKarti
           key={oneri.eslesme_id}
           oneri={oneri}
           onIlgileniyorum={() => onIlgileniyorum(oneri)}
+          onSimdilikDegil={() => onSimdilikDegil(oneri)}
         />
       ))}
     </div>
@@ -253,12 +317,15 @@ function OneriListesi({
 function OneriKarti({
   oneri,
   onIlgileniyorum,
+  onSimdilikDegil,
 }: {
   oneri: Oneri;
   onIlgileniyorum: () => void;
+  onSimdilikDegil: () => void;
 }) {
   const kart = oneri.yetenek_karti;
-  const kararVerildi = oneri.durum !== "onerildi";
+  const eylemler = firmaEylemleri(oneri.durum);
+  const ilgiGosterdi = oneri.durum === "genc_ilgilendi";
 
   return (
     <BelgeKarti
@@ -266,6 +333,11 @@ function OneriKarti({
       altbaslik={`${kart.genc_adi} · Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
       rozet={
         <span className="flex flex-wrap gap-2">
+          {ilgiGosterdi ? (
+            <span className="rounded-sm border border-baglanti px-2.5 py-1 text-xs text-baglanti">
+              {firmaDurumEtiketi(oneri.durum)}
+            </span>
+          ) : null}
           <PilotRozeti sayi={kart.tamamlanan_pilot} />
           <SkorRozeti skor={oneri.skor} />
         </span>
@@ -273,7 +345,7 @@ function OneriKarti({
     >
       <section className="flex flex-col gap-1.5">
         <h4 className="font-heading text-sm font-semibold text-ana">
-          Neden eşleşti
+          {NEDEN_UYGUN}
         </h4>
         {oneri.gerekce_metni ? (
           <p className="text-sm text-pretty">{oneri.gerekce_metni}</p>
@@ -305,14 +377,25 @@ function OneriKarti({
       </section>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-4">
-        {kararVerildi ? (
-          <p className="text-sm text-pretty">
-            <span className="font-medium">
-              {DURUM_ETIKETLERI[oneri.durum] ?? oneri.durum}.
-            </span>{" "}
-            {DURUM_ACIKLAMALARI[oneri.durum] ?? ""}
-          </p>
-        ) : (
+        {ilgiGosterdi ? (
+          <>
+            <Button type="button" size="lg" onClick={onIlgileniyorum}>
+              İlgileniyorum
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              onClick={onSimdilikDegil}
+            >
+              Şimdilik değil
+            </Button>
+            <span className="text-xs text-pretty text-muted-foreground">
+              İlgilenirseniz iletişim bilgileriniz paylaşılır ve iş birliği
+              başlar.
+            </span>
+          </>
+        ) : eylemler.ilgileniyorum ? (
           <>
             <Button type="button" size="lg" onClick={onIlgileniyorum}>
               İlgileniyorum
@@ -322,6 +405,24 @@ function OneriKarti({
               paylaşılır.
             </span>
           </>
+        ) : (
+          <p className="text-sm text-pretty">
+            <span className="font-medium">
+              {firmaDurumEtiketi(oneri.durum)}.
+            </span>{" "}
+            {DURUM_ACIKLAMALARI[oneri.durum] ?? ""}
+            {oneri.isbirligi_id ? (
+              <>
+                {" "}
+                <Link
+                  href={`/isbirligi/${oneri.isbirligi_id}`}
+                  className="text-baglanti underline"
+                >
+                  İş birliğine gidin
+                </Link>
+              </>
+            ) : null}
+          </p>
         )}
       </div>
 
