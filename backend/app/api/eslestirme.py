@@ -68,6 +68,7 @@ from app.schemas.eslestirme import (
     BanaGelenIlgi,
     EslesmeDurumYaniti,
     EslestirmeCalistirIstegi,
+    GencEslesmesi,
     GencIlgiIstegi,
     IlgileniyorumIstegi,
     KurumOnerisi,
@@ -76,6 +77,7 @@ from app.schemas.eslestirme import (
 )
 from app.servisler import eslestirme as servis
 from app.servisler.eslestirme import (
+    IHTIYAC_ACIK,
     eslesmeleri_oku,
     iletisim,
     iliskileriyle,
@@ -203,8 +205,9 @@ async def ilgileniyorum(
                 oturum,
                 eslesme.yetenek_karti.kullanici.hesap_id,
                 TUR_KARSILIKLI_ILGI,
-                f"{kurum.ad} da seninle ilgileniyor; karşılıklı ilgi oluştu. "
-                "İletişim bilgileriniz paylaşıldı ve iş birliği başladı.",
+                # Adın ardında ek yok: "de/da" ünlü uyumu ada göre değişir.
+                f"{kurum.ad} ilgine karşılık verdi. İletişim bilgileriniz paylaşıldı "
+                "ve iş birliği başladı.",
                 eslesme.id,
             )
         else:
@@ -388,6 +391,63 @@ async def bana_gelenler(
         )
         for eslesme in eslesmeler.all()
     ]
+
+
+async def _gencin_satirlari(oturum: AsyncSession, hesap: Hesap, *kosullar) -> list[GencEslesmesi]:
+    eslesmeler = await oturum.scalars(
+        iliskileriyle(select(Eslesme))
+        .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
+        .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
+        .where(YetenekKarti.kullanici_id == kullanici_id(hesap), *kosullar)
+        .order_by(Eslesme.skor.desc(), Eslesme.son_aktivite_tarihi.desc())
+    )
+    return [
+        GencEslesmesi(
+            eslesme_id=eslesme.id,
+            durum=eslesme.durum,
+            uyum=round(eslesme.skor, 4),
+            gerekce_metni=eslesme.gerekce_metni,
+            son_aktivite_tarihi=eslesme.son_aktivite_tarihi,
+            yetenek_karti_id=eslesme.yetenek_karti_id,
+            rol_alani=eslesme.yetenek_karti.rol_alani,
+            ihtiyac_karti=await ihtiyac_karti_yaniti(oturum, eslesme.ihtiyac_karti_id),
+            isbirligi_id=eslesme.isbirligi.id if eslesme.isbirligi else None,
+            iletisim=iletisim(eslesme, hesap),
+        )
+        for eslesme in eslesmeler.all()
+    ]
+
+
+@router.get("/firsatlarim", response_model=list[GencEslesmesi])
+async def firsatlarim(
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[GencEslesmesi]:
+    """Sana uygun fırsatlar: gencin kartlarının eşik üstü, açık ihtiyaçlardaki
+    henüz ilgi gösterilmemiş önerileri, uyum sırasıyla (plan § 7).
+
+    Yalnızca okur, eşleştirme çalıştırmaz. Açık bir ilan panosu değil: genç
+    yalnızca kendi kartına önerilmiş ihtiyaçları görür.
+    """
+    return await _gencin_satirlari(
+        oturum,
+        hesap,
+        Eslesme.durum == DURUM_ONERILDI,
+        Eslesme.skor >= SKOR_ESIGI,
+        IhtiyacKarti.durum == IHTIYAC_ACIK,
+    )
+
+
+@router.get("/ilgilerim", response_model=list[GencEslesmesi])
+async def ilgilerim(
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[GencEslesmesi]:
+    """Gencin kendi gösterdiği ilgiler ve durumları: beklemede, karşılıklı ilgi, kapandı.
+
+    Firmanın başlattığı ilgiler "bana gelenler"de.
+    """
+    return await _gencin_satirlari(oturum, hesap, Eslesme.baslatan == ROL_GENC)
 
 
 # --- Durum geçişi ----------------------------------------------------------------------

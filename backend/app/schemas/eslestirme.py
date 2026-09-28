@@ -92,6 +92,26 @@ class BanaGelenIlgi(BaseModel):
     iletisim: Iletisim | None = None
 
 
+class GencEslesmesi(BaseModel):
+    """Gencin ana sayfasındaki bir satır: fırsat (önerildi) ya da kendi ilgisi.
+
+    `uyum` eşleşmenin skoru (0-1; arayüz "%72 uyum" yazar). `gerekce_metni`
+    firmaya yazılan açıklamanın aynısı (plan § 0 karar 9; başlık "Neden uygun?").
+    E-posta yalnızca karşılıklı ilgide `iletisim`'de.
+    """
+
+    eslesme_id: uuid.UUID
+    durum: str
+    uyum: float
+    gerekce_metni: str | None
+    son_aktivite_tarihi: dt.datetime
+    yetenek_karti_id: uuid.UUID
+    rol_alani: str
+    ihtiyac_karti: IhtiyacKartiYaniti
+    isbirligi_id: uuid.UUID | None = None
+    iletisim: Iletisim | None = None
+
+
 class GencIlgiIstegi(BaseModel):
     """Genç ilgi gösterirken açık onay verir: firma da ilgilenirse e-postası
     firmayla paylaşılır. Onaysız istek 422."""

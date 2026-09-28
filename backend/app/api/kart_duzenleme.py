@@ -18,18 +18,33 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.agents.eslestirme import DURUM_ONERILDI, tamamlanan_pilot_sayilari
+from app.agents.guclendirme import (
+    FirsatSirasi,
+    bonus_farki,
+    guclendirme_metni,
+    one_cikacagi_firsat_sayisi,
+)
 from app.agents.kart_duzenleme import versiyon_artmali_mi
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, yetenek_kartinin_sahibi_mi
 from app.api.yetenek_kartlari import KART_BULUNAMADI, kart_yaniti
 from app.db.session import get_session
+from app.models.eslesme import Eslesme
 from app.models.hesap import ROL_GENC, Hesap
+from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
-from app.schemas.kart_duzenleme import IsKalemiGirdisi, IsKalemiGuncelleme, KartGuncelleme
+from app.schemas.kart_duzenleme import (
+    Guclendirme,
+    IsKalemiGirdisi,
+    IsKalemiGuncelleme,
+    KartGuncelleme,
+)
 from app.schemas.kesif import YetenekKartiYaniti
 from app.servisler import kart_duzenleme as duzenleme
 from app.servisler import kart_hazirlama
+from app.servisler.eslestirme import IHTIYAC_ACIK
 
 router = APIRouter(prefix="/yetenek-kartlari", tags=["kart-duzenleme"])
 
@@ -73,6 +88,77 @@ async def _sonuclandir(
     else:
         await oturum.rollback()  # kilidi bırak
     return await kart_yaniti(oturum, kart_id)
+
+
+@router.get("/{kart_id}/guclendir", response_model=list[Guclendirme])
+async def guclendir(
+    kart_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[Guclendirme]:
+    """'Kartını güçlendir': kanıtı eksik her çalışma ve kanıt eklenirse kaç
+    fırsatta öne çıkabileceği (app/agents/guclendirme.py). Yalnızca okur."""
+    kart = await oturum.scalar(
+        select(YetenekKarti)
+        .options(selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru))
+        .where(YetenekKarti.id == kart_id)
+    )
+    if kart is None or not yetenek_kartinin_sahibi_mi(hesap, kart):
+        raise bulunamadi(KART_BULUNAMADI)
+
+    siralar = await _firsat_siralari(oturum, kart.id)
+    pilot = (await tamamlanan_pilot_sayilari(oturum, [kart.id])).get(kart.id, 0)
+    gostergeler = {
+        c.id: (
+            (
+                c.guven_skoru.kanit_orijinalligi,
+                c.guven_skoru.sonuc_olculebilirligi,
+                c.guven_skoru.rol_netligi,
+                c.guven_skoru.ucuncu_taraf_onayi,
+            )
+            if c.guven_skoru
+            else None
+        )
+        for c in kart.somut_ciktilar
+    }
+    sonuc = []
+    for cikti in kart.somut_ciktilar:
+        if cikti.kanit_linki:
+            continue
+        sayi = one_cikacagi_firsat_sayisi(siralar, bonus_farki(gostergeler, cikti.id, pilot))
+        sonuc.append(
+            Guclendirme(
+                somut_cikti_id=cikti.id,
+                baslik=cikti.baslik,
+                one_cikacagi_firsat=sayi,
+                metin=guclendirme_metni(sayi),
+            )
+        )
+    return sonuc
+
+
+async def _firsat_siralari(oturum: AsyncSession, kart_id: uuid.UUID) -> list[FirsatSirasi]:
+    """Kartın fırsatları (önerilmiş, açık ihtiyaç) ve her birinde rakiplerin skorları."""
+    firsatlar = (
+        await oturum.execute(
+            select(Eslesme.ihtiyac_karti_id, Eslesme.skor)
+            .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
+            .where(
+                Eslesme.yetenek_karti_id == kart_id,
+                Eslesme.durum == DURUM_ONERILDI,
+                IhtiyacKarti.durum == IHTIYAC_ACIK,
+            )
+        )
+    ).all()
+    siralar = []
+    for ihtiyac_id, skor in firsatlar:
+        rakipler = await oturum.scalars(
+            select(Eslesme.skor).where(
+                Eslesme.ihtiyac_karti_id == ihtiyac_id, Eslesme.yetenek_karti_id != kart_id
+            )
+        )
+        siralar.append(FirsatSirasi(kendi_skoru=skor, rakip_skorlari=list(rakipler)))
+    return siralar
 
 
 @router.patch("/{kart_id}", response_model=YetenekKartiYaniti)

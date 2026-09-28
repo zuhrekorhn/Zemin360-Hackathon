@@ -6,6 +6,7 @@ bilinmeyen alan sessizce yok sayılmaz.
 
 from __future__ import annotations
 
+import uuid
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
@@ -21,6 +22,15 @@ Etiketler = Annotated[
     Field(max_length=30),
 ]
 DeneyimSeviyesi = Literal["potansiyel", "baslangic", "orta", "ileri"]
+
+
+class Guclendirme(BaseModel):
+    """'Kartını güçlendir' satırı: kanıtı eksik bir çalışma ve kanıtın etkisi."""
+
+    somut_cikti_id: uuid.UUID
+    baslik: str
+    one_cikacagi_firsat: int
+    metin: str
 
 
 class KartGuncelleme(BaseModel):

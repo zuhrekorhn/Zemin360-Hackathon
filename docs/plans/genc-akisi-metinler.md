@@ -48,11 +48,17 @@ Karar 15 gereği şimdi değiştirilmiyor; toplu denetimde ele alınacak.
 | Dosya | Bileşen / yer | Metin | Kime |
 |---|---|---|---|
 | `backend/app/api/eslestirme.py` | Bildirim (genç ilgi gösterdi) | "{genç adı} ihtiyacınızla ilgileniyor. Siz de ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır." | firma |
-| `backend/app/api/eslestirme.py` | Bildirim (karşılıklı ilgi) | "{firma adı} da seninle ilgileniyor; karşılıklı ilgi oluştu. İletişim bilgileriniz paylaşıldı ve iş birliği başladı." | genç |
+| `backend/app/api/eslestirme.py` | Bildirim (karşılıklı ilgi) | "{firma adı} ilgine karşılık verdi. İletişim bilgileriniz paylaşıldı ve iş birliği başladı." (10. adımda düzeltildi: adın ardındaki "da" eki ünlü uyumu yüzünden kaldırıldı) | genç |
 | `backend/app/servisler/ilgi.py` | Bildirim (şimdilik değil / ihtiyaç kapandı) | "{firma adı} tarafındaki fırsat kapandı." | genç |
 | `backend/app/agents/eslesme_durumu.py` | 409 (eşik altı) | "Bu fırsat için ilgi gösterilemiyor; uyumun yeterli değil." | genç |
 | `backend/app/agents/eslesme_durumu.py` | 409 (kapalı ihtiyaç) | "Bu fırsat kapandı." | genç |
 | `backend/app/servisler/eslestirme.py` | 409 (kapalı ihtiyaçta yeniden hesap) | "Bu ihtiyaç kapandı; yeni aday aranmıyor." | firma |
 | `backend/app/agents/eslesme_durumu.py` | 409 cümlesi, yeni durum ve olay etiketleri | "…'ilgi iletildi, firmanın yanıtı bekleniyor' durumunda…", "…'kapandı' durumunda…"; "ilgi gösterilemez", "ilgi geri çekilemez", "kapatılamaz" | ikisi |
 
-> **Denetime not:** 409 cümlesinin kalıbı ("Bu eşleşme şu an '…' durumunda; … .") Faz B'den; "eşleşme" kelimesi ve tırnaklı durum adı rehberdeki § 5.4 ("ne oldu + ne yapmalı") biçimine uymuyor, denetimde bakılsın. Mevcut "kurum ilgileniyor, gencin yanıtı bekleniyor" etiketinde "kurum" geçiyor (rehber: "firma"). "{firma adı} da" ekinde ünlü uyumu ("de/da") ada göre değişir; şimdilik sabit "da".
+> **Denetime not:** 409 cümlesinin kalıbı ("Bu eşleşme şu an '…' durumunda; … .") Faz B'den; "eşleşme" kelimesi ve tırnaklı durum adı rehberdeki § 5.4 ("ne oldu + ne yapmalı") biçimine uymuyor, denetimde bakılsın. Mevcut "kurum ilgileniyor, gencin yanıtı bekleniyor" etiketinde "kurum" geçiyor (rehber: "firma"). Ad + ek taraması (10. adım): backend bildirimlerinde adın ardına ek gelen başka metin yok; "{ad} ile" kalıplarında "ile" ayrı kelime, ünlü uyumundan etkilenmez.
+
+## 10. adım — Genç ana sayfası ve firma tarafı
+
+| Dosya | Bileşen / yer | Metin | Kime |
+|---|---|---|---|
+| `backend/app/agents/guclendirme.py` | "Kartını güçlendir" satırı | "Bu çalışmaya kanıt eklersen {n} fırsatta öne çıkabilirsin." / "Kanıt eklemek, yeni fırsatlarda kartını güçlendirir." | genç |
