@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -45,6 +46,9 @@ class OneriYaniti(BaseModel):
     gerekce_metni: str | None
     yetenek_karti: YetenekKartiYaniti
     iletisim: Iletisim | None = None
+    # Genç ilgi gösterdi, firmanın yanıtı bekleniyor. Skoru değiştirmez;
+    # firma ekranında ayrı bir işaret ve bölüm (plan § 7.1).
+    genc_ilgi_gosterdi: bool = False
 
 
 class OnerilerYaniti(BaseModel):
@@ -86,6 +90,13 @@ class BanaGelenIlgi(BaseModel):
     ihtiyac_karti: IhtiyacKartiYaniti
     isbirligi_id: uuid.UUID | None = None
     iletisim: Iletisim | None = None
+
+
+class GencIlgiIstegi(BaseModel):
+    """Genç ilgi gösterirken açık onay verir: firma da ilgilenirse e-postası
+    firmayla paylaşılır. Onaysız istek 422."""
+
+    iletisim_onayi: Literal[True]
 
 
 class KurumOnerisi(BaseModel):

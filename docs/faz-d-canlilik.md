@@ -175,7 +175,7 @@ Genç ve kurum bu uçları çağıramaz (403). Onlar hatırlatmayı bildirim ola
    - **Öneri:** B, platform cron'u. Yerelde ve demoda düğme ya da betik.
    - **Alternatif:** A, uygulama içi zamanlayıcı.
 2. **Hedef tanımları:** Öneri § 7'deki tablo. "Başvuru" için alternatif: kayıtlı her genç hesabı.
-3. **Yeni fırsat ne söyler:**
+3. **Yeni fırsat ne söyler:** *(Değişti, 28 Eyl: genç akışında genç önerilmiş fırsatları zaten görüyor — `plans/genc-akisi.md` § 0 karar 1; anonimliğin gerekçesi kalmadı. Bildirimin metni ve bağlantısı genç ana sayfası adımında fırsatlar bölümüne yönlenecek.)*
    - **Öneri:** Anonim; kurum adı ve ihtiyaç metni yok, sektör ve "kartını güçlendir" var.
    - **Alternatif:** İhtiyaç kartını gence göstermek; Faz B sahiplik kuralını değiştirir.
 4. **Eşik değerleri:** Öneri § 1'deki tablo (7 / 3 ve 10 / 5 / 14 gün, gecikmede 1 gün; fırsatta 7 günlük yeni ihtiyaç ve 14 günlük eski kart).

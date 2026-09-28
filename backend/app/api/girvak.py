@@ -11,8 +11,10 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.eslestirme import (
+    DURUM_GENC_ILGILENDI,
     DURUM_ILGILENILIYOR,
     DURUM_KABUL_EDILDI,
+    DURUM_KAPANDI,
     DURUM_ONERILDI,
     DURUM_REDDEDILDI,
 )
@@ -72,6 +74,8 @@ async def sayilar(
             ilgileniliyor=durumlar.get(DURUM_ILGILENILIYOR, 0),
             kabul_edildi=durumlar.get(DURUM_KABUL_EDILDI, 0),
             reddedildi=durumlar.get(DURUM_REDDEDILDI, 0),
+            genc_ilgilendi=durumlar.get(DURUM_GENC_ILGILENDI, 0),
+            kapandi=durumlar.get(DURUM_KAPANDI, 0),
         ),
         isbirligi=await _say(oturum, Isbirligi),
         isbirligi_durumlari=IsbirligiSayilari(

@@ -71,6 +71,12 @@ DURUM_ONERILDI = "onerildi"
 DURUM_ILGILENILIYOR = "ilgileniliyor"
 DURUM_KABUL_EDILDI = "kabul_edildi"
 DURUM_REDDEDILDI = "reddedildi"
+# Gençten ilgi (docs/plans/genc-akisi.md § 4): genç ilgi gösterdi, kurumun yanıtı
+# bekleniyor. Karar verilmiş kayıt sayılır: pipeline silmez, skorunu ve
+# gerekçesini değiştirmez (plan § 0, karar 14).
+DURUM_GENC_ILGILENDI = "genc_ilgilendi"
+# Kurum "şimdilik değil" dedi ya da ihtiyaç kapandı. Gence "Kapandı" görünür.
+DURUM_KAPANDI = "kapandi"
 
 GEREKCE_TALIMATI = """Sen Zemin360'ın Eşleştirme Ajanı'sın. Bir kurumun ihtiyaç kartı ile
 bir gencin yetenek kartının neden eşleştiğini açıklıyorsun.

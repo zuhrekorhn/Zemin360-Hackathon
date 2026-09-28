@@ -29,6 +29,10 @@ TUR_PLAN_ONAYLANDI = "plan_onaylandi"
 TUR_ADIM_ISARETLENDI = "adim_isaretlendi"
 TUR_ADIM_TAMAMLANDI = "adim_tamamlandi"
 TUR_ISBIRLIGI_TAMAMLANDI = "isbirligi_tamamlandi"
+# Gençten ilgi (docs/plans/genc-akisi.md § 7.1)
+TUR_GENC_ILGI = "genc_ilgi"  # firmaya: bir genç ilgi gösterdi
+TUR_KARSILIKLI_ILGI = "karsilikli_ilgi"  # gence: firma da ilgilendi, iş birliği açıldı
+TUR_FIRSAT_KAPANDI = "firsat_kapandi"  # gence: bekleyen fırsat kapandı (nötr)
 
 
 class Bildirim(UUIDPrimaryKeyMixin, Base):

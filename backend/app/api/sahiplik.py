@@ -25,10 +25,18 @@ from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.yetenek_karti import YetenekKarti
 
-# Gencin ihtiyaç kartını görebilmesi için eşleşmenin ulaşmış olması gereken
-# durumlar: kurum ilgilendikten sonra (not § 3). "onerildi" iken genç kurumun
-# kendisine bakıp bakmadığını bilmez.
-GENCE_ACIK_DURUMLAR = ("ilgileniliyor", "kabul_edildi", "reddedildi")
+# Gencin görebildiği eşleşme durumları. Faz B'de genç eşleşmeyi ancak kurum
+# ilgilendikten sonra görüyordu; genç akışında (docs/plans/genc-akisi.md § 0,
+# karar 1) eşik üstü öneriler gence "fırsat" olarak baştan görünür, yani kendi
+# kartının bütün eşleşmeleri. E-posta yine yalnızca karşılıklı ilgide açılır.
+GENCE_ACIK_DURUMLAR = (
+    "onerildi",
+    "genc_ilgilendi",
+    "ilgileniliyor",
+    "kabul_edildi",
+    "reddedildi",
+    "kapandi",
+)
 
 # Sohbet checkpoint'ine oturumu açan hesabın kimliği bu anahtarla yazılır.
 SOHBET_SAHIBI = "sahip_hesap_id"

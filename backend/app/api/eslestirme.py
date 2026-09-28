@@ -16,22 +16,27 @@ import datetime as dt
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.eslesme_durumu import (
+    OLAY_GENC_ILGI,
     OLAY_ILGILENIYORUM,
+    OLAY_ILGIYI_GERI_CEK,
     OLAY_KABUL,
     OLAY_RED,
+    OLAY_SIMDILIK_DEGIL,
     GecersizGecis,
     gecis,
+    ilgi_engeli,
 )
 from app.agents.eslestirme import (
+    DURUM_GENC_ILGILENDI,
+    DURUM_ONERILDI,
     SKOR_ESIGI,
     TOP_N,
     ihtiyac_kartini_getir,
 )
-from app.agents.takip_durumu import ISBIRLIGI_PLAN_BEKLIYOR
 from app.api import takip
 from app.api.bildirimler import bildirim_ekle
 from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
@@ -47,16 +52,23 @@ from app.api.sahiplik import (
 from app.api.sahiplik import kurum_id as hesabin_kurumu
 from app.api.yetenek_kartlari import kart_yaniti
 from app.db.session import get_session
-from app.models.bildirim import TUR_ILGI, TUR_KABUL, TUR_RED
+from app.models.bildirim import (
+    TUR_FIRSAT_KAPANDI,
+    TUR_GENC_ILGI,
+    TUR_ILGI,
+    TUR_KABUL,
+    TUR_KARSILIKLI_ILGI,
+    TUR_RED,
+)
 from app.models.eslesme import Eslesme
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
-from app.models.isbirligi import Isbirligi
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import (
     BanaGelenIlgi,
     EslesmeDurumYaniti,
     EslestirmeCalistirIstegi,
+    GencIlgiIstegi,
     IlgileniyorumIstegi,
     KurumOnerisi,
     OnerilerYaniti,
@@ -68,10 +80,14 @@ from app.servisler.eslestirme import (
     iletisim,
     iliskileriyle,
 )
+from app.servisler.ilgi import firsat_kapandi_metni, isbirligini_ac
 
 router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
 IHTIYAC_YOK = "Kuruma ait ihtiyaç kartı yok"
+# Faz B'de yalnızca kurum ilgi gösterebiliyordu: bu durumlardaki eski kayıtlar
+# kurumun ilgisiyle başladı.
+KURUM_ILGISI_DURUMLARI = ("ilgileniliyor", "kabul_edildi", "reddedildi")
 ESLESME_BULUNAMADI = "Eşleşme bulunamadı"
 
 
@@ -161,25 +177,125 @@ async def onerilerim(
 @router.post("/ilgileniyorum", response_model=EslesmeDurumYaniti)
 async def ilgileniyorum(
     istek: IlgileniyorumIstegi,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> EslesmeDurumYaniti:
-    """Kurum ilgilendiğini söyler: `onerildi` → `ilgileniliyor`.
+    """Kurum ilgilendiğini söyler. İki kapı:
 
-    İş birliği burada AÇILMAZ; gencin kabulünü bekler
-    (docs/faz-b-kimlik-ve-dongu.md § 5). Gence bildirim gider.
+    - `onerildi` → `ilgileniliyor`: iş birliği AÇILMAZ, gencin kabulünü bekler
+      (docs/faz-b-kimlik-ve-dongu.md § 5). Gence bildirim gider.
+    - `genc_ilgilendi` → `kabul_edildi` (karşılıklı ilgi): genç onayını ilgi
+      gösterirken verdi; iş birliği açılır, e-postalar iki tarafa görünür,
+      yanıttan sonra plan önerilir (docs/plans/genc-akisi.md § 4).
     """
     eslesme = await _eslesmeyi_kilitle(oturum, istek.eslesme_id)
     if eslesme is None or not ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
         raise bulunamadi(ESLESME_BULUNAMADI)
-    if _gecisi_uygula(eslesme, OLAY_ILGILENIYORUM, hesap):
+    karsilikli = eslesme.durum == DURUM_GENC_ILGILENDI
+    degisti = _gecisi_uygula(eslesme, OLAY_ILGILENIYORUM, hesap)
+    if degisti:
         kurum = eslesme.ihtiyac_karti.kurum
+        eslesme.kurum_ilgi_tarihi = eslesme.son_aktivite_tarihi
+        if karsilikli:
+            isbirligini_ac(eslesme)
+            bildirim_ekle(
+                oturum,
+                eslesme.yetenek_karti.kullanici.hesap_id,
+                TUR_KARSILIKLI_ILGI,
+                f"{kurum.ad} da seninle ilgileniyor; karşılıklı ilgi oluştu. "
+                "İletişim bilgileriniz paylaşıldı ve iş birliği başladı.",
+                eslesme.id,
+            )
+        else:
+            eslesme.baslatan = ROL_KURUM
+            bildirim_ekle(
+                oturum,
+                eslesme.yetenek_karti.kullanici.hesap_id,
+                TUR_ILGI,
+                f"{kurum.ad}, “{eslesme.yetenek_karti.rol_alani}” kartınla ilgileniyor. "
+                "Kabul edersen e-posta adresleriniz paylaşılır.",
+                eslesme.id,
+            )
+    await oturum.commit()
+    if degisti and karsilikli and eslesme.isbirligi is not None:
+        arka_plan.add_task(takip.plani_arka_planda_oner, eslesme.isbirligi.id)
+    return _durum_yaniti(eslesme, hesap)
+
+
+@router.post("/{eslesme_id}/genc-ilgi", response_model=EslesmeDurumYaniti)
+async def genc_ilgi(
+    eslesme_id: uuid.UUID,
+    istek: GencIlgiIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Genç bir fırsata ilgi gösterir: `onerildi` → `genc_ilgilendi`.
+
+    Yalnızca eşik üstü ve açık ihtiyaç (409, nedeniyle). İlgi skoru değiştirmez;
+    firma ekranında ayrı bir işaret. `iletisim_onayi` zorunlu: firma da
+    ilgilenirse e-posta firmayla paylaşılır. Firmaya bildirim gider.
+    """
+    eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
+    if eslesme.durum == DURUM_ONERILDI:
+        engel = ilgi_engeli(eslesme.skor, eslesme.ihtiyac_karti.durum)
+        if engel:
+            raise HTTPException(status_code=409, detail=engel)
+    if _gecisi_uygula(eslesme, OLAY_GENC_ILGI, hesap):
+        eslesme.baslatan = ROL_GENC
+        eslesme.genc_ilgi_tarihi = eslesme.son_aktivite_tarihi
+        eslesme.genc_iletisim_onayi_tarihi = eslesme.son_aktivite_tarihi
+        bildirim_ekle(
+            oturum,
+            eslesme.ihtiyac_karti.kurum.hesap_id,
+            TUR_GENC_ILGI,
+            f"{eslesme.yetenek_karti.kullanici.ad} ihtiyacınızla ilgileniyor. Siz de "
+            "ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır.",
+            eslesme.id,
+        )
+    await oturum.commit()
+    return _durum_yaniti(eslesme, hesap)
+
+
+@router.post("/{eslesme_id}/ilgiyi-geri-cek", response_model=EslesmeDurumYaniti)
+async def ilgiyi_geri_cek(
+    eslesme_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Genç ilgisini, karşılıklı hâle gelmeden geri çeker: `genc_ilgilendi` → `onerildi`.
+
+    İlgi kaydı ve iletişim onayı silinir. Karşılıklı ilgiden sonra 409.
+    Firmaya bildirim gitmez: firmanın ekranındaki işaret kalkar.
+    """
+    eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
+    if _gecisi_uygula(eslesme, OLAY_ILGIYI_GERI_CEK, hesap):
+        eslesme.baslatan = None
+        eslesme.genc_ilgi_tarihi = None
+        eslesme.genc_iletisim_onayi_tarihi = None
+    await oturum.commit()
+    return _durum_yaniti(eslesme, hesap)
+
+
+@router.post("/{eslesme_id}/simdilik-degil", response_model=EslesmeDurumYaniti)
+async def simdilik_degil(
+    eslesme_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Firma, ilgi gösteren gence "şimdilik değil" der: `genc_ilgilendi` → `kapandi`.
+
+    Gence nötr bildirim ("fırsat kapandı"; ret ifadesi ve neden yok).
+    """
+    eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
+    if eslesme is None or not ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
+        raise bulunamadi(ESLESME_BULUNAMADI)
+    if _gecisi_uygula(eslesme, OLAY_SIMDILIK_DEGIL, hesap):
         bildirim_ekle(
             oturum,
             eslesme.yetenek_karti.kullanici.hesap_id,
-            TUR_ILGI,
-            f"{kurum.ad}, “{eslesme.yetenek_karti.rol_alani}” kartınla ilgileniyor. "
-            "Kabul edersen e-posta adresleriniz paylaşılır.",
+            TUR_FIRSAT_KAPANDI,
+            firsat_kapandi_metni(eslesme.ihtiyac_karti.kurum.ad),
             eslesme.id,
         )
     await oturum.commit()
@@ -200,10 +316,7 @@ async def kabul(
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
     degisti = _gecisi_uygula(eslesme, OLAY_KABUL, hesap)
     if degisti:
-        if eslesme.isbirligi is None:
-            eslesme.isbirligi = Isbirligi(
-                baslangic_tarihi=dt.date.today(), durum=ISBIRLIGI_PLAN_BEKLIYOR
-            )
+        isbirligini_ac(eslesme)
         bildirim_ekle(
             oturum,
             eslesme.ihtiyac_karti.kurum.hesap_id,
@@ -243,17 +356,22 @@ async def bana_gelenler(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> list[BanaGelenIlgi]:
-    """Gencin kartlarına gelen ilgiler, en yeni hareket önce.
+    """Gencin kartlarına kurumun gösterdiği ilgiler, en yeni hareket önce.
 
-    `onerildi` durumundakiler burada yok: kurum henüz karar vermedi; genç
-    eşleşmeyi ancak ilgi bildirildiğinde görür (sahiplik.GENCE_ACIK_DURUMLAR).
+    Yalnızca ilk ilgiyi kurumun gösterdiği kayıtlar (`baslatan = kurum`; eski
+    kayıtlar migration'la öyle işaretlendi). Gencin kendi gösterdiği ilgiler
+    ve henüz ilgisiz öneriler gencin fırsat listesinde (genç ana sayfası).
     """
     eslesmeler = await oturum.scalars(
         iliskileriyle(select(Eslesme))
         .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
         .where(
             YetenekKarti.kullanici_id == kullanici_id(hesap),
-            Eslesme.durum.in_(GENCE_ACIK_DURUMLAR),
+            or_(
+                Eslesme.baslatan == ROL_KURUM,
+                # Başlatanı bilinmeyen (alan eklenmeden yazılmış) kurum ilgisi.
+                and_(Eslesme.baslatan.is_(None), Eslesme.durum.in_(KURUM_ILGISI_DURUMLARI)),
+            ),
         )
         .order_by(Eslesme.son_aktivite_tarihi.desc())
     )
@@ -290,10 +408,10 @@ async def _eslesmeyi_kilitle(oturum: AsyncSession, eslesme_id: uuid.UUID) -> Esl
 
 
 async def _gencin_eslesmesi(oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid.UUID) -> Eslesme:
-    """Gencin kendi kartına ait ve ona açılmış eşleşme; değilse 404.
+    """Gencin kendi kartına ait eşleşme; değilse 404 (varlık sızdırılmaz).
 
-    `onerildi` durumundaki eşleşme de 404: genç onu henüz göremiyor, varlığı
-    sızdırılmaz (sahiplik sözleşmesi).
+    Genç akışında (plan § 0, karar 1) genç kendi kartının bütün eşleşmelerini
+    görür (sahiplik.GENCE_ACIK_DURUMLAR).
     """
     eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
     if (
@@ -313,7 +431,7 @@ def _gecisi_uygula(eslesme: Eslesme, olay: str, hesap: Hesap) -> bool:
     etkiler geçişle aynı işlemde yazılsın.
     """
     try:
-        sonuc = gecis(eslesme.durum, olay, hesap.rol)
+        sonuc = gecis(eslesme.durum, olay, hesap.rol, baslatan=eslesme.baslatan)
     except GecersizGecis as hata:
         raise HTTPException(status_code=409, detail=str(hata)) from hata
     if sonuc.degisti:
@@ -373,6 +491,7 @@ async def _yanit_kur(
             gerekce_metni=eslesme.gerekce_metni,
             yetenek_karti=await kart_yaniti(oturum, eslesme.yetenek_karti_id),
             iletisim=iletisim(eslesme, hesap),
+            genc_ilgi_gosterdi=eslesme.durum == DURUM_GENC_ILGILENDI,
         )
         for eslesme in eslesmeler
     ]

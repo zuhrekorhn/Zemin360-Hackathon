@@ -16,6 +16,8 @@ class EslesmeSayilari(BaseModel):
     ilgileniliyor: int
     kabul_edildi: int
     reddedildi: int
+    genc_ilgilendi: int = 0
+    kapandi: int = 0
 
 
 class IsbirligiSayilari(BaseModel):

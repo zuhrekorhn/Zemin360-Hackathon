@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.eslestirme import (
+    DURUM_GENC_ILGILENDI,
     DURUM_KABUL_EDILDI,
     Aday,
     adaylari_getir,
@@ -42,6 +43,10 @@ from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import Iletisim
 
 logger = logging.getLogger("zemin360.eslestirme")
+
+IHTIYAC_ACIK = "acik"
+# Firmaya görünür (docs/icerik-rehberi.md: "siz", teknik terim yok).
+IHTIYAC_KAPALI_MESAJI = "Bu ihtiyaç kapandı; yeni aday aranmıyor."
 
 
 def iliskileriyle(sorgu):
@@ -112,6 +117,9 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
         raise HTTPException(
             status_code=409, detail="İhtiyaç kartının embedding'i yok; kart yeniden onaylanmalı"
         )
+    if ihtiyac.durum != IHTIYAC_ACIK:
+        # Kapalı ihtiyaç için aday aranmaz; mevcut kayıtlar okunabilir kalır.
+        raise HTTPException(status_code=409, detail=IHTIYAC_KAPALI_MESAJI)
 
     # Aynı ihtiyaç kartı için pipeline'lar sıraya girer: kart onaylanınca
     # arka plan işi başlıyor, kurum da o sırada öneriler sayfasını açınca
@@ -147,9 +155,10 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
                 )
             )
             yeni_oneri += eklenen.rowcount
-        else:
+        elif eslesme.durum != DURUM_GENC_ILGILENDI:
             # Kurumun verdiği karar (ilgileniliyor/kabul/red) ezilmez;
-            # yalnızca skor tazelenir.
+            # yalnızca skor tazelenir. Gencin ilgi gösterdiği kaydın skoru da
+            # değişmez (plan § 0, karar 14): genç o uyumu görerek ilgilendi.
             eslesme.skor = aday.skor
 
     # Eklenenler ON CONFLICT ile yazıldı; ORM nesneleri yeniden okunarak alınır.
@@ -157,7 +166,10 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
     gerekce_bekleyenler: list[tuple[Eslesme, Aday]] = [
         (guncel[aday.yetenek_karti.id], aday)
         for aday in secilenler
-        if aday.yetenek_karti.id in guncel and guncel[aday.yetenek_karti.id].gerekce_metni is None
+        if aday.yetenek_karti.id in guncel
+        and guncel[aday.yetenek_karti.id].gerekce_metni is None
+        # Gencin ilgi gösterdiği kaydın gerekçesi değiştirilmez (karar 14).
+        and guncel[aday.yetenek_karti.id].durum != DURUM_GENC_ILGILENDI
     ]
 
     # Gerekçeler birbirinden bağımsız: sırayla beklemek Top-5'te kullanıcıyı

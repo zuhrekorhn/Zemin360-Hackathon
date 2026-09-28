@@ -36,10 +36,13 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | | `/dogrulama/kanit/{somut_cikti_id}` | GET | Kanıtın güncel durumu: rubrik puanı + referans istekleri. Zaman aşımı (`bekliyor` → `yanit_yok`) bu okuma anında hesaplanır — ayrı bir zamanlayıcı yok |
 | **Eşleştirme** | `/eslestirme/calistir` | POST | Pipeline'ı yeniden çalıştırır. Kurum yalnızca kendi kurumu için (gövde boş; başka `kurum_id` 404), GİRVAK `kurum_id` vermek zorunda. Gövdede `ihtiyac_karti_id` verilmezse kurumun en son ihtiyaç kartı. İhtiyaç kartı onaylanınca (ya da embedding'i yeniden hesaplanınca) o kart için arka planda da çalışır (zamanlayıcı yok) |
 | | `/eslestirme/oneriler/{kurum_id}` | GET | Kurum yalnızca kendi `kurum_id`'si (başkası 404), GİRVAK hepsi. `?ihtiyac_karti_id=` ile belirli kart (başka kurumunki 404), verilmezse en son kart. Sıralı liste + gerekçe. `skor_esigi` ve `az_sonuc_uyarisi` yanıtta döner — arayüz eşiği kendi içine yazmaz |
-| | `/eslestirme/ilgileniyorum` | POST | Kurum (ihtiyacın sahibi): `onerildi` → `ilgileniliyor`. İş birliği AÇMAZ |
+| | `/eslestirme/ilgileniyorum` | POST | Kurum (ihtiyacın sahibi): `onerildi` → `ilgileniliyor`, iş birliği AÇMAZ. Genç zaten ilgi gösterdiyse (`genc_ilgilendi`) **karşılıklı ilgi**: → `kabul_edildi`, iş birliği açılır, `iletisim` iki tarafa döner, plan arka planda önerilir; genç ayrıca onay vermez |
 | | `/eslestirme/{id}/kabul` | POST | Genç (kartın sahibi): `ilgileniliyor` → `kabul_edildi`, `ISBIRLIGI` açılır, yanıtta `iletisim` (iki e-posta) |
 | | `/eslestirme/{id}/red` | POST | Genç (kartın sahibi): `ilgileniliyor` → `reddedildi` |
-| | `/eslestirme/bana-gelenler` | GET | Genç: kartlarına ilgi gösterilmiş eşleşmeler (`onerildi` hariç), ihtiyaç kartı ve kurum adıyla |
+| | `/eslestirme/{id}/genc-ilgi` | POST | **Gençten ilgi** (kartın sahibi): `{iletisim_onayi: true}` zorunlu (yoksa 422); `onerildi` → `genc_ilgilendi`. Yalnızca eşik üstü ve açık ihtiyaç (409, nedeniyle). Skoru değiştirmez; firmaya bildirim. E-posta açılmaz |
+| | `/eslestirme/{id}/ilgiyi-geri-cek` | POST | Genç: `genc_ilgilendi` → `onerildi`; ilgi ve onay kaydı silinir. Karşılıklı ilgiden sonra 409 |
+| | `/eslestirme/{id}/simdilik-degil` | POST | Kurum (ihtiyacın sahibi): `genc_ilgilendi` → `kapandi`; gence nötr bildirim ("fırsat kapandı") |
+| | `/eslestirme/bana-gelenler` | GET | Genç: ilk ilgiyi kurumun gösterdiği eşleşmeler (`baslatan = kurum`), ihtiyaç kartı ve kurum adıyla. Gencin kendi ilgileri ve ilgisiz öneriler genç ana sayfasında |
 | | `/eslestirme/onerilerim` | GET | Kurum: tüm ihtiyaç kartlarındaki öneriler, durum ve gencin adıyla (`iletisim` yalnızca `kabul_edildi`'de). Yalnızca okur, pipeline çalıştırmaz |
 | | `/isbirliklerim` | GET | Genç ve kurum: taraf olduğu iş birlikleri, iki tarafa aynı görünüm, `iletisim` dahil; eşleşmenin `son_aktivite_tarihi`'ne göre en yeni önce |
 | **GİRVAK** | `/girvak/sayilar` | GET | Yalnızca GİRVAK. Hesap (role göre), kart, eşleşme (duruma göre), iş birliği sayıları; kişisel veri yok |

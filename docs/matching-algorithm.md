@@ -70,6 +70,10 @@ Pilotu olmayan kartın skoru Faz C öncesiyle birebir aynı (demo kalibrasyonu b
 
 ## 5. Eşik ve Sıralama
 
+> **Karar verilmiş kayıtlar korunur** (`plans/genc-akisi.md` § 0 karar 14). Yeniden hesap yalnızca `onerildi` kayıtlarını siler ve en iyi 5 sınırı yalnızca onlara uygulanır. Kurumun karar verdiği kayıtlarda (`ilgileniliyor`, `kabul_edildi`, `reddedildi`) yalnızca skor tazelenir; gencin ilgi gösterdiği kayıtta (`genc_ilgilendi`) skor ve gerekçe de değişmez, kayıt ilk 5'in dışına düşse de firmanın "İlgi gösterenler" listesinde kalır. Kapalı ihtiyaç için aday aranmaz.
+>
+> **Bilinen sınır:** ilk 5 (`TOP_N`) ihtiyaç başınadır; sıralamada 6. ve sonrası olan genç o ihtiyacı fırsat olarak görmez (`plans/genc-akisi.md` § 0 karar 3).
+
 Mutlak bir eşik yerine (havuz küçükken saçmalar) **Top-N** yaklaşımı: en yüksek skorlu **5 sonuç** gösterilir. Ek güvenlik: skor %40'ın altındaysa hiç gösterilmez (tamamen alakasız sonuçları filtrelemek için).
 
 ### Benzerlik alt sınırı: 0.45 (skordan önce uygulanır)

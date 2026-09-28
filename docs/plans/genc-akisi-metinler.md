@@ -42,3 +42,17 @@ Karar 15 gereği şimdi değiştirilmiyor; toplu denetimde ele alınacak.
 | `frontend/src/app/kart/[id]/page.tsx` | Kart sayfası | "Kartı düzenle", "İş ekle", "Kaydedildi.", "Bu kartta henüz iş yok. Aşağıdan ekleyebilirsin." (sahibi) / "Bu kartta somut çıktı yok." (diğerleri); satırlar "Sertifikalar", "Diller" | genç / herkes |
 | `backend/app/agents/dogrulama.py` | 409 cümleleri (arayüzde görünür) | "Bu kişiden yanıt zaten bekleniyor.", "Bu referans işin güncel hâli için zaten yanıt verdi." | genç |
 | `backend/app/api/kart_duzenleme.py` | 404 cümlesi | "İş kalemi bulunamadı" | genç |
+
+## 9. adım — İlgi durum makinesi (backend cümleleri; arayüz 10. adımda)
+
+| Dosya | Bileşen / yer | Metin | Kime |
+|---|---|---|---|
+| `backend/app/api/eslestirme.py` | Bildirim (genç ilgi gösterdi) | "{genç adı} ihtiyacınızla ilgileniyor. Siz de ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır." | firma |
+| `backend/app/api/eslestirme.py` | Bildirim (karşılıklı ilgi) | "{firma adı} da seninle ilgileniyor; karşılıklı ilgi oluştu. İletişim bilgileriniz paylaşıldı ve iş birliği başladı." | genç |
+| `backend/app/servisler/ilgi.py` | Bildirim (şimdilik değil / ihtiyaç kapandı) | "{firma adı} tarafındaki fırsat kapandı." | genç |
+| `backend/app/agents/eslesme_durumu.py` | 409 (eşik altı) | "Bu fırsat için ilgi gösterilemiyor; uyumun yeterli değil." | genç |
+| `backend/app/agents/eslesme_durumu.py` | 409 (kapalı ihtiyaç) | "Bu fırsat kapandı." | genç |
+| `backend/app/servisler/eslestirme.py` | 409 (kapalı ihtiyaçta yeniden hesap) | "Bu ihtiyaç kapandı; yeni aday aranmıyor." | firma |
+| `backend/app/agents/eslesme_durumu.py` | 409 cümlesi, yeni durum ve olay etiketleri | "…'ilgi iletildi, firmanın yanıtı bekleniyor' durumunda…", "…'kapandı' durumunda…"; "ilgi gösterilemez", "ilgi geri çekilemez", "kapatılamaz" | ikisi |
+
+> **Denetime not:** 409 cümlesinin kalıbı ("Bu eşleşme şu an '…' durumunda; … .") Faz B'den; "eşleşme" kelimesi ve tırnaklı durum adı rehberdeki § 5.4 ("ne oldu + ne yapmalı") biçimine uymuyor, denetimde bakılsın. Mevcut "kurum ilgileniyor, gencin yanıtı bekleniyor" etiketinde "kurum" geçiyor (rehber: "firma"). "{firma adı} da" ekinde ünlü uyumu ("de/da") ada göre değişir; şimdilik sabit "da".

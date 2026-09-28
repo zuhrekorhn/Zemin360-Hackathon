@@ -1,15 +1,24 @@
-"""Eşleşme durum makinesi (docs/faz-b-kimlik-ve-dongu.md § 5).
+"""Eşleşme durum makinesi (docs/faz-b-kimlik-ve-dongu.md § 5, docs/plans/genc-akisi.md § 4).
 
-Geçiş kuralı tek yerde ve saf: uç noktalar yalnızca `gecis()`'in söylediğini
-uygular (iş birliği aç, aktivite tarihini güncelle…). Tablo
-tests/test_eslesme_durumu.py'de birebir sabitlenmiş.
+Geçiş kuralı tek yerde ve saf: uç noktalar ve servisler yalnızca `gecis()`'in
+söylediğini uygular (iş birliği aç, aktivite tarihini güncelle…). Tablo
+tests/test_eslesme_durumu.py ve tests/test_ilgi_durumu.py'de birebir sabitlenmiş.
+
+İki kapı var, ayrı sistem değil: ilk ilgiyi kurum da gösterebilir genç de.
 
     onerildi ──ilgileniyorum (kurum)──▶ ilgileniliyor ──kabul (genç)──▶ kabul_edildi
-                                                    └──red (genç)────▶ reddedildi
+       │                                             └──red (genç)────▶ reddedildi
+       └──genc_ilgi (genç)──▶ genc_ilgilendi ──ilgileniyorum (kurum)──▶ kabul_edildi
+                                  ├──simdilik_degil (kurum)──▶ kapandi
+                                  └──ilgiyi_geri_cek (genç)──▶ onerildi
+    onerildi | genc_ilgilendi | ilgileniliyor ──ihtiyac_kapandi (sistem)──▶ kapandi
+
+Karşılıklı ilgi `kabul_edildi`'dir: genç ilgiyi gösterirken iletişim onayını
+verdi, kurum ilgilenince ayrıca onay beklenmez; iş birliği açılır.
 
 Aynı geçişin tekrarı (çift tıklama) hata değil: sonuç `degisti=False` döner
-ve uç nokta yan etkiyi tekrarlamaz. Tablo dışındaki her geçiş
-`GecersizGecis` — uç noktada 409, mevcut durumu söyleyerek.
+ve uç nokta yan etkiyi tekrarlamaz. Tablo dışındaki her geçiş `GecersizGecis`,
+uç noktada 409, mevcut durumu söyleyerek.
 """
 
 from __future__ import annotations
@@ -17,35 +26,64 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.agents.eslestirme import (
+    DURUM_GENC_ILGILENDI,
     DURUM_ILGILENILIYOR,
     DURUM_KABUL_EDILDI,
+    DURUM_KAPANDI,
     DURUM_ONERILDI,
     DURUM_REDDEDILDI,
+    SKOR_ESIGI,
 )
 from app.models.hesap import ROL_GENC, ROL_KURUM
+
+# Kimse adına değil, kuralın kendisi (ihtiyaç kapanınca).
+ROL_SISTEM = "sistem"
 
 OLAY_ILGILENIYORUM = "ilgileniyorum"
 OLAY_KABUL = "kabul"
 OLAY_RED = "red"
+OLAY_GENC_ILGI = "genc_ilgi"
+OLAY_ILGIYI_GERI_CEK = "ilgiyi_geri_cek"
+OLAY_SIMDILIK_DEGIL = "simdilik_degil"
+OLAY_IHTIYAC_KAPANDI = "ihtiyac_kapandi"
 
-# (olay) → (kim yapar, hangi durumdan, hangi duruma)
-GECISLER: dict[str, tuple[str, str, str]] = {
-    OLAY_ILGILENIYORUM: (ROL_KURUM, DURUM_ONERILDI, DURUM_ILGILENILIYOR),
-    OLAY_KABUL: (ROL_GENC, DURUM_ILGILENILIYOR, DURUM_KABUL_EDILDI),
-    OLAY_RED: (ROL_GENC, DURUM_ILGILENILIYOR, DURUM_REDDEDILDI),
+# (olay, kaynak durum) → (kim yapar, hedef durum)
+GECISLER: dict[tuple[str, str], tuple[str, str]] = {
+    (OLAY_ILGILENIYORUM, DURUM_ONERILDI): (ROL_KURUM, DURUM_ILGILENILIYOR),
+    (OLAY_KABUL, DURUM_ILGILENILIYOR): (ROL_GENC, DURUM_KABUL_EDILDI),
+    (OLAY_RED, DURUM_ILGILENILIYOR): (ROL_GENC, DURUM_REDDEDILDI),
+    # Gençten ilgi (genc-akisi § 4)
+    (OLAY_GENC_ILGI, DURUM_ONERILDI): (ROL_GENC, DURUM_GENC_ILGILENDI),
+    (OLAY_ILGIYI_GERI_CEK, DURUM_GENC_ILGILENDI): (ROL_GENC, DURUM_ONERILDI),
+    (OLAY_ILGILENIYORUM, DURUM_GENC_ILGILENDI): (ROL_KURUM, DURUM_KABUL_EDILDI),
+    (OLAY_SIMDILIK_DEGIL, DURUM_GENC_ILGILENDI): (ROL_KURUM, DURUM_KAPANDI),
+    # İhtiyaç kapanınca karar verilmemiş kayıtlar kapanır
+    (OLAY_IHTIYAC_KAPANDI, DURUM_ONERILDI): (ROL_SISTEM, DURUM_KAPANDI),
+    (OLAY_IHTIYAC_KAPANDI, DURUM_GENC_ILGILENDI): (ROL_SISTEM, DURUM_KAPANDI),
+    (OLAY_IHTIYAC_KAPANDI, DURUM_ILGILENILIYOR): (ROL_SISTEM, DURUM_KAPANDI),
 }
 
+# Olayı kim yapar (her olayın tek bir yapanı var).
+OLAYIN_ROLU: dict[str, str] = {olay: rol for (olay, _), (rol, _) in GECISLER.items()}
+
+# 409 cümleleri arayüzde görünür (docs/icerik-rehberi.md).
 DURUM_ETIKETLERI = {
     DURUM_ONERILDI: "önerildi",
     DURUM_ILGILENILIYOR: "kurum ilgileniyor, gencin yanıtı bekleniyor",
     DURUM_KABUL_EDILDI: "kabul edildi",
     DURUM_REDDEDILDI: "reddedildi",
+    DURUM_GENC_ILGILENDI: "ilgi iletildi, firmanın yanıtı bekleniyor",
+    DURUM_KAPANDI: "kapandı",
 }
 
 OLAY_ETIKETLERI = {
     OLAY_ILGILENIYORUM: "ilgi bildirilemez",
     OLAY_KABUL: "kabul edilemez",
     OLAY_RED: "reddedilemez",
+    OLAY_GENC_ILGI: "ilgi gösterilemez",
+    OLAY_ILGIYI_GERI_CEK: "ilgi geri çekilemez",
+    OLAY_SIMDILIK_DEGIL: "kapatılamaz",
+    OLAY_IHTIYAC_KAPANDI: "kapatılamaz",
 }
 
 
@@ -69,12 +107,46 @@ class GecisSonucu:
     degisti: bool
 
 
-def gecis(durum: str, olay: str, rol: str) -> GecisSonucu:
-    yapan, kaynak, hedef = GECISLER[olay]
-    if rol != yapan:
+def gecis(durum: str, olay: str, rol: str, baslatan: str | None = None) -> GecisSonucu:
+    """`baslatan`: ilk ilgiyi kim gösterdi (eşleşmenin `baslatan` alanı).
+
+    Yalnızca bir yerde fark eder: kurumun `kabul_edildi` bir eşleşmeye yeniden
+    "ilgileniyorum" demesi. Eşleşme karşılıklı ilgiyle açıldıysa (genç başlattı)
+    bu, kurumun kendi geçişinin tekrarıdır (200). Kurum başlattıysa `kabul_edildi`
+    gencin kabulüdür, kurumun geçişi değil: Faz B'deki gibi 409.
+    """
+    if rol != OLAYIN_ROLU[olay]:
         raise RolUygunDegil(olay)
-    if durum == kaynak:
-        return GecisSonucu(hedef, degisti=True)
-    if durum == hedef:
-        return GecisSonucu(hedef, degisti=False)
+    kural = GECISLER.get((olay, durum))
+    if kural is not None:
+        return GecisSonucu(kural[1], degisti=True)
+    if _tekrar_mi(durum, olay, baslatan):
+        return GecisSonucu(durum, degisti=False)
     raise GecersizGecis(durum, olay)
+
+
+def _tekrar_mi(durum: str, olay: str, baslatan: str | None) -> bool:
+    """Durum, bu olayın bir geçişinin hedefi mi (aynı geçişin tekrarı)?"""
+    if olay == OLAY_ILGILENIYORUM and durum == DURUM_KABUL_EDILDI:
+        return baslatan == ROL_GENC
+    return any(o == olay and hedef == durum for (o, _), (_, hedef) in GECISLER.items())
+
+
+# --- Gençten ilgi: eşik ve açıklık (backend'de de uygulanır) ------------------------------
+
+IHTIYAC_ACIK = "acik"
+ESIK_ALTI = "Bu fırsat için ilgi gösterilemiyor; uyumun yeterli değil."
+IHTIYAC_KAPALI = "Bu fırsat kapandı."
+
+
+def ilgi_engeli(skor: float, ihtiyac_durumu: str) -> str | None:
+    """Genç bu eşleşmeye ilgi gösterebilir mi? Gösteremiyorsa nedeni (409).
+
+    Yalnızca eşik üstü ve açık ihtiyaç. Eşik altı bir aday için zaten öneri
+    kaydı yazılmıyor; kural yine de burada, kayıt eskimiş olabilir.
+    """
+    if ihtiyac_durumu != IHTIYAC_ACIK:
+        return IHTIYAC_KAPALI
+    if skor < SKOR_ESIGI:
+        return ESIK_ALTI
+    return None

@@ -43,10 +43,11 @@ def test_kabul_yolu_ve_eposta_gizliligi():
         e1 = str(d.E1.id)
         oneriler_yolu = f"/eslestirme/oneriler/{d.kurum1.profil.id}"
 
-        # Genç, kurum ilgi bildirmeden eşleşmeyi göremez ve kabul edemez.
+        # Kurum ilgi bildirmeden "bana gelen ilgiler" boş ve kabul edilecek bir şey yok.
+        # Genç akışında (plan § 0, karar 1) genç önerilen eşleşmeyi görür: 409, 404 değil.
         assert (await istemci.get("/eslestirme/bana-gelenler", headers=d.genc1.baslik)).json() == []
         yanit = await istemci.post(f"/eslestirme/{e1}/kabul", headers=d.genc1.baslik)
-        assert yanit.status_code == 404
+        assert yanit.status_code == 409
 
         ilgi = await istemci.post(
             "/eslestirme/ilgileniyorum", headers=d.kurum1.baslik, json={"eslesme_id": e1}

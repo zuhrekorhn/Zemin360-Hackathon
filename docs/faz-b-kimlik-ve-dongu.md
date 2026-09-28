@@ -52,6 +52,8 @@
 
 ## 3. Sahiplik: kim neye erişir
 
+> **Değişti (28 Eyl, genç akışı; `plans/genc-akisi.md` § 0 karar 1):** Genç artık kendi kartına önerilmiş eşleşmeyi ve ihtiyacı (`onerildi`) kurum ilgilenmeden görür; eşik üstü öneriler gence "fırsat" olarak gösterilir ve genç de ilgi gösterebilir. Gerekçe: genç yalnızca beklemek zorunda kalmasın, görünür olduğu fırsatları bilsin (Zemin360 problem 1). Tablodaki "kendisine ilgi gösterilmiş ihtiyaç (durum `ilgileniliyor` ve sonrası)" satırı artık "kendi kartının bütün eşleşmeleri" demektir. **Değişmeyen:** e-postalar yine yalnızca `kabul_edildi`'de, yalnızca iki tarafa açılır.
+
 **Hata kodları**
 - **401:** Token yok ya da geçersiz.
 - **403:** Rol uygun değil.
@@ -96,6 +98,8 @@ GİRVAK okuma işlerinde her şeyi görür. Yazma işleri genç ve kurumun işid
 - **Testler:** Mevcut e-posta upsert testleri, hesaba bağlı profil güncellemesi testlerine dönüşür.
 
 ## 5. İki taraflı döngü: eşleşme durumları
+
+> **Genişledi (28 Eyl, `plans/genc-akisi.md` § 4):** İlk ilgiyi genç de gösterebilir (`genc_ilgilendi`); kurum da ilgilenirse doğrudan `kabul_edildi` (karşılıklı ilgi). Kurum "şimdilik değil" diyebilir ya da ihtiyaç kapanabilir (`kapandi`). Aşağıdaki tablonun satırları aynen geçerli; yeni satırlar `app/agents/eslesme_durumu.py`'de.
 
 | Şu an | Olay | Kim yapar | Sonra | Yan etki |
 |---|---|---|---|---|

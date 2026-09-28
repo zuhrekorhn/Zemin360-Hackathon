@@ -158,15 +158,16 @@ def test_yetenek_karti_embedding_yalnizca_sahibi():
 
 
 def test_ihtiyac_karti_gorme():
-    """Genç ihtiyacı ancak kurum ilgilendikten sonra görür."""
+    """Genç, kendi kartına önerilmiş ihtiyacı görür (genç akışı, plan § 0 karar 1;
+    Faz B'de ancak kurum ilgilendikten sonra görüyordu). Başkasınınkini görmez."""
 
     async def adimlar(istemci, d):
         await durumlar(
             istemci,
             "GET",
             f"/ihtiyac-kartlari/{d.I1.id}",
-            # E1 hâlâ "onerildi": genc1 I1'i görmez
-            {None: 401, d.kurum1: 200, d.kurum2: 404, d.genc1: 404, d.girvak: 200},
+            # E1 "onerildi": genc1 I1'i fırsat olarak görür, genc2 görmez
+            {None: 401, d.kurum1: 200, d.kurum2: 404, d.genc1: 200, d.genc2: 404, d.girvak: 200},
         )
         await durumlar(
             istemci,
