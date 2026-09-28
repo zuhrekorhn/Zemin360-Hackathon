@@ -9,6 +9,7 @@ durumu okunduğu anda hesaplanıyor (Eşleştirme'deki cron'suz yaklaşımın ay
 
 from __future__ import annotations
 
+import datetime as dt
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -113,6 +114,7 @@ async def referans_yaniti(
     referans.durum = DURUM_YANITLANDI
     referans.yanit_metni = istek.yorum
     referans.puan = istek.puan
+    referans.yanit_tarihi = dt.datetime.now(dt.UTC)
 
     cikti = await _ciktiyi_getir(oturum, referans.somut_cikti_id)
     if cikti.guven_skoru is None:

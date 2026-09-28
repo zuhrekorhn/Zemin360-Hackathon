@@ -43,4 +43,9 @@ class ReferansIstegi(UUIDPrimaryKeyMixin, Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
+    # Yanıtın geldiği an. İş kalemi sonradan değişirse (SomutCikti.icerik_tarihi)
+    # bundan önceki yanıtlar geçmiş olarak kalır, puana girmez. Bu alandan önce
+    # yanıtlanmışlarda NULL.
+    yanit_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     somut_cikti: Mapped[SomutCikti] = relationship(back_populates="referans_istekleri")

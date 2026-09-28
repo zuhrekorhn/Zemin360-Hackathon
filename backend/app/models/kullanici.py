@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, Text, text
+from sqlalchemy import Date, ForeignKey, SmallInteger, String, Text, text
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -36,6 +37,19 @@ class Kullanici(UUIDPrimaryKeyMixin, Base):
         ARRAY(Text), default=list, server_default=text("'{}'")
     )
     musaitlik: Mapped[str | None] = mapped_column(String)
+    # Kayıt formunun yapısal alanları (docs/plans/genc-akisi.md § 3.2). Eşleştirme
+    # bunlara bakmaz: yalnızca yetkinliğe dayanıyor. Fotoğraf, yaş, cinsiyet gibi
+    # alanlar bilinçli olarak YOK. Bu alanlardan önce açılmış profillerde NULL.
+    # ogrenci | mezun | calisiyor
+    kariyer_durumu: Mapped[str | None] = mapped_column(String)
+    okul: Mapped[str | None] = mapped_column(String)
+    bolum: Mapped[str | None] = mapped_column(String)
+    sinif: Mapped[int | None] = mapped_column(SmallInteger)
+    mezuniyet_yili: Mapped[int | None] = mapped_column(SmallInteger)
+    musaitlik_baslangici: Mapped[date | None] = mapped_column(Date)
+    github_url: Mapped[str | None] = mapped_column(String)
+    linkedin_url: Mapped[str | None] = mapped_column(String)
+    portfolyo_url: Mapped[str | None] = mapped_column(String)
 
     hesap: Mapped[Hesap | None] = relationship(back_populates="kullanici")
     yetenek_kartlari: Mapped[list[YetenekKarti]] = relationship(

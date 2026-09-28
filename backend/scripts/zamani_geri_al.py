@@ -47,10 +47,21 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("hesap", "olusturma_tarihi"),
     # Referansın 7 günlük zaman aşımı da tutarlı kaysın.
     ("referans_istegi", "olusturma_tarihi"),
+    # Referans yanıtı ile iş kaleminin içerik tarihi birlikte kaysın: yanıtın
+    # puana girip girmediği ikisinin sırasına bağlı.
+    ("referans_istegi", "yanit_tarihi"),
+    ("somut_cikti", "icerik_tarihi"),
+    ("eslesme", "genc_ilgi_tarihi"),
+    ("eslesme", "genc_iletisim_onayi_tarihi"),
+    ("eslesme", "kurum_ilgi_tarihi"),
+    ("hesap", "kvkk_onay_tarihi"),
 )
 
 # Bilerek kaydırılmayanlar: sistem zamanı değil, kullanıcının yazdığı tarih.
-KAYDIRILMAYANLAR: tuple[tuple[str, str], ...] = (("somut_cikti", "tarih"),)
+KAYDIRILMAYANLAR: tuple[tuple[str, str], ...] = (
+    ("somut_cikti", "tarih"),
+    ("kullanici", "musaitlik_baslangici"),
+)
 
 
 class UretimdeCalismaz(Exception):

@@ -39,6 +39,10 @@ class Hesap(UUIDPrimaryKeyMixin, Base):
     olusturma_tarihi: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    # KVKK aydınlatma metninin onaylandığı an (docs/plans/genc-akisi.md § 3.1).
+    # Hesapta, profilde değil: onay bir hesabın; firma hesapları da aynı alanı
+    # kullanacak. Bu alandan önce açılmış hesaplarda NULL.
+    kvkk_onay_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     kullanici: Mapped[Kullanici | None] = relationship(back_populates="hesap", uselist=False)
     kurum: Mapped[Kurum | None] = relationship(back_populates="hesap", uselist=False)

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, String, Text, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -39,6 +39,11 @@ class IhtiyacKarti(UUIDPrimaryKeyMixin, Base):
     olusturma_tarihi: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+    # acik | kapandi (docs/plans/genc-akisi.md § 0, karar 4). Kapalı ihtiyaç
+    # eşleştirmeye girmez; bekleyen ilgiler "kapandı" olur. Kapatma düğmesi
+    # firma görevinde.
+    durum: Mapped[str] = mapped_column(String, default="acik", server_default=text("'acik'"))
 
     kurum: Mapped[Kurum] = relationship(back_populates="ihtiyac_kartlari")
     eslesmeler: Mapped[list[Eslesme]] = relationship(

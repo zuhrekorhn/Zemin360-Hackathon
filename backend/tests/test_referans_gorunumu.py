@@ -225,5 +225,16 @@ def test_yanit_sonrasi_skor_yine_de_hesaplanir():
     assert cikti.guven_skoru.ucuncu_taraf_onayi == 2
 
 
+def test_yanitin_zamani_kaydedilir():
+    """İş kalemi sonradan değişirse eski yanıtı ayırt etmenin dayanağı."""
+    yanitlanan, cikti = _yanitlanan_ve_diger_referans()
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti, None)
+    once = dt.datetime.now(dt.UTC)
+
+    TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5})
+
+    assert yanitlanan.yanit_tarihi >= once
+
+
 def test_yanit_sonucu_semasi_yalnizca_baslik_ve_durum_tasir():
     assert set(ReferansYanitiSonucu.model_fields) == {"baslik", "durum"}

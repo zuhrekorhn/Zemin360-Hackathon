@@ -31,6 +31,13 @@ class YetenekKarti(UUIDPrimaryKeyMixin, Base):
     araclar_teknolojiler: Mapped[list[str]] = mapped_column(
         ARRAY(Text), default=list, server_default=text("'{}'")
     )
+    # Opsiyonel; Keşif sohbetinde ya da kart düzenlemede eklenir.
+    sertifikalar: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), default=list, server_default=text("'{}'")
+    )
+    diller: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), default=list, server_default=text("'{}'")
+    )
     kanit_bekleyen: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=text("false")
     )

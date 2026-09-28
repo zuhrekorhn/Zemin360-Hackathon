@@ -41,6 +41,15 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
+    # İlginin kaydı (docs/plans/genc-akisi.md § 3.5). Karar `durum`'da; bu alanlar
+    # yalnızca "kim, ne zaman" bilgisini taşır, hiçbir kural onlara bakmaz.
+    # genc | kurum: ilk ilgiyi kim gösterdi (eski kurum ilgileri migration'da "kurum")
+    baslatan: Mapped[str | None] = mapped_column(String)
+    genc_ilgi_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Gencin "kurum da ilgilenirse e-postam paylaşılsın" onayı
+    genc_iletisim_onayi_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    kurum_ilgi_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     yetenek_karti: Mapped[YetenekKarti] = relationship(back_populates="eslesmeler")
     ihtiyac_karti: Mapped[IhtiyacKarti] = relationship(back_populates="eslesmeler")
     # ER: ESLESME ||--o| ISBIRLIGI (0 veya 1)
