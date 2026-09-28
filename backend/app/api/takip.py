@@ -73,6 +73,7 @@ from app.schemas.takip import (
     MilestoneGuncelleIstegi,
     MilestoneYaniti,
 )
+from app.servisler.eslestirme import iletisim
 
 logger = logging.getLogger("zemin360.takip")
 
@@ -233,9 +234,6 @@ def ilerleme_hesapla(milestonelar, bugun: dt.date | None = None) -> Ilerleme:
 
 
 def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> IsbirligiDetayi:
-    # eslestirme.py bu modülü yalnızca fonksiyon içinde içe aktarıyor; döngü yok.
-    from app.api.eslestirme import iletisim
-
     bugun = bugun or dt.date.today()
     eslesme = isbirligi.eslesme
     adimlar = [

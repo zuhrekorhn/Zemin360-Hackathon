@@ -13,12 +13,12 @@ import uuid
 
 from sqlalchemy import select
 
-from app.api import eslestirme as eslestirme_api
 from app.db.base import EMBEDDING_DIM
 from app.models.bildirim import Bildirim
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.referans_istegi import ReferansIstegi
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler import eslestirme as eslestirme_servisi
 from tests.test_sahiplik import _hesap, durumlar, senaryo
 
 VEKTOR = [1.0] + [0.0] * (EMBEDDING_DIM - 1)
@@ -142,7 +142,7 @@ def test_pipeline_yalnizca_yeni_oneri_icin_bildirim_yazar(monkeypatch):
     async def gerekce_yok(_ihtiyac, _aday):
         return None
 
-    monkeypatch.setattr(eslestirme_api, "gerekce_uret", gerekce_yok)
+    monkeypatch.setattr(eslestirme_servisi, "gerekce_uret", gerekce_yok)
 
     async def adimlar(istemci, d):
         kurum = await _hesap(d.oturum, "kurum", "Vektör Koop")

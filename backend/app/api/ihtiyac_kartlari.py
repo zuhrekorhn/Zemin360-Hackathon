@@ -14,7 +14,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.api.kimlik import mevcut_hesap
 from app.api.sahiplik import (
     bulunamadi,
@@ -28,6 +27,7 @@ from app.db.session import get_session
 from app.models.hesap import Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.schemas.tanimlama import IhtiyacKartiYaniti, KurumYaniti
+from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
 
 logger = logging.getLogger("zemin360.embedding")
 

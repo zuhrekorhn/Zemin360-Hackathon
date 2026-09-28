@@ -12,7 +12,6 @@ from sqlalchemy import false, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.eslestirme import iletisim
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import kullanici_id, kurum_id
 from app.api.takip import ilerleme_hesapla
@@ -23,6 +22,7 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import IsbirligiOzeti
+from app.servisler.eslestirme import iletisim
 
 router = APIRouter(tags=["isbirlikleri"])
 

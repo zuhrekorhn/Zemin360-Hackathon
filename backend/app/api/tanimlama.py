@@ -14,7 +14,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
-from app.api.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.profil import kurumun_profilini_guncelle
@@ -32,6 +31,7 @@ from app.schemas.tanimlama import (
     IhtiyacTaslagi,
     TanimlamaSohbetYaniti,
 )
+from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
 
 router = APIRouter(prefix="/tanimlama", tags=["tanimlama"])
 

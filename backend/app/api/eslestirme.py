@@ -5,19 +5,19 @@ Kurum aynı anda platformda olmak zorunda değil. Gerçek bir cron/kuyruk
 altyapısı kurmuyoruz (bilinçli, bkz. docs/architecture.md) — bu uç nokta
 ileride bir zamanlayıcının çağıracağı "asıl işi yapan" kanca; şimdilik
 doğrudan da çağrılabiliyor.
+
+Pipeline'ın kendisi app/servisler/eslestirme.py'de (ihtiyaç onayının arka
+plan işi de onu çağırıyor); bu modül yetki, durum geçişi ve yanıt şeması.
 """
 
 from __future__ import annotations
 
-import asyncio
 import datetime as dt
-import logging
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.agents.eslesme_durumu import (
     OLAY_ILGILENIYORUM,
@@ -27,20 +27,14 @@ from app.agents.eslesme_durumu import (
     gecis,
 )
 from app.agents.eslestirme import (
-    DURUM_KABUL_EDILDI,
     SKOR_ESIGI,
     TOP_N,
-    Aday,
-    adaylari_getir,
-    eslesme_ekle_ifadesi,
-    gerekce_uret,
     ihtiyac_kartini_getir,
-    kilit_anahtari,
-    siralayip_ele,
-    temizlenecekler,
 )
 from app.agents.takip_durumu import ISBIRLIGI_PLAN_BEKLIYOR
+from app.api import takip
 from app.api.bildirimler import bildirim_ekle
+from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import (
     GENCE_ACIK_DURUMLAR,
@@ -52,27 +46,28 @@ from app.api.sahiplik import (
 )
 from app.api.sahiplik import kurum_id as hesabin_kurumu
 from app.api.yetenek_kartlari import kart_yaniti
-from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
-from app.db.session import get_session, get_sessionmaker
-from app.models.bildirim import TUR_ILGI, TUR_KABUL, TUR_RED, TUR_YENI_ONERI
+from app.db.session import get_session
+from app.models.bildirim import TUR_ILGI, TUR_KABUL, TUR_RED
 from app.models.eslesme import Eslesme
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
-from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import (
     BanaGelenIlgi,
     EslesmeDurumYaniti,
     EslestirmeCalistirIstegi,
-    Iletisim,
     IlgileniyorumIstegi,
     KurumOnerisi,
     OnerilerYaniti,
     OneriYaniti,
 )
-
-logger = logging.getLogger("zemin360.eslestirme")
+from app.servisler import eslestirme as servis
+from app.servisler.eslestirme import (
+    eslesmeleri_oku,
+    iletisim,
+    iliskileriyle,
+)
 
 router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
@@ -122,7 +117,7 @@ async def oneriler(
     kurum_id = _hedef_kurum(hesap, kurum_id)
     ihtiyac = await _ihtiyac_karti(oturum, kurum_id, ihtiyac_karti_id)
 
-    mevcut = await _eslesmeleri_oku(oturum, ihtiyac.id)
+    mevcut = await eslesmeleri_oku(oturum, ihtiyac.id)
     if not mevcut:
         return await _pipeline_calistir(oturum, ihtiyac, hesap)
 
@@ -141,7 +136,7 @@ async def onerilerim(
     olan önce.
     """
     eslesmeler = await oturum.scalars(
-        _iliskileriyle(select(Eslesme))
+        iliskileriyle(select(Eslesme))
         .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
         .where(IhtiyacKarti.kurum_id == hesabin_kurumu(hesap))
         .order_by(Eslesme.son_aktivite_tarihi.desc(), Eslesme.skor.desc())
@@ -219,9 +214,6 @@ async def kabul(
     # Durum, iş birliği ve bildirim aynı işlemde: biri yazılıp öbürü kaybolmasın.
     await oturum.commit()
     if degisti and eslesme.isbirligi is not None:
-        # takip.py bu modülü içe aktarıyor (iletisim); döngü olmasın.
-        from app.api import takip
-
         arka_plan.add_task(takip.plani_arka_planda_oner, eslesme.isbirligi.id)
     return _durum_yaniti(eslesme, hesap)
 
@@ -256,11 +248,8 @@ async def bana_gelenler(
     `onerildi` durumundakiler burada yok: kurum henüz karar vermedi; genç
     eşleşmeyi ancak ilgi bildirildiğinde görür (sahiplik.GENCE_ACIK_DURUMLAR).
     """
-    # ihtiyac_kartlari bu modülü içe aktarıyor (arka plan eşleştirmesi); döngü olmasın.
-    from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
-
     eslesmeler = await oturum.scalars(
-        _iliskileriyle(select(Eslesme))
+        iliskileriyle(select(Eslesme))
         .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
         .where(
             YetenekKarti.kullanici_id == kullanici_id(hesap),
@@ -286,15 +275,6 @@ async def bana_gelenler(
 # --- Durum geçişi ----------------------------------------------------------------------
 
 
-def _iliskileriyle(sorgu):
-    """İletişim bilgisi ve sahiplik için gereken ilişkiler: iki taraf ve iş birliği."""
-    return sorgu.options(
-        selectinload(Eslesme.yetenek_karti).selectinload(YetenekKarti.kullanici),
-        selectinload(Eslesme.ihtiyac_karti).selectinload(IhtiyacKarti.kurum),
-        selectinload(Eslesme.isbirligi),
-    )
-
-
 async def _eslesmeyi_kilitle(oturum: AsyncSession, eslesme_id: uuid.UUID) -> Eslesme | None:
     """Satırı kilitleyerek okur: çift tıklama iki iş birliği açmasın.
 
@@ -302,7 +282,7 @@ async def _eslesmeyi_kilitle(oturum: AsyncSession, eslesme_id: uuid.UUID) -> Esl
     geçişi "tekrar" olarak görür.
     """
     return await oturum.scalar(
-        _iliskileriyle(select(Eslesme))
+        iliskileriyle(select(Eslesme))
         .where(Eslesme.id == eslesme_id)
         .with_for_update(of=Eslesme)
         .execution_options(populate_existing=True)
@@ -342,27 +322,6 @@ def _gecisi_uygula(eslesme: Eslesme, olay: str, hesap: Hesap) -> bool:
     return sonuc.degisti
 
 
-def taraf_mi(hesap: Hesap, eslesme: Eslesme) -> bool:
-    """Hesap eşleşmenin iki tarafından biri mi (kartın genci ya da ihtiyacın kurumu)?"""
-    return yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti) or (
-        ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti)
-    )
-
-
-def iletisim(eslesme: Eslesme, hesap: Hesap | None) -> Iletisim | None:
-    """E-postalar yalnızca `kabul_edildi`'de ve yalnızca iki taraftan birine.
-
-    GİRVAK okuma yetkisiyle her şeyi görür ama iletişim bilgisi onun işi
-    değil. `eslesme` ilişkileriyle yüklenmiş olmalı (`_iliskileriyle`).
-    """
-    if eslesme.durum != DURUM_KABUL_EDILDI or hesap is None or not taraf_mi(hesap, eslesme):
-        return None
-    return Iletisim(
-        genc_email=eslesme.yetenek_karti.kullanici.email,
-        kurum_email=eslesme.ihtiyac_karti.kurum.iletisim_email,
-    )
-
-
 def _durum_yaniti(eslesme: Eslesme, hesap: Hesap) -> EslesmeDurumYaniti:
     return EslesmeDurumYaniti(
         eslesme_id=eslesme.id,
@@ -370,29 +329,6 @@ def _durum_yaniti(eslesme: Eslesme, hesap: Hesap) -> EslesmeDurumYaniti:
         isbirligi_id=eslesme.isbirligi.id if eslesme.isbirligi else None,
         iletisim=iletisim(eslesme, hesap),
     )
-
-
-async def eslestirmeyi_arka_planda_calistir(ihtiyac_karti_id: uuid.UUID) -> None:
-    """İhtiyaç kartı onaylanınca eşleştirmeyi yanıt gönderildikten sonra başlatır.
-
-    Kurum öneriler sayfasına geldiğinde hesap çoğunlukla bitmiş oluyor; bitmemişse
-    `GET /oneriler` zaten kendi başına hesaplıyor, yani bu bir hızlandırma —
-    doğruluğun ona bağlı olduğu bir adım değil.
-
-    Zamanlayıcı kurmuyoruz (bkz. CLAUDE.md): bu da bir isteğin tetiklediği iş,
-    periyodik bir görev değil. Kendi oturumunu açıyor, çünkü isteğin oturumu
-    yanıtla birlikte kapanıyor. Hata olursa yutuluyor: kullanıcı kartını zaten
-    onayladı, arka plandaki hesap yüzünden bir şey kaybetmemeli.
-    """
-    async with get_sessionmaker()() as oturum:
-        try:
-            ihtiyac = await oturum.get(IhtiyacKarti, ihtiyac_karti_id)
-            if ihtiyac is not None:
-                await _pipeline_calistir(oturum, ihtiyac)
-        except HTTPException as hata:
-            logger.info("Arka plan eşleştirme atlandı (%s): %s", ihtiyac_karti_id, hata.detail)
-        except Exception:
-            logger.exception("Arka plan eşleştirme başarısız (%s)", ihtiyac_karti_id)
 
 
 # --- Pipeline --------------------------------------------------------------
@@ -416,100 +352,9 @@ async def _ihtiyac_karti(
 async def _pipeline_calistir(
     oturum: AsyncSession, ihtiyac: IhtiyacKarti, hesap: Hesap | None = None
 ) -> OnerilerYaniti:
-    if ihtiyac.embedding is None:
-        raise HTTPException(
-            status_code=409, detail="İhtiyaç kartının embedding'i yok; kart yeniden onaylanmalı"
-        )
-
-    # Aynı ihtiyaç kartı için pipeline'lar sıraya girer: kart onaylanınca
-    # arka plan işi başlıyor, kurum da o sırada öneriler sayfasını açınca
-    # GET /oneriler ikinci bir pipeline başlatıyordu — mükerrer satır ve çift
-    # LLM çağrısı. İkinci çağrı burada birincinin commit'ini bekler, sonra
-    # kayıtları ve gerekçeleri hazır bulur. Kilit transaction sonunda kalkar.
-    await oturum.execute(
-        text("SELECT pg_advisory_xact_lock(:anahtar)"),
-        {"anahtar": kilit_anahtari(ihtiyac.id)},
-    )
-
-    secilenler = siralayip_ele(await adaylari_getir(oturum, ihtiyac))
-    eskiler = await _eslesmeleri_oku(oturum, ihtiyac.id)
-    mevcutlar = {e.yetenek_karti_id: e for e in eskiler}
-
-    # Kural ya da kart değişmiş olabilir: artık seçilmeyen öneriler listede
-    # kalmasın. Kurumun karar verdiği kayıtlara dokunulmuyor.
-    for eskimis in temizlenecekler(eskiler, [aday.yetenek_karti.id for aday in secilenler]):
-        mevcutlar.pop(eskimis.yetenek_karti_id, None)
-        await oturum.delete(eskimis)
-
-    yeni_oneri = 0
-    for aday in secilenler:
-        eslesme = mevcutlar.get(aday.yetenek_karti.id)
-        if eslesme is None:
-            # ON CONFLICT DO NOTHING: aynı anda çalışan başka bir pipeline
-            # eklemişse rowcount 0, bildirimde iki kez sayılmaz.
-            eklenen = await oturum.execute(
-                eslesme_ekle_ifadesi(
-                    ihtiyac_karti_id=ihtiyac.id,
-                    yetenek_karti_id=aday.yetenek_karti.id,
-                    skor=aday.skor,
-                )
-            )
-            yeni_oneri += eklenen.rowcount
-        else:
-            # Kurumun verdiği karar (ilgileniliyor/kabul/red) ezilmez;
-            # yalnızca skor tazelenir.
-            eslesme.skor = aday.skor
-
-    # Eklenenler ON CONFLICT ile yazıldı; ORM nesneleri yeniden okunarak alınır.
-    guncel = {e.yetenek_karti_id: e for e in await _eslesmeleri_oku(oturum, ihtiyac.id)}
-    gerekce_bekleyenler: list[tuple[Eslesme, Aday]] = [
-        (guncel[aday.yetenek_karti.id], aday)
-        for aday in secilenler
-        if aday.yetenek_karti.id in guncel and guncel[aday.yetenek_karti.id].gerekce_metni is None
-    ]
-
-    # Gerekçeler birbirinden bağımsız: sırayla beklemek Top-5'te kullanıcıyı
-    # beş çağrı boyunca bekletiyordu. Hepsi aynı anda gidiyor.
-    if gerekce_bekleyenler:
-        metinler = await asyncio.gather(
-            *(_gerekce(ihtiyac, aday) for _, aday in gerekce_bekleyenler)
-        )
-        for (eslesme, _), metin in zip(gerekce_bekleyenler, metinler, strict=True):
-            eslesme.gerekce_metni = metin
-
-    if yeni_oneri:
-        bildirim_ekle(
-            oturum,
-            await oturum.scalar(select(Kurum.hesap_id).where(Kurum.id == ihtiyac.kurum_id)),
-            TUR_YENI_ONERI,
-            f"İhtiyaç kartın için {yeni_oneri} yeni öneri var.",
-        )
-
-    await oturum.commit()
-
-    return await _yanit_kur(oturum, ihtiyac.id, await _eslesmeleri_oku(oturum, ihtiyac.id), hesap)
-
-
-async def _gerekce(ihtiyac, aday: Aday) -> str | None:
-    """Gerekçeyi üretir; LLM erişilemezse eşleşmeyi gerekçesiz bırakır.
-
-    Skor ve sıralama LLM'den bağımsız — hız sınırı ya da sağlayıcı arızası yüzünden
-    tüm öneri listesini kaybetmek mantıksız olurdu. Gerekçe NULL kalır,
-    sonraki çalıştırmada yeniden denenir (arayüz bunu açıkça söylüyor).
-    """
-    try:
-        return await gerekce_uret(ihtiyac, aday)
-    except (HizSinirHatasi, ModelMesgulHatasi):
-        return None
-
-
-async def _eslesmeleri_oku(oturum: AsyncSession, ihtiyac_karti_id: uuid.UUID) -> list[Eslesme]:
-    satirlar = await oturum.scalars(
-        _iliskileriyle(select(Eslesme))
-        .where(Eslesme.ihtiyac_karti_id == ihtiyac_karti_id)
-        .order_by(Eslesme.skor.desc())
-    )
-    return list(satirlar)
+    """Pipeline'ı çalıştırır (app/servisler/eslestirme.py) ve yanıtı kurar."""
+    eslesmeler = await servis.pipeline_calistir(oturum, ihtiyac)
+    return await _yanit_kur(oturum, ihtiyac.id, eslesmeler, hesap)
 
 
 async def _yanit_kur(

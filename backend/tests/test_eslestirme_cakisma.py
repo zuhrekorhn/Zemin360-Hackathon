@@ -12,8 +12,8 @@ from types import SimpleNamespace
 from sqlalchemy.dialects import postgresql
 
 from app.agents.eslestirme import eslesme_ekle_ifadesi, kilit_anahtari
-from app.api import eslestirme as eslestirme_api
 from app.models.eslesme import Eslesme
+from app.servisler import eslestirme as eslestirme_servisi
 
 
 def test_ayni_cift_icin_tek_eslesme_kisiti_var():
@@ -69,10 +69,10 @@ def test_kilit_eslesmeler_okunmadan_once_alinir(monkeypatch):
         okunanlar.append("adaylar")
         return []
 
-    monkeypatch.setattr(eslestirme_api, "adaylari_getir", adaylar)
+    monkeypatch.setattr(eslestirme_servisi, "adaylari_getir", adaylar)
 
     oturum = KayitTutanOturum()
-    asyncio.run(eslestirme_api._pipeline_calistir(oturum, ihtiyac))
+    asyncio.run(eslestirme_servisi.pipeline_calistir(oturum, ihtiyac))
 
     assert "pg_advisory_xact_lock" in oturum.ifadeler[0]
     # Eşleşme okumaları kilitten sonra
