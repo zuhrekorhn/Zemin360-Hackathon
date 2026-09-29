@@ -41,9 +41,12 @@ class IhtiyacKarti(UUIDPrimaryKeyMixin, Base):
     )
 
     # acik | kapandi (docs/plans/genc-akisi.md § 0, karar 4). Kapalı ihtiyaç
-    # eşleştirmeye girmez; bekleyen ilgiler "kapandı" olur. Kapatma düğmesi
-    # firma görevinde.
+    # eşleştirmeye girmez; bekleyen ilgiler "kapandı" olur. Kapanan ilan tekrar
+    # açılmaz (docs/plans/firma-akisi.md § 0, karar 7).
     durum: Mapped[str] = mapped_column(String, default="acik", server_default=text("'acik'"))
+    # Firmanın kapatırken seçtiği neden (app/core/ilan.py); yalnızca GİRVAK görür.
+    kapanma_nedeni: Mapped[str | None] = mapped_column(String)
+    kapanma_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     kurum: Mapped[Kurum] = relationship(back_populates="ihtiyac_kartlari")
     eslesmeler: Mapped[list[Eslesme]] = relationship(

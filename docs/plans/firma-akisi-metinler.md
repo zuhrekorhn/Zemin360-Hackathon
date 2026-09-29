@@ -37,3 +37,19 @@ Sütunlar: **Dosya** · **Yer** · **Metin** · **Kime**.
 | `components/ust-menu.tsx` | Menü | Firma profili | firma |
 | `app/tanimlama/page.tsx` | Onay formu notu (profil tamsa) | Aranan şehir, adayın nerede olmasını istediğiniz yer. Çalışma modeli “Uzaktan” ise şehir filtresi uygulanmaz. | firma |
 | `backend/app/core/firma_profili.py`, `schemas/auth.py` | 422 cümleleri | Kuruluş yılı 1900 ile {yıl} arasında olmalı · Tanıtım en çok 300 karakter olmalı · Firma kaydında firma bilgileri zorunlu · KVKK aydınlatma metni onaylanmalı | firma |
+
+## 3. adım — İlan kapatma
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `components/ilan-kapatma.tsx` | Düğme | İhtiyacı kapat | firma |
+| 〃 | Onay sorusu | Bu ihtiyaç kapatılsın mı? Bekleyen adaylara “fırsat kapandı” bildirimi gider ve yeni aday aranmaz. Kapanan ihtiyaç tekrar açılmaz. | firma |
+| 〃 | Neden başlığı | Neden kapatıyorsunuz? | firma |
+| `lib/ilan.ts` | Nedenler | Platformda bulduk · Başka yoldan bulduk · Vazgeçtik | firma |
+| `components/ilan-kapatma.tsx` | Not | Nedeni yalnızca program ekibi görür; adaylara gösterilmez. | firma |
+| 〃 | Butonlar | Kapat · Kapatılıyor… · Vazgeç | firma |
+| `app/kurum/page.tsx` | Kapalı ilan etiketi | Kapandı | firma |
+| `app/girvak/page.tsx` | Bölüm | Kapanan ihtiyaçlar · "Firmaların ihtiyacı kapatırken seçtiği neden. Nedeni yalnızca siz görürsünüz." · Platformda bulundu · Başka yoldan bulundu · Vazgeçildi | GİRVAK |
+| `app/servisler/ilgi.py` | Gence bildirim (mevcut, değişmedi) | {firma adı} tarafındaki fırsat kapandı. | genç |
+
+Denetime not: firma ilanına aday firma da gelecek (7-8. adım); "bekleyen adaylara" ifadesi iki durumu da kapsıyor.

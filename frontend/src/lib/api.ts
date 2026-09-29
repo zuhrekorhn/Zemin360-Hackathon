@@ -97,6 +97,8 @@ export type IhtiyacKartiOzeti = {
   problem_tanimi: string;
   olusturma_tarihi: string;
   embedding_var: boolean;
+  /** acik | kapandi (docs/plans/firma-akisi.md § 7) */
+  durum: string;
 };
 
 /** Giriş yapmış hesap; kart ve kurum kimliği buradan okunur. */
@@ -541,7 +543,20 @@ export type IhtiyacKartiYaniti = {
   musaitlik_tercihi: string | null;
   embedding_var: boolean;
   kurum: KurumYaniti;
+  /** acik | kapandi. Kapanma nedeni yalnızca GİRVAK sayılarında. */
+  durum: string;
 };
+
+/** POST /ihtiyac-kartlari/{id}/kapat — firma ilanını nedenle kapatır; tekrar 200. */
+export function ihtiyacKartiKapat(
+  kartId: string,
+  neden: "platformda_bulundu" | "baska_yoldan_bulundu" | "vazgecildi",
+): Promise<IhtiyacKartiYaniti> {
+  return apiIstek<IhtiyacKartiYaniti>(`/ihtiyac-kartlari/${kartId}/kapat`, {
+    method: "POST",
+    body: JSON.stringify({ neden }),
+  });
+}
 
 /** POST /ihtiyac-kartlari/{id}/embedding — kartı eşleştirmeye hazırlar;
  *  başarılıysa eşleştirme de arka planda başlar. */
@@ -955,6 +970,13 @@ export type GirvakSayilari = {
   };
   /** Faz D: programın adı + platformda ne sayıldığı (fark gizlenmez). */
   hedefler: ProgramHedefi[];
+  /** Firma akışı: kapanan ilanlar, firmanın seçtiği nedene göre. */
+  kapanan_ihtiyaclar: {
+    platformda_bulundu: number;
+    baska_yoldan_bulundu: number;
+    vazgecildi: number;
+    nedensiz: number;
+  };
 };
 
 export type ProgramHedefi = {

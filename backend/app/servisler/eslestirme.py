@@ -106,6 +106,14 @@ async def eslestirmeyi_arka_planda_calistir(ihtiyac_karti_id: uuid.UUID) -> None
             logger.exception("Arka plan eşleştirme başarısız (%s)", ihtiyac_karti_id)
 
 
+async def ihtiyac_kilidi(oturum: AsyncSession, ihtiyac_karti_id: uuid.UUID) -> None:
+    """İhtiyaç başına işlem kilidi: pipeline'lar ve ilan kapatma sıraya girer."""
+    await oturum.execute(
+        text("SELECT pg_advisory_xact_lock(:anahtar)"),
+        {"anahtar": kilit_anahtari(ihtiyac_karti_id)},
+    )
+
+
 async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Eslesme]:
     """Adayları seçer, eşleşmeleri yazar, gerekçeleri üretir; güncel eşleşmeleri döner."""
     if ihtiyac.embedding is None:
@@ -121,10 +129,14 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
     # GET /oneriler ikinci bir pipeline başlatıyordu — mükerrer satır ve çift
     # LLM çağrısı. İkinci çağrı burada birincinin commit'ini bekler, sonra
     # kayıtları ve gerekçeleri hazır bulur. Kilit transaction sonunda kalkar.
-    await oturum.execute(
-        text("SELECT pg_advisory_xact_lock(:anahtar)"),
-        {"anahtar": kilit_anahtari(ihtiyac.id)},
+    await ihtiyac_kilidi(oturum, ihtiyac.id)
+    # Kilidi beklerken ilan kapatılmış olabilir (kapatma da bu kilidi alıyor):
+    # durum kilitten sonra yeniden okunur, kapalı ilana öneri yazılmaz.
+    guncel_durum = await oturum.scalar(
+        select(IhtiyacKarti.durum).where(IhtiyacKarti.id == ihtiyac.id)
     )
+    if guncel_durum != IHTIYAC_ACIK:
+        raise HTTPException(status_code=409, detail=IHTIYAC_KAPALI_MESAJI)
 
     secilenler = siralayip_ele(await adaylari_getir(oturum, ihtiyac))
     eskiler = await eslesmeleri_oku(oturum, ihtiyac.id)

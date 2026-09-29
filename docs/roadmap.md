@@ -162,7 +162,7 @@ Plan ve kararlar: [`plans/firma-akisi.md`](plans/firma-akisi.md). Özellik dondu
 
 - [x] Taraf kavramı (davranış değişmez)
 - [x] Firma kayıt formu ve profil
-- [ ] İlan kapatma (nedenli)
+- [x] İlan kapatma (nedenli)
 - [ ] Firma doğrulaması (alan adı ipucu + GİRVAK onayı)
 - [ ] Firma kartı (sohbet + düzenleme)
 - [ ] Ortak ilanı ve iki kapı

@@ -71,6 +71,8 @@ class IhtiyacKartiOzeti(BaseModel):
     problem_tanimi: str
     olusturma_tarihi: dt.datetime
     embedding_var: bool
+    # acik | kapandi (panel kapalı ilanı ayrı gösterir)
+    durum: str = "acik"
 
 
 class MeYaniti(BaseModel):

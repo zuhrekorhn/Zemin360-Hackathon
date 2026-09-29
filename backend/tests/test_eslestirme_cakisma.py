@@ -52,6 +52,11 @@ class KayitTutanOturum:
     async def execute(self, ifade, *args, **kwargs):
         self.ifadeler.append(str(ifade))
 
+    async def scalar(self, ifade, *args, **kwargs):
+        # Kilitten sonra ilanın durumu yeniden okunur (firma-akisi § 7).
+        self.ifadeler.append(str(ifade))
+        return "acik"
+
     async def scalars(self, ifade, *args, **kwargs):
         self.ifadeler.append(str(ifade))
         return []
@@ -75,6 +80,8 @@ def test_kilit_eslesmeler_okunmadan_once_alinir(monkeypatch):
     asyncio.run(eslestirme_servisi.pipeline_calistir(oturum, ihtiyac))
 
     assert "pg_advisory_xact_lock" in oturum.ifadeler[0]
-    # Eşleşme okumaları kilitten sonra
-    assert all("eslesme" in ifade for ifade in oturum.ifadeler[1:])
+    # Kilitten sonra önce ilanın güncel durumu (kapatılmış olabilir), sonra
+    # eşleşme okumaları.
+    assert "ihtiyac_karti.durum" in oturum.ifadeler[1]
+    assert all("eslesme" in ifade for ifade in oturum.ifadeler[2:])
     assert okunanlar == ["adaylar"]

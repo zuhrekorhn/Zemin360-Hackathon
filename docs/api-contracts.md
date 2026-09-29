@@ -30,6 +30,7 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | | `/tanimlama/sohbet/cevap` | POST | Kullanıcı (kurum) cevabını işler, sıradaki soruyu döner |
 | | `/tanimlama/kart/onayla` | POST | Taslağı `IHTIYAC_KARTI`'na yazar. Keşif'teki gibi tekrarlanabilir; eşleştirme yalnızca embedding hesaplandıysa arka planda başlar |
 | | `/ihtiyac-kartlari/{id}/embedding` | POST | Embedding'i yeniden hesaplar; başarılıysa eşleştirmeyi başlatır |
+| | `/ihtiyac-kartlari/{id}/kapat` | POST | Yalnızca ilanın firması (`{neden: platformda_bulundu\|baska_yoldan_bulundu\|vazgecildi}`, zorunlu). Bekleyen ilgiler `kapandi` olur, ilgisi bekleyenlere nötr bildirim (neden yazılmaz). Tekrar 200, yan etkisiz, ilk neden korunur; kapanan ilan tekrar açılmaz. Genç/GİRVAK 403, başka firmanın ilanı 404, neden eksik ya da küme dışı 422. Eşleştirmeyle aynı kilidi alır. Yanıttaki `durum` (`acik\|kapandi`); neden yanıtta yok (`plans/firma-akisi.md` § 7) |
 | | `/ihtiyac-kartlari/{id}` | GET | Eşleştirme Ajanı'nın da okuyacağı kart görünümü. `kurum.id` döner (öneri uç noktası kurum kimliğiyle çalışıyor); iletişim e-postası dönmez |
 | **Doğrulama** | `/dogrulama/kanit-ekle` | POST | `SOMUT_CIKTI` + ön rubrik skoru |
 | | `/dogrulama/referans/{token}` | GET | Token bazlı, girişsiz. Referans kişinin yanıt vermeden önce gördüğü bilgi: çıktının başlığı, açıklaması, **iddia sahibinin adı** ve isteğin durumu. E-posta/telefon gibi iletişim bilgisi DÖNMEZ — referans kişi kimin için konuştuğunu bilmeli, ama bu uç nokta girişsiz olduğu için yalnızca yanıt vermeye yetecek kadarını açar. Zaman aşımı (`bekliyor` → `yanit_yok`) bu okuma anında hesaplanır |
@@ -50,7 +51,7 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | | `/eslestirme/bana-gelenler` | GET | Genç: ilk ilgiyi kurumun gösterdiği eşleşmeler (`baslatan = kurum`), ihtiyaç kartı ve kurum adıyla. Gencin kendi ilgileri ve ilgisiz öneriler genç ana sayfasında |
 | | `/eslestirme/onerilerim` | GET | Kurum: tüm ihtiyaç kartlarındaki öneriler, durum ve gencin adıyla (`iletisim` yalnızca `kabul_edildi`'de). Yalnızca okur, pipeline çalıştırmaz |
 | | `/isbirliklerim` | GET | Genç ve kurum: taraf olduğu iş birlikleri, iki tarafa aynı görünüm, `iletisim` dahil; eşleşmenin `son_aktivite_tarihi`'ne göre en yeni önce |
-| **GİRVAK** | `/girvak/sayilar` | GET | Yalnızca GİRVAK. Hesap (role göre), kart, eşleşme (duruma göre), iş birliği sayıları; kişisel veri yok |
+| **GİRVAK** | `/girvak/sayilar` | GET | Yalnızca GİRVAK. Hesap (role göre), kart, eşleşme (duruma göre), iş birliği sayıları; kapanan ilanlar nedenlerine göre (`kapanan_ihtiyaclar`); kişisel veri yok |
 | **Canlılık** | `/canlilik/tarama` | Arka plan iş (günlük cron) | Pasif `ESLESME` kayıtlarını tarar |
 | | `/canlilik/hatirlatma/{eslesme_id}` | GET | Üretilen mesajı gösterir |
 | **Takip** | `/isbirligi/{id}` | GET | İki tarafa **birebir aynı** görünüm: plan, zaman çizelgesi (gecikme okuma anında), onaylar, ilerleme, durum özeti, `iletisim`. GİRVAK okur, e-postasız; başkasının iş birliği 404. (Sözleşmedeki ayrı `/zaman-cizelgesi` ucunun yerine, Faz C notu § 7) |

@@ -241,6 +241,28 @@ function GirvakSayfasi() {
               ]}
             />
           </PanelBolumu>
+
+          <PanelBolumu
+            baslik="Kapanan ihtiyaçlar"
+            aciklama="Firmaların ihtiyacı kapatırken seçtiği neden. Nedeni yalnızca siz görürsünüz."
+          >
+            <SayiIzgarasi
+              ogeler={[
+                {
+                  etiket: "Platformda bulundu",
+                  sayi: sayilar.kapanan_ihtiyaclar.platformda_bulundu,
+                },
+                {
+                  etiket: "Başka yoldan bulundu",
+                  sayi: sayilar.kapanan_ihtiyaclar.baska_yoldan_bulundu,
+                },
+                {
+                  etiket: "Vazgeçildi",
+                  sayi: sayilar.kapanan_ihtiyaclar.vazgecildi,
+                },
+              ]}
+            />
+          </PanelBolumu>
         </>
       ) : null}
     </main>

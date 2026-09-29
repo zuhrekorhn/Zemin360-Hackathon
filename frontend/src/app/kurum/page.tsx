@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
+import { IlanKapatma } from "@/components/ilan-kapatma";
 import { SkorRozeti } from "@/components/kart";
 import {
   BosDurum,
@@ -23,6 +24,8 @@ import {
 import { firmaProfilBandi } from "@/lib/firma-profil";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { firmaDurumEtiketi } from "@/lib/ilgi";
+import { ilanKapali, ilanlariSirala } from "@/lib/ilan";
+import { useOturum } from "@/lib/oturum";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 
 /**
@@ -44,6 +47,7 @@ export default function KurumPaneli() {
 
 function KurumPaneliIcerigi() {
   const hesap = useGirisliHesap();
+  const { tazele } = useOturum();
   const [oneriler, setOneriler] = useState<KurumOnerisi[] | null>(null);
   const [isbirlikleri, setIsbirlikleri] = useState<IsbirligiOzeti[] | null>(
     null,
@@ -105,18 +109,22 @@ function KurumPaneliIcerigi() {
           />
         ) : (
           <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
-            {kartlar.map((kart) => (
+            {ilanlariSirala(kartlar).map((kart) => (
               <li
                 key={kart.id}
-                className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+                className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
               >
                 <div className="flex flex-1 flex-col gap-1">
                   <span className="text-sm text-pretty">
                     {kart.problem_tanimi}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {tarihYaz(kart.olusturma_tarihi)}
-                    {!kart.embedding_var ? " · eşleştirmeye hazır değil" : null}
+                    {ilanKapali(kart) ? (
+                      <DurumEtiketi metin="Kapandı" />
+                    ) : !kart.embedding_var ? (
+                      " · eşleştirmeye hazır değil"
+                    ) : null}
                   </span>
                 </div>
                 <Button asChild size="sm" className="w-fit shrink-0">
@@ -124,6 +132,17 @@ function KurumPaneliIcerigi() {
                     Önerileri gör
                   </Link>
                 </Button>
+                {ilanKapali(kart) ? null : (
+                  // Kapanınca /me tazelenir: liste durumu oradan okuyor;
+                  // öneriler de "kapandı" olduğu için yeniden okunur.
+                  <IlanKapatma
+                    kartId={kart.id}
+                    onKapandi={() => {
+                      void tazele();
+                      void oku();
+                    }}
+                  />
+                )}
               </li>
             ))}
           </ul>

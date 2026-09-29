@@ -182,6 +182,7 @@ async def me(
                 problem_tanimi=kart.problem_tanimi,
                 olusturma_tarihi=kart.olusturma_tarihi,
                 embedding_var=kart.embedding is not None,
+                durum=kart.durum,
             )
             for kart in kartlar
         ]

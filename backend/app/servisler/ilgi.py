@@ -58,16 +58,22 @@ def kapanacak_mi(durum: str) -> bool:
     return durum in (DURUM_ONERILDI, DURUM_GENC_ILGILENDI, DURUM_ILGILENILIYOR)
 
 
-async def ihtiyaci_kapat(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> int:
+async def ihtiyaci_kapat(
+    oturum: AsyncSession, ihtiyac: IhtiyacKarti, neden: str | None = None
+) -> int:
     """İhtiyacı kapatır; bekleyen ilgiler "kapandı" olur. Döner: kapanan kayıt sayısı.
 
     Kapalı ihtiyaç eşleştirmeye girmez (pipeline ve kart hazırlama açık ihtiyaca
     bakar). Bir ilgisi beklenen genç (kendi gösterdiği ya da firmanın
     gösterdiği) nötr bir bildirim alır; yalnızca önerilmiş olan almaz, çünkü
-    orada bir bekleyiş yoktu. Commit çağıranın işi. Firma arayüzündeki
-    "kapat" düğmesi firma görevinde (plan § 0, karar 4).
+    orada bir bekleyiş yoktu. Commit çağıranın işi.
+
+    `neden` firmanın seçtiği kapanma nedeni (app/core/ilan.py); yalnızca
+    GİRVAK görür, bildirimde yazılmaz (docs/plans/firma-akisi.md § 7).
     """
     ihtiyac.durum = IHTIYAC_KAPANDI
+    ihtiyac.kapanma_nedeni = neden
+    ihtiyac.kapanma_tarihi = dt.datetime.now(dt.UTC)
     eslesmeler = await oturum.scalars(
         iliskileriyle(select(Eslesme))
         .where(Eslesme.ihtiyac_karti_id == ihtiyac.id)

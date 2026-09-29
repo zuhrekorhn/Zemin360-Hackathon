@@ -14,7 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.kimlik import mevcut_hesap
+from app.api.kimlik import mevcut_hesap, rol_gerekli
 from app.api.sahiplik import (
     bulunamadi,
     girvak_mi,
@@ -24,10 +24,11 @@ from app.api.sahiplik import (
 from app.api.yetenek_kartlari import EMBEDDING_HATA_MESAJI
 from app.core.embeddings import EmbeddingHatasi, embedding_uret, ihtiyac_temsil_metni
 from app.db.session import get_session
-from app.models.hesap import Hesap
+from app.models.hesap import ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
-from app.schemas.tanimlama import IhtiyacKartiYaniti, KurumYaniti
-from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
+from app.schemas.tanimlama import IhtiyacKartiKapatIstegi, IhtiyacKartiYaniti, KurumYaniti
+from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir, ihtiyac_kilidi
+from app.servisler.ilgi import IHTIYAC_KAPANDI, ihtiyaci_kapat
 
 logger = logging.getLogger("zemin360.embedding")
 
@@ -54,6 +55,7 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> IhtiyacKartiY
         calisma_modeli=kart.calisma_modeli,
         musaitlik_tercihi=kart.musaitlik_tercihi,
         embedding_var=kart.embedding is not None,
+        durum=kart.durum,
         kurum=KurumYaniti(
             id=kart.kurum.id,
             ad=kart.kurum.ad,
@@ -112,4 +114,33 @@ async def ihtiyac_karti_embedding(
     if not await embedding_hesapla(oturum, kart):
         raise HTTPException(status_code=503, detail=EMBEDDING_HATA_MESAJI)
     arka_plan.add_task(eslestirmeyi_arka_planda_calistir, kart.id)
+    return await kart_yaniti(oturum, kart.id)
+
+
+@router.post("/ihtiyac-kartlari/{kart_id}/kapat", response_model=IhtiyacKartiYaniti)
+async def ihtiyac_karti_kapat(
+    kart_id: uuid.UUID,
+    istek: IhtiyacKartiKapatIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> IhtiyacKartiYaniti:
+    """Firma ilanını kapatır (docs/plans/firma-akisi.md § 0 karar 7, § 7).
+
+    Bekleyen ilgiler "kapandı" olur ve nötr bildirim gider (app/servisler/ilgi.py).
+    Kapanan ilan tekrar açılmaz; ikinci istek 200 döner ve yan etkisizdir (ilk
+    neden korunur). Başkasının ilanı 404. Pipeline ile aynı kilidi alır:
+    çalışan bir eşleştirme bitmeden kapatma yazılmaz.
+    """
+    await ihtiyac_kilidi(oturum, kart_id)
+    kart = await oturum.scalar(
+        select(IhtiyacKarti)
+        .where(IhtiyacKarti.id == kart_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if kart is None or not ihtiyac_kartinin_sahibi_mi(hesap, kart):
+        raise bulunamadi(KART_BULUNAMADI)
+    if kart.durum != IHTIYAC_KAPANDI:
+        await ihtiyaci_kapat(oturum, kart, istek.neden)
+    await oturum.commit()
     return await kart_yaniti(oturum, kart.id)

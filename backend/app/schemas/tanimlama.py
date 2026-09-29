@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.ilan import KapanmaNedeni
 from app.core.musaitlik import HosgoruluMusaitlik, KatiMusaitlik
 
 
@@ -97,3 +98,13 @@ class IhtiyacKartiYaniti(BaseModel):
     musaitlik_tercihi: str | None
     embedding_var: bool
     kurum: KurumYaniti
+    # acik | kapandi. Kapanma nedeni burada yok: yalnızca GİRVAK görür.
+    durum: str = "acik"
+
+
+class IhtiyacKartiKapatIstegi(BaseModel):
+    """Kapatma nedeni zorunlu (docs/plans/firma-akisi.md § 0 karar 7)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    neden: KapanmaNedeni

@@ -38,8 +38,10 @@ from app.schemas.girvak import (
     HedefSayisi,
     HesapSayilari,
     IsbirligiSayilari,
+    KapananIhtiyaclar,
     Sayilar,
 )
+from app.servisler.ilgi import IHTIYAC_KAPANDI
 
 router = APIRouter(prefix="/girvak", tags=["girvak"])
 
@@ -84,7 +86,18 @@ async def sayilar(
             tamamlandi=isbirlikleri.get(ISBIRLIGI_TAMAMLANDI, 0),
         ),
         hedefler=await hedef_sayilari(oturum, durumlar, isbirlikleri),
+        kapanan_ihtiyaclar=await kapanan_ihtiyaclar(oturum),
     )
+
+
+async def kapanan_ihtiyaclar(oturum: AsyncSession) -> KapananIhtiyaclar:
+    satirlar = await oturum.execute(
+        select(IhtiyacKarti.kapanma_nedeni, func.count())
+        .where(IhtiyacKarti.durum == IHTIYAC_KAPANDI)
+        .group_by(IhtiyacKarti.kapanma_nedeni)
+    )
+    nedenler = {neden or "nedensiz": sayi for neden, sayi in satirlar.all()}
+    return KapananIhtiyaclar(**nedenler)
 
 
 async def hedef_sayilari(
