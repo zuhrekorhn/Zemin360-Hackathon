@@ -79,6 +79,30 @@ def ihtiyac_temsil_metni(*, problem_tanimi: str, basari_kriteri: str | None) -> 
     )
 
 
+def firma_temsil_metni(
+    *,
+    ne_yapiyoruz: str,
+    yetkinlikler: Sequence[str],
+    onceki_isler: str | None,
+    sektor: str | None,
+) -> str:
+    """Firma kartını embedding'e verilecek düz metne çevirir (docs/plans/firma-akisi.md § 4).
+
+    Firmanın **ne yaptığı**: iş birliği ortağı arayan ilanın problemiyle
+    karşılaştırılır. Aradığı ortak ve iş birliği türü bilinçli olarak DIŞARIDA
+    (onlar firmanın ne yaptığını değil, ne istediğini söylüyor). Değiştirilirse
+    mevcut firma vektörleri yeniden hesaplanmalı.
+    """
+    return "\n".join(
+        [
+            f"Firma ne yapıyor: {ne_yapiyoruz}",
+            f"Yetkinlikler: {', '.join(yetkinlikler)}",
+            f"Önceki işler: {onceki_isler or ''}",
+            f"Sektör: {sektor or ''}",
+        ]
+    )
+
+
 def yetenek_temsil_metni(
     *,
     rol_alani: str,

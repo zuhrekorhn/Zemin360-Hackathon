@@ -66,3 +66,15 @@ Denetime not: firma ilanına aday firma da gelecek (7-8. adım); "bekleyen adayl
 | `lib/firma-dogrulama.ts` | İpucu cümleleri | E-posta uzantısı ({alan}) web sitesiyle uyuşuyor. · …uyuşmuyor. · Herkese açık bir e-posta servisi kullanılmış ({alan}); uzantı firmayı göstermiyor. · Web sitesi yazılmamış; e-posta uzantısı karşılaştırılamadı. · Kayıtlı bir e-posta yok. | GİRVAK |
 
 Denetime not: "Şimdilik değil" GİRVAK'ın düğmesi; firmaya hiçbir metin gitmiyor, profilinde "Doğrulama bekleniyor" kalıyor (rehber § 2.5, olumsuz haber nazik).
+
+## 5a. adım — Firma kartı (tablo, okuma, düzenleme)
+
+Arayüz 5b'de. Bu adımda yalnızca backend cümleleri:
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `backend/app/api/firma_karti.py` | 404 | Firma kartınız henüz yok. | firma |
+| `backend/app/core/firma_karti.py`, `schemas/firma_karti.py` | 422 | Firmanın ne yaptığı zorunlu · En az bir yetkinlik zorunlu · En çok 15 yetkinlik yazılabilir · Bir yetkinlik en çok 80 karakter olmalı · {Alan} en çok {n} karakter olmalı · Tanınmayan iş birliği türü | firma |
+| `backend/app/core/firma_karti.py` | İş birliği türleri | Pilot uygulama · Tedarik · Ortak ürün · Yatırım · Diğer | firma |
+
+Denetime not: "Bu alanlar boş bırakılamaz: ne_yapiyoruz" 422 cümlesi alan adını kod adıyla veriyor (genç profilindeki aynı cümle de öyle); arayüz formu göndermeden önce kendi cümlesini göstermeli.

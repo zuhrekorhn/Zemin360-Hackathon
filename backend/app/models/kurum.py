@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
+    from app.models.firma_karti import FirmaKarti
     from app.models.hesap import Hesap
     from app.models.ihtiyac_karti import IhtiyacKarti
 
@@ -52,6 +53,10 @@ class Kurum(UUIDPrimaryKeyMixin, Base):
     dogrulama_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     hesap: Mapped[Hesap | None] = relationship(back_populates="kurum")
+    # Firma kartı (firma başına bir tane, isteğe bağlı; karar 9).
+    firma_karti: Mapped[FirmaKarti | None] = relationship(
+        back_populates="kurum", uselist=False, cascade="all, delete-orphan"
+    )
     ihtiyac_kartlari: Mapped[list[IhtiyacKarti]] = relationship(
         back_populates="kurum", cascade="all, delete-orphan"
     )

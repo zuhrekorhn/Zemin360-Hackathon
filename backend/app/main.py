@@ -15,6 +15,7 @@ from app.api import (
     canlilik,
     dogrulama,
     eslestirme,
+    firma_karti,
     girvak,
     health,
     ihtiyac_kartlari,
@@ -95,3 +96,4 @@ app.include_router(girvak.router)
 app.include_router(takip.router)
 app.include_router(canlilik.router)
 app.include_router(profil.router)
+app.include_router(firma_karti.router)

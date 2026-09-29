@@ -4,6 +4,7 @@ from app.db.base import Base
 from app.models.bildirim import Bildirim
 from app.models.canlilik_olayi import CanlilikOlayi
 from app.models.eslesme import Eslesme
+from app.models.firma_karti import FirmaKarti
 from app.models.guven_skoru import GuvenSkoru
 from app.models.hesap import Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -20,6 +21,7 @@ __all__ = [
     "Bildirim",
     "CanlilikOlayi",
     "Eslesme",
+    "FirmaKarti",
     "GuvenSkoru",
     "Hesap",
     "IhtiyacKarti",

@@ -66,3 +66,19 @@ def kart_hazirlama_arka_plani_yok(monkeypatch):
 
     monkeypatch.setattr(kart_hazirlama, "karti_hazirla", kaydet)
     return cagrilar
+
+
+@pytest.fixture(autouse=True)
+def firma_karti_hazirlama_arka_plani_yok(monkeypatch):
+    """Firma kartı onayı ve düzenlemesi yanıttan sonra kartı hazırlıyor (gerçek
+    oturum, embedding). Testlerde çalışmasın; çağrılar kaydedilir, o işi sınayan
+    test çekirdeği (`firma_kartini_hazirla_oturumla`) doğrudan çağırır."""
+    from app.servisler import firma_karti
+
+    cagrilar: list = []
+
+    async def kaydet(kart_id, versiyon):
+        cagrilar.append((kart_id, versiyon))
+
+    monkeypatch.setattr(firma_karti, "firma_kartini_hazirla", kaydet)
+    return cagrilar

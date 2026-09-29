@@ -91,6 +91,19 @@ erDiagram
     string dogrulama_durumu
     timestamp dogrulama_tarihi
   }
+  FIRMA_KARTI {
+    uuid id PK
+    uuid kurum_id FK
+    text ne_yapiyoruz
+    text[] yetkinlikler
+    text onceki_isler
+    text aranan_isbirligi
+    text[] isbirligi_turleri
+    int versiyon
+    vector embedding
+    uuid oturum_id
+    timestamp olusturma_tarihi
+  }
   IHTIYAC_KARTI {
     uuid id PK
     uuid kurum_id FK
@@ -163,6 +176,7 @@ erDiagram
 - **`GUVEN_SKORU` ve `REFERANS_ISTEGI`, `SOMUT_CIKTI`'dan ayrı tablolar.** Bir çıktının birden fazla referans isteği olabilir; güven skoru zamanla güncellenebilir olmalı (itiraz sonrası yeniden hesaplama).
 - **`ESLESME.durum` ve ilgi alanları (genç akışı, `plans/genc-akisi.md` § 4).** Değerler: `onerildi`, `genc_ilgilendi`, `ilgileniliyor`, `kabul_edildi`, `reddedildi`, `kapandi`; kural tek yerde (`app/agents/eslesme_durumu.py`). Karar `durum`'da; `baslatan` (`genc | kurum`), `genc_ilgi_tarihi`, `genc_iletisim_onayi_tarihi`, `kurum_ilgi_tarihi` yalnızca "kim, ne zaman" bilgisi. Tek alan seçildi çünkü pipeline, Canlılık, GİRVAK sayıları ve sahiplik `durum`'u okuyor. Karşılıklı ilgi `kabul_edildi`'dir. `IHTIYAC_KARTI.durum` (`acik | kapandi`): kapalı ihtiyaç eşleştirmeye girmez, bekleyen kayıtlar `kapandi` olur. Firma kapatırken neden seçer (`kapanma_nedeni`: `platformda_bulundu | baska_yoldan_bulundu | vazgecildi`, `kapanma_tarihi`); neden yalnızca GİRVAK sayılarında görünür, kapanan ilan tekrar açılmaz (`plans/firma-akisi.md` § 7).
 - **`KURUM` kayıt alanları (firma akışı, `plans/firma-akisi.md` § 2).** `tur` (`girisim | kobi | kurumsal`), `web_sitesi`, `calisan_araligi` (`1-10 | 11-50 | 51-250 | 250+`), `kurulus_yili`, `tanitim` (≤300), `yetkili_ad`, `yetkili_gorev`; hepsi nullable. Zorunluluk (tür, sektör, şehir) kayıt şemasında; eski hesaplarda boş olabilir, panel engellemeyen bir bantla ister. Vergi numarası, adres ve telefon bilinçli olarak toplanmaz. KVKK onayı gençteki gibi `hesap.kvkk_onay_tarihi`'nde. Kurallar `app/core/firma_profili.py`. **Doğrulama** (§ 6): `dogrulama_durumu` (`bekliyor | dogrulandi | simdilik_degil`, varsayılan `bekliyor`) ve GİRVAK'ın karar anı `dogrulama_tarihi`. Alan adı ipucu saklanmaz, okuma anında hesaplanır (`app/core/firma_dogrulama.py`, ağ isteği yok). Web sitesinin alan adı değişince `bekliyor`a döner. Dışarıya yalnızca `dogrulandi: bool` açılır; "şimdilik değil" firmaya "bekliyor"dan ayırt edilmez.
+- **`FIRMA_KARTI` (firma akışı, `plans/firma-akisi.md` § 0 karar 10).** Firma başına bir kart (`kurum_id` UNIQUE), isteğe bağlı: yalnızca genç arayan firmanın karta ihtiyacı yok, kartı olmayan firma ortak olarak önerilmez. Yetenek kartı genişletilmedi; onun alanları gence özel. Paylaşılan kısım eşleşme, pipeline, ilgi kuralları ve iş birliği. Embedding firmanın **ne yaptığını** temsil eder (ne yapıyoruz, yetkinlikler, önceki işler, sektör); aradığı ortak ve iş birliği türü benzerlik metnine girmez. `versiyon` hazırlamanın tekrar korumasıdır; `oturum_id` UNIQUE, aynı sohbetin ikinci onayı mevcut kartı döner. Kurallar `app/core/firma_karti.py`.
 - **`ESLESME` → `ISBIRLIGI` ilişkisi isteğe bağlı (0 veya 1).** Her eşleşme iş birliğine dönüşmez — kurum "ilgileniyorum" der, iş birliği ancak genç kabul edince (`kabul_edildi`) açılır (docs/faz-b-kimlik-ve-dongu.md § 5).
 - **`CANLILIK_OLAYI` doğrudan `ESLESME`'ye bağlı, `ISBIRLIGI`'na değil.** Pasiflik takibi bir iş birliği resmen başlamadan da çalışabilmeli — örn. "eşleşme önerildi ama kimse tıklamadı" durumu.
 - **`kanit_bekleyen` (YETENEK_KARTI) ve `durum` (REFERANS_ISTEGI, ESLESME, ISBIRLIGI) alanları state machine mantığıyla çalışıyor.** Örn. `REFERANS_ISTEGI.durum`: `bekliyor` → `yanitlandi` veya `yanit_yok` (zaman aşımı, ceza değil nötr durum). `yanitlandi`, referansın yanıt verdiğini söyler — olumlu bulduğunu değil; olumsuz bir referans da bu durumda olur, değerlendirme `GUVEN_SKORU.ucuncu_taraf_onayi` puanında taşınır.
