@@ -12,6 +12,8 @@ export const CANLILIK_TUR_ETIKETLERI: Record<string, string> = {
   isbirligi_hareketsiz: "Hareketsiz iş birliği",
   adim_gecikti: "Gecikmiş adım",
   yeni_firsat: "Yeni fırsat",
+  // Genç akışı: genç ilgi gösterdi, firma yanıt vermedi (GİRVAK panelinde).
+  genc_ilgisi_yanitsiz: "Yanıtsız genç ilgisi",
 };
 
 export function turEtiketi(tur: string): string {

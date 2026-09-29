@@ -108,6 +108,32 @@ def test_yanitsiz_ilgi_iki_kademe():
     senaryo(adimlar)
 
 
+def test_genc_ilgisi_yanitsiz_firmaya_bir_kez():
+    """Genç ilgi gösterdi, firma 5 gündür yanıt vermedi: firmaya tek hatırlatma,
+    tekrar yok; gence gitmez (genç akışı, plan § 7.1)."""
+
+    async def adimlar(istemci, d):
+        d.E1.durum, d.E1.baslatan = "genc_ilgilendi", "genc"
+        await _gecmise(d, d.E1, 4)
+        await _tara(d)
+        assert await _olaylar(d, d.E1) == []  # eşik altı
+
+        await _gecmise(d, d.E1, 6)
+        await _tara(d)
+        assert [(o.tur, o.alici_hesap_id) for o in await _olaylar(d, d.E1)] == [
+            ("genc_ilgisi_yanitsiz", d.kurum1.hesap.id)
+        ]
+        [bildirim] = await bildirimleri(d, d.kurum1)
+        assert bildirim.tur == "genc_ilgisi_yanitsiz"
+        assert bildirim.metin.startswith("Elif 6 gündür ihtiyacınızla")
+        assert await bildirimleri(d, d.genc1) == []
+
+        await _tara(d)  # aynı dönem: tekrar yok
+        assert len(await _olaylar(d, d.E1)) == 1
+
+    senaryo(adimlar)
+
+
 def test_onaylanmayan_plan_yalnizca_onaylamayana():
     async def adimlar(istemci, d):
         isb = await isbirligi_ac(d, adimlar=1)

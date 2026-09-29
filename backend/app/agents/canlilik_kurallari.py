@@ -16,7 +16,7 @@ from __future__ import annotations
 import datetime as dt
 from dataclasses import dataclass
 
-from app.agents.eslestirme import DURUM_ILGILENILIYOR, DURUM_ONERILDI
+from app.agents.eslestirme import DURUM_GENC_ILGILENDI, DURUM_ILGILENILIYOR, DURUM_ONERILDI
 from app.agents.takip_durumu import ISBIRLIGI_AKTIF, ISBIRLIGI_PLAN_BEKLIYOR
 from app.models.hesap import ROL_GENC, ROL_KURUM
 
@@ -27,6 +27,8 @@ PLAN_ONAYSIZ = "plan_onaysiz"
 ISBIRLIGI_HAREKETSIZ = "isbirligi_hareketsiz"
 ADIM_GECIKTI = "adim_gecikti"
 YENI_FIRSAT = "yeni_firsat"
+# Genç ilgi gösterdi, firma yanıt vermedi (docs/plans/genc-akisi.md § 7.1).
+GENC_ILGISI_YANITSIZ = "genc_ilgisi_yanitsiz"
 
 TURLER = (
     ONERI_BEKLIYOR,
@@ -36,6 +38,7 @@ TURLER = (
     ISBIRLIGI_HAREKETSIZ,
     ADIM_GECIKTI,
     YENI_FIRSAT,
+    GENC_ILGISI_YANITSIZ,
 )
 
 # Eşikler (gün) — onaylı tablo, § 1. Tek yer; .env'den değişmez (demo için
@@ -47,6 +50,8 @@ ESIKLER: dict[str, int] = {
     PLAN_ONAYSIZ: 5,
     ISBIRLIGI_HAREKETSIZ: 14,
     ADIM_GECIKTI: 1,  # hedef tarihten sonra
+    # Genç akışı (plan § 0, karar 6): firmaya, tek kademe, sabit.
+    GENC_ILGISI_YANITSIZ: 5,
 }
 # Yeni fırsat (§ 2): son bu kadar günde açılmış ihtiyaç kartı…
 FIRSAT_YENI_IHTIYAC_GUN = 7
@@ -72,7 +77,7 @@ def gecen_gun(an: dt.datetime, simdi: dt.datetime) -> int:
 
 
 def eslesme_hatirlatmalari(durum: str, hareketsiz_gun: int) -> list[Hatirlatma]:
-    """`onerildi` ve `ilgileniliyor` eşleşmeler; diğer durumlar hatırlatılmaz."""
+    """`onerildi`, `ilgileniliyor` ve `genc_ilgilendi` eşleşmeler; diğerleri hatırlatılmaz."""
     if durum == DURUM_ONERILDI:
         if hareketsiz_gun >= ESIKLER[ONERI_BEKLIYOR]:
             return [Hatirlatma(ONERI_BEKLIYOR, ROL_KURUM)]
@@ -84,6 +89,11 @@ def eslesme_hatirlatmalari(durum: str, hareketsiz_gun: int) -> list[Hatirlatma]:
             return [Hatirlatma(ILGI_YANITSIZ_2, ROL_GENC), Hatirlatma(ILGI_YANITSIZ_2, ROL_KURUM)]
         if hareketsiz_gun >= ESIKLER[ILGI_YANITSIZ_1]:
             return [Hatirlatma(ILGI_YANITSIZ_1, ROL_GENC)]
+    if durum == DURUM_GENC_ILGILENDI:
+        # Tek kademe: firma bir kez hatırlatılır; yanıt vermezse kayıt korunur
+        # (karar 14), ısrar edilmez.
+        if hareketsiz_gun >= ESIKLER[GENC_ILGISI_YANITSIZ]:
+            return [Hatirlatma(GENC_ILGISI_YANITSIZ, ROL_KURUM)]
     return []
 
 

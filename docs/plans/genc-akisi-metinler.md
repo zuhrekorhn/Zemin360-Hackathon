@@ -78,3 +78,12 @@ Karar 15 gereği şimdi değiştirilmiyor; toplu denetimde ele alınacak.
 | `frontend/src/app/tanimlama/page.tsx` | Onay formu notu (karar 1) | "Onaylanan ihtiyaç, eşleşen adaylara gösterilir." | firma |
 
 > **Denetime not (10. adım):** Onay pencereleri (`window.confirm`) tarayıcının kendi düğmelerini ("Tamam/İptal") gösteriyor; rehber § 5.6 "Sil / Vazgeç" gibi eylem adı istiyor, bunun için özel bir onay bileşeni gerekir (mevcut ekranlarda da aynı). Firma öneriler sayfasında "Adaylar" / "İlgi gösterenler" dışındaki mevcut metinler ("Eşleştirme önerileri", "skoruyla", "Karar senin", "Yeniden hesapla", eşik açıklaması "%40 … eşik değerini") rehbere uymuyor ("skor", "eşik", "sen"); dokunulmadı.
+
+## 11. adım — Canlılık: yanıtsız genç ilgisi
+
+| Dosya | Bileşen / yer | Metin | Kime |
+|---|---|---|---|
+| `backend/app/agents/canlilik.py` | Hatırlatma (şablon, 5 gün) | "{genç adı} {n} gündür ihtiyacınızla ilgili yanıtınızı bekliyor. İlgileniyorsanız karşılıklı ilgiyi başlatabilir ya da “Şimdilik değil” diyebilirsiniz." (7. günde "bir haftadır") | firma |
+| `frontend/src/lib/canlilik.ts` | GİRVAK paneli tür etiketi | "Yanıtsız genç ilgisi" | GİRVAK |
+
+> **Denetime not (11. adım):** Canlılık'ın kişiselleştirme istemi (`KISISEL_TALIMAT`) her alıcıya "sen" diye hitap ettiriyor; mevcut firma hatırlatmaları (`oneri_bekliyor`, `ilgi_yanitsiz_2` firma kısmı, `plan_onaysiz`, `isbirligi_hareketsiz`, `adim_gecikti` firmaya gidenleri) ve şablonları da "sen" kullanıyor ("İhtiyaç kartın için…", "…bakabilirsin"). Rehber firmaya "siz" istiyor: denetimde istem alıcıya göre hitap seçecek biçimde düzeltilmeli, şablonlar ayrılmalı. Yeni tür bu yüzden yalnızca şablonla gidiyor.

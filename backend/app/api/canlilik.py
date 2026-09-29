@@ -34,6 +34,7 @@ from app.agents.canlilik_kurallari import (
     ESIKLER,
     FIRSAT_ESKI_KART_GUN,
     FIRSAT_YENI_IHTIYAC_GUN,
+    GENC_ILGISI_YANITSIZ,
     ILGI_YANITSIZ_1,
     ONERI_BEKLIYOR,
     YENI_FIRSAT,
@@ -46,7 +47,7 @@ from app.agents.canlilik_kurallari import (
     isbirligi_hatirlatmalari,
     tekrar_mi,
 )
-from app.agents.eslestirme import DURUM_ILGILENILIYOR, DURUM_ONERILDI
+from app.agents.eslestirme import DURUM_GENC_ILGILENDI, DURUM_ILGILENILIYOR, DURUM_ONERILDI
 from app.agents.takip_durumu import (
     ISBIRLIGI_AKTIF,
     ISBIRLIGI_PLAN_BEKLIYOR,
@@ -189,13 +190,15 @@ async def pasif_adaylar(oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date
     Hiçbir şey yazmaz: hem tarama hem GİRVAK'ın "pasifleşen bağlantılar"
     listesi bunu kullanır; ikisi aynı kuralı görür.
     """
-    esik = simdi - dt.timedelta(days=min(ESIKLER[ILGI_YANITSIZ_1], ESIKLER[ONERI_BEKLIYOR]))
+    esik = simdi - dt.timedelta(
+        days=min(ESIKLER[ILGI_YANITSIZ_1], ESIKLER[ONERI_BEKLIYOR], ESIKLER[GENC_ILGISI_YANITSIZ])
+    )
     eslesmeler = list(
         await oturum.scalars(
             select(Eslesme)
             .options(*_iliskiler())
             .where(
-                Eslesme.durum.in_([DURUM_ONERILDI, DURUM_ILGILENILIYOR]),
+                Eslesme.durum.in_([DURUM_ONERILDI, DURUM_ILGILENILIYOR, DURUM_GENC_ILGILENDI]),
                 Eslesme.son_aktivite_tarihi <= esik,
             )
         )

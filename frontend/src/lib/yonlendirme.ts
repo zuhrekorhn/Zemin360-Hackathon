@@ -95,6 +95,7 @@ export function bildirimHedefi(
       return "/genc#firsatlar";
     // Gençten ilgi (docs/plans/genc-akisi.md § 7.1)
     case "genc_ilgi":
+    case "genc_ilgisi_yanitsiz":
       return "/kurum#ihtiyaclar";
     case "karsilikli_ilgi":
     case "firsat_kapandi":

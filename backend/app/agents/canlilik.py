@@ -18,6 +18,7 @@ from langchain_core.runnables import Runnable
 
 from app.agents.canlilik_kurallari import (
     ADIM_GECIKTI,
+    GENC_ILGISI_YANITSIZ,
     ILGI_YANITSIZ_1,
     ILGI_YANITSIZ_2,
     ISBIRLIGI_HAREKETSIZ,
@@ -82,6 +83,13 @@ def sablon_metni(b: HatirlatmaBaglami) -> str:
             f"“{b.adim}” adımının hedef tarihi {b.gun} gün geçti; tamamlandıysa işaretle, "
             f"değilse {b.karsi_ad} ile konuşun."
         )
+    if b.tur == GENC_ILGISI_YANITSIZ:
+        # Firmaya "siz" (docs/icerik-rehberi.md § 3).
+        return (
+            f"{b.karsi_ad} {_gun(b.gun)} ihtiyacınızla ilgili yanıtınızı bekliyor. "
+            "İlgileniyorsanız karşılıklı ilgiyi başlatabilir ya da “Şimdilik değil” "
+            "diyebilirsiniz."
+        )
     if b.tur == YENI_FIRSAT:
         alan = f" ({b.sektor})" if b.sektor else ""
         return f"Kartına uyan yeni bir ihtiyaç var{alan}. Kanıt eklemek kartını öne çıkarır."
@@ -142,6 +150,12 @@ def _kisisel_zincir() -> Runnable:
     )
 
 
+# Yalnızca şablonla giden türler. Kişiselleştirme istemi alıcıya "sen" diye
+# hitap ettiriyor; firmaya giden yeni türler rehber gereği "siz" (istem metin
+# denetiminde ele alınacak, docs/plans/genc-akisi-metinler.md).
+YALNIZ_SABLON = frozenset({GENC_ILGISI_YANITSIZ})
+
+
 async def kisisel_metin(b: HatirlatmaBaglami) -> str | None:
     """Kişiye özel metin; kullanılamazsa None (çağıran şablona düşer). Hata yutulur."""
     taslak = sablon_metni(b)
@@ -170,4 +184,6 @@ async def kisisel_metin(b: HatirlatmaBaglami) -> str | None:
 
 async def metin_uret(b: HatirlatmaBaglami) -> str:
     """Hatırlatma metni: önce kişiye özel, olmazsa şablon. Asla boş dönmez."""
+    if b.tur in YALNIZ_SABLON:
+        return sablon_metni(b)
     return await kisisel_metin(b) or sablon_metni(b)

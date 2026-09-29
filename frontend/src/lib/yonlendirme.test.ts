@@ -97,6 +97,7 @@ describe("bildirimHedefi — Canlılık", () => {
     // Genç akışında genç fırsatları görüyor (plan § 0, karar 1).
     expect(bildirimHedefi("yeni_firsat")).toBe("/genc#firsatlar");
     expect(bildirimHedefi("genc_ilgi")).toBe("/kurum#ihtiyaclar");
+    expect(bildirimHedefi("genc_ilgisi_yanitsiz")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("firsat_kapandi")).toBe("/genc#ilgilerim");
     expect(bildirimHedefi("karsilikli_ilgi", "i1")).toBe("/isbirligi/i1");
     expect(bildirimHedefi("karsilikli_ilgi")).toBe("/genc#ilgilerim");

@@ -7,6 +7,7 @@ import pytest
 from app.agents.canlilik_kurallari import (
     ADIM_GECIKTI,
     ESIKLER,
+    GENC_ILGISI_YANITSIZ,
     ILGI_YANITSIZ_1,
     ILGI_YANITSIZ_2,
     ISBIRLIGI_HAREKETSIZ,
@@ -35,6 +36,7 @@ def test_esikler_onayli_tablo():
         PLAN_ONAYSIZ: 5,
         ISBIRLIGI_HAREKETSIZ: 14,
         ADIM_GECIKTI: 1,
+        GENC_ILGISI_YANITSIZ: 5,  # genç akışı, plan § 0 karar 6
     }
 
 
@@ -59,6 +61,11 @@ def test_gecen_gun_asagi_yuvarlar():
             10,
             [Hatirlatma(ILGI_YANITSIZ_2, "genc"), Hatirlatma(ILGI_YANITSIZ_2, "kurum")],
         ),
+        # Genç ilgi gösterdi, firma yanıtsız: firmaya tek kademe (genç akışı).
+        ("genc_ilgilendi", 4, []),
+        ("genc_ilgilendi", 5, [Hatirlatma(GENC_ILGISI_YANITSIZ, "kurum")]),
+        ("genc_ilgilendi", 30, [Hatirlatma(GENC_ILGISI_YANITSIZ, "kurum")]),
+        ("kapandi", 99, []),
         ("kabul_edildi", 99, []),
         ("reddedildi", 99, []),  # kapsam dışı
     ],

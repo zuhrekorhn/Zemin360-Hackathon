@@ -87,3 +87,17 @@ def test_tarama_kisisel_metni_bildirime_yazar(monkeypatch):
         assert (await bildirimleri(d, d.genc2))[-1].metin == "Kişisel: Koop İki 4"
 
     senaryo(adimlar)
+
+
+def test_firmaya_giden_genc_ilgisi_yalnizca_sablonla_siz_hitabiyla(monkeypatch):
+    """Kişiselleştirme istemi "sen" diye hitap ettiriyor; firmaya "siz" gitsin diye
+    bu tür şablonla gider (docs/icerik-rehberi.md § 3). Dil modeli hiç çağrılmaz."""
+    _zincir(monkeypatch, RuntimeError("çağrılmamalıydı"))
+    b = canlilik.HatirlatmaBaglami(
+        tur="genc_ilgisi_yanitsiz", alici="kurum", gun=6, karsi_ad="Elif"
+    )
+    metin = asyncio.run(canlilik.metin_uret(b))
+    assert metin == (
+        "Elif 6 gündür ihtiyacınızla ilgili yanıtınızı bekliyor. İlgileniyorsanız "
+        "karşılıklı ilgiyi başlatabilir ya da “Şimdilik değil” diyebilirsiniz."
+    )

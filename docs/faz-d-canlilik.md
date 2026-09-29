@@ -44,6 +44,7 @@ aşımıyla ve Takip gecikmesiyle aynı desen; yeni bir "pasif" alanı saklanmaz
 | `isbirligi_hareketsiz` | İş birliği `aktif` | **14 gün** hareketsiz | İki taraf | "İki haftadır adımlarda hareket yok; sıradaki adım 'Kayıt ekranı'." |
 | `adim_gecikti` | `aktif` iş birliğinde gecikmiş adım | Hedef tarihten **1 gün** sonra | Adımı henüz işaretlememiş taraf(lar) | "'Kayıt ekranı' adımının hedef tarihi 3 gün geçti; tamamlandıysa işaretle, değilse karşı tarafla konuşun." |
 | `yeni_firsat` | Yeni ihtiyacın önerisi (§ 2) | — | Genç | "Kartına uyan yeni bir ihtiyaç var (sektör: sivil toplum). Kanıt eklemek kartını öne çıkarır." |
+| `genc_ilgisi_yanitsiz` *(genç akışı, 29 Eyl)* | Eşleşme `genc_ilgilendi` | **5 gün** hareketsiz, tek kademe | Firma | "Elif 5 gündür ihtiyacınızla ilgili yanıtınızı bekliyor. İlgileniyorsanız karşılıklı ilgiyi başlatabilir ya da “Şimdilik değil” diyebilirsiniz." Yalnızca şablon: kişiselleştirme istemi "sen" diye hitap ettiriyor, firmaya "siz" gitmeli (`plans/genc-akisi.md` § 7.1) |
 
 **Kurallar:**
 - **Kapsam dışı kayıtlar:** `reddedildi` eşleşmeler ve `tamamlandi` iş birlikleri hatırlatılmaz. Hesabı olmayan (Faz B öncesi) profil de hatırlatılmaz.
