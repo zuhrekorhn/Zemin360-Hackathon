@@ -55,6 +55,7 @@ from app.agents.takip_durumu import (
 )
 from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import _bearer, _yetkisiz, mevcut_hesap, rol_gerekli
+from app.api.sahiplik import karsi_taraf, taraf_adi, taraf_hesabi
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.models.canlilik_olayi import CanlilikOlayi
@@ -138,17 +139,12 @@ def _anahtar(eslesme_id, tur, alici_hesap_id, milestone_id) -> tuple:
     return (eslesme_id, tur, alici_hesap_id, milestone_id)
 
 
-def _taraf_hesabi(eslesme: Eslesme, rol: str) -> uuid.UUID | None:
-    if rol == ROL_GENC:
-        return eslesme.yetenek_karti.kullanici.hesap_id
-    return eslesme.ihtiyac_karti.kurum.hesap_id
+_taraf_hesabi = taraf_hesabi
 
 
 def _karsi_ad(eslesme: Eslesme, rol: str) -> str:
     """Alıcının karşısındaki taraf: gence kurumun adı, kuruma gencin adı."""
-    if rol == ROL_GENC:
-        return eslesme.ihtiyac_karti.kurum.ad
-    return eslesme.yetenek_karti.kullanici.ad
+    return taraf_adi(eslesme, karsi_taraf(rol))
 
 
 def _iliskiler():

@@ -38,6 +38,13 @@ GENCE_ACIK_DURUMLAR = (
     "kapandi",
 )
 
+# Eşleşmenin iki tarafı (docs/plans/firma-akisi.md § 3, karar 12). Durum
+# makinesindeki roller bu iki taraftır, hesabın rolü değil: aday tarafı bugün
+# yetenek kartının genci, firma–firma eşleşmede aday firma olacak. Değerler
+# eski rol adlarıyla aynı: `eslesme.baslatan` ve `gecis()` tablosu değişmesin.
+TARAF_ADAY = ROL_GENC
+TARAF_ILAN = ROL_KURUM
+
 # Sohbet checkpoint'ine oturumu açan hesabın kimliği bu anahtarla yazılır.
 SOHBET_SAHIBI = "sahip_hesap_id"
 
@@ -98,6 +105,39 @@ async def yetenek_kartini_gorebilir_mi(
             )
         )
     )
+
+
+# --- Eşleşmenin tarafları ---------------------------------------------------------------
+
+
+def eslesmedeki_taraf(hesap: Hesap, eslesme: Eslesme) -> str | None:
+    """Hesap bu eşleşmenin aday tarafı mı, ilan tarafı mı? Değilse None.
+
+    `eslesme` iki kartıyla ve sahipleriyle yüklenmiş olmalı.
+    """
+    if yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti):
+        return TARAF_ADAY
+    if ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
+        return TARAF_ILAN
+    return None
+
+
+def karsi_taraf(taraf: str) -> str:
+    return TARAF_ILAN if taraf == TARAF_ADAY else TARAF_ADAY
+
+
+def taraf_hesabi(eslesme: Eslesme, taraf: str) -> uuid.UUID | None:
+    """Tarafın hesabı (bildirim alıcısı)."""
+    if taraf == TARAF_ADAY:
+        return eslesme.yetenek_karti.kullanici.hesap_id
+    return eslesme.ihtiyac_karti.kurum.hesap_id
+
+
+def taraf_adi(eslesme: Eslesme, taraf: str) -> str:
+    """Tarafın kullanıcıya görünen adı (gencin adı ya da firmanın adı)."""
+    if taraf == TARAF_ADAY:
+        return eslesme.yetenek_karti.kullanici.ad
+    return eslesme.ihtiyac_karti.kurum.ad
 
 
 # --- İhtiyaç kartı ---------------------------------------------------------------------

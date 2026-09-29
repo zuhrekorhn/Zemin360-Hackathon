@@ -28,6 +28,7 @@ from app.agents.eslestirme import (
 )
 from app.agents.takip_durumu import ISBIRLIGI_PLAN_BEKLIYOR
 from app.api.bildirimler import bildirim_ekle
+from app.api.sahiplik import TARAF_ADAY, TARAF_ILAN, taraf_adi, taraf_hesabi
 from app.models.bildirim import TUR_FIRSAT_KAPANDI
 from app.models.eslesme import Eslesme
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -84,9 +85,9 @@ async def ihtiyaci_kapat(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> int:
         if bekleyen_vardi:
             bildirim_ekle(
                 oturum,
-                eslesme.yetenek_karti.kullanici.hesap_id,
+                taraf_hesabi(eslesme, TARAF_ADAY),
                 TUR_FIRSAT_KAPANDI,
-                firsat_kapandi_metni(eslesme.ihtiyac_karti.kurum.ad),
+                firsat_kapandi_metni(taraf_adi(eslesme, TARAF_ILAN)),
                 eslesme.id,
             )
     return kapanan

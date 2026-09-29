@@ -41,14 +41,10 @@ from app.agents.takip_durumu import (
     isbirligi_tamamlandi_mi,
     plan_gecisi,
 )
+from app.api import sahiplik
 from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import mevcut_hesap, rol_gerekli
-from app.api.sahiplik import (
-    bulunamadi,
-    girvak_mi,
-    ihtiyac_kartinin_sahibi_mi,
-    yetenek_kartinin_sahibi_mi,
-)
+from app.api.sahiplik import bulunamadi, eslesmedeki_taraf, girvak_mi, karsi_taraf
 from app.db.session import get_session, get_sessionmaker
 from app.models.bildirim import (
     TUR_ADIM_ISARETLENDI,
@@ -116,13 +112,8 @@ async def isbirligini_getir(
 
 
 def taraf_rolu(hesap: Hesap, isbirligi: Isbirligi) -> str | None:
-    """Hesap bu iş birliğinin genci mi, kurumu mu? Değilse None."""
-    eslesme = isbirligi.eslesme
-    if yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti):
-        return ROL_GENC
-    if ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
-        return ROL_KURUM
-    return None
+    """Hesap bu iş birliğinin aday tarafı mı, ilan tarafı mı? Değilse None."""
+    return eslesmedeki_taraf(hesap, isbirligi.eslesme)
 
 
 async def okunabilir_isbirligi(
@@ -153,19 +144,14 @@ def _simdi() -> dt.datetime:
 
 
 def taraf_adi(isbirligi: Isbirligi, rol: str) -> str:
-    eslesme = isbirligi.eslesme
-    return eslesme.yetenek_karti.kullanici.ad if rol == ROL_GENC else eslesme.ihtiyac_karti.kurum.ad
+    return sahiplik.taraf_adi(isbirligi.eslesme, rol)
 
 
 def taraf_hesabi(isbirligi: Isbirligi, rol: str) -> uuid.UUID | None:
-    eslesme = isbirligi.eslesme
-    if rol == ROL_GENC:
-        return eslesme.yetenek_karti.kullanici.hesap_id
-    return eslesme.ihtiyac_karti.kurum.hesap_id
+    return sahiplik.taraf_hesabi(isbirligi.eslesme, rol)
 
 
-def karsi_rol(rol: str) -> str:
-    return ROL_KURUM if rol == ROL_GENC else ROL_GENC
+karsi_rol = karsi_taraf
 
 
 def aktivite(isbirligi: Isbirligi) -> None:

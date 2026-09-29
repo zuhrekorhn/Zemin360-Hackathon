@@ -43,11 +43,14 @@ from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import (
     GENCE_ACIK_DURUMLAR,
+    TARAF_ADAY,
+    TARAF_ILAN,
     bulunamadi,
+    eslesmedeki_taraf,
     girvak_mi,
-    ihtiyac_kartinin_sahibi_mi,
     kullanici_id,
-    yetenek_kartinin_sahibi_mi,
+    taraf_adi,
+    taraf_hesabi,
 )
 from app.api.sahiplik import kurum_id as hesabin_kurumu
 from app.api.yetenek_kartlari import kart_yaniti
@@ -191,33 +194,30 @@ async def ilgileniyorum(
       gösterirken verdi; iş birliği açılır, e-postalar iki tarafa görünür,
       yanıttan sonra plan önerilir (docs/plans/genc-akisi.md § 4).
     """
-    eslesme = await _eslesmeyi_kilitle(oturum, istek.eslesme_id)
-    if eslesme is None or not ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
-        raise bulunamadi(ESLESME_BULUNAMADI)
+    eslesme = await _ilan_tarafinin_eslesmesi(oturum, hesap, istek.eslesme_id)
     karsilikli = eslesme.durum == DURUM_GENC_ILGILENDI
-    degisti = _gecisi_uygula(eslesme, OLAY_ILGILENIYORUM, hesap)
+    degisti = _gecisi_uygula(eslesme, OLAY_ILGILENIYORUM, TARAF_ILAN)
     if degisti:
-        kurum = eslesme.ihtiyac_karti.kurum
         eslesme.kurum_ilgi_tarihi = eslesme.son_aktivite_tarihi
         if karsilikli:
             isbirligini_ac(eslesme)
             bildirim_ekle(
                 oturum,
-                eslesme.yetenek_karti.kullanici.hesap_id,
+                taraf_hesabi(eslesme, TARAF_ADAY),
                 TUR_KARSILIKLI_ILGI,
                 # Adın ardında ek yok: "de/da" ünlü uyumu ada göre değişir.
-                f"{kurum.ad} ilgine karşılık verdi. İletişim bilgileriniz paylaşıldı "
-                "ve iş birliği başladı.",
+                f"{taraf_adi(eslesme, TARAF_ILAN)} ilgine karşılık verdi. "
+                "İletişim bilgileriniz paylaşıldı ve iş birliği başladı.",
                 eslesme.id,
             )
         else:
-            eslesme.baslatan = ROL_KURUM
+            eslesme.baslatan = TARAF_ILAN
             bildirim_ekle(
                 oturum,
-                eslesme.yetenek_karti.kullanici.hesap_id,
+                taraf_hesabi(eslesme, TARAF_ADAY),
                 TUR_ILGI,
-                f"{kurum.ad}, “{eslesme.yetenek_karti.rol_alani}” kartınla ilgileniyor. "
-                "Kabul edersen e-posta adresleriniz paylaşılır.",
+                f"{taraf_adi(eslesme, TARAF_ILAN)}, “{eslesme.yetenek_karti.rol_alani}” "
+                "kartınla ilgileniyor. Kabul edersen e-posta adresleriniz paylaşılır.",
                 eslesme.id,
             )
     await oturum.commit()
@@ -244,15 +244,15 @@ async def genc_ilgi(
         engel = ilgi_engeli(eslesme.skor, eslesme.ihtiyac_karti.durum)
         if engel:
             raise HTTPException(status_code=409, detail=engel)
-    if _gecisi_uygula(eslesme, OLAY_GENC_ILGI, hesap):
-        eslesme.baslatan = ROL_GENC
+    if _gecisi_uygula(eslesme, OLAY_GENC_ILGI, TARAF_ADAY):
+        eslesme.baslatan = TARAF_ADAY
         eslesme.genc_ilgi_tarihi = eslesme.son_aktivite_tarihi
         eslesme.genc_iletisim_onayi_tarihi = eslesme.son_aktivite_tarihi
         bildirim_ekle(
             oturum,
-            eslesme.ihtiyac_karti.kurum.hesap_id,
+            taraf_hesabi(eslesme, TARAF_ILAN),
             TUR_GENC_ILGI,
-            f"{eslesme.yetenek_karti.kullanici.ad} ihtiyacınızla ilgileniyor. Siz de "
+            f"{taraf_adi(eslesme, TARAF_ADAY)} ihtiyacınızla ilgileniyor. Siz de "
             "ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır.",
             eslesme.id,
         )
@@ -272,7 +272,7 @@ async def ilgiyi_geri_cek(
     Firmaya bildirim gitmez: firmanın ekranındaki işaret kalkar.
     """
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
-    if _gecisi_uygula(eslesme, OLAY_ILGIYI_GERI_CEK, hesap):
+    if _gecisi_uygula(eslesme, OLAY_ILGIYI_GERI_CEK, TARAF_ADAY):
         eslesme.baslatan = None
         eslesme.genc_ilgi_tarihi = None
         eslesme.genc_iletisim_onayi_tarihi = None
@@ -290,15 +290,13 @@ async def simdilik_degil(
 
     Gence nötr bildirim ("fırsat kapandı"; ret ifadesi ve neden yok).
     """
-    eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
-    if eslesme is None or not ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
-        raise bulunamadi(ESLESME_BULUNAMADI)
-    if _gecisi_uygula(eslesme, OLAY_SIMDILIK_DEGIL, hesap):
+    eslesme = await _ilan_tarafinin_eslesmesi(oturum, hesap, eslesme_id)
+    if _gecisi_uygula(eslesme, OLAY_SIMDILIK_DEGIL, TARAF_ILAN):
         bildirim_ekle(
             oturum,
-            eslesme.yetenek_karti.kullanici.hesap_id,
+            taraf_hesabi(eslesme, TARAF_ADAY),
             TUR_FIRSAT_KAPANDI,
-            firsat_kapandi_metni(eslesme.ihtiyac_karti.kurum.ad),
+            firsat_kapandi_metni(taraf_adi(eslesme, TARAF_ILAN)),
             eslesme.id,
         )
     await oturum.commit()
@@ -317,14 +315,14 @@ async def kabul(
     Yanıttan sonra Takip Ajanı planı önerir (docs/faz-c-takip.md § 4).
     """
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
-    degisti = _gecisi_uygula(eslesme, OLAY_KABUL, hesap)
+    degisti = _gecisi_uygula(eslesme, OLAY_KABUL, TARAF_ADAY)
     if degisti:
         isbirligini_ac(eslesme)
         bildirim_ekle(
             oturum,
-            eslesme.ihtiyac_karti.kurum.hesap_id,
+            taraf_hesabi(eslesme, TARAF_ILAN),
             TUR_KABUL,
-            f"{eslesme.yetenek_karti.kullanici.ad} ilgini kabul etti; iletişim bilgileri açıldı.",
+            f"{taraf_adi(eslesme, TARAF_ADAY)} ilgini kabul etti; iletişim bilgileri açıldı.",
             eslesme.id,
         )
     # Durum, iş birliği ve bildirim aynı işlemde: biri yazılıp öbürü kaybolmasın.
@@ -342,12 +340,12 @@ async def red(
 ) -> EslesmeDurumYaniti:
     """Genç şu an kabul etmiyor. Kuruma nötr dilde bildirim gider."""
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
-    if _gecisi_uygula(eslesme, OLAY_RED, hesap):
+    if _gecisi_uygula(eslesme, OLAY_RED, TARAF_ADAY):
         bildirim_ekle(
             oturum,
-            eslesme.ihtiyac_karti.kurum.hesap_id,
+            taraf_hesabi(eslesme, TARAF_ILAN),
             TUR_RED,
-            f"{eslesme.yetenek_karti.kullanici.ad} bu eşleşmeyi şu an kabul etmedi.",
+            f"{taraf_adi(eslesme, TARAF_ADAY)} bu eşleşmeyi şu an kabul etmedi.",
             eslesme.id,
         )
     await oturum.commit()
@@ -371,7 +369,7 @@ async def bana_gelenler(
         .where(
             YetenekKarti.kullanici_id == kullanici_id(hesap),
             or_(
-                Eslesme.baslatan == ROL_KURUM,
+                Eslesme.baslatan == TARAF_ILAN,
                 # Başlatanı bilinmeyen (alan eklenmeden yazılmış) kurum ilgisi.
                 and_(Eslesme.baslatan.is_(None), Eslesme.durum.in_(KURUM_ILGISI_DURUMLARI)),
             ),
@@ -447,7 +445,7 @@ async def ilgilerim(
 
     Firmanın başlattığı ilgiler "bana gelenler"de.
     """
-    return await _gencin_satirlari(oturum, hesap, Eslesme.baslatan == ROL_GENC)
+    return await _gencin_satirlari(oturum, hesap, Eslesme.baslatan == TARAF_ADAY)
 
 
 # --- Durum geçişi ----------------------------------------------------------------------
@@ -476,22 +474,35 @@ async def _gencin_eslesmesi(oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid
     eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
     if (
         eslesme is None
-        or not yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti)
+        or eslesmedeki_taraf(hesap, eslesme) != TARAF_ADAY
         or eslesme.durum not in GENCE_ACIK_DURUMLAR
     ):
         raise bulunamadi(ESLESME_BULUNAMADI)
     return eslesme
 
 
-def _gecisi_uygula(eslesme: Eslesme, olay: str, hesap: Hesap) -> bool:
+async def _ilan_tarafinin_eslesmesi(
+    oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid.UUID
+) -> Eslesme:
+    """İlanın sahibi firmanın eşleşmesi (kilitli); değilse 404."""
+    eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
+    if eslesme is None or eslesmedeki_taraf(hesap, eslesme) != TARAF_ILAN:
+        raise bulunamadi(ESLESME_BULUNAMADI)
+    return eslesme
+
+
+def _gecisi_uygula(eslesme: Eslesme, olay: str, taraf: str) -> bool:
     """Kuralı `gecis()`'e sorar; değiştiyse durumu ve aktivite tarihini yazar.
+
+    `taraf`: eşleşmedeki taraf (aday / ilan), hesabın rolü değil
+    (docs/plans/firma-akisi.md § 3). Çağıran tarafı sahiplikle doğrulamış olmalı.
 
     Döner: geçiş gerçekten oldu mu. False = aynı geçişin tekrarı; çağıran yan
     etkiyi (iş birliği, bildirim) tekrarlamaz. Commit çağıranın işi: yan
     etkiler geçişle aynı işlemde yazılsın.
     """
     try:
-        sonuc = gecis(eslesme.durum, olay, hesap.rol, baslatan=eslesme.baslatan)
+        sonuc = gecis(eslesme.durum, olay, taraf, baslatan=eslesme.baslatan)
     except GecersizGecis as hata:
         raise HTTPException(status_code=409, detail=str(hata)) from hata
     if sonuc.degisti:

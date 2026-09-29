@@ -31,7 +31,7 @@ from app.agents.eslestirme import (
     temizlenecekler,
 )
 from app.api.bildirimler import bildirim_ekle
-from app.api.sahiplik import ihtiyac_kartinin_sahibi_mi, yetenek_kartinin_sahibi_mi
+from app.api.sahiplik import eslesmedeki_taraf
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_sessionmaker
 from app.models.bildirim import TUR_YENI_ONERI
@@ -67,20 +67,15 @@ async def eslesmeleri_oku(oturum: AsyncSession, ihtiyac_karti_id: uuid.UUID) -> 
     return list(satirlar)
 
 
-def taraf_mi(hesap: Hesap, eslesme: Eslesme) -> bool:
-    """Hesap eşleşmenin iki tarafından biri mi (kartın genci ya da ihtiyacın kurumu)?"""
-    return yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti) or (
-        ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti)
-    )
-
-
 def iletisim(eslesme: Eslesme, hesap: Hesap | None) -> Iletisim | None:
     """E-postalar yalnızca `kabul_edildi`'de ve yalnızca iki taraftan birine.
 
     GİRVAK okuma yetkisiyle her şeyi görür ama iletişim bilgisi onun işi
     değil. `eslesme` ilişkileriyle yüklenmiş olmalı (`iliskileriyle`).
     """
-    if eslesme.durum != DURUM_KABUL_EDILDI or hesap is None or not taraf_mi(hesap, eslesme):
+    if eslesme.durum != DURUM_KABUL_EDILDI or hesap is None:
+        return None
+    if eslesmedeki_taraf(hesap, eslesme) is None:
         return None
     return Iletisim(
         genc_email=eslesme.yetenek_karti.kullanici.email,
