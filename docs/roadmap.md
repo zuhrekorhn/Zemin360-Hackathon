@@ -156,6 +156,21 @@ Plan ve kararlar: [`plans/genc-akisi.md`](plans/genc-akisi.md); elle deneme: [`p
 - [x] Canlılık: yanıtsız genç ilgisi (firmaya, 5 gün)
 - [ ] Toplu metin denetimi (`plans/genc-akisi-metinler.md`, `icerik-rehberi.md`): ayrı adım
 
+## Firma akışı (29 Eyl →)
+
+Plan ve kararlar: [`plans/firma-akisi.md`](plans/firma-akisi.md). Özellik dondurma tarihi bu görev için kayabilir (29 Eyl kararı).
+
+- [ ] Taraf kavramı (davranış değişmez)
+- [ ] Firma kayıt formu ve profil
+- [ ] İlan kapatma (nedenli)
+- [ ] Firma doğrulaması (alan adı ipucu + GİRVAK onayı)
+- [ ] Firma kartı (sohbet + düzenleme)
+- [ ] Ortak ilanı ve iki kapı
+- [ ] Firma–firma eşleştirme
+- [ ] Firmalar arası ilgi ve iş birliği
+- [ ] GİRVAK sayıları, Canlılık süzgeci, demo verisi
+- [ ] Belgeler ve deneme senaryosu
+
 ## Gözden geçirme ve düzeltme günü (3 Eki)
 
 Yeni özellik değil; Faz B'de bilinçli olarak dışarıda bırakılan ve denemede
