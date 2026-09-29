@@ -94,3 +94,5 @@ class MeYaniti(BaseModel):
     # alanlardan önce açılmış hesaplara panel engellemeyen bir bant gösterir.
     eksik_profil_alanlari: list[str] = Field(default_factory=list)
     kvkk_onayli: bool = True
+    # Firma: firma kartı var mı? Yoksa panel "Firma kartınızı oluşturun" der (karar 9).
+    firma_karti_var: bool = False

@@ -63,6 +63,7 @@ describe("profilBandi", () => {
       rol: "genc",
       eksik_profil_alanlari: [],
       kvkk_onayli: true,
+      firma_karti_var: false,
       ...ek,
     }) as MeYaniti;
 
@@ -73,7 +74,10 @@ describe("profilBandi", () => {
   it("eksik alanları ve KVKK onayını söyler", () => {
     expect(
       profilBandi(
-        hesap({ eksik_profil_alanlari: ["sehir", "musaitlikler"], kvkk_onayli: false }),
+        hesap({
+          eksik_profil_alanlari: ["sehir", "musaitlikler"],
+          kvkk_onayli: false,
+        }),
       ),
     ).toBe(
       "Profilini tamamla: profilinde eksik bilgi var (şehir, müsaitlik); KVKK aydınlatma metnini onaylamadın.",
@@ -100,7 +104,9 @@ describe("kartTamamlamaCagrisi", () => {
   const genc = (kartSayisi: number) =>
     ({
       rol: "genc",
-      yetenek_kartlari: Array.from({ length: kartSayisi }, (_, i) => ({ id: String(i) })),
+      yetenek_kartlari: Array.from({ length: kartSayisi }, (_, i) => ({
+        id: String(i),
+      })),
     }) as MeYaniti;
 
   it("kartı olmayan gence çağrı", () => {
@@ -111,7 +117,10 @@ describe("kartTamamlamaCagrisi", () => {
   it("kartı varsa ya da kurumsa yok", () => {
     expect(kartTamamlamaCagrisi(genc(1))).toBeNull();
     expect(
-      kartTamamlamaCagrisi({ rol: "kurum", yetenek_kartlari: [] } as unknown as MeYaniti),
+      kartTamamlamaCagrisi({
+        rol: "kurum",
+        yetenek_kartlari: [],
+      } as unknown as MeYaniti),
     ).toBeNull();
   });
 });

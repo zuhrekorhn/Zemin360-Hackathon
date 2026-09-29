@@ -85,3 +85,29 @@ class FirmaKartiYaniti(BaseModel):
     # Eşleştirmeye hazır mı (arka plan hazırlığı bitti mi)?
     embedding_var: bool
     olusturma_tarihi: dt.datetime
+
+
+class FirmaKartiTaslagi(BaseModel):
+    """Sohbetin o anki taslağı: her alan boş olabilir."""
+
+    ne_yapiyoruz: str | None = None
+    yetkinlikler: list[str] = []
+    onceki_isler: str | None = None
+    aranan_isbirligi: str | None = None
+    isbirligi_turleri: list[str] = []
+
+
+class FirmaKartiSohbetYaniti(BaseModel):
+    oturum_id: uuid.UUID
+    soru: str | None = None
+    taslak: FirmaKartiTaslagi
+    taslak_hazir: bool
+
+
+class FirmaKartiOnaylaIstegi(BaseModel):
+    """Onay: sohbetin taslağı ya da firmanın formda düzelttiği hâli."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    oturum_id: uuid.UUID
+    duzeltilmis_taslak: FirmaKartiGirdisi | None = None

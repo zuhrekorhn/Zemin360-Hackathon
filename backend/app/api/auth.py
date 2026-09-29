@@ -11,7 +11,7 @@ from __future__ import annotations
 import datetime as dt
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -27,6 +27,7 @@ from app.api.profil import (
 from app.core.kimlik import sifre_dogru_mu, sifre_hashle, token_uret
 from app.core.metin import eposta_normalize
 from app.db.session import get_session
+from app.models.firma_karti import FirmaKarti
 from app.models.hesap import ROL_GENC, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kullanici import Kullanici
@@ -175,6 +176,13 @@ async def me(
         yanit.ad = hesap.kurum.ad
         yanit.kurum_id = hesap.kurum.id
         yanit.eksik_profil_alanlari = firmanin_eksikleri(hesap.kurum)
+        yanit.firma_karti_var = bool(
+            await oturum.scalar(
+                select(func.count())
+                .select_from(FirmaKarti)
+                .where(FirmaKarti.kurum_id == hesap.kurum.id)
+            )
+        )
         yanit.kvkk_onayli = hesap.kvkk_onay_tarihi is not None
         yanit.ihtiyac_kartlari = [
             IhtiyacKartiOzeti(

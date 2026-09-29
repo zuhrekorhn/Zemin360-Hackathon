@@ -17,6 +17,7 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 6. **Çalışma başına kanıt ve referans:** sonuç ve kişinin payından sonra, kanıtı ya da referansı olmayan her çalışmaya tek soruda "gösteren bir link ya da doğrulayabilecek birinin e-postası" sorulur. Ek soruların tavanı 4 (kendi sayacıyla, her soru bir kez). Referans e-postası onayda mevcut referans isteği mekanizmasıyla o çalışmaya bağlanır. Çalışma türü (proje, staj, iş, gönüllülük, yarışma), sonuç ve pay ayrı alanlarda saklanır; sertifika ve dil isteğe bağlı.
 7. **Kart düzenlenebilir** (`plans/genc-akisi.md` § 6): genç kartını ve çalışmalarını formla düzenler; "Yeni iş ekle" sohbeti ertelendi (plan § 0, karar 16).
 8. **Gizlilik:** iletişim bilgisi varsayılan olarak kuruma gösterilmez; kart ve gencin adı görünür, e-posta iki taraf da onaylayınca (kurum ilgilenir, genç kabul eder) açılır (`faz-b-kimlik-ve-dongu.md` § 5).
+9. **Firma soru seti** (firma akışı, `plans/firma-akisi.md` § 5): aynı motorla ayrı bir `AjanTanimi` (`app/agents/firma_karti.py`) firmanın "biz ne yapıyoruz" kartını çıkarır. Kayıt formundaki bilgiler (ad, tür, sektör, şehir, tanıtım, web sitesi) bağlam olarak gider, sorulmaz. Zorunlu: ne yaptığı ve yetkinlikler (iki tur); ek sorular önceki işler ve aradığı ortak, her biri bir kez. Yer tutucu yazılmaz, eksik alan onay formunda tamamlanır. Firmaya "siz". Kart firma onaylamadan kaydedilmez, firma başına bir kart.
 
 ## 2. Tanımlama Ajanı
 

@@ -15,6 +15,9 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 | | `/kurum/profil` | PATCH | Gençteki kurallar: yalnızca gönderilen alan değişir, zorunlu alan (ad, tür, sektör, şehir) boşaltılamaz (422), toplanmayan alan 422, `kvkk_onay: true` onay tarihi yoksa yazar. Genç/GİRVAK 403 |
 | **Firma kartı** | `/kurum/kart` | GET | Yalnızca firma, kendi kartı; yoksa `null` (kart isteğe bağlı). `firma_adi`, `ne_yapiyoruz`, `yetkinlikler`, `onceki_isler`, `aranan_isbirligi`, `isbirligi_turleri` (`pilot\|tedarik\|ortak_urun\|yatirim\|diger`), `versiyon`, `embedding_var` (`plans/firma-akisi.md` § 5) |
 | | `/kurum/kart` | PATCH | Yalnızca gönderilen alan değişir; `ne_yapiyoruz` ve `yetkinlikler` boşaltılamaz (422), toplanmayan alan 422, kart yoksa 404. Satır kilitli; gerçek değişiklikte `versiyon` artar. Firmanın ne yaptığını anlatan alanlar (ne yapıyoruz, yetkinlikler, önceki işler) değişirse vektör düşer ve kart yanıttan sonra yeniden hazırlanır; aradığı ortak ve iş birliği türü hazırlama tetiklemez. Genç/GİRVAK 403 |
+| | `/kurum/kart/sohbet/baslat` | POST | Kart sohbetini açar; kayıt formu bilgileri bağlam olarak gider (sorulmaz). Kartı olan firma 409 |
+| | `/kurum/kart/sohbet/cevap` | POST | `{oturum_id, cevap}`; başkasının sohbeti 404, taslak hazırsa 409, hız sınırı 429 |
+| | `/kurum/kart/onayla` | POST | `{oturum_id, duzeltilmis_taslak?}` → 201. Aynı oturum tekrar 200 (aynı kart); firmanın başka kartı varsa 409; taslak zorunluları eksikse 422; taslak hazır değilse 409. Kart yanıttan sonra hazırlanır (embedding) |
 | **Bildirimler** | `/bildirimler` | GET | Kendi bildirimleri, en yeni önce (en çok 100). Her rol |
 | | `/bildirimler/{id}/okundu` | POST | Kendi bildirimi; başkasınınki 404. Tekrarında ilk okunma tarihi korunur |
 | | `/bildirimler/hepsini-oku` | POST | `{okunan}` döner |

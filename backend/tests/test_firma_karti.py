@@ -130,6 +130,9 @@ def test_firma_basina_tek_kart_ve_baskasinin_karti_gorunmez():
         assert kendi["embedding_var"] is False
         baskasi = (await istemci.get("/kurum/kart", headers=d.kurum2.baslik)).json()
         assert baskasi is None
+        # Panel bandı /me'den okunuyor.
+        assert (await istemci.get("/me", headers=d.kurum1.baslik)).json()["firma_karti_var"]
+        assert not (await istemci.get("/me", headers=d.kurum2.baslik)).json()["firma_karti_var"]
 
         with pytest.raises(IntegrityError):
             await servis.karti_olustur(d.oturum, d.kurum1.profil.id, KART)

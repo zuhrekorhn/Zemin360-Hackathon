@@ -21,6 +21,7 @@ import {
   isbirliklerim,
   onerilerim,
 } from "@/lib/api";
+import { firmaKartiCagrisi } from "@/lib/firma-karti";
 import { firmaProfilBandi } from "@/lib/firma-profil";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { firmaDurumEtiketi } from "@/lib/ilgi";
@@ -74,6 +75,7 @@ function KurumPaneliIcerigi() {
 
   const kartlar = hesap.ihtiyac_kartlari;
   const bant = firmaProfilBandi(hesap);
+  const kartCagrisi = firmaKartiCagrisi(hesap);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
@@ -85,6 +87,19 @@ function KurumPaneliIcerigi() {
           İhtiyaç kartların, önerilerin ve açılan iş birliklerin burada.
         </p>
       </header>
+
+      {kartCagrisi ? (
+        // Engellemez (karar 9): yalnızca iş birliği ortağı olarak bulunmak için gerekli.
+        <div
+          role="note"
+          className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm text-pretty"
+        >
+          <span>{kartCagrisi}</span>
+          <Link href="/kurum/kart" className="text-baglanti underline">
+            Firma kartını oluştur
+          </Link>
+        </div>
+      ) : null}
 
       {bant ? (
         // Engellemez (docs/plans/firma-akisi.md § 0, karar 9): eski hesaplar için.

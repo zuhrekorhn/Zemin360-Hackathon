@@ -78,3 +78,26 @@ Arayüz 5b'de. Bu adımda yalnızca backend cümleleri:
 | `backend/app/core/firma_karti.py` | İş birliği türleri | Pilot uygulama · Tedarik · Ortak ürün · Yatırım · Diğer | firma |
 
 Denetime not: "Bu alanlar boş bırakılamaz: ne_yapiyoruz" 422 cümlesi alan adını kod adıyla veriyor (genç profilindeki aynı cümle de öyle); arayüz formu göndermeden önce kendi cümlesini göstermeli.
+
+## 5b. adım — Firma kartı sohbeti ve sayfası
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `backend/app/agents/firma_karti.py` | Açılış | Firmanızın ne yaptığını birkaç cümleyle anlatın: hangi ürünü ya da hizmeti sunuyorsunuz, kimler için? | firma |
+| 〃 | Zorunlu sorular | Firmanızın sunduğu ürün ya da hizmeti bir-iki cümleyle anlatır mısınız? Kimler için ve hangi sorunu çözüyor? · Firmanızın en güçlü olduğu alanlar neler? Kısa başlıklar yeterli, örneğin “talep tahmini” ya da “soğuk zincir lojistiği”. | firma |
+| 〃 | Ek sorular | Bugüne kadar yaptığınız bir-iki işi ya da çalıştığınız müşteri türlerini anlatır mısınız? Bir sonuç varsa sayıyla yazabilirsiniz. · Nasıl bir firmayla, ne için iş birliği yapmak istersiniz? Örneğin bir pilot uygulama, tedarik ya da ortak ürün. | firma |
+| `backend/app/api/firma_karti.py` | 409/422/503/429 | Firma kartınız zaten var; kart sayfasından düzenleyebilirsiniz. · Kartta firmanın ne yaptığı ve en az bir yetkinlik olmalı. · Kart sohbeti şu an hazır değil · {hız sınırı} Sohbetiniz kayıtlı. · Taslak hazır; sıradaki adım onay · Taslak henüz hazır değil | firma |
+| `app/kurum/kart/page.tsx` | Başlık, giriş | Firma kartı · Firmanızın ne yaptığını anlatan kart. İş birliği ortağı arayan firmalar sizi bu kartla bulur. | firma |
+| 〃 | Sohbet notu | Bu sohbet yapay zekâ desteğiyle ilerler. Kartınız siz onaylamadan kaydedilmez. Kayıtta verdiğiniz bilgiler tekrar sorulmaz. | firma |
+| 〃 | Sohbet adı | Zemin360 | firma |
+| 〃 | Taslak | Kartınızın taslağı · Sohbetten çıkan kart bu. Gözden geçirin, gerekirse düzeltin ve onaylayın. · Kartı onayla | firma |
+| 〃 | Görünüm | Kartı düzenle · Yetkinlikler · Önceki işler · Aradığınız ortak · İş birliği türleri · Kartınız kaydedildi. · Kaydet · Vazgeç | firma |
+| 〃 | Bekleme | Kartınız eşleştirmeye hazırlanıyor. Birkaç saniye sonra sayfayı yenileyerek görebilirsiniz. | firma |
+| `components/firma-karti-formu.tsx` | Etiketler | Ne yapıyorsunuz? · Yetkinlikler · Önceki işleriniz · Nasıl bir ortak arıyorsunuz? · İş birliği türleri (isteğe bağlı) · Virgülle ayırın; en çok 15 tane. | firma |
+| `lib/firma-karti.ts` | Form hataları | Firmanızın ne yaptığını yazın. · Açıklama en çok 1000 karakter olmalı. · En az bir yetkinlik yazın. · En çok 15 yetkinlik yazabilirsiniz. | firma |
+| 〃, `app/kurum/page.tsx` | Panel çağrısı | Firma kartınızı oluşturun, diğer firmalar sizi bulabilsin. · Firma kartını oluştur | firma |
+| `components/ust-menu.tsx` | Menü | Firma kartı | firma |
+
+Denetime notlar:
+- Sohbet balonundaki bekleme metni "Ajan düşünüyor…" ortak bileşenden geliyor (`components/sohbet.tsx`); firma kartı sohbetinde de görünüyor. Metin denetiminde değiştirilmeli.
+- "Kartınız eşleştirmeye hazırlanıyor": "eşleştirme" mevcut firma metinlerinde de geçiyor; rehberde terim olarak yok, denetimde bakılsın.

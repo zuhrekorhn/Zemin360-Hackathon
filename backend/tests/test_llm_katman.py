@@ -23,7 +23,7 @@ from langchain_google_genai.chat_models import (
     GoogleRateLimitError,
 )
 
-from app.agents import dogrulama, eslestirme, kesif, tanimlama
+from app.agents import dogrulama, eslestirme, firma_karti, kesif, tanimlama
 from app.core.config import get_settings
 from app.core.llm import (
     YEDEGE_DUSUREN_HATALAR,
@@ -37,6 +37,7 @@ from app.core.llm import (
 ZINCIRLER = (
     kesif._cikarim_zinciri,
     tanimlama._cikarim_zinciri,
+    firma_karti._cikarim_zinciri,
     eslestirme._gerekce_zinciri,
     dogrulama._rubrik_zinciri,
 )
@@ -98,7 +99,9 @@ def test_model_adlari_env_den_okunur(ortam):
     assert ayarlar.gemini_zaman_asimi_sn == 12
 
 
-@pytest.mark.parametrize("zincir", [kesif._cikarim_zinciri, tanimlama._cikarim_zinciri])
+@pytest.mark.parametrize(
+    "zincir", [kesif._cikarim_zinciri, tanimlama._cikarim_zinciri, firma_karti._cikarim_zinciri]
+)
 def test_cikarim_isleri_hizli_katmanda(ortam, zincir):
     assert _ana_ve_yedek(zincir()) == ("hizli-ana", "hizli-yedek")
 

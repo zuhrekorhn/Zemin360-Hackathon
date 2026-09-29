@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
+from app.agents.firma_karti import grafik_derle as firma_karti_grafigi_derle
 from app.agents.kesif import grafik_derle as kesif_grafigi_derle
 from app.agents.tanimlama import grafik_derle as tanimlama_grafigi_derle
 from app.api import (
@@ -43,7 +44,8 @@ logging.getLogger("google_genai.models").setLevel(logging.WARNING)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """İki sohbet grafiğini uygulama ömrü boyunca tek checkpointer'la paylaştırır.
+    """Sohbet grafiklerini (Keşif, Tanımlama, firma kartı) uygulama ömrü boyunca
+    tek checkpointer'la paylaştırır.
 
     Checkpointer kendi tablolarını (checkpoints, checkpoint_writes…) `setup()`
     ile oluşturur; bunlar LangGraph'a ait olduğu için Alembic'e girmiyor.
@@ -56,6 +58,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await checkpointer.setup()
         app.state.kesif_grafigi = kesif_grafigi_derle(checkpointer)
         app.state.tanimlama_grafigi = tanimlama_grafigi_derle(checkpointer)
+        app.state.firma_karti_grafigi = firma_karti_grafigi_derle(checkpointer)
         yield
     model_kontrolu.cancel()
 

@@ -117,6 +117,8 @@ export type MeYaniti = {
   eksik_profil_alanlari: string[];
   /** Genç ve firma: KVKK aydınlatma metni onaylı mı? GİRVAK'ta true. */
   kvkk_onayli: boolean;
+  /** Firma: firma kartı var mı? (panel çağrısı) */
+  firma_karti_var: boolean;
 };
 
 /* --- Genç profili (docs/plans/genc-akisi.md § 5.1, § 6.1) ------------------
@@ -236,6 +238,92 @@ export function firmaProfiliGuncelle(
   return apiIstek<FirmaProfil>("/kurum/profil", {
     method: "PATCH",
     body: JSON.stringify(girdi),
+  });
+}
+
+/* --- Firma kartı (docs/plans/firma-akisi.md § 5) ---------------------------
+   Tipler backend'deki app/schemas/firma_karti.py ile birebir eşleşir. */
+
+export type FirmaKartiGirdisi = {
+  ne_yapiyoruz: string;
+  yetkinlikler: string[];
+  onceki_isler: string | null;
+  aranan_isbirligi: string | null;
+  isbirligi_turleri: string[];
+};
+
+export type FirmaKartiYaniti = FirmaKartiGirdisi & {
+  id: string;
+  kurum_id: string;
+  firma_adi: string;
+  versiyon: number;
+  /** Eşleştirmeye hazır mı (arka plan hazırlığı bitti mi)? */
+  embedding_var: boolean;
+  olusturma_tarihi: string;
+};
+
+export type FirmaKartiTaslagi = {
+  ne_yapiyoruz: string | null;
+  yetkinlikler: string[];
+  onceki_isler: string | null;
+  aranan_isbirligi: string | null;
+  isbirligi_turleri: string[];
+};
+
+export type FirmaKartiSohbetYaniti = {
+  oturum_id: string;
+  soru: string | null;
+  taslak: FirmaKartiTaslagi;
+  taslak_hazir: boolean;
+};
+
+/** GET /kurum/kart — firmanın kartı; yoksa null. */
+export function firmaKartim(): Promise<FirmaKartiYaniti | null> {
+  return apiIstek<FirmaKartiYaniti | null>("/kurum/kart", {
+    cache: "no-store",
+  });
+}
+
+/** PATCH /kurum/kart — yalnızca gönderilen alan değişir. */
+export function firmaKartiDuzenle(
+  girdi: Partial<FirmaKartiGirdisi>,
+): Promise<FirmaKartiYaniti> {
+  return apiIstek<FirmaKartiYaniti>("/kurum/kart", {
+    method: "PATCH",
+    body: JSON.stringify(girdi),
+  });
+}
+
+/** POST /kurum/kart/sohbet/baslat — kartı olan firma için 409. */
+export function firmaKartiSohbetBaslat(): Promise<FirmaKartiSohbetYaniti> {
+  return apiIstek<FirmaKartiSohbetYaniti>("/kurum/kart/sohbet/baslat", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+/** POST /kurum/kart/sohbet/cevap */
+export function firmaKartiSohbetCevap(
+  oturumId: string,
+  cevap: string,
+): Promise<FirmaKartiSohbetYaniti> {
+  return apiIstek<FirmaKartiSohbetYaniti>("/kurum/kart/sohbet/cevap", {
+    method: "POST",
+    body: JSON.stringify({ oturum_id: oturumId, cevap }),
+  });
+}
+
+/** POST /kurum/kart/onayla — taslağı (ya da düzeltilmiş hâlini) kaydeder. */
+export function firmaKartiOnayla(
+  oturumId: string,
+  duzeltilmis: FirmaKartiGirdisi,
+): Promise<FirmaKartiYaniti> {
+  return apiIstek<FirmaKartiYaniti>("/kurum/kart/onayla", {
+    method: "POST",
+    body: JSON.stringify({
+      oturum_id: oturumId,
+      duzeltilmis_taslak: duzeltilmis,
+    }),
   });
 }
 
