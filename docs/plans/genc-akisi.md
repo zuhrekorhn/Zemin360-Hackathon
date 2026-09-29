@@ -486,3 +486,65 @@ Eşleştirme pipeline'ı (`_pipeline_calistir`) `app/api/eslestirme.py` içinde 
 - **SSRF:** Kanıt linki kontrolünde iç/özel IP engeli yok. Ayrı görev olarak ele alınacak.
 - **Ana sayfa:** Hâlâ "Faz 2" diyor (`frontend/src/app/page.tsx:140`).
 - **Supervisor:** Belgelerdeki "LangGraph supervisor pattern" ifadesi kodla uyuşmuyor.
+
+---
+
+## 15. Kapanış (29 Eyl)
+
+### Uygulananlar (§ 0 kararlarıyla)
+
+| Adım | Commit | Özet |
+|---|---|---|
+| 1 | `d18bb3f` | Eklemeli alanlar (profil, KVKK, çalışma, ilgi kaydı, ihtiyaç durumu) |
+| 2 | `370dd8a` | Eşleştirme pipeline'ı `app/servisler/`'e (davranış değişmedi) — karar 5 |
+| 3 | `c7070eb` | Müsaitlik çoklu seçim, staj dahil; boş liste elenmez — karar 2 |
+| 4 | `0257641` | Kayıt formu, KVKK onayı, `/profil`, eski hesaplara bant, demo verisi — karar 10 |
+| 5 | `2b05abf` | Kart hazırlama: linkli çalışma otomatik puanlanır, kart mevcut ihtiyaçlarla eşleşir — karar 7 |
+| 6 | `1602159` | Keşif form bilgilerini sormaz; çalışma başına kanıt ve referans — karar 12 |
+| 7 | `05a95bf` | Kart düzenleme; değişen çalışmanın göstergesi sıfırlanır, eski referans geçmişte — karar 8 |
+| 9 | `99ba692` | Gençten ilgi, karşılıklı ilgi, "şimdilik değil", ihtiyaç kapanma kuralı; ilgi gösterilmiş kayıt korunur — kararlar 1, 4, 14 |
+| 10 | `710fe10`, `3cf366c` | Genç ana sayfası (fırsatlar, kartını güçlendir, ilgilerim), firma tarafında ilgi gösterenler, açık iletişim onayı — kararlar 3, 9, 11 |
+| 11 | `87f6fca` | Canlılık: yanıtsız genç ilgisi, firmaya 5 gün, tek kademe — karar 6 |
+| 12 | — | Belgeler: api-contracts, architecture, data-schema, agent-specs (§ 1, 3, 4, 5; Doğrulama'nın yalnızca başlık/açıklama okuduğu açık — karar 13), Faz B/D notları, matching-algorithm, README, CLAUDE.md, roadmap |
+
+### Ertelenen
+
+- **8. adım, "Yeni iş ekle" sohbeti** (karar 16): dondurma sonrası. Form tabanlı ekleme aynı ihtiyacı karşılıyor; `somut_cikti.oturum_id` yerinde.
+- **Firmanın ihtiyaç "kapat" düğmesi** (karar 4): kural ve servis hazır (`servisler/ilgi.py › ihtiyaci_kapat`), uç ve arayüz firma görevinde.
+- **Toplu metin denetimi** (karar 15): liste `genc-akisi-metinler.md`, kurallar `icerik-rehberi.md`.
+
+### Bilinen sınırlar
+
+- **En iyi 5 sınırı** (karar 3): İhtiyaç başına sıralamada 6. ve sonrası olan genç o fırsatı görmez.
+- **"Neden uygun?" metni:** Firmaya hitaben 3. şahısla yazılıyor ve gence aynen gösteriliyor (karar 9).
+- **Arka plan işleri:** Eşleştirme, puanlama ve plan önerisi yanıttan sonra çalışıyor; sayfa kendiliğinden yenilenmiyor. Düzenlemeden hemen sonra gösterge boş görünür.
+- **"Kartını güçlendir":** En iyi durumu varsayıyor (kanıt 3/3); metin bunu "öne çıkabilirsin" diye söylüyor.
+- **Referans:** E-posta gönderilmiyor (SMTP yok). Genç yanıt linkini kendisi iletiyor; ilke olarak kendi referansını kendisi doldurabilir.
+- **İlgiyi geri çekme:** Genç ilgisini geri çekince firmaya bildirim gitmiyor; firma ekranındaki işaret kalkıyor.
+- **Hatırlatmalarda hitap:** Yanıtsız genç ilgisi hatırlatması yalnızca şablonla gidiyor. Kişiselleştirme istemi herkese "sen" diyor, diğer firma hatırlatmaları da öyle.
+- **Onay pencereleri:** Tarayıcının "Tamam/İptal" düğmelerini kullanıyor; rehber § 5.6 eylem adı istiyor.
+- **Mükerrer kontrol:** Aynı `oturum_id` kuralı yalnızca kart onayında var. "Yeni iş ekle" ertelendiği için çalışma eklemede tekrar koruması, form düğmesinin çift tıklamayı engellemesine dayanıyor.
+
+### Kapsam dışı kalan, hâlâ açık işler
+
+Öncelik: **D** = deploy (Faz E, 4 Eki) öncesi şart · **T** = teslim ve demo (5 Eki) öncesi · **S** = dondurma sonrası.
+
+| İş | Öncelik | Not |
+|---|---|---|
+| Kanıt linki kontrolünde iç/özel IP engeli (SSRF) | **D** | Sunucu, gencin verdiği adrese istek atıyor; bulutta iç adresleri yoklatabilir |
+| KVKK aydınlatma metninin hukuki onayı | **D** | `/kvkk` şu an platformun ne yaptığını anlatan taslak; GİRVAK'ın onayladığı metin gelmeli |
+| Tohum verinin genç akışı alanlarıyla hazırlanması | **D** | Faz E: kayıt alanları, ilgi gösterilmiş ve karşılıklı ilgili örnekler |
+| Faz E'nin kendi maddeleri | **D** | Canlı CORS, `TARAMA_ANAHTARI` ile cron, migration'ların sıfırdan çalışması |
+| Toplu metin denetimi | **T** | "… Ajanı" adları, firmaya "sen", uzun tire, "skor/eşik" geçen firma metinleri, Canlılık istemi ve şablonlarının hitabı, onay pencereleri. Liste: `genc-akisi-metinler.md` |
+| Ana sayfadaki "Faz 2" yazısı | **T** | `frontend/src/app/page.tsx`; tek satır, metin denetimine girebilir |
+| Belgelerdeki "LangGraph supervisor pattern" ifadesi | **T** | Kodda supervisor yok; README, CLAUDE.md ve architecture'da düzeltilmeli, jüri sorabilir |
+| README eksikleri | **T** | Proje adı yer tutucu, canlı adres, ekran görüntüleri; README MIT diyor ama `LICENSE` dosyası yok (Faz F) |
+| `yeni_firsat` bildirim metni hâlâ anonim | **T** | Karar 1'den sonra anonimliğin gerekçesi kalmadı; metin denetiminde firma adı eklenebilir |
+| Firma tarafı | **T** | Sıradaki görev: firma profili ve düzenlemesi, ihtiyaç kapatma düğmesi, girişim/startup kapsam kararı |
+| "Yeni iş ekle" sohbeti | **S** | Karar 16 |
+| Onay pencereleri için özel bileşen | **S** | Eylem adlı düğmeler için; denetimde istenirse T |
+| En iyi 5 sınırının gözden geçirilmesi | **S** | Havuz büyüyünce |
+| Benzerlik alt sınırının (0,45) yeniden kalibrasyonu | **S** | 4 kartla ayarlandı |
+| Gence hitaben ayrı "Neden uygun?" metni | **S** | Ek dil modeli çağrısı gerektirir |
+| Hesap silme ve KVKK onayını geri alma | **S** | Şu an yalnızca "talep için program ekibine başvur" |
+| ESCO taksonomisi | **S** | Belgede zaten isteğe bağlı |

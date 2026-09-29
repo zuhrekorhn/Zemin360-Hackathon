@@ -141,14 +141,29 @@ reddeder; sayfa görünür ama düğmeler çalışmaz. Yerel denemede `http://lo
 **Demo notu:** Tohum verinin bir kısmının `son_aktivite_tarihi` geriye çekilir;
 pasifleşme günlerce beklemeden gösterilebilir.
 
+## Genç akışı (28-29 Eyl) ✓
+
+Plan ve kararlar: [`plans/genc-akisi.md`](plans/genc-akisi.md); elle deneme: [`plans/genc-akisi-deneme.md`](plans/genc-akisi-deneme.md).
+
+- [x] Kayıt formu (profil alanları, KVKK onayı), profil düzenleme, eski hesaplara bant
+- [x] Müsaitlik çoklu seçim (staj dahil)
+- [x] Kart onayında otomatik puanlama ve yeniden eşleştirme (sonradan gelen genç açığı kapandı)
+- [x] Keşif form bilgilerini sormaz; çalışma başına kanıt ve referans
+- [x] Kart ve çalışma düzenleme; değişen çalışmanın göstergesi sıfırlanır
+- [ ] "Yeni iş ekle" sohbeti: **dondurma sonrasına ertelendi** (karar 16)
+- [x] Gençten ilgi, karşılıklı ilgi, "şimdilik değil", ihtiyaç kapanma kuralı; ilgi gösterilmiş kayıt korunur
+- [x] Genç ana sayfası (fırsatlar, kartını güçlendir, ilgilerim) ve firma tarafında ilgi gösterenler
+- [x] Canlılık: yanıtsız genç ilgisi (firmaya, 5 gün)
+- [ ] Toplu metin denetimi (`plans/genc-akisi-metinler.md`, `icerik-rehberi.md`): ayrı adım
+
 ## Gözden geçirme ve düzeltme günü (3 Eki)
 
 Yeni özellik değil; Faz B'de bilinçli olarak dışarıda bırakılan ve denemede
 eksikliği görülen profil işleri ile arayüz düzeltmeleri. Akşam özellik dondurma.
 
 - [ ] Profil alanları (kayıttan sonra doldurulan şehir, çalışma modeli, müsaitlik,
-      sektör) gözden geçirilir.
-- [ ] Profil düzenleme sayfası (genç ve kurum).
+      sektör) gözden geçirilir. *Genç tarafı genç akışında yapıldı; firma tarafı kaldı.*
+- [ ] Profil düzenleme sayfası (genç ve kurum). *Genç `/profil` hazır; firma kaldı.*
 - [ ] Arayüz düzeltmeleri (C ve D'den biriken küçük işler).
 
 ## Faz E — Yayına alma + tohum veri (4 Eki)

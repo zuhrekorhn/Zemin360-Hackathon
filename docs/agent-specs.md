@@ -13,7 +13,10 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 2. Boş alan kalırsa takip sorusu sorar. **Zorunlu alanlar** (rol, deneyim, sektör ilgisi, araçlar) için sormaya devam eder — en fazla 6 tur, o da yalnızca sonsuz döngüye karşı; tavana gelinirse alanlar "belirtilmedi" ile doldurulur. Sebebi sahada görüldü: 2 turluk sınır dolduğunda kart `sektor_ilgi_alani` boş kaydedilmişti ve o alan embedding metnine girdiği için eşleştirme skorunu doğrudan düşürüyor. **Zorunlu olmayan ayrıntılar** (çıktı başına ölçülebilir sonuç ve kişinin kendi payı) **kendi sayacıyla** en fazla 2 soru; her soru bir kez sorulur, kullanıcı bilmiyorsa ısrar edilmez, sıradaki eksiğe geçilir. Zorunlu alan fazında modelin önerdiği takip sorusu yalnızca konusu eksik bir zorunlu alansa kullanılır (model sorusunu `takip_konusu` ile etiketliyor); değilse o alanın sabit sorusu sorulur. Sebebi sahada görüldü: sektör eksikken model "projede rolün neydi" diye sordu, bir sonraki turda sistemin ek sorusu aynı konuyu tekrar sordu. (Önceden zorunlu alanlarla aynı sayacı paylaşıyordu: zorunlu alanlar 2 tur sürünce hiç sorulmuyordu, "bilmiyorum" diyene de aynı soru tekrar geliyordu.) Tanımlama Ajanı 2 turda kapanmaya devam eder.
 3. Kart taslağını kullanıcıya gösterir, **onaylatır** (insan onayı zorunlu).
 4. **Edge case — "hiç projem yok":** somut çıktı alanı zorunlu değildir. Fallback soru zinciri ("okulda bir ödev, gönüllü bir iş var mı?") kullanılır; hâlâ yoksa kart `deneyim_seviyesi: "potansiyel"` etiketiyle oluşturulur ve Doğrulama Ajanı'nı atlayarak doğrudan Eşleştirme'ye gider.
-5. **Gizlilik:** iletişim bilgisi varsayılan olarak kuruma gösterilmez; kart ve gencin adı görünür, e-posta iki taraf da onaylayınca (kurum ilgilenir, genç kabul eder) açılır (`faz-b-kimlik-ve-dongu.md` § 5).
+5. **Kayıt formundaki bilgiler sorulmaz** (genç akışı, `plans/genc-akisi.md` § 5.3): şehir, çalışma modeli, müsaitlik, durum, okul ve bölüm sohbetin başında ayrı bir sistem mesajıyla bağlam olarak gider. Modelin önerdiği soru yalnızca konusu eksik bir Keşif alanıysa kullanıldığı için form alanı sorulamaz; aradığı fırsat türü de sorulmaz (müsaitlik profilde). Seviye soyut sorulmaz, araçla ne yapıldığı anlattırılır.
+6. **Çalışma başına kanıt ve referans:** sonuç ve kişinin payından sonra, kanıtı ya da referansı olmayan her çalışmaya tek soruda "gösteren bir link ya da doğrulayabilecek birinin e-postası" sorulur. Ek soruların tavanı 4 (kendi sayacıyla, her soru bir kez). Referans e-postası onayda mevcut referans isteği mekanizmasıyla o çalışmaya bağlanır. Çalışma türü (proje, staj, iş, gönüllülük, yarışma), sonuç ve pay ayrı alanlarda saklanır; sertifika ve dil isteğe bağlı.
+7. **Kart düzenlenebilir** (`plans/genc-akisi.md` § 6): genç kartını ve çalışmalarını formla düzenler; "Yeni iş ekle" sohbeti ertelendi (plan § 0, karar 16).
+8. **Gizlilik:** iletişim bilgisi varsayılan olarak kuruma gösterilmez; kart ve gencin adı görünür, e-posta iki taraf da onaylayınca (kurum ilgilenir, genç kabul eder) açılır (`faz-b-kimlik-ve-dongu.md` § 5).
 
 ## 2. Tanımlama Ajanı
 
@@ -38,6 +41,10 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 6. Eşik altı sonuçlar gösterilmez.
 7. LLM ile gerekçe metni üretimi (en çok katkı sağlayan taksonomi düğümleri + doğrulama durumu).
 
+**Ne zaman çalışır:** ihtiyaç kartı onaylanınca (o ihtiyaç için) ve yetenek kartı onaylanınca, düzenlenince ya da profildeki filtre alanı değişince (o kartla ilgili açık ihtiyaçlar için; `app/servisler/kart_hazirlama.py`). Sonradan gelen genç böylece mevcut ihtiyaçlarla eşleşir. Pipeline tek: `app/servisler/eslestirme.py`.
+
+**İlgi iki taraflı** (`plans/genc-akisi.md` § 4): eşik üstü öneri gence "fırsat" olarak görünür; ilk ilgiyi firma da genç de gösterebilir, genç ilgi skoru değiştirmez. Karar verilmiş kayıtlar korunur: yeniden hesap yalnızca `onerildi` kayıtlarını siler; gencin ilgi gösterdiği kaydın skoru ve gerekçesi de değişmez (karar 14). Kapalı ihtiyaç için aday aranmaz.
+
 **Bilinen sınırlamalar:** Cold start (havuz küçükken kalite düşük — jüriye açıkça belirtilmeli). Taksonomi tek zorunlu filtre değil, embedding serbest metni de temsil eder.
 
 ## 4. Doğrulama Ajanı
@@ -47,17 +54,21 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 **Ne sağlamayacak:** "Bu kişi yalan söylüyor" gibi kesin hüküm vermez — sadece sinyal toplar. Kod/commit geçmişi analiz etmez. Kanıtsız kartı sistemden dışlamaz, sadece "doğrulanmamış" etiketler. Üçüncü taraf onayını zorunlu kılmaz (akışı tıkamamak için).
 
 **Nasıl sağlayacak:**
-1. Kanıt kontrolü — link erişilebilirlik + LLM ile tutarlılık karşılaştırması.
+1. Kanıt kontrolü — **linkin yalnızca açılıp açılmadığına ve sayfanın başlığı ile kısa açıklamasına** bakılır (`<head>` içindeki `<title>`/`og:title` ve `meta description`/`og:description`, en çok 400 karakter). Sayfanın içeriği, reponun dili, README'si, dosyaları ya da commit geçmişi **okunmaz**. Dil modeli, iddiayı (başlık, açıklama, sonuç, pay) bu başlık ve açıklamayla karşılaştırarak üç bileşeni puanlar; link açılmıyorsa kanıt bileşeni kuralla 0'dır. Referans bileşeni dil modelinden değil, referansların 1-5 puanlarının ortalamasından kuralla hesaplanır.
 2. Referans akışı — tek kullanımlık, girişsiz link; 3-5 soruluk yapılandırılmış form; **5-7 gün timeout, nötr durum** (bkz. `sequence-diagrams.md`).
 3. Rubrik puanı — sabit kriterlere göre LLM puanlama + gerekçe metni.
 4. **İtiraz hakkı:** kullanıcı skoru görebilmeli, yanlış değerlendirilen kanıtı yeniden gönderebilmeli.
 5. **Önyargı riski:** rubrik kriterleri objektif/kontrol edilebilir tutulmalı ("ölçülebilir sonuç var mı — evet/hayır"), "ne kadar etkileyici yazılmış" gibi öznel kriterlerden kaçınılmalı.
+6. **Otomatik puanlama** (genç akışı): linki olan çalışma, kart onaylanınca ve düzenlenince arka planda puanlanır; linksiz çalışma puanlanmaz, "doğrulanmamış" nötr durumda kalır.
+7. **Düzenleme sıfırlar:** bir çalışmanın içeriği ya da linki değişirse o çalışmanın göstergesi sıfırlanır ve yeniden değerlendirilir; değişmeyenlerinki korunur. Değişiklikten önceki referans yanıtları silinmez, geçmiş olarak görünür ama puana girmez; genç referansı yeniden isteyebilir (`plans/genc-akisi.md` § 0, karar 8).
 
 ## 5. Canlılık Ajanı
 
 **Ne sağlayacak:** Kurulan eşleşmeleri periyodik tarama; pasifleşen bağlantıları fark etme; LLM'in yazdığı kişiselleştirilmiş hatırlatma/öneri mesajı.
 
 **Ne sağlamayacak:** Karmaşık bir davranışsal tahmin modeli kurmaz — kural tabanlı bir eşik (örn. "30 gündür etkileşim yok") yeterli. Toplu/jenerik spam göndermez.
+
+**Genç akışı eki:** genç ilgi gösterdi ve firma 5 gündür yanıt vermediyse firmaya tek hatırlatma (`genc_ilgisi_yanitsiz`, yalnızca şablon, "siz" hitabı).
 
 **Nasıl sağlayacak:** Günlük bir arka plan işi, `ESLESME` kayıtlarının `son_aktivite_tarihi`nı tarar, eşik altına düşenler için LLM'e bağlama dayalı bir hatırlatma mesajı yazdırır (`CANLILIK_OLAYI` tablosuna yazılır).
 

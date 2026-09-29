@@ -24,7 +24,17 @@ erDiagram
     string ad
     string email
     string sehir
+    text[] calisma_modelleri
     text[] musaitlikler
+    string kariyer_durumu
+    string okul
+    string bolum
+    int sinif
+    int mezuniyet_yili
+    date musaitlik_baslangici
+    string github_url
+    string linkedin_url
+    string portfolyo_url
   }
   YETENEK_KARTI {
     uuid id PK
@@ -126,6 +136,14 @@ erDiagram
 ```
 
 ## Tasarım Kararları
+
+- **Genç akışı alanları (28-29 Eyl, `plans/genc-akisi.md` § 3).**
+  - `HESAP.kvkk_onay_tarihi`.
+  - `KULLANICI`'da kayıt formunun yapısal alanları (yukarıdaki diyagram). Fotoğraf, yaş, cinsiyet, medeni durum, TC kimlik no, adres ve ücret beklentisi bilinçli olarak yok; şema bu alanları 422 ile reddeder.
+  - `YETENEK_KARTI.sertifikalar`, `diller`; `versiyon` her gerçek düzenlemede artar.
+  - `SOMUT_CIKTI.is_turu`, `kendi_rolu`, `olculebilir_sonuc` (eskiden açıklamaya birleştiriliyordu; rubrik ve embedding birleşik okur, `app/core/is_kalemi.py`), `icerik_tarihi` (NULL = hiç değişmedi; değişince güven göstergesi sıfırlanır) ve `oturum_id` ("Yeni iş ekle" sohbeti için, ertelendi).
+  - `REFERANS_ISTEGI.yanit_tarihi`: `icerik_tarihi`'nden önce verilmiş yanıt geçmişte kalır, puana girmez.
+  - `ESLESME` ve `IHTIYAC_KARTI.durum` aşağıda.
 
 - **`HESAP` (Faz B) — kimlik profilden ayrı.** `hesap(id, email UNIQUE, sifre_hash, rol, olusturma_tarihi)`; `rol` ∈ `genc | kurum | girvak`. Genç hesabının bir `KULLANICI` profili, kurum hesabının bir `KURUM` profili olur (`hesap_id` UNIQUE FK, 1-1); GİRVAK hesabının profili yok. Şifre argon2id ile hash'lenir, düz şifre saklanmaz. `hesap_id` nullable: Faz B öncesi profiller için hesap uydurulmadı. Gerekçe ve iki seçeneğin karşılaştırması: `faz-b-kimlik-ve-dongu.md` § 1.
 - **`ISBIRLIGI` ve `MILESTONE` (Faz C) — Takip.** `ISBIRLIGI.durum`: `plan_bekliyor` → `aktif` (iki taraf da mevcut planı onaylayınca; düzenleme iki onayı da sıfırlar) → `tamamlandi` (son adım iki tarafça tamamlanınca, kural; ajanın kararı değil). `MILESTONE.durum`: `bekliyor` → `tamamlandi` (genç ve kurum ayrı ayrı işaretler). **Gecikme saklanmaz**, okuma anında hesaplanır (`hedef_tarih < bugün` ve tamamlanmadı). Onaylanan plan kilitli; `aktif`'te yalnızca `kanit_linki` değişir. `durum_ozeti` Takip Ajanı'nın kesilebilir özeti, hiçbir kural ona bakmaz. **Tamamlanmış pilot** sinyali saklanmaz, `durum = tamamlandi` kayıtlarından hesaplanır ve Eşleştirme'nin doğrulama bonusuna girer (`matching-algorithm.md` § 4). Faz B'de `aktif` açılmış planı olmayan kayıtlar migration'la `plan_bekliyor` oldu. Bkz. `faz-c-takip.md`.

@@ -37,6 +37,34 @@ Görevler üç kategoriye ayrılıyor, her biri farklı model gerektiriyor:
 
 Çıkarımda format zaten net, ince akıl yürütme gerekmiyor; sohbetin her turunda çağrıldığı için hız ve maliyet belirleyici. Gerekçe ve rubrik tek seferlik ama nüans önemli: kartlardaki somut noktalara atıf, kurallara uyum (itiraz notu beyandır, sayı uydurma yok). Bu katmanlama maliyetin büyük kısmını ucuz modelde tutarken kalite gereken yerde güçlü modeli devreye sokuyor. Güçlü modelin gerçekten gerekli olup olmadığı, aynı girdiyle Pro ve Flash karşılaştırılarak ölçülüyor; model `.env`'den değiştirilebildiği için karar kod değişikliği gerektirmiyor.
 
+## Katmanlar (backend)
+
+| Katman | Ne durur | Kural |
+|---|---|---|
+| `app/agents/` | Saf kurallar (durum makineleri, eşikler, skor, düzenleme ve güçlendirme hesapları) ve dil modeli çağrıları | Veritabanı yok; testle sabitlenmiş tablolar. Yapay zekâ öneri ve metin üretir, karar kuraldadır |
+| `app/servisler/` | Birden fazla uç ve arka plan işinin paylaştığı orkestrasyon: eşleştirme pipeline'ı, kart hazırlama (embedding → otomatik puanlama → yeniden eşleştirme), kart düzenleme, doğrulama rubriğinin yazılması, ilgi akışının yan etkileri (iş birliği açma, ihtiyacı kapatma) | Genç akışında açıldı (`plans/genc-akisi.md` § 11) |
+| `app/api/` | Uçlar: yetki (401/403/404), istek/yanıt şeması, servisi çağırma, bildirim | İnce kalır; aynı iş iki uçta yazılmaz |
+
+Arka plan işleri `BackgroundTasks` ile yanıttan sonra çalışır, kendi oturumunu açar, hatayı yutar ve idempotenttir (danışma kilidi, `ON CONFLICT`, versiyon kontrolü, satır kilidi). Testler hepsini `tests/conftest.py`'de sahteyle değiştirir.
+
+## İlgi akışı (iki kapı)
+
+Eşleşme durumu tek alanda (`eslesme.durum`), geçiş kuralı tek fonksiyonda (`app/agents/eslesme_durumu.py › gecis`):
+
+```
+onerildi ──firma "ilgileniyorum"──▶ ilgileniliyor ──genç kabul──▶ kabul_edildi
+   │                                              └──genç red────▶ reddedildi
+   └──genç ilgi (iletişim onayıyla)──▶ genc_ilgilendi ──firma "ilgileniyorum"──▶ kabul_edildi (karşılıklı ilgi)
+                                         ├──firma "şimdilik değil"──▶ kapandi
+                                         └──genç geri çeker──────────▶ onerildi
+   onerildi | genc_ilgilendi | ilgileniliyor ──ihtiyaç kapandı──▶ kapandi
+```
+
+- Genç eşik üstü önerileri "fırsat" olarak görür; ilgisi skoru değiştirmez.
+- `kabul_edildi` iş birliğini açar, e-postaları yalnızca iki tarafa gösterir ve plan önerisini başlatır.
+- Karar verilmiş kayıtlar yeniden hesapta korunur: pipeline yalnızca `onerildi` siler, `genc_ilgilendi`'nin skorunu ve gerekçesini de değiştirmez.
+- Ayrıntı: `plans/genc-akisi.md` § 4, `faz-b-kimlik-ve-dongu.md` § 5.
+
 ## Repo Yapısı
 
 ```

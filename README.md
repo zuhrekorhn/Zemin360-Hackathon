@@ -190,16 +190,25 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 
 ## Proje Durumu
 
-🟢 **Faz C tamamlandı, Faz D (Canlılık + GİRVAK paneli) başlıyor.** Üç rol (genç, kurum, GİRVAK) kendi paneliyle giriyor; döngü kapalı: genç kart oluşturur → kurum ilgilenir → genç kabul eder → plan iki tarafça onaylanır → adımlar iki taraflı tamamlanır → tamamlanmış pilot sinyali kartına ve eşleşme skoruna geri döner. Altı ajandan beşi çalışıyor:
+🟢 **Faz A-D ve genç akışı tamamlandı; altı ajan da çalışıyor.** Üç rol (genç, firma, GİRVAK) kendi paneliyle giriyor. Döngü kapalı:
+
+1. Genç kısa bir kayıt formundan sonra sohbetle yetenek kartını oluşturur.
+2. Kart onaylanınca linkli çalışmalar değerlendirilir ve kart açık ihtiyaçlarla eşleşir.
+3. Genç eşleştiği fırsatları görür ve ilgi gösterebilir; firma da ilgi gösterebilir. İki taraf da ilgilenince iletişim açılır ve iş birliği başlar.
+4. Plan iki tarafça onaylanır, adımlar iki taraflı tamamlanır.
+5. Tamamlanan iş birliği gencin kartına ve eşleşme skoruna geri döner.
+6. Canlılık, hareketsiz kalan bağlantıları hatırlatır; GİRVAK programı panelden izler.
 
 | Ajan | Durum |
 |---|---|
-| **Keşif** | Çalışıyor — sohbet → yetenek kartı taslağı → onay → kayıt + embedding |
-| **Tanımlama** | Çalışıyor — sokratik sohbet → ihtiyaç kartı taslağı → onay → kayıt + embedding |
-| **Eşleştirme** | Çalışıyor — sert filtre → benzerlik alt sınırı → pgvector skoru → gerekçe. Kurum ilgilenir, genç kabul eder, iş birliği açılır. Arayüz: `/kurum`, `/kurum/oneriler`, `/genc` |
-| **Doğrulama** | Çalışıyor — kanıt kontrolü + rubrik → referans akışı → itiraz. Arayüz: `/kart/{id}` ve `/referans` |
-| **Takip** | Çalışıyor — kabulde plan önerisi → iki taraflı onay → iki taraflı işaretleme, gecikme → otomatik tamamlanma → tamamlanmış pilot sinyali; kısa durum özeti. Arayüz: `/isbirligi/{id}` |
-| Canlılık | Faz D (1-2 Eki) |
+| **Keşif** | Çalışıyor. Kayıt formunun bilgilerini sormaz; çalışma başına kanıt ve referans da sorulur. Arayüz: `/kesif` |
+| **Tanımlama** | Çalışıyor. Sokratik sohbet → ihtiyaç kartı. Arayüz: `/tanimlama` |
+| **Eşleştirme** | Çalışıyor. Sert filtre → benzerlik alt sınırı → skor → gerekçe. İhtiyaç ve yetenek kartı onayında/düzenlemesinde arka planda. İlgi iki taraflı. Arayüz: `/kurum/oneriler`, `/genc` |
+| **Doğrulama** | Çalışıyor. Link erişimi + başlık/açıklama + rubrik, referans akışı, itiraz. Linkli çalışma otomatik puanlanır, düzenlenince sıfırlanır. Arayüz: `/kart/{id}`, `/referans` |
+| **Takip** | Çalışıyor. Plan önerisi, iki taraflı onay ve işaretleme, tamamlanma sinyali. Arayüz: `/isbirligi/{id}` |
+| **Canlılık** | Çalışıyor. Hareketsizlik hatırlatmaları (yanıtsız genç ilgisi dahil), yeni fırsat, GİRVAK paneli. Arayüz: `/girvak` |
+
+Genç akışının kararları ve bilinen sınırları: [`docs/plans/genc-akisi.md`](docs/plans/genc-akisi.md). Elle deneme senaryosu: [`docs/plans/genc-akisi-deneme.md`](docs/plans/genc-akisi-deneme.md). Arayüz metinleri [`docs/icerik-rehberi.md`](docs/icerik-rehberi.md)'ye uyar.
 
 **Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında ve kart ekranında tam adres olarak gösteriliyor, referans kişiye elle iletilir. **Referans güvenliği (Faz B):** referans yanıt uç noktası yalnızca iddianın başlığını ve durumu dönüyor; kanıt durumu (`GET /dogrulama/kanit/{id}`, referans e-postaları ve yanıt linkleri) artık yalnızca çıktının sahibi gence ve GİRVAK'a açık, kurum ve başkaları göremiyor. Kalan sınırlama: SMTP olmadığı için yanıt linkini genç kendisi iletiyor, yani ilke olarak kendi referansını doldurabilir. Gerçek kullanımda token yalnızca referans kişiye e-postayla gitmeli. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
 
@@ -209,7 +218,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 
 **Takip kapsamı:** ajan plan ve özet önerir, karar vermez; tamamlanma bir kuraldır (son adım iki tarafça tamamlanınca). Onaylanan plan kilitlidir. Tamamlanmış pilot, Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125; pilotsuz kartın skoru değişmez, alakayı yaratmaz). Durum özeti kesilebilir iş: çökerse ya da kesilirse döngü aynen çalışır.
 
-Sırada: Canlılık Ajanı (pasifleşen bağlantılar, hatırlatma, yeni fırsat) ve GİRVAK panelinin program hedefleri.
+Sırada: firma tarafı ve toplu metin denetimi.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım

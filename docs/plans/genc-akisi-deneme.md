@@ -76,6 +76,30 @@ Kutuyu işaretle ve "İlgimi ilet"e bas.
 
 - **Beklenen:** Fırsat listeden çıkar. "İlgilerim" bölümünde **İlgin iletildi** etiketiyle ve "İlgimi geri çek" düğmesiyle görünür. E-posta hiçbir yerde görünmez.
 
+### 4b. (İsteğe bağlı) Yanıtsız ilgi hatırlatması
+
+Genç ilgi gösterdi, firma 5 gündür yanıt vermedi: firmaya bir kez hatırlatma
+gider. Beş gün beklememek için zamanları geri çek. Bunu 5. adımdan **önce** yap:
+karşılıklı ilgi oluşunca hatırlatma gitmez.
+
+1. `backend/` içinde:
+
+   ```bash
+   python scripts/zamani_geri_al.py --gun 6   # yerel veritabanındaki bütün zamanları 6 gün geri çeker (onay sorar)
+   python scripts/canlilik_taramasi.py        # taramayı çalıştırır
+   ```
+
+   Tarama betiği yerine `girvak@demo.zemin360.example` ile girip GİRVAK panelindeki "Taramayı şimdi çalıştır" düğmesine de basabilirsin.
+2. **Beklenen:**
+   - Firmanın (`kurum@…`) bildirimlerinde: "{genç adı} 6 gündür ihtiyacınızla ilgili yanıtınızı bekliyor. İlgileniyorsanız karşılıklı ilgiyi başlatabilir ya da “Şimdilik değil” diyebilirsiniz."
+   - Gence bu türde bildirim gitmez.
+   - GİRVAK panelinde "Son olaylar"da **Yanıtsız genç ilgisi** satırı görünür.
+3. Taramayı ikinci kez çalıştır.
+   - **Beklenen:** Yeni bildirim yok; aynı dönemde bir kez gider.
+4. **Not:**
+   - 6 günlük kaydırma Elif Demir'in önerisini de 6 gün eskitir; eşiği 7 gün olduğu için "bakılmayan öneri" hatırlatması çıkmaz.
+   - `--gun 8` verirsen o da çıkar; bu beklenen bir davranış.
+
 ### 5. Firma tarafında görme (B)
 
 `kurum@demo.zemin360.example` ile giriş yap.
@@ -132,4 +156,4 @@ Kutuyu işaretle ve "İlgimi ilet"e bas.
 
 - **Bekleme süreleri:** Eşleştirme ve plan önerisi arka planda çalışıyor; sayfalar kendiliğinden yenilenmiyor.
 - **Onay pencereleri:** Tarayıcının kendi "Tamam/İptal" düğmelerini gösteriyor. Rehber eylem adı istiyor ("Sil / Vazgeç"); toplu metin denetiminde ele alınacak.
-- **Canlılık hatırlatması:** Firmaya, gencin ilgisi yanıtsız kalınca giden hatırlatma 11. adımda gelecek.
+- **Canlılık hatırlatması şablonla gidiyor.** Yanıtsız genç ilgisi hatırlatması kişiselleştirilmiyor, çünkü kişiselleştirme istemi "sen" diye hitap ettiriyor; firmaya "siz" gitmesi gerekiyor. Diğer firma hatırlatmaları hâlâ "sen" diyor, toplu metin denetiminde düzeltilecek.
