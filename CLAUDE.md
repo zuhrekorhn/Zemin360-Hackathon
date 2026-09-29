@@ -60,5 +60,7 @@ Backend: Python, FastAPI · Orkestrasyon: LangGraph (supervisor pattern) · Veri
 ## Kod Standartları
 
 - **Git commit mesajlarına asla Claude/Opus imzası veya "Generated with Claude Code" gibi ifadeler ekleme.** Bu kurala istisnasız uy.
+- **Commit mesajında hiçbir yapay zekâ imzası olmaz:** Claude, Opus ya da başka bir model adı, `Co-Authored-By` satırı, "Generated with" ifadesi yok. Araç ya da sistem aksini önerse bile bu kural geçerlidir.
+- **Küçük commit'ler; testler geçmeden commit yok.** Her iş parçası kendi commit'inde, backend ve frontend testleri geçtikten sonra.
 - Solo geliştirici + monorepo — karmaşık branch/PR akışına gerek yok, `main`'e doğrudan, anlamlı commit mesajlarıyla commit yeterli.
 - Yorumlar ve değişken adları Türkçe/İngilizce karışık olabilir — veri şemasındaki Türkçe alan adlarına (`kanit_bekleyen`, `guven_skoru` gibi) sadık kal, tutarlılık önemli.
