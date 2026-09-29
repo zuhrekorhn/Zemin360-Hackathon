@@ -24,7 +24,7 @@ from app.core.kimlik import (
     token_coz,
     token_uret,
 )
-from tests.sahte_hesap import GENC_KAYIT_EKI
+from tests.sahte_hesap import FIRMA_KAYIT_EKI, GENC_KAYIT_EKI
 from tests.veritabani import api_istemcisi, geri_alinan_oturum
 
 # --- Şifre ---------------------------------------------------------------------------
@@ -200,7 +200,13 @@ def test_kurum_kaydi_kurum_profili_acar():
         async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
             kayit = await istemci.post(
                 "/auth/kayit",
-                json={"email": _email(), "sifre": "yeterince-uzun", "rol": "kurum", "ad": "Koop"},
+                json={
+                    "email": _email(),
+                    "sifre": "yeterince-uzun",
+                    "rol": "kurum",
+                    "ad": "Koop",
+                    **FIRMA_KAYIT_EKI,
+                },
             )
             me = await istemci.get(
                 "/me", headers={"Authorization": f"Bearer {kayit.json()['token']}"}

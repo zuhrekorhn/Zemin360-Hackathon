@@ -6,11 +6,13 @@ Ajan başına dışarıya açılan uç noktalar. Detaylı akışlar için bkz. `
 
 | Ajan | Uç nokta | Yöntem | Not |
 |---|---|---|---|
-| **Kimlik** | `/auth/kayit` | POST | `{email, sifre, rol: genc\|kurum, ad}` → 201 + token. **Genç** ayrıca `genc_profili` (şehir, çalışma modelleri, durum `ogrenci\|mezun\|calisiyor`, müsaitlikler zorunlu; okul, bölüm, sınıf, mezuniyet yılı, başlangıç tarihi, GitHub/LinkedIn/portfolyo opsiyonel) ve `kvkk_onay: true` gönderir; yoksa 422. Kurum `genc_profili` göndermez. Toplanmayan bir alan (cinsiyet, doğum tarihi…) 422. GİRVAK açık kayıtla açılamaz (422), e-posta kayıtlıysa 409 (bkz. `faz-b-kimlik-ve-dongu.md`, `plans/genc-akisi.md` § 5.1) |
+| **Kimlik** | `/auth/kayit` | POST | `{email, sifre, rol: genc\|kurum, ad}` → 201 + token. **Genç** ayrıca `genc_profili` (şehir, çalışma modelleri, durum `ogrenci\|mezun\|calisiyor`, müsaitlikler zorunlu; okul, bölüm, sınıf, mezuniyet yılı, başlangıç tarihi, GitHub/LinkedIn/portfolyo opsiyonel) ve `kvkk_onay: true` gönderir; yoksa 422. **Firma** ayrıca `firma_profili` (tür `girisim\|kobi\|kurumsal`, sektör, şehir zorunlu; web sitesi, çalışan aralığı `1-10\|11-50\|51-250\|250+`, kuruluş yılı, tanıtım (≤300), formu dolduranın adı ve görevi isteğe bağlı) ve `kvkk_onay: true` gönderir; yoksa 422 (`plans/firma-akisi.md` § 0 karar 2). Toplanmayan bir alan (cinsiyet, doğum tarihi…) 422. GİRVAK açık kayıtla açılamaz (422), e-posta kayıtlıysa 409 (bkz. `faz-b-kimlik-ve-dongu.md`, `plans/genc-akisi.md` § 5.1) |
 | | `/auth/giris` | POST | `{email, sifre}` → token. Yanlış e-posta ve yanlış şifre aynı 401'i alır |
 | | `/me` | GET | Giriş gerekli (`Authorization: Bearer`). Hesap, profil özeti, kartlar, `okunmamis_bildirim`. Genç için `eksik_profil_alanlari` ve `kvkk_onayli` (eski hesaplara engellemeyen bant) |
 | **Profil** | `/profil` | GET | Yalnızca genç, kendi profili (token'ın profili; başkasının profili diye bir yol yok). Kayıt formunun alanları, `kvkk_onay_tarihi`, `eksik_alanlar` |
 | | `/profil` | PATCH | Yalnızca gönderilen alan değişir; opsiyonel alan `null` ya da `""` ile silinir, zorunlu alan (ad, şehir, çalışma modeli, müsaitlik, durum) boşaltılamaz (422). `kvkk_onay: true` onay tarihi yoksa yazar. Kurum/GİRVAK 403 |
+| | `/kurum/profil` | GET | Yalnızca firma, kendi profili. Kayıt formunun alanları, iletişim e-postası, `kvkk_onay_tarihi`, `eksik_alanlar` (`tur`, `sektor`, `sehir`) |
+| | `/kurum/profil` | PATCH | Gençteki kurallar: yalnızca gönderilen alan değişir, zorunlu alan (ad, tür, sektör, şehir) boşaltılamaz (422), toplanmayan alan 422, `kvkk_onay: true` onay tarihi yoksa yazar. Genç/GİRVAK 403 |
 | **Bildirimler** | `/bildirimler` | GET | Kendi bildirimleri, en yeni önce (en çok 100). Her rol |
 | | `/bildirimler/{id}/okundu` | POST | Kendi bildirimi; başkasınınki 404. Tekrarında ilk okunma tarihi korunur |
 | | `/bildirimler/hepsini-oku` | POST | `{okunan}` döner |

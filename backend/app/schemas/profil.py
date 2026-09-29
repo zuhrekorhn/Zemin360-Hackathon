@@ -1,4 +1,6 @@
-"""Gencin profil şemaları: kayıt formu ve profil düzenleme (docs/plans/genc-akisi.md § 5.1).
+"""Genç ve firma profil şemaları: kayıt formu ve profil düzenleme.
+
+Genç: docs/plans/genc-akisi.md § 5.1. Firma: docs/plans/firma-akisi.md § 2.
 
 `extra="forbid"`: toplanmayan bir alan (cinsiyet, doğum tarihi…) gönderilirse
 sessizce yok sayılmaz, 422 döner — toplanmadığı açık olsun.
@@ -12,6 +14,12 @@ from typing import Annotated
 from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Field
 
 from app.core import calisma_modeli
+from app.core.firma_profili import (
+    CalisanAraligi,
+    FirmaTuru,
+    kurulus_yili_dogrula,
+    tanitim_temizle,
+)
 from app.core.genc_profili import (
     SINIF_EN_AZ,
     SINIF_EN_COK,
@@ -115,6 +123,67 @@ class GencProfilYaniti(BaseModel):
     github_url: str | None
     linkedin_url: str | None
     portfolyo_url: str | None
+    kvkk_onay_tarihi: dt.datetime | None
+    # Doldurulması gereken zorunlu alanlar (eski hesaplar için bant)
+    eksik_alanlar: list[str]
+
+
+# --- Firma (docs/plans/firma-akisi.md § 0 kararlar 1-2) ---------------------------------
+
+KurulusYili = Annotated[int | None, AfterValidator(kurulus_yili_dogrula)]
+Tanitim = Annotated[str | None, BeforeValidator(tanitim_temizle)]
+
+
+class FirmaKayitProfili(BaseModel):
+    """Kayıt formunun firma kısmı. Firma adı, e-posta, şifre `KayitIstegi`'nde."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    tur: FirmaTuru
+    sektor: Annotated[KisaMetin, AfterValidator(lambda v: _dolu(v, "Sektör"))]
+    sehir: Annotated[Sehir, AfterValidator(lambda v: _dolu(v, "Şehir"))]
+    web_sitesi: WebAdresi = None
+    calisan_araligi: CalisanAraligi | None = None
+    kurulus_yili: KurulusYili = None
+    tanitim: Tanitim = None
+    yetkili_ad: KisaMetin = None
+    yetkili_gorev: KisaMetin = None
+
+
+class FirmaProfilGuncelleme(BaseModel):
+    """`PATCH /kurum/profil`: yalnızca gönderilen alan değişir.
+
+    Zorunlu alanlar (ad, tür, sektör, şehir) boşaltılamaz; isteğe bağlılar
+    `null` ya da boş metinle silinir. `kvkk_onay: true` onay tarihi yoksa yazar.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    ad: KisaMetin = None
+    tur: FirmaTuru | None = None
+    sektor: KisaMetin = None
+    sehir: Sehir = None
+    web_sitesi: WebAdresi = None
+    calisan_araligi: CalisanAraligi | None = None
+    kurulus_yili: KurulusYili = None
+    tanitim: Tanitim = None
+    yetkili_ad: KisaMetin = None
+    yetkili_gorev: KisaMetin = None
+    kvkk_onay: bool | None = None
+
+
+class FirmaProfilYaniti(BaseModel):
+    ad: str
+    email: str | None
+    tur: str | None
+    sektor: str | None
+    sehir: str | None
+    web_sitesi: str | None
+    calisan_araligi: str | None
+    kurulus_yili: int | None
+    tanitim: str | None
+    yetkili_ad: str | None
+    yetkili_gorev: str | None
     kvkk_onay_tarihi: dt.datetime | None
     # Doldurulması gereken zorunlu alanlar (eski hesaplar için bant)
     eksik_alanlar: list[str]

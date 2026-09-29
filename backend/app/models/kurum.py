@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -28,6 +28,19 @@ class Kurum(UUIDPrimaryKeyMixin, Base):
     # doldurulur; gence yalnızca eşleşme kabul edilince görünür. Tekil ve
     # normalize; NULL birden fazla olabilir (UNIQUE NULL'ları eşit saymaz).
     iletisim_email: Mapped[str | None] = mapped_column(String, index=True, unique=True)
+
+    # Kayıt formu (docs/plans/firma-akisi.md § 2). Kural ve değer kümeleri
+    # app/core/firma_profili.py'de. Eski hesaplarda boş olabilir (bant).
+    # girisim | kobi | kurumsal
+    tur: Mapped[str | None] = mapped_column(String)
+    web_sitesi: Mapped[str | None] = mapped_column(String)
+    # 1-10 | 11-50 | 51-250 | 250+
+    calisan_araligi: Mapped[str | None] = mapped_column(String)
+    kurulus_yili: Mapped[int | None] = mapped_column(Integer)
+    tanitim: Mapped[str | None] = mapped_column(Text)
+    # Formu dolduran kişi (firmanın temsilcisi); iletişim bilgisi değil.
+    yetkili_ad: Mapped[str | None] = mapped_column(String)
+    yetkili_gorev: Mapped[str | None] = mapped_column(String)
 
     hesap: Mapped[Hesap | None] = relationship(back_populates="kurum")
     ihtiyac_kartlari: Mapped[list[IhtiyacKarti]] = relationship(

@@ -110,9 +110,9 @@ export type MeYaniti = {
   yetenek_kartlari: YetenekKartiOzeti[];
   ihtiyac_kartlari: IhtiyacKartiOzeti[];
   okunmamis_bildirim: number;
-  /** Genç: doldurulması gereken zorunlu profil alanları (eski hesaplar için bant). */
+  /** Genç ve firma: doldurulması gereken zorunlu profil alanları (eski hesaplar için bant). */
   eksik_profil_alanlari: string[];
-  /** Genç: KVKK aydınlatma metni onaylı mı? Diğer rollerde true. */
+  /** Genç ve firma: KVKK aydınlatma metni onaylı mı? GİRVAK'ta true. */
   kvkk_onayli: boolean;
 };
 
@@ -167,8 +167,65 @@ export function profilGetir(): Promise<GencProfil> {
 }
 
 /** PATCH /profil — zorunlu alan boşaltılamaz (422). */
-export function profilGuncelle(girdi: GencProfilGuncelleme): Promise<GencProfil> {
+export function profilGuncelle(
+  girdi: GencProfilGuncelleme,
+): Promise<GencProfil> {
   return apiIstek<GencProfil>("/profil", {
+    method: "PATCH",
+    body: JSON.stringify(girdi),
+  });
+}
+
+/* --- Firma profili (docs/plans/firma-akisi.md § 2) ---------------------------
+   Tipler backend'deki app/schemas/profil.py ile birebir eşleşir. */
+
+export type FirmaTuru = "girisim" | "kobi" | "kurumsal";
+export type CalisanAraligi = "1-10" | "11-50" | "51-250" | "250+";
+
+/** Kayıt formunun firma kısmı. Vergi no, adres, telefon bilinçli yok. */
+export type FirmaKayitProfili = {
+  tur: FirmaTuru;
+  sektor: string;
+  sehir: string;
+  web_sitesi?: string | null;
+  calisan_araligi?: CalisanAraligi | null;
+  kurulus_yili?: number | null;
+  tanitim?: string | null;
+  yetkili_ad?: string | null;
+  yetkili_gorev?: string | null;
+};
+
+export type FirmaProfil = {
+  ad: string;
+  email: string | null;
+  tur: FirmaTuru | null;
+  sektor: string | null;
+  sehir: string | null;
+  web_sitesi: string | null;
+  calisan_araligi: CalisanAraligi | null;
+  kurulus_yili: number | null;
+  tanitim: string | null;
+  yetkili_ad: string | null;
+  yetkili_gorev: string | null;
+  kvkk_onay_tarihi: string | null;
+  eksik_alanlar: string[];
+};
+
+/** PATCH /kurum/profil: yalnızca gönderilen alan değişir. */
+export type FirmaProfilGuncelleme = Partial<
+  Omit<FirmaProfil, "email" | "kvkk_onay_tarihi" | "eksik_alanlar">
+> & { kvkk_onay?: boolean };
+
+/** GET /kurum/profil — firmanın kendi profili. */
+export function firmaProfiliGetir(): Promise<FirmaProfil> {
+  return apiIstek<FirmaProfil>("/kurum/profil");
+}
+
+/** PATCH /kurum/profil — zorunlu alan boşaltılamaz (422). */
+export function firmaProfiliGuncelle(
+  girdi: FirmaProfilGuncelleme,
+): Promise<FirmaProfil> {
+  return apiIstek<FirmaProfil>("/kurum/profil", {
     method: "PATCH",
     body: JSON.stringify(girdi),
   });
@@ -188,7 +245,9 @@ export function kayitOl(girdi: {
   ad: string;
   /** Genç için zorunlu; kurum göndermez. */
   genc_profili?: GencKayitProfili;
-  /** Genç için zorunlu (KVKK aydınlatma metni onayı). */
+  /** Firma için zorunlu; genç göndermez. */
+  firma_profili?: FirmaKayitProfili;
+  /** İki rol için de zorunlu (KVKK aydınlatma metni onayı). */
   kvkk_onay?: boolean;
 }): Promise<TokenYaniti> {
   return apiIstek<TokenYaniti>("/auth/kayit", {

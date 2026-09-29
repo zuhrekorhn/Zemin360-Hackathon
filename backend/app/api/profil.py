@@ -1,4 +1,8 @@
-"""Gencin profili: kayıt formu alanları, profil düzenleme ve kart onayıyla gelen güncelleme.
+"""Genç ve firma profili: kayıt formu alanları, profil düzenleme ve kart onayıyla gelen güncelleme.
+
+- `GET /kurum/profil`, `PATCH /kurum/profil` (firma, yalnızca kendisi):
+  docs/plans/firma-akisi.md § 2. Gençteki kurallar: yalnızca gönderilen alan
+  değişir, zorunlu alan boşaltılamaz.
 
 - `GET /profil`, `PATCH /profil` (genç, yalnızca kendisi): kayıt formundaki
   alanlar (docs/plans/genc-akisi.md § 6.1). Yalnızca gönderilen alan değişir.
@@ -19,16 +23,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.kart_duzenleme import degisen_alanlar, yeniden_eslestirme_gerekir_mi
 from app.api.kimlik import rol_gerekli
-from app.core import calisma_modeli
+from app.core import calisma_modeli, firma_profili
 from app.core.genc_profili import ZORUNLU_ALANLAR, eksik_profil_alanlari
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
-from app.models.hesap import ROL_GENC, Hesap
+from app.models.hesap import ROL_GENC, ROL_KURUM, Hesap
 from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import GencProfili
-from app.schemas.profil import GencProfilGuncelleme, GencProfilYaniti
+from app.schemas.profil import (
+    FirmaProfilGuncelleme,
+    FirmaProfilYaniti,
+    GencProfilGuncelleme,
+    GencProfilYaniti,
+)
 from app.schemas.tanimlama import KurumProfili
 from app.servisler import kart_hazirlama
 
@@ -153,6 +162,84 @@ def gencin_profilini_guncelle(kullanici: Kullanici, profil: GencProfili) -> None
         kullanici.calisma_modelleri = modeller
     if profil.musaitlikler:
         kullanici.musaitlikler = list(profil.musaitlikler)
+
+
+# --- Firma profili (docs/plans/firma-akisi.md § 2) ---------------------------------------
+
+FIRMA_PROFIL_ALANLARI: tuple[str, ...] = (
+    "ad",
+    "tur",
+    "sektor",
+    "sehir",
+    "web_sitesi",
+    "calisan_araligi",
+    "kurulus_yili",
+    "tanitim",
+    "yetkili_ad",
+    "yetkili_gorev",
+)
+FIRMA_BOSALTILAMAZ = frozenset({"ad", *firma_profili.ZORUNLU_ALANLAR})
+
+
+def firma_profilini_uygula(kurum: Kurum, degerler: dict[str, Any]) -> None:
+    """Doğrulanmış değerleri firma profiline yazar (kayıt ve PATCH aynı yoldan)."""
+    for alan, deger in degerler.items():
+        if alan in FIRMA_PROFIL_ALANLARI:
+            setattr(kurum, alan, deger)
+
+
+def firmanin_eksikleri(kurum: Kurum) -> list[str]:
+    return firma_profili.eksik_firma_alanlari(tur=kurum.tur, sektor=kurum.sektor, sehir=kurum.sehir)
+
+
+def firma_profil_yaniti(hesap: Hesap, kurum: Kurum) -> FirmaProfilYaniti:
+    return FirmaProfilYaniti(
+        ad=kurum.ad,
+        email=kurum.iletisim_email,
+        tur=kurum.tur,
+        sektor=kurum.sektor,
+        sehir=kurum.sehir,
+        web_sitesi=kurum.web_sitesi,
+        calisan_araligi=kurum.calisan_araligi,
+        kurulus_yili=kurum.kurulus_yili,
+        tanitim=kurum.tanitim,
+        yetkili_ad=kurum.yetkili_ad,
+        yetkili_gorev=kurum.yetkili_gorev,
+        kvkk_onay_tarihi=hesap.kvkk_onay_tarihi,
+        eksik_alanlar=firmanin_eksikleri(kurum),
+    )
+
+
+@router.get("/kurum/profil", response_model=FirmaProfilYaniti)
+async def firma_profili_getir(
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+) -> FirmaProfilYaniti:
+    return firma_profil_yaniti(hesap, hesap.kurum)
+
+
+@router.patch("/kurum/profil", response_model=FirmaProfilYaniti)
+async def firma_profili_guncelle(
+    istek: FirmaProfilGuncelleme,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> FirmaProfilYaniti:
+    """Yalnızca gönderilen alan değişir; zorunlu alan boşaltılamaz (422).
+
+    Profil token'daki hesabın firması; başkasının profili diye bir yol yok.
+    """
+    gonderilenler = {alan: getattr(istek, alan) for alan in istek.model_fields_set}
+    bosalanlar = sorted(
+        alan for alan, deger in gonderilenler.items() if alan in FIRMA_BOSALTILAMAZ and not deger
+    )
+    if bosalanlar:
+        raise HTTPException(
+            status_code=422, detail=f"Bu alanlar boş bırakılamaz: {', '.join(bosalanlar)}"
+        )
+    firma_profilini_uygula(hesap.kurum, gonderilenler)
+    if gonderilenler.get("kvkk_onay") and hesap.kvkk_onay_tarihi is None:
+        hesap.kvkk_onay_tarihi = dt.datetime.now(dt.UTC)
+    await oturum.commit()
+    return firma_profil_yaniti(hesap, hesap.kurum)
 
 
 def kurumun_profilini_guncelle(kurum: Kurum, profil: KurumProfili) -> None:

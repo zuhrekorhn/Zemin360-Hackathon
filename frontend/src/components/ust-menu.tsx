@@ -53,6 +53,7 @@ export function UstMenu() {
       baglantilar = [
         panel,
         { yol: "/tanimlama", etiket: "Yeni ihtiyaç" },
+        { yol: "/kurum/profil", etiket: "Firma profili" },
         bildirim,
       ];
     } else {

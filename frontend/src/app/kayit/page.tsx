@@ -4,11 +4,17 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { FirmaProfilAlanlari } from "@/components/firma-profil-alanlari";
 import { GencProfilAlanlari } from "@/components/genc-profil-alanlari";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { kayitOl } from "@/lib/api";
+import {
+  BOS_FIRMA_FORMU,
+  firmaFormunuDogrula,
+  formuFirmaProfilineCevir,
+} from "@/lib/firma-profil";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
 import {
@@ -27,8 +33,9 @@ import { giristenSonra, kayittanSonra } from "@/lib/yonlendirme";
  * Kayıtla birlikte giriş yapılmış olur. Genç kayıtta yapısal profil alanlarını
  * (şehir, çalışma modeli, müsaitlik, durum…) ve KVKK onayını verir
  * (docs/plans/genc-akisi.md § 5.1); yetkinlikler Keşif sohbetinde toplanır.
- * Kurumun şehir ve sektörü kart onay formunda. Ana sayfadaki düğmeler `?rol=`
- * ile gelir.
+ * Firma kayıtta türünü, sektörünü, şehrini ve isteğe bağlı tanıtım bilgilerini
+ * verir; KVKK onayı iki rol için de zorunlu (docs/plans/firma-akisi.md § 0
+ * kararlar 1-2). Ana sayfadaki düğmeler `?rol=` ile gelir.
  */
 
 const SIFRE_EN_AZ = 8;
@@ -74,6 +81,7 @@ function KayitFormu() {
   const [email, setEmail] = useState("");
   const [sifre, setSifre] = useState("");
   const [profil, setProfil] = useState(BOS_PROFIL_FORMU);
+  const [firma, setFirma] = useState(BOS_FIRMA_FORMU);
   const [kvkkOnay, setKvkkOnay] = useState(false);
   const [bekleniyor, setBekleniyor] = useState(false);
   const [hata, setHata] = useState<Hata | null>(null);
@@ -88,13 +96,19 @@ function KayitFormu() {
     olay.preventDefault();
     if (bekleniyor || !rol) return;
     setHata(null);
-    if (rol === "genc") {
-      const hatalar = profilFormunuDogrula(profil);
-      if (!kvkkOnay) hatalar.push("KVKK aydınlatma metnini onayla.");
-      if (hatalar.length > 0) {
-        setHata({ metin: hatalar.join(" "), kota: false });
-        return;
-      }
+    const hatalar =
+      rol === "genc"
+        ? profilFormunuDogrula(profil)
+        : firmaFormunuDogrula(firma);
+    if (!kvkkOnay)
+      hatalar.push(
+        rol === "genc"
+          ? "KVKK aydınlatma metnini onayla."
+          : "KVKK aydınlatma metnini onaylayın.",
+      );
+    if (hatalar.length > 0) {
+      setHata({ metin: hatalar.join(" "), kota: false });
+      return;
     }
     setBekleniyor(true);
     try {
@@ -103,9 +117,10 @@ function KayitFormu() {
         sifre,
         rol,
         ad: ad.trim(),
+        kvkk_onay: kvkkOnay,
         ...(rol === "genc"
-          ? { genc_profili: formuProfileCevir(profil), kvkk_onay: kvkkOnay }
-          : {}),
+          ? { genc_profili: formuProfileCevir(profil) }
+          : { firma_profili: formuFirmaProfilineCevir(firma) }),
       });
       tokenYaz(yanit.token);
       // Genç doğrudan Keşif sohbetine (onboarding), kurum paneline.
@@ -215,8 +230,14 @@ function KayitFormu() {
         </p>
 
         {rol === "genc" ? (
+          <GencProfilAlanlari form={profil} onDegis={setProfil} />
+        ) : null}
+        {rol === "kurum" ? (
+          <FirmaProfilAlanlari form={firma} onDegis={setFirma} />
+        ) : null}
+
+        {rol ? (
           <>
-            <GencProfilAlanlari form={profil} onDegis={setProfil} />
             <label className="flex items-start gap-2 text-sm text-pretty">
               <input
                 type="checkbox"

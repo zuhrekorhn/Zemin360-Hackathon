@@ -43,7 +43,7 @@ from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
-from app.schemas.profil import GencKayitProfili
+from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -55,6 +55,14 @@ GIRVAK_EPOSTA = f"girvak@{ALAN}"
 
 GENC_ADI = "Elif Demir"
 KURUM_ADI = "Moda Dayanışma Kooperatifi"
+KURUM_PROFILI = FirmaKayitProfili(
+    tur="kobi",
+    sektor="sivil toplum",
+    sehir="İstanbul",
+    calisan_araligi="11-50",
+    kurulus_yili=2014,
+    tanitim="Kadıköy'de gıda bankası ve dayanışma mutfağı işleten bir kooperatif.",
+)
 
 
 @dataclass
@@ -185,12 +193,18 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
             sonuclar.append(Sonuc(KURUM_EPOSTA, ROL_KURUM, yeni=False))
             ihtiyac = None
         else:
+            # Firma kayıt formunun alanları dolu (docs/plans/firma-akisi.md § 0
+            # kararlar 2, 20): demo hesabı "Profilinizi tamamlayın" bandı görmesin.
             hesap = await hesap_olustur(
-                oturum, email=KURUM_EPOSTA, sifre=sifre, rol=ROL_KURUM, ad=KURUM_ADI
+                oturum,
+                email=KURUM_EPOSTA,
+                sifre=sifre,
+                rol=ROL_KURUM,
+                ad=KURUM_ADI,
+                firma_profili=KURUM_PROFILI,
+                kvkk_onay=True,
             )
             kurum = await oturum.scalar(select(Kurum).where(Kurum.hesap_id == hesap.id))
-            kurum.sektor = "sivil toplum"
-            kurum.sehir = "İstanbul"
             ihtiyac = kurumun_karti(kurum.id)
             oturum.add(ihtiyac)
             await oturum.commit()

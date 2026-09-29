@@ -298,9 +298,7 @@ function OneriListesi({
       ) : null}
 
       {digerleri.length > 0 && ilgiGosterenler.length > 0 ? (
-        <h2 className="font-heading text-xl font-semibold text-ana">
-          Adaylar
-        </h2>
+        <h2 className="font-heading text-xl font-semibold text-ana">Adaylar</h2>
       ) : null}
       {digerleri.map((oneri) => (
         <OneriKarti

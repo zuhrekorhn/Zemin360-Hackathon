@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 from app.core.kimlik import SIFRE_EN_AZ
-from app.schemas.profil import GencKayitProfili
+from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
 from app.schemas.sohbet import DoluMetin
 
 
@@ -22,9 +22,11 @@ class KayitIstegi(BaseModel):
     # Gencin adı ya da kurumun adı; profil bununla açılır.
     ad: DoluMetin
     # Genç için zorunlu: kayıt formunun yapısal alanları (docs/plans/genc-akisi.md
-    # § 5.1). Kurum kaydı bunu göndermez; kurum profili firma görevinde.
+    # § 5.1). Firma kaydı bunu göndermez.
     genc_profili: GencKayitProfili | None = None
-    # KVKK aydınlatma metni onayı; genç için zorunlu. Sunucu onay anını yazar.
+    # Firma için zorunlu (docs/plans/firma-akisi.md § 0, karar 2).
+    firma_profili: FirmaKayitProfili | None = None
+    # KVKK aydınlatma metni onayı; iki rol için de zorunlu. Sunucu onay anını yazar.
     kvkk_onay: bool = False
 
     @model_validator(mode="after")
@@ -32,10 +34,15 @@ class KayitIstegi(BaseModel):
         if self.rol == "genc":
             if self.genc_profili is None:
                 raise ValueError("Genç kaydında profil bilgileri zorunlu")
-            if not self.kvkk_onay:
-                raise ValueError("KVKK aydınlatma metni onaylanmalı")
-        elif self.genc_profili is not None:
-            raise ValueError("Kurum kaydı genç profili taşımaz")
+            if self.firma_profili is not None:
+                raise ValueError("Genç kaydı firma profili taşımaz")
+        else:
+            if self.firma_profili is None:
+                raise ValueError("Firma kaydında firma bilgileri zorunlu")
+            if self.genc_profili is not None:
+                raise ValueError("Kurum kaydı genç profili taşımaz")
+        if not self.kvkk_onay:
+            raise ValueError("KVKK aydınlatma metni onaylanmalı")
         return self
 
 

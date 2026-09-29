@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { GirisKapisi } from "@/components/giris-kapisi";
+import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
   CevapAlani,
@@ -24,6 +24,7 @@ import {
   tanimlamaBaslat,
   tanimlamaCevap,
 } from "@/lib/api";
+import { onaydaFirmaBilgisiSorulmali } from "@/lib/firma-profil";
 import { hatayaCevir } from "@/lib/hata";
 import {
   CALISMA_MODELI_ETIKETLERI,
@@ -230,6 +231,11 @@ function TaslakBolumu({
     duzeltilmisTaslak: IhtiyacTaslagi,
   ) => void;
 }) {
+  // Firmanın sektörü ve şehri kayıtta alınıyor (docs/plans/firma-akisi.md
+  // § 0 karar 2); burada yalnızca bu alanlardan önce açılmış hesaplarda sorulur.
+  const firmaBilgisiSor = onaydaFirmaBilgisiSorulmali(
+    useGirisliHesap().eksik_profil_alanlari,
+  );
   const [sektor, setSektor] = useState("");
   const [sehir, setSehir] = useState("");
   // İki ayrı şehir var ve karıştırılıyordu: kurumun bulunduğu yer ile
@@ -288,35 +294,39 @@ function TaslakBolumu({
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormAlani etiket="Sektör" htmlFor="sektor" istegeBagli>
-              <Input
-                id="sektor"
-                value={sektor}
-                onChange={(olay) => setSektor(olay.target.value)}
-              />
-            </FormAlani>
+            {firmaBilgisiSor ? (
+              <>
+                <FormAlani etiket="Sektör" htmlFor="sektor" istegeBagli>
+                  <Input
+                    id="sektor"
+                    value={sektor}
+                    onChange={(olay) => setSektor(olay.target.value)}
+                  />
+                </FormAlani>
 
-            <FormAlani etiket="Kurumun şehri" htmlFor="sehir" istegeBagli>
-              {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
-                  bozuyordu (bkz. backend/app/core/sehir.py). */}
-              <select
-                id="sehir"
-                value={sehir}
-                onChange={(olay) => {
-                  setSehir(olay.target.value);
-                  // Aranan şehir boşsa kurumun şehri makul bir varsayılan;
-                  // kullanıcı yine de değiştirebiliyor.
-                  if (!aranilanSehir) setAranilanSehir(olay.target.value);
-                }}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
-              >
-                {SEHIR_SECENEKLERI.map((secenek) => (
-                  <option key={secenek.deger} value={secenek.deger}>
-                    {secenek.etiket}
-                  </option>
-                ))}
-              </select>
-            </FormAlani>
+                <FormAlani etiket="Kurumun şehri" htmlFor="sehir" istegeBagli>
+                  {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
+                      bozuyordu (bkz. backend/app/core/sehir.py). */}
+                  <select
+                    id="sehir"
+                    value={sehir}
+                    onChange={(olay) => {
+                      setSehir(olay.target.value);
+                      // Aranan şehir boşsa kurumun şehri makul bir varsayılan;
+                      // kullanıcı yine de değiştirebiliyor.
+                      if (!aranilanSehir) setAranilanSehir(olay.target.value);
+                    }}
+                    className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+                  >
+                    {SEHIR_SECENEKLERI.map((secenek) => (
+                      <option key={secenek.deger} value={secenek.deger}>
+                        {secenek.etiket}
+                      </option>
+                    ))}
+                  </select>
+                </FormAlani>
+              </>
+            ) : null}
 
             <FormAlani
               etiket="Aranan şehir"
@@ -373,12 +383,21 @@ function TaslakBolumu({
             </select>
           </FormAlani>
 
-          <p className="text-xs text-pretty text-muted-foreground">
-            <span className="font-medium">Kurumun şehri</span> sizin
-            bulunduğunuz yer; <span className="font-medium">aranan şehir</span>{" "}
-            gencin nerede olmasını istediğiniz. Çalışma modeli “Uzaktan” ise
-            şehir filtresi hiç uygulanmaz.
-          </p>
+          {firmaBilgisiSor ? (
+            <p className="text-xs text-pretty text-muted-foreground">
+              <span className="font-medium">Kurumun şehri</span> sizin
+              bulunduğunuz yer;{" "}
+              <span className="font-medium">aranan şehir</span> gencin nerede
+              olmasını istediğiniz. Çalışma modeli “Uzaktan” ise şehir filtresi
+              hiç uygulanmaz.
+            </p>
+          ) : (
+            <p className="text-xs text-pretty text-muted-foreground">
+              <span className="font-medium">Aranan şehir</span>, adayın nerede
+              olmasını istediğiniz yer. Çalışma modeli “Uzaktan” ise şehir
+              filtresi uygulanmaz.
+            </p>
+          )}
 
           {/* Genç akışı (docs/plans/genc-akisi.md § 0 karar 1): eşik üstü
               adaylar ihtiyacı fırsat olarak görür. */}

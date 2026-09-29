@@ -31,6 +31,12 @@ GENC_KAYIT_EKI = {
     "kvkk_onay": True,
 }
 
+# Firma kaydının geçerli ek alanları (docs/plans/firma-akisi.md § 0 karar 2).
+FIRMA_KAYIT_EKI = {
+    "firma_profili": {"tur": "kobi", "sektor": "Sivil toplum", "sehir": "İstanbul"},
+    "kvkk_onay": True,
+}
+
 
 def sahte_hesap(rol: str) -> SimpleNamespace:
     """Profiliyle birlikte bir hesap: genç için `kullanici`, kurum için `kurum`."""

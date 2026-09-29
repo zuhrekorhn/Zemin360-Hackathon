@@ -161,7 +161,7 @@ Plan ve kararlar: [`plans/genc-akisi.md`](plans/genc-akisi.md); elle deneme: [`p
 Plan ve kararlar: [`plans/firma-akisi.md`](plans/firma-akisi.md). Özellik dondurma tarihi bu görev için kayabilir (29 Eyl kararı).
 
 - [x] Taraf kavramı (davranış değişmez)
-- [ ] Firma kayıt formu ve profil
+- [x] Firma kayıt formu ve profil
 - [ ] İlan kapatma (nedenli)
 - [ ] Firma doğrulaması (alan adı ipucu + GİRVAK onayı)
 - [ ] Firma kartı (sohbet + düzenleme)

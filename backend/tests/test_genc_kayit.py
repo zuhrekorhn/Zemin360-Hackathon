@@ -20,7 +20,7 @@ from app.core.kimlik import token_uret
 from app.main import app
 from app.schemas.auth import KayitIstegi
 from app.schemas.profil import GencKayitProfili
-from tests.sahte_hesap import GENC_KAYIT_EKI
+from tests.sahte_hesap import FIRMA_KAYIT_EKI, GENC_KAYIT_EKI
 from tests.veritabani import api_istemcisi, geri_alinan_oturum
 
 PROFIL = GENC_KAYIT_EKI["genc_profili"]
@@ -105,10 +105,11 @@ def test_genc_kaydi_profil_ve_kvkk_ister():
     assert KayitIstegi(**_kayit(rol="genc", **GENC_KAYIT_EKI)).genc_profili.sehir == "İstanbul"
 
 
-def test_kurum_kaydi_degismedi_genc_profili_tasimaz():
-    assert KayitIstegi(**_kayit(rol="kurum")).genc_profili is None
+def test_kurum_kaydi_genc_profili_tasimaz():
+    # Firma kaydı artık firma profili ve KVKK onayı ister (firma-akisi § 0 karar 2).
+    assert KayitIstegi(**_kayit(rol="kurum", **FIRMA_KAYIT_EKI)).genc_profili is None
     with pytest.raises(ValidationError):
-        KayitIstegi(**_kayit(rol="kurum", genc_profili=PROFIL))
+        KayitIstegi(**_kayit(rol="kurum", genc_profili=PROFIL, **FIRMA_KAYIT_EKI))
 
 
 @pytest.mark.parametrize(

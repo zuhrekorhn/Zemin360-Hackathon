@@ -18,7 +18,12 @@ from sqlalchemy.orm import selectinload
 
 from app.api.bildirimler import okunmamis_sayisi
 from app.api.kimlik import mevcut_hesap
-from app.api.profil import profili_uygula, profilin_eksikleri
+from app.api.profil import (
+    firma_profilini_uygula,
+    firmanin_eksikleri,
+    profili_uygula,
+    profilin_eksikleri,
+)
 from app.core.kimlik import sifre_dogru_mu, sifre_hashle, token_uret
 from app.core.metin import eposta_normalize
 from app.db.session import get_session
@@ -34,7 +39,7 @@ from app.schemas.auth import (
     TokenYaniti,
     YetenekKartiOzeti,
 )
-from app.schemas.profil import GencKayitProfili
+from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
 
 router = APIRouter(tags=["kimlik"])
 
@@ -54,6 +59,7 @@ async def hesap_olustur(
     rol: str,
     ad: str | None,
     genc_profili: GencKayitProfili | None = None,
+    firma_profili: FirmaKayitProfili | None = None,
     kvkk_onay: bool = False,
 ) -> Hesap:
     """Hesabı ve (genç/kurum için) profilini açar, commit eder.
@@ -63,7 +69,7 @@ async def hesap_olustur(
     sahiplenilmez: e-posta doğrulaması yok, başkasının eski kartlarını
     e-postasını yazarak almak mümkün olmamalı.
 
-    `genc_profili` ve `kvkk_onay` uçta zorunlu (şema); burada isteğe bağlı,
+    Profil ve `kvkk_onay` uçta zorunlu (şema); burada isteğe bağlı,
     çünkü betikler ve testler profili ayrıca kuruyor.
     """
     email = eposta_normalize(email)
@@ -82,7 +88,10 @@ async def hesap_olustur(
                 profili_uygula(kullanici, genc_profili.model_dump())
             oturum.add(kullanici)
         elif rol == ROL_KURUM:
-            oturum.add(Kurum(hesap_id=hesap.id, ad=ad, iletisim_email=email))
+            kurum = Kurum(hesap_id=hesap.id, ad=ad, iletisim_email=email)
+            if firma_profili is not None:
+                firma_profilini_uygula(kurum, firma_profili.model_dump())
+            oturum.add(kurum)
         await oturum.commit()
     except IntegrityError as hata:
         await oturum.rollback()
@@ -101,6 +110,7 @@ async def kayit(istek: KayitIstegi, oturum: AsyncSession = Depends(get_session))
             rol=istek.rol,
             ad=istek.ad,
             genc_profili=istek.genc_profili,
+            firma_profili=istek.firma_profili,
             kvkk_onay=istek.kvkk_onay,
         )
     except EpostaKayitli as hata:
@@ -164,6 +174,8 @@ async def me(
         )
         yanit.ad = hesap.kurum.ad
         yanit.kurum_id = hesap.kurum.id
+        yanit.eksik_profil_alanlari = firmanin_eksikleri(hesap.kurum)
+        yanit.kvkk_onayli = hesap.kvkk_onay_tarihi is not None
         yanit.ihtiyac_kartlari = [
             IhtiyacKartiOzeti(
                 id=kart.id,

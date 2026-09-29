@@ -20,6 +20,7 @@ import {
   isbirliklerim,
   onerilerim,
 } from "@/lib/api";
+import { firmaProfilBandi } from "@/lib/firma-profil";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { firmaDurumEtiketi } from "@/lib/ilgi";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
@@ -32,7 +33,6 @@ import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
  * Panel yalnızca okur; eşleştirmeyi çalıştırmak (dil modeli çağrısı olabilir)
  * öneriler sayfasının işi.
  */
-
 
 export default function KurumPaneli() {
   return (
@@ -69,6 +69,7 @@ function KurumPaneliIcerigi() {
   }, [oku]);
 
   const kartlar = hesap.ihtiyac_kartlari;
+  const bant = firmaProfilBandi(hesap);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
@@ -80,6 +81,19 @@ function KurumPaneliIcerigi() {
           İhtiyaç kartların, önerilerin ve açılan iş birliklerin burada.
         </p>
       </header>
+
+      {bant ? (
+        // Engellemez (docs/plans/firma-akisi.md § 0, karar 9): eski hesaplar için.
+        <div
+          role="note"
+          className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm text-pretty"
+        >
+          <span>{bant}</span>
+          <Link href="/kurum/profil" className="text-baglanti underline">
+            Firma profiline git
+          </Link>
+        </div>
+      ) : null}
 
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
