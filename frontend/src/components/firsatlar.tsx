@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { DurumEtiketi, IletisimSatiri } from "@/components/panel";
 import { Button } from "@/components/ui/button";
 import type { GencEslesmesi, IhtiyacKartiYaniti } from "@/lib/api";
@@ -77,8 +78,9 @@ export function FirsatKarti({
   return (
     <li className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <span className="font-heading text-lg font-semibold text-ana">
+        <span className="flex flex-wrap items-center gap-2 font-heading text-lg font-semibold text-ana">
           {ihtiyac.kurum.ad}
+          <DogrulanmisFirma dogrulandi={ihtiyac.kurum.dogrulandi} />
         </span>
         <span className="rounded-sm border border-baglanti px-2 py-0.5 text-xs text-baglanti">
           {uyumMetni(firsat.uyum)}
@@ -177,8 +179,9 @@ export function IlgiSatiri({
   return (
     <li className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <span className="font-heading text-lg font-semibold text-ana">
+        <span className="flex flex-wrap items-center gap-2 font-heading text-lg font-semibold text-ana">
           {ihtiyac.kurum.ad}
+          <DogrulanmisFirma dogrulandi={ihtiyac.kurum.dogrulandi} />
         </span>
         <DurumEtiketi
           metin={gencDurumEtiketi(ilgi.durum)}

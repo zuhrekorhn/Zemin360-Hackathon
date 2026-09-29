@@ -7,6 +7,7 @@
  * giriş yapmalı (docs/faz-b-kimlik-ve-dongu.md § 1).
  */
 
+import type { AlanAdiIpucu } from "@/lib/firma-dogrulama";
 import { ayrintiyiOku } from "@/lib/ayrinti";
 import { tokenOku, tokenSil } from "@/lib/token";
 
@@ -211,11 +212,16 @@ export type FirmaProfil = {
   yetkili_gorev: string | null;
   kvkk_onay_tarihi: string | null;
   eksik_alanlar: string[];
+  /** GİRVAK doğruladı mı? Web sitesi değişince yeniden beklenir. */
+  dogrulandi: boolean;
 };
 
 /** PATCH /kurum/profil: yalnızca gönderilen alan değişir. */
 export type FirmaProfilGuncelleme = Partial<
-  Omit<FirmaProfil, "email" | "kvkk_onay_tarihi" | "eksik_alanlar">
+  Omit<
+    FirmaProfil,
+    "email" | "kvkk_onay_tarihi" | "eksik_alanlar" | "dogrulandi"
+  >
 > & { kvkk_onay?: boolean };
 
 /** GET /kurum/profil — firmanın kendi profili. */
@@ -531,6 +537,8 @@ export type KurumYaniti = {
   ad: string;
   sektor: string | null;
   sehir: string | null;
+  /** "Doğrulanmış firma" işareti (docs/plans/firma-akisi.md § 0 karar 17). */
+  dogrulandi: boolean;
 };
 
 export type IhtiyacKartiYaniti = {
@@ -986,6 +994,42 @@ export type ProgramHedefi = {
   sayi: number;
   hedef: number;
 };
+
+/** GİRVAK'ın firma doğrulama listesi (docs/plans/firma-akisi.md § 6). */
+export type OnayBekleyenFirma = {
+  kurum_id: string;
+  ad: string;
+  tur: FirmaTuru | null;
+  sektor: string | null;
+  sehir: string | null;
+  web_sitesi: string | null;
+  /** Tam e-posta değil, yalnızca uzantısı. */
+  eposta_alan_adi: string | null;
+  ipucu: AlanAdiIpucu;
+  dogrulama_durumu: "bekliyor" | "dogrulandi" | "simdilik_degil";
+  dogrulama_tarihi: string | null;
+  kayit_tarihi: string;
+};
+
+/** GET /girvak/firmalar — varsayılan: onay bekleyenler. */
+export function girvakFirmalar(
+  durum: "bekliyor" | "dogrulandi" | "simdilik_degil" = "bekliyor",
+): Promise<OnayBekleyenFirma[]> {
+  return apiIstek<OnayBekleyenFirma[]>(`/girvak/firmalar?durum=${durum}`, {
+    cache: "no-store",
+  });
+}
+
+/** POST /girvak/firmalar/{id}/dogrula — tekrar 200, yan etkisiz. */
+export function girvakFirmaDogrula(
+  kurumId: string,
+  karar: "dogrulandi" | "simdilik_degil",
+): Promise<OnayBekleyenFirma> {
+  return apiIstek<OnayBekleyenFirma>(`/girvak/firmalar/${kurumId}/dogrula`, {
+    method: "POST",
+    body: JSON.stringify({ karar }),
+  });
+}
 
 export function girvakSayilari(): Promise<GirvakSayilari> {
   return apiIstek<GirvakSayilari>("/girvak/sayilar", { cache: "no-store" });

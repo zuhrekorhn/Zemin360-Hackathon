@@ -77,6 +77,9 @@ class KurumYaniti(BaseModel):
 
     id: uuid.UUID
     ad: str
+    # "Doğrulanmış firma" işareti (docs/plans/firma-akisi.md § 0 karar 17).
+    # Durumun kendisi (bekliyor / şimdilik değil) yalnızca GİRVAK'a.
+    dogrulandi: bool = False
     sektor: str | None
     sehir: str | None
 

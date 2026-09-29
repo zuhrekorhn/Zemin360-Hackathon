@@ -104,12 +104,15 @@ describe("formuFirmaProfilineCevir", () => {
       yetkili_gorev: "İnovasyon müdürü",
       kvkk_onay_tarihi: null,
       eksik_alanlar: [],
+      dogrulandi: false,
     };
-    const { ad, email, kvkk_onay_tarihi, eksik_alanlar, ...geri } = profil;
+    const { ad, email, kvkk_onay_tarihi, eksik_alanlar, dogrulandi, ...geri } =
+      profil;
     void ad;
     void email;
     void kvkk_onay_tarihi;
     void eksik_alanlar;
+    void dogrulandi;
     expect(formuFirmaProfilineCevir(firmaProfilindenForma(profil))).toEqual(
       geri,
     );

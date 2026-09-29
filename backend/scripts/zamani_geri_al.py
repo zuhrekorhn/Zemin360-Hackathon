@@ -56,6 +56,7 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("eslesme", "kurum_ilgi_tarihi"),
     ("hesap", "kvkk_onay_tarihi"),
     ("ihtiyac_karti", "kapanma_tarihi"),
+    ("kurum", "dogrulama_tarihi"),
 )
 
 # Bilerek kaydırılmayanlar: sistem zamanı değil, kullanıcının yazdığı tarih.

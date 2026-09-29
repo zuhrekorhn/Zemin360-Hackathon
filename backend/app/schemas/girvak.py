@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+import datetime as dt
+import uuid
+
+from pydantic import BaseModel, ConfigDict
+
+from app.core.firma_dogrulama import AlanAdiIpucu, GirvakKarari
 
 
 class HesapSayilari(BaseModel):
@@ -60,3 +65,29 @@ class Sayilar(BaseModel):
     hedefler: list[HedefSayisi]
     # Firma akışı: kapanan ilanlar nedenleriyle.
     kapanan_ihtiyaclar: KapananIhtiyaclar = KapananIhtiyaclar()
+
+
+class OnayBekleyenFirma(BaseModel):
+    """GİRVAK'ın doğrulama listesi (docs/plans/firma-akisi.md § 6).
+
+    Tam e-posta dönmez; yalnızca alan adı (ipucunun dayanağı). İletişim
+    bilgisi GİRVAK'ın işi değil (eşleşmedeki kuralla aynı).
+    """
+
+    kurum_id: uuid.UUID
+    ad: str
+    tur: str | None
+    sektor: str | None
+    sehir: str | None
+    web_sitesi: str | None
+    eposta_alan_adi: str | None
+    ipucu: AlanAdiIpucu
+    dogrulama_durumu: str
+    dogrulama_tarihi: dt.datetime | None
+    kayit_tarihi: dt.datetime
+
+
+class FirmaDogrulamaIstegi(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    karar: GirvakKarari

@@ -173,6 +173,9 @@ class FirmaProfilGuncelleme(BaseModel):
 
 
 class FirmaProfilYaniti(BaseModel):
+    # GİRVAK doğruladı mı? Bekliyor ile "şimdilik değil" firmaya ayrılmaz
+    # (olumsuz haber nazik; firma "Doğrulama bekleniyor" görür).
+    dogrulandi: bool = False
     ad: str
     email: str | None
     tur: str | None

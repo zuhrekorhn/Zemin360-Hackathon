@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -41,6 +42,14 @@ class Kurum(UUIDPrimaryKeyMixin, Base):
     # Formu dolduran kişi (firmanın temsilcisi); iletişim bilgisi değil.
     yetkili_ad: Mapped[str | None] = mapped_column(String)
     yetkili_gorev: Mapped[str | None] = mapped_column(String)
+
+    # Firma doğrulaması (docs/plans/firma-akisi.md § 6): bekliyor | dogrulandi |
+    # simdilik_degil. Karar GİRVAK'ın; alan adı ipucu saklanmaz
+    # (app/core/firma_dogrulama.py). Web sitesi değişince `bekliyor`a döner.
+    dogrulama_durumu: Mapped[str] = mapped_column(
+        String, default="bekliyor", server_default=text("'bekliyor'")
+    )
+    dogrulama_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     hesap: Mapped[Hesap | None] = relationship(back_populates="kurum")
     ihtiyac_kartlari: Mapped[list[IhtiyacKarti]] = relationship(

@@ -23,6 +23,7 @@ from app.api.sahiplik import (
 )
 from app.api.yetenek_kartlari import EMBEDDING_HATA_MESAJI
 from app.core.embeddings import EmbeddingHatasi, embedding_uret, ihtiyac_temsil_metni
+from app.core.firma_dogrulama import DOGRULANDI
 from app.db.session import get_session
 from app.models.hesap import ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -59,6 +60,7 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> IhtiyacKartiY
         kurum=KurumYaniti(
             id=kart.kurum.id,
             ad=kart.kurum.ad,
+            dogrulandi=kart.kurum.dogrulama_durumu == DOGRULANDI,
             sektor=kart.kurum.sektor,
             sehir=kart.kurum.sehir,
         ),

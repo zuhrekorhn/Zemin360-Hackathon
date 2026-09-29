@@ -1,10 +1,17 @@
 """GİRVAK paneli (docs/faz-b-kimlik-ve-dongu.md § 7).
 
+Firma akışı: firma doğrulaması (docs/plans/firma-akisi.md § 6). GİRVAK'ın
+yazabildiği tek şey doğrulama kararı.
+
 Faz B'de yalnızca sayılar: hesap, kart, eşleşme, iş birliği. Hedefler ve
 grafikler Faz D'de bu uca eklenecek. Kişisel veri dönmez, yalnızca sayım.
 """
 
 from __future__ import annotations
+
+import datetime as dt
+import uuid
+from typing import Literal
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
@@ -23,9 +30,13 @@ from app.agents.takip_durumu import (
     ISBIRLIGI_PLAN_BEKLIYOR,
     ISBIRLIGI_TAMAMLANDI,
 )
+from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import rol_gerekli
+from app.api.sahiplik import bulunamadi
+from app.core import firma_dogrulama
 from app.core.program import HEDEFLER
 from app.db.session import get_session
+from app.models.bildirim import TUR_FIRMA_DOGRULANDI
 from app.models.eslesme import Eslesme
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -35,10 +46,12 @@ from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.girvak import (
     EslesmeSayilari,
+    FirmaDogrulamaIstegi,
     HedefSayisi,
     HesapSayilari,
     IsbirligiSayilari,
     KapananIhtiyaclar,
+    OnayBekleyenFirma,
     Sayilar,
 )
 from app.servisler.ilgi import IHTIYAC_KAPANDI
@@ -134,3 +147,79 @@ async def hedef_sayilari(
         )
         for h in HEDEFLER
     ]
+
+
+# --- Firma doğrulaması (docs/plans/firma-akisi.md § 0 karar 6, § 6) -------------------
+
+FIRMA_BULUNAMADI = "Firma bulunamadı"
+DOGRULANDI_METNI = (
+    "Firmanız doğrulandı. Adınızın yanında artık “Doğrulanmış firma” işareti görünüyor."
+)
+
+
+def _firma_satiri(kurum: Kurum, kayit_tarihi: dt.datetime) -> OnayBekleyenFirma:
+    return OnayBekleyenFirma(
+        kurum_id=kurum.id,
+        ad=kurum.ad,
+        tur=kurum.tur,
+        sektor=kurum.sektor,
+        sehir=kurum.sehir,
+        web_sitesi=kurum.web_sitesi,
+        eposta_alan_adi=firma_dogrulama.eposta_alan_adi(kurum.iletisim_email),
+        ipucu=firma_dogrulama.alan_adi_ipucu(kurum.iletisim_email, kurum.web_sitesi),
+        dogrulama_durumu=kurum.dogrulama_durumu,
+        dogrulama_tarihi=kurum.dogrulama_tarihi,
+        kayit_tarihi=kayit_tarihi,
+    )
+
+
+@router.get("/firmalar", response_model=list[OnayBekleyenFirma])
+async def firmalar(
+    durum: Literal["bekliyor", "dogrulandi", "simdilik_degil"] = "bekliyor",
+    _hesap: Hesap = Depends(rol_gerekli(ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[OnayBekleyenFirma]:
+    """Doğrulama durumuna göre firmalar (varsayılan: onay bekleyenler), en yeni kayıt önce.
+
+    Yalnızca hesabı olan firmalar (Faz B öncesi profil programın katılımcısı değil).
+    """
+    satirlar = await oturum.execute(
+        select(Kurum, Hesap.olusturma_tarihi)
+        .join(Hesap, Hesap.id == Kurum.hesap_id)
+        .where(Kurum.dogrulama_durumu == durum)
+        .order_by(Hesap.olusturma_tarihi.desc())
+    )
+    return [_firma_satiri(kurum, tarih) for kurum, tarih in satirlar.all()]
+
+
+@router.post("/firmalar/{kurum_id}/dogrula", response_model=OnayBekleyenFirma)
+async def firmayi_dogrula(
+    kurum_id: uuid.UUID,
+    istek: FirmaDogrulamaIstegi,
+    _hesap: Hesap = Depends(rol_gerekli(ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
+) -> OnayBekleyenFirma:
+    """GİRVAK'ın kararı: `dogrulandi` ya da `simdilik_degil`.
+
+    Aynı kararın tekrarı 200 ve yan etkisiz. GİRVAK kararını değiştirebilir.
+    Firmaya yalnızca doğrulanınca bildirim gider; "şimdilik değil" sessiz
+    (olumsuz haber nazik: firma "Doğrulama bekleniyor" görmeye devam eder).
+    """
+    satir = (
+        await oturum.execute(
+            select(Kurum, Hesap.olusturma_tarihi)
+            .join(Hesap, Hesap.id == Kurum.hesap_id)
+            .where(Kurum.id == kurum_id)
+            .with_for_update(of=Kurum)
+        )
+    ).first()
+    if satir is None:
+        raise bulunamadi(FIRMA_BULUNAMADI)
+    kurum, kayit_tarihi = satir
+    if kurum.dogrulama_durumu != istek.karar:
+        kurum.dogrulama_durumu = istek.karar
+        kurum.dogrulama_tarihi = dt.datetime.now(dt.UTC)
+        if istek.karar == firma_dogrulama.DOGRULANDI:
+            bildirim_ekle(oturum, kurum.hesap_id, TUR_FIRMA_DOGRULANDI, DOGRULANDI_METNI)
+    await oturum.commit()
+    return _firma_satiri(kurum, kayit_tarihi)

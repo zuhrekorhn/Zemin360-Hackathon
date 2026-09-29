@@ -99,6 +99,7 @@ describe("bildirimHedefi — Canlılık", () => {
     expect(bildirimHedefi("genc_ilgi")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("genc_ilgisi_yanitsiz")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("firsat_kapandi")).toBe("/genc#ilgilerim");
+    expect(bildirimHedefi("firma_dogrulandi")).toBe("/kurum/profil");
     expect(bildirimHedefi("karsilikli_ilgi", "i1")).toBe("/isbirligi/i1");
     expect(bildirimHedefi("karsilikli_ilgi")).toBe("/genc#ilgilerim");
   });

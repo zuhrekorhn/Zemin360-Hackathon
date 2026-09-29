@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.kart_duzenleme import degisen_alanlar, yeniden_eslestirme_gerekir_mi
 from app.api.kimlik import rol_gerekli
-from app.core import calisma_modeli, firma_profili
+from app.core import calisma_modeli, firma_dogrulama, firma_profili
 from app.core.genc_profili import ZORUNLU_ALANLAR, eksik_profil_alanlari
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
@@ -207,6 +207,7 @@ def firma_profil_yaniti(hesap: Hesap, kurum: Kurum) -> FirmaProfilYaniti:
         yetkili_gorev=kurum.yetkili_gorev,
         kvkk_onay_tarihi=hesap.kvkk_onay_tarihi,
         eksik_alanlar=firmanin_eksikleri(kurum),
+        dogrulandi=kurum.dogrulama_durumu == firma_dogrulama.DOGRULANDI,
     )
 
 
@@ -235,7 +236,14 @@ async def firma_profili_guncelle(
         raise HTTPException(
             status_code=422, detail=f"Bu alanlar boş bırakılamaz: {', '.join(bosalanlar)}"
         )
-    firma_profilini_uygula(hesap.kurum, gonderilenler)
+    kurum = hesap.kurum
+    if "web_sitesi" in gonderilenler and firma_dogrulama.dogrulama_sifirlanir_mi(
+        kurum.web_sitesi, gonderilenler["web_sitesi"]
+    ):
+        # Doğrulama kimlikle ilgili: site değişince GİRVAK yeniden bakar (karar 15).
+        kurum.dogrulama_durumu = firma_dogrulama.BEKLIYOR
+        kurum.dogrulama_tarihi = None
+    firma_profilini_uygula(kurum, gonderilenler)
     if gonderilenler.get("kvkk_onay") and hesap.kvkk_onay_tarihi is None:
         hesap.kvkk_onay_tarihi = dt.datetime.now(dt.UTC)
     await oturum.commit()

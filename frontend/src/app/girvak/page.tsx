@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { FirmaOnaylari } from "@/components/firma-onaylari";
 import { GirisKapisi } from "@/components/giris-kapisi";
 import {
   BosDurum,
@@ -146,6 +147,8 @@ function GirvakSayfasi() {
           {tarama ? <TaramaOzeti sonuc={tarama} /> : null}
         </div>
       </PanelBolumu>
+
+      <FirmaOnaylari />
 
       <PanelBolumu
         id="pasifler"

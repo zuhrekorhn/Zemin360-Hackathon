@@ -53,3 +53,16 @@ Sütunlar: **Dosya** · **Yer** · **Metin** · **Kime**.
 | `app/servisler/ilgi.py` | Gence bildirim (mevcut, değişmedi) | {firma adı} tarafındaki fırsat kapandı. | genç |
 
 Denetime not: firma ilanına aday firma da gelecek (7-8. adım); "bekleyen adaylara" ifadesi iki durumu da kapsıyor.
+
+## 4. adım — Firma doğrulaması
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `lib/firma-dogrulama.ts`, `components/dogrulanmis-firma.tsx` | İşaret | Doğrulanmış firma | herkes |
+| `app/kurum/profil/page.tsx` | Doğrulanmamışsa | Doğrulama bekleniyor. Program ekibi firmanızı doğrulayınca adınızın yanında “Doğrulanmış firma” işareti görünür. Web sitenizi değiştirirseniz doğrulama yeniden yapılır. | firma |
+| `backend/app/api/girvak.py` | Firmaya bildirim | Firmanız doğrulandı. Adınızın yanında artık “Doğrulanmış firma” işareti görünüyor. | firma |
+| `components/firma-onaylari.tsx` | Bölüm | Onay bekleyen firmalar · "Sistemin ipucu e-posta uzantısıyla web sitesinin adresini karşılaştırır; siteye bağlanmaz. Kararı siz verirsiniz. Onaylanan firmanın adının yanında “Doğrulanmış firma” işareti görünür." · Boş: Onay bekleyen firma yok. | GİRVAK |
+| 〃 | Butonlar | Onayla · Şimdilik değil | GİRVAK |
+| `lib/firma-dogrulama.ts` | İpucu cümleleri | E-posta uzantısı ({alan}) web sitesiyle uyuşuyor. · …uyuşmuyor. · Herkese açık bir e-posta servisi kullanılmış ({alan}); uzantı firmayı göstermiyor. · Web sitesi yazılmamış; e-posta uzantısı karşılaştırılamadı. · Kayıtlı bir e-posta yok. | GİRVAK |
+
+Denetime not: "Şimdilik değil" GİRVAK'ın düğmesi; firmaya hiçbir metin gitmiyor, profilinde "Doğrulama bekleniyor" kalıyor (rehber § 2.5, olumsuz haber nazik).

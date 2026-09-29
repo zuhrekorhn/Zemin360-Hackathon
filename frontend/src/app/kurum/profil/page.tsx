@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { FirmaProfilAlanlari } from "@/components/firma-profil-alanlari";
 import { GirisKapisi } from "@/components/giris-kapisi";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
@@ -117,6 +118,18 @@ function FirmaProfilIcerigi() {
           oluşunca paylaşılır.
         </p>
       </header>
+
+      <p className="flex flex-wrap items-center gap-2 text-sm">
+        {profil.dogrulandi ? (
+          <DogrulanmisFirma dogrulandi />
+        ) : (
+          <span className="text-muted-foreground">
+            Doğrulama bekleniyor. Program ekibi firmanızı doğrulayınca adınızın
+            yanında “Doğrulanmış firma” işareti görünür. Web sitenizi
+            değiştirirseniz doğrulama yeniden yapılır.
+          </span>
+        )}
+      </p>
 
       <form className="flex flex-col gap-6" onSubmit={kaydet}>
         <FormAlani etiket="Firma adı" htmlFor="ad">

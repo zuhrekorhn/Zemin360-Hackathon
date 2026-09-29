@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { FirsatKarti, IlgiSatiri } from "@/components/firsatlar";
+import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
   BosDurum,
@@ -462,8 +463,9 @@ function IlgiKaydi({
   return (
     <li className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className="font-heading text-lg font-semibold text-ana">
+        <span className="flex flex-wrap items-center gap-2 font-heading text-lg font-semibold text-ana">
           {ihtiyac.kurum.ad}
+          <DogrulanmisFirma dogrulandi={ihtiyac.kurum.dogrulandi} />
         </span>
         <span className="text-xs text-muted-foreground">
           “{ilgi.rol_alani}” kartınla · {tarihYaz(ilgi.son_aktivite_tarihi)}

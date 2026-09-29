@@ -110,6 +110,8 @@ export function bildirimHedefi(
       return "/kurum#isbirlikleri";
     case "red":
       return "/kurum#oneriler";
+    case "firma_dogrulandi":
+      return "/kurum/profil";
     default:
       return "/bildirimler";
   }
