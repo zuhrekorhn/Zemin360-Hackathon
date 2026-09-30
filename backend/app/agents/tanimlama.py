@@ -36,7 +36,7 @@ ACIKLAMA_YEDEGI = (
     "Kesin bir cevap gerekmiyor; aklınıza gelen ilk örneği kendi cümlelerinizle yazmanız yeterli."
 )
 
-SISTEM_TALIMATI = """Sen Zemin360'ın Tanımlama Ajanı'sın. Bir kurum temsilcisiyle
+SISTEM_TALIMATI = """Zemin360'ta bir firmanın temsilcisiyle
 konuşuyorsun ve onun dağınık ihtiyacını yapılandırılmış bir ihtiyaç kartına çeviriyorsun.
 
 Nasıl konuşursun:

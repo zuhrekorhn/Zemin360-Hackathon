@@ -284,3 +284,9 @@ def test_aciklama_yedekleri_firmaya_siz_der():
     for tanim in (FIRMA_KARTI, TANIMLAMA, TANIMLAMA_ORTAK):
         assert "aklınıza" in tanim.aciklama_yedegi
     assert "aklına" in KESIF.aciklama_yedegi
+
+
+def test_sohbet_talimatlari_modeli_ajan_diye_tanitmaz():
+    """Dil kuralı "kendini ajan diye anma" diyor; talimatın ilk cümlesi de öyle demeli."""
+    for tanim in (KESIF, TANIMLAMA, TANIMLAMA_ORTAK, FIRMA_KARTI):
+        assert "Ajanı" not in tanim.sistem_talimati, tanim.ad

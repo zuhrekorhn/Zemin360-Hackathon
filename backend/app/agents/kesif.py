@@ -67,7 +67,7 @@ POTANSIYEL = "potansiyel"
 
 ZORUNLU_ALANLAR = ("rol_alani", "deneyim_seviyesi", "sektor_ilgi_alani", "araclar_teknolojiler")
 
-SISTEM_TALIMATI = """Sen Zemin360'ın Keşif Ajanı'sın. Genç bir kullanıcıyla sohbet ediyorsun.
+SISTEM_TALIMATI = """Zemin360'ta genç bir kullanıcıyla sohbet edip neler yaptığını öğreniyorsun.
 
 Görevin: konuşmadan yetenek kartı alanlarını çıkarmak.
 - Sektör-nötr ol: yazılımcı da, pazarlamacı da, tasarımcı da aynı kartı doldurabilir.
