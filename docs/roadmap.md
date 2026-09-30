@@ -154,7 +154,7 @@ Plan ve kararlar: [`plans/genc-akisi.md`](plans/genc-akisi.md); elle deneme: [`p
 - [x] Gençten ilgi, karşılıklı ilgi, "şimdilik değil", ihtiyaç kapanma kuralı; ilgi gösterilmiş kayıt korunur
 - [x] Genç ana sayfası (fırsatlar, kartını güçlendir, ilgilerim) ve firma tarafında ilgi gösterenler
 - [x] Canlılık: yanıtsız genç ilgisi (firmaya, 5 gün)
-- [ ] Toplu metin denetimi (`plans/genc-akisi-metinler.md`, `icerik-rehberi.md`): ayrı adım
+- [x] Toplu metin denetimi (`plans/genc-akisi-metinler.md`, `icerik-rehberi.md`): 30 Eyl, genç ve firma ekranları birlikte; son onay Zühre'de
 
 ## Firma akışı (29 Eyl →)
 
@@ -193,7 +193,7 @@ eksikliği görülen profil işleri ile arayüz düzeltmeleri. Akşam özellik d
 - [ ] **Railway cron'u ve `TARAMA_ANAHTARI`:** canlıda zamanlanmış görev günde iki
       kez (09:00, 18:00 İstanbul) `POST /canlilik/tarama`'yı `X-Tarama-Anahtari`
       başlığıyla çağırır; anahtar `.env`'de, kullanıcı token'ı değil (Faz D notu § 4).
-- [ ] Migration'lar canlı veritabanında sıfırdan çalışır.
+- [ ] Migration'lar canlı veritabanında sıfırdan çalışır. *Yerelde boş veritabanında doğrulandı (30 Eyl): `upgrade head`, `alembic check` (model ile şema aynı) ve `downgrade base` temiz.*
 - [ ] Tohum veri: 30-50 yetenek kartı, 8-10 kurum, birkaç tamamlanmış ve
       pasifleşmiş iş birliği. Demo senaryosuyla aynı hikâyeden beslenir.
 - [ ] Tohum veriye **son adımı kalmış ve bir adımı gecikmiş** hazır bir iş birliği
@@ -209,8 +209,8 @@ eksikliği görülen profil işleri ile arayüz düzeltmeleri. Akşam özellik d
 
 - [ ] Demo senaryosu canlı adreste baştan sona en az iki kez.
 - [ ] README güncel: proje adı, canlı adres, ekran görüntüleri, "Sırada" bölümü.
-- [ ] LICENSE dosyası (MIT).
-- [ ] `architecture.md`, `agent-specs.md`, `data-schema.md` koddaki gerçek durumla uyumlu.
+- [x] LICENSE dosyası (MIT).
+- [ ] `architecture.md`, `agent-specs.md`, `data-schema.md` koddaki gerçek durumla uyumlu. *Orkestrasyon ("supervisor") ifadesi README, CLAUDE.md ve architecture'da düzeltildi (30 Eyl).*
 - [ ] Yedek demo videosu (canlı demoda LLM gecikmesine karşı).
 
 ## Kesim çizgisi
