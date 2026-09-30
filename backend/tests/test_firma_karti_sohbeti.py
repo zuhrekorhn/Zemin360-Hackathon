@@ -21,6 +21,7 @@ from app.agents.firma_karti import (
 )
 from app.agents.kesif import KESIF
 from app.agents.tanimlama import TANIMLAMA, TANIMLAMA_ORTAK
+from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.main import app
 from app.models.kurum import Kurum
 from app.servisler import firma_karti as servis
@@ -287,6 +288,10 @@ def test_aciklama_yedekleri_firmaya_siz_der():
 
 
 def test_sohbet_talimatlari_modeli_ajan_diye_tanitmaz():
-    """Dil kuralı "kendini ajan diye anma" diyor; talimatın ilk cümlesi de öyle demeli."""
+    """Dil kuralı "kendini ajan diye anma" diyor; talimatın kendisi de öyle demeli.
+
+    Dil kuralı bloğu yasak adı örnek olarak içerdiği için ondan önceki kısma bakılır.
+    """
     for tanim in (KESIF, TANIMLAMA, TANIMLAMA_ORTAK, FIRMA_KARTI):
-        assert "Ajanı" not in tanim.sistem_talimati, tanim.ad
+        talimat = tanim.sistem_talimati.removesuffix(KULLANICI_DILI_KURALLARI)
+        assert "Ajanı" not in talimat, tanim.ad
