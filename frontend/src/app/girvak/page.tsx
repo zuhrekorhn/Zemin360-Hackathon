@@ -101,7 +101,7 @@ function GirvakSayfasi() {
     <Sayfa>
       <SayfaBasligi
         baslik="GİRVAK paneli"
-        aciklama="Program hedefleri gerçek sayılarla, pasifleşen bağlantılar ve Canlılık Ajanı’nın son hatırlatmaları. Kişisel bilgi olarak yalnızca ad."
+        aciklama="Program hedefleri gerçek sayılarla, pasifleşen bağlantılar ve son hatırlatmalar. Kişisel bilgi olarak yalnızca ad görünür."
       />
 
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
@@ -149,10 +149,10 @@ function GirvakSayfasi() {
       <PanelBolumu
         id="pasifler"
         baslik="Pasifleşen bağlantılar"
-        aciklama="Şu an eşiği aşmış kayıtlar; en uzun süredir hareketsiz olan önce. Bu liste okunurken hiçbir hatırlatma gönderilmez."
+        aciklama="Şu an hareketsizlik süresini aşmış kayıtlar; en uzun süredir hareketsiz olan önce. Bu liste okunurken hiçbir hatırlatma gönderilmez."
       >
         {pasifler === null ? null : pasifler.length === 0 ? (
-          <BosDurum metin="Şu an eşiği aşmış bir bağlantı yok." />
+          <BosDurum metin="Şu an hareketsizlik süresini aşmış bir bağlantı yok." />
         ) : (
           <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
             {pasifler.map((pasif) => (
@@ -165,7 +165,7 @@ function GirvakSayfasi() {
         )}
       </PanelBolumu>
 
-      <PanelBolumu id="olaylar" baslik="Son Canlılık olayları">
+      <PanelBolumu id="olaylar" baslik="Son hatırlatmalar">
         {olaylar === null ? null : olaylar.length === 0 ? (
           <BosDurum metin="Henüz hatırlatma gönderilmedi. Tarama çalıştığında burada görünür." />
         ) : (
@@ -179,7 +179,7 @@ function GirvakSayfasi() {
                     {olay.alici_rol ? (
                       <span className="text-muted-foreground">
                         {" "}
-                        ({olay.alici_rol === "genc" ? "genç" : "kurum"})
+                        ({olay.alici_rol === "genc" ? "genç" : "firma"})
                       </span>
                     ) : null}
                   </span>
@@ -204,7 +204,7 @@ function GirvakSayfasi() {
             <SayiIzgarasi
               ogeler={[
                 { etiket: "Genç hesabı", sayi: sayilar.hesap.genc },
-                { etiket: "Kurum hesabı", sayi: sayilar.hesap.kurum },
+                { etiket: "Firma hesabı", sayi: sayilar.hesap.kurum },
                 { etiket: "Yetenek kartı", sayi: sayilar.yetenek_karti },
                 { etiket: "İhtiyaç kartı", sayi: sayilar.ihtiyac_karti },
               ]}
@@ -213,7 +213,7 @@ function GirvakSayfasi() {
 
           <PanelBolumu
             baslik="Eşleşmeler ve iş birlikleri"
-            aciklama="Öneriden tamamlanmış pilota: kurum ilgilenir, genç kabul eder, plan iki tarafça onaylanır ve adım adım tamamlanır."
+            aciklama="Öneriden tamamlanan iş birliğine: firma ilgilenir, genç kabul eder, plan iki tarafça onaylanır ve adım adım tamamlanır."
           >
             <SayiIzgarasi
               ogeler={[
@@ -234,7 +234,7 @@ function GirvakSayfasi() {
                   sayi: sayilar.isbirligi_durumlari.aktif,
                 },
                 {
-                  etiket: "Tamamlanmış pilot",
+                  etiket: "Tamamlanan iş birliği",
                   sayi: sayilar.isbirligi_durumlari.tamamlandi,
                 },
               ]}
@@ -243,7 +243,7 @@ function GirvakSayfasi() {
 
           <PanelBolumu
             baslik="Genç–firma ve firma–firma"
-            aciklama="Yukarıdaki toplamların eşleşme türüne göre dağılımı. Firma–firma, bir firmanın iş birliği ortağı aradığı ilanlardan çıkan eşleşmeler."
+            aciklama="Yukarıdaki toplamların eşleşme türüne göre dağılımı. Firma–firma, bir firmanın iş birliği ortağı aradığı ihtiyaçlardan çıkan eşleşmeler."
           >
             <SayiIzgarasi
               ogeler={[
@@ -341,8 +341,8 @@ function TaramaOzeti({ sonuc }: { sonuc: TaramaSonucu }) {
   return (
     <p className="text-sm text-pretty" role="status">
       {turler.length === 0
-        ? "Yeni hatırlatma yok: eşiği aşan kayıt yok ya da bu dönemde zaten hatırlatıldı."
-        : `${sonuc.bildirim} bildirim gönderildi — ${turler
+        ? "Yeni hatırlatma yok: hareketsizlik süresini aşan kayıt yok ya da bu dönemde zaten hatırlatıldı."
+        : `${sonuc.bildirim} bildirim gönderildi. ${turler
             .map(([tur, sayi]) => `${turEtiketi(tur)}: ${sayi}`)
             .join(", ")}.`}
       <span className="ml-1 text-xs text-muted-foreground">

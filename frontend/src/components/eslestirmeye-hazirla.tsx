@@ -39,8 +39,8 @@ export function EslestirmeyeHazirla({
       className="flex flex-col gap-3 rounded-sm border border-kenar bg-muted px-4 py-3"
     >
       <p className="text-sm text-pretty">
-        Kart kaydedildi, ama henüz eşleştirmeye hazır değil: vektör servisine
-        o an ulaşılamadı. Hazırlanana kadar öneri listelerinde görünmez.
+        Kart kaydedildi, ancak henüz eşleşmeye hazır değil; o an bağlantı
+        kurulamadı. Hazırlanana kadar öneri listelerinde görünmez.
       </p>
       {hata ? <p className="text-sm text-pretty">{hata}</p> : null}
       <Button

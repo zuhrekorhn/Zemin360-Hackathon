@@ -5,6 +5,7 @@
  */
 
 import type { IsbirligiDetayi, MilestoneYaniti, Rol } from "@/lib/api";
+import { type Hitap, hitapla } from "@/lib/hitap";
 
 export type Taraf = "genc" | "kurum";
 
@@ -31,6 +32,7 @@ export function adimGorunumu(
   adim: MilestoneYaniti,
   detay: IsbirligiDetayi,
   taraf: Taraf | null,
+  hitap: Hitap = "sen",
 ): AdimGorunumu {
   const genc = adim.genc_isaret !== null;
   const kurum = adim.kurum_isaret !== null;
@@ -45,9 +47,9 @@ export function adimGorunumu(
   if (taraf === null) {
     // GİRVAK: taraf adlarıyla, yönsüz.
     const metin = genc
-      ? `${detay.genc_adi} tamamlandı dedi; ${detay.kurum_adi} tarafının onayı bekleniyor.`
+      ? `${detay.aday_adi} tamamlandı dedi; ${detay.kurum_adi} tarafının onayı bekleniyor.`
       : kurum
-        ? `${detay.kurum_adi} tamamlandı dedi; ${detay.genc_adi} tarafının onayı bekleniyor.`
+        ? `${detay.kurum_adi} tamamlandı dedi; ${detay.aday_adi} tarafının onayı bekleniyor.`
         : "Sürüyor.";
     return {
       metin,
@@ -61,7 +63,7 @@ export function adimGorunumu(
   const karsiAd = karsiTarafAdi(detay, taraf);
   if (ben) {
     return {
-      metin: `Sen tamamlandı dedin; ${karsiAd} tarafının onayı bekleniyor.`,
+      metin: `${hitapla(hitap, "Sen tamamlandı dedin", "Siz tamamlandı dediniz")}; ${karsiAd} tarafının onayı bekleniyor.`,
       tamamlandi: false,
       benIsaretledim: true,
       siraBende: false,
@@ -69,7 +71,7 @@ export function adimGorunumu(
   }
   if (karsi) {
     return {
-      metin: `${karsiAd} tamamlandı dedi; senin onayın bekleniyor.`,
+      metin: `${karsiAd} tamamlandı dedi; ${hitapla(hitap, "senin onayın", "sizin onayınız")} bekleniyor.`,
       tamamlandi: false,
       benIsaretledim: false,
       siraBende: true,
@@ -92,12 +94,13 @@ export type PlanOnayGorunumu = {
 export function planOnayGorunumu(
   detay: IsbirligiDetayi,
   taraf: Taraf | null,
+  hitap: Hitap = "sen",
 ): PlanOnayGorunumu {
   const genc = detay.genc_plan_onayi !== null;
   const kurum = detay.kurum_plan_onayi !== null;
   if (taraf === null) {
     const onaylayanlar = [
-      genc ? detay.genc_adi : null,
+      genc ? detay.aday_adi : null,
       kurum ? detay.kurum_adi : null,
     ].filter(Boolean);
     return {
@@ -114,13 +117,13 @@ export function planOnayGorunumu(
     return { metin: "İki taraf da onayladı.", benOnayladim: true };
   if (ben) {
     return {
-      metin: `Sen onayladın; ${karsiAd} tarafının onayı bekleniyor.`,
+      metin: `${hitapla(hitap, "Sen onayladın", "Siz onayladınız")}; ${karsiAd} tarafının onayı bekleniyor.`,
       benOnayladim: true,
     };
   }
   if (karsi) {
     return {
-      metin: `${karsiAd} planı onayladı; senin onayın bekleniyor.`,
+      metin: `${karsiAd} planı onayladı; ${hitapla(hitap, "senin onayın", "sizin onayınız")} bekleniyor.`,
       benOnayladim: false,
     };
   }

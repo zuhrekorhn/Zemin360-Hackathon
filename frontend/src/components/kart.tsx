@@ -12,12 +12,15 @@ import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
  * resmi belge hissi.
  */
 
-/** Rubriğin dört bileşeni (docs/agent-specs.md § 4). */
+/**
+ * Güven göstergesinin dört başlığı (docs/agent-specs.md § 4). Kısa adlar
+ * rehberden (docs/icerik-rehberi.md § 4); uzun adlar yalnızca açıklamada.
+ */
 const BILESENLER = [
-  { ad: "Kanıt orijinalliği", alan: "kanit_orijinalligi" },
-  { ad: "Ölçülebilir sonuç", alan: "sonuc_olculebilirligi" },
-  { ad: "Rol netliği", alan: "rol_netligi" },
-  { ad: "Üçüncü taraf onayı", alan: "ucuncu_taraf_onayi" },
+  { ad: "Kanıt", alan: "kanit_orijinalligi" },
+  { ad: "Sonuç", alan: "sonuc_olculebilirligi" },
+  { ad: "Rol", alan: "rol_netligi" },
+  { ad: "Referans", alan: "ucuncu_taraf_onayi" },
 ] as const;
 
 /**
@@ -83,8 +86,7 @@ export function BelgeKarti({
 export function SkorRozeti({ skor }: { skor: number }) {
   return (
     <span className="rounded-sm border border-kenar px-2.5 py-1 font-mono text-sm text-ana">
-      %{Math.round(skor * 100)}
-      <span className="sr-only"> eşleşme skoru</span>
+      %{Math.round(skor * 100)} uyum
     </span>
   );
 }
@@ -134,7 +136,9 @@ export function CiktiOzeti({
           </p>
         ) : null}
         {cikti.olculebilir_sonuc ? (
-          <p className="text-sm text-pretty">Sonuç: {cikti.olculebilir_sonuc}</p>
+          <p className="text-sm text-pretty">
+            Sonuç: {cikti.olculebilir_sonuc}
+          </p>
         ) : null}
         {cikti.kendi_rolu ? (
           <p className="text-sm text-pretty">Payı: {cikti.kendi_rolu}</p>
@@ -161,8 +165,8 @@ export function CiktiOzeti({
         <GuvenGostergesi skor={cikti.guven_skoru} />
       ) : (
         <p className="border-t border-kenar px-4 py-3 text-sm text-muted-foreground">
-          Bu çıktı henüz doğrulanmadı. Doğrulanmamış olmak kartı eler değil,
-          sadece güven göstergesi boş kalır.
+          Bu çalışma henüz değerlendirilmedi. Değerlendirilmemiş olmak kartı
+          elemez; yalnızca güven göstergesi boş kalır.
         </p>
       )}
     </div>
@@ -177,7 +181,7 @@ export function PilotRozeti({ sayi }: { sayi: number }) {
   if (sayi < 1) return null;
   return (
     <span className="rounded-sm border border-baglanti px-2.5 py-1 text-xs text-baglanti">
-      {sayi} tamamlanmış pilot
+      {sayi} tamamlanan iş birliği
     </span>
   );
 }

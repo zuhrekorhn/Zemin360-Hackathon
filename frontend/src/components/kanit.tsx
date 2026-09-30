@@ -122,7 +122,7 @@ export function KanitBolumu({
             id={`link-${somutCiktiId}`}
             value={link}
             onChange={(olay) => setLink(olay.target.value)}
-            placeholder="github.com/… veya bir demo adresi"
+            placeholder="ör. github.com/… ya da bir demo adresi"
             inputMode="url"
           />
         </FormAlani>
@@ -137,7 +137,7 @@ export function KanitBolumu({
               id={`tur-${somutCiktiId}`}
               value={tur}
               onChange={(olay) => setTur(olay.target.value)}
-              placeholder="kod deposu, rapor, video…"
+              placeholder="ör. kod deposu, rapor, video"
             />
           </FormAlani>
 
@@ -151,7 +151,7 @@ export function KanitBolumu({
               type="email"
               value={referansEmail}
               onChange={(olay) => setReferansEmail(olay.target.value)}
-              placeholder="isi-dogrulayabilecek@ornek.com"
+              placeholder="ör. ad@ornek.com"
               autoComplete="off"
             />
           </FormAlani>
@@ -172,7 +172,7 @@ export function KanitBolumu({
           <span className="text-xs text-muted-foreground">
             {degerlendirmeyiBekliyor
               ? "Sohbette verdiğin link hazır; istersen değiştirebilirsin."
-              : "Kanıt linki açılıp okunur, sonra dört başlıkta puanlanır."}
+              : "Linkin açılır, başlığı okunur ve çalışman dört açıdan değerlendirilir."}
           </span>
         </div>
       </form>
@@ -181,7 +181,9 @@ export function KanitBolumu({
         <section className="flex flex-col gap-3 border-t border-kenar pt-4">
           {durum?.guven_skoru?.gerekce_metni ? (
             <p className="text-sm text-pretty">
-              <span className="text-muted-foreground">Ajanın notu: </span>
+              <span className="text-muted-foreground">
+                Değerlendirme notu:{" "}
+              </span>
               {durum.guven_skoru.gerekce_metni}
             </p>
           ) : null}
@@ -201,7 +203,7 @@ export function KanitBolumu({
               }}
             >
               <FormAlani
-                etiket="Neden itiraz ediyorsun?"
+                etiket="İtiraz nedeni"
                 htmlFor={`itiraz-${somutCiktiId}`}
                 istegeBagli
               >
@@ -209,12 +211,12 @@ export function KanitBolumu({
                   id={`itiraz-${somutCiktiId}`}
                   value={aciklama}
                   onChange={(olay) => setAciklama(olay.target.value)}
-                  placeholder="Örn. rolüm açıklamada net yazmıyordu"
+                  placeholder="ör. rolüm açıklamada net yazmıyordu"
                 />
               </FormAlani>
               <p className="text-xs text-muted-foreground">
-                Yukarıdaki kanıt linkini doldurduysan yeni link kullanılır. Puan
-                yeniden hesaplanır; referans yanıtı korunur.
+                Yukarıya yeni bir kanıt linki yazdıysan o kullanılır. Güven
+                göstergesi yeniden hesaplanır; referans yanıtı korunur.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button type="submit" size="lg" disabled={bekleniyor}>
@@ -238,10 +240,10 @@ export function KanitBolumu({
                 size="lg"
                 onClick={() => setItirazAcik(true)}
               >
-                Puana itiraz et
+                Değerlendirmeye itiraz et
               </Button>
               <span className="text-xs text-muted-foreground">
-                Puanı düşük buluyorsan yeniden değerlendirilmesini
+                Değerlendirmeyi eksik buluyorsan yeniden bakılmasını
                 isteyebilirsin.
               </span>
             </div>
@@ -276,7 +278,8 @@ function YanitLinki({ adres }: { adres: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <p className="text-xs text-muted-foreground">
-        Yanıt linki — e-posta göndermiyoruz, referans kişiye kendin ilet:
+        Yanıt linki. E-posta göndermiyoruz; bu linki referans kişiye kendin
+        ilet:
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <a
@@ -344,7 +347,9 @@ function ReferansSatiri({
         <YanitLinki adres={yanitSayfasi} />
       ) : null}
 
-      {not ? <p className="text-xs text-pretty text-muted-foreground">{not}</p> : null}
+      {not ? (
+        <p className="text-xs text-pretty text-muted-foreground">{not}</p>
+      ) : null}
       {yenidenIstenebilir ? (
         <Button
           type="button"

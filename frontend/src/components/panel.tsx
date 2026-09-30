@@ -76,7 +76,7 @@ export function IletisimSatiri({
 }) {
   const satirlar =
     karsiTaraf === "kurum"
-      ? [{ etiket: "Kurumun e-postası", eposta: iletisim.kurum_email }]
+      ? [{ etiket: "Firmanın e-postası", eposta: iletisim.kurum_email }]
       : iletisim.aday_firma_email
         ? // Firma–firma: karşı taraf ortak firma (docs/plans/firma-akisi.md § 9).
           [

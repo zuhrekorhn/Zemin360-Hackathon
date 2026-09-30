@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
+import { OnayAlani } from "@/components/onay-alani";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
   BelgeKarti,
@@ -145,14 +146,8 @@ function OnerilerIcerigi() {
 
   const ilgilendigimiSoyle = (oneri: Oneri) => durumuYaz(oneri, ilgileniyorum);
 
+  // Onay kartın içinde sorulur (SimdilikDegilDugmesi, rehber § 5.6).
   function simdilikDegilDe(oneri: Oneri) {
-    if (
-      !window.confirm(
-        `${onerininAdayAdi(oneri)} için “Şimdilik değil” demek istiyor musunuz? Adaya bu fırsatın kapandığı bildirilir; neden yazılmaz.`,
-      )
-    ) {
-      return;
-    }
     void durumuYaz(oneri, simdilikDegil);
   }
 
@@ -165,11 +160,11 @@ function OnerilerIcerigi() {
   return (
     <Sayfa>
       <SayfaBasligi
-        baslik="Eşleştirme önerileri"
+        baslik="Uygun adaylar"
         aciklama={
           ortak
-            ? "İlanınıza uyan firmalar, uyumuyla ve neden önerildikleriyle birlikte. Karar sizin."
-            : "İhtiyaç kartınla eşleşen yetenek kartları, skoruyla ve neden önerildiğinin gerekçesiyle birlikte. Karar senin."
+            ? "İhtiyacınıza uyan firmalar, uyumuyla ve neden uygun olduklarıyla birlikte. Karar sizin."
+            : "İhtiyacınıza uyan gençler, uyumuyla ve neden uygun olduklarıyla birlikte. Karar sizin."
         }
       >
         {gosterilenKart ? (
@@ -192,7 +187,7 @@ function OnerilerIcerigi() {
             aria-hidden="true"
             className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
           />
-          Eşleşmeler hesaplanıyor…
+          Adaylar hazırlanıyor…
         </p>
       ) : null}
 
@@ -236,11 +231,11 @@ function KurumYok() {
   return (
     <div className="flex flex-col items-start gap-3 rounded-sm border border-kenar bg-card px-5 py-4">
       <p className="text-sm text-pretty">
-        Henüz bir ihtiyaç kartın yok. Eşleştirme, Tanımlama Ajanı’yla
-        oluşturduğun karttan yola çıkıyor.
+        Henüz bir ihtiyaç tanımlamadınız. Kısa bir sohbetle ihtiyacınızı
+        netleştirin, size uygun adayları gösterelim.
       </p>
       <Button asChild size="lg">
-        <Link href="/tanimlama">İhtiyaç kartı oluştur</Link>
+        <Link href="/tanimlama">İhtiyacınızı tanımlayın</Link>
       </Button>
     </div>
   );
@@ -262,11 +257,11 @@ function OneriListesi({
     return (
       <div className="flex flex-col gap-2 rounded-sm border border-kenar bg-card px-5 py-4">
         <p className="text-sm text-pretty">
-          Şu an ilanınıza yeterince uyan bir firma yok. Firmalar kartlarını
-          oluşturdukça yeni öneriler çıkabilir.
+          Şu an ihtiyacınıza yeterince uyan bir firma yok. Firmalar kartlarını
+          oluşturdukça yeni adaylar çıkabilir.
         </p>
         <p className="text-sm text-pretty text-muted-foreground">
-          İlanınızdaki problemi ve başarı kriterini netleştirmek de yardımcı
+          İhtiyacınızdaki problemi ve başarı kriterini netleştirmek de yardımcı
           olur.
         </p>
       </div>
@@ -276,15 +271,13 @@ function OneriListesi({
     return (
       <div className="flex flex-col gap-2 rounded-sm border border-kenar bg-card px-5 py-4">
         <p className="text-sm text-pretty">
-          Şu an eşik değerini geçen bir eşleşme yok. Eşik{" "}
-          <span className="font-mono">
-            %{Math.round(veri.skor_esigi * 100)}
-          </span>{" "}
-          — bunun altındaki kartlar gösterilmiyor, çünkü zayıf bir öneri kuruma
-          da gence de vakit kaybettiriyor.
+          Şu an ihtiyacınıza yeterince uyan bir aday yok. Yalnızca yeterince
+          uyan adayları gösteriyoruz; zayıf bir öneri iki tarafın da vaktini
+          alır.
         </p>
         <p className="text-sm text-pretty text-muted-foreground">
-          Havuz büyüdükçe ya da ihtiyaç kartını netleştirdikçe yeniden dene.
+          Yeni gençler katıldıkça ya da ihtiyacınızı netleştirdikçe yeniden
+          hesaplayın.
         </p>
       </div>
     );
@@ -294,8 +287,8 @@ function OneriListesi({
     <div className="flex flex-col gap-6">
       {veri.az_sonuc_uyarisi ? (
         <p className="rounded-sm border border-kenar bg-muted px-5 py-3 text-sm text-pretty">
-          Havuz henüz küçük: {veri.oneriler.length} öneri çıktı. Bunu
-          gizlemiyoruz — az sayıda aday, kötü aday demek değil.
+          Havuz henüz küçük: {veri.oneriler.length} aday çıktı. Az sayıda aday,
+          kötü aday demek değil.
         </p>
       ) : null}
 
@@ -383,9 +376,8 @@ function OneriKarti({
           <p className="text-sm text-pretty">{oneri.gerekce_metni}</p>
         ) : (
           <p className="text-sm text-pretty text-muted-foreground">
-            Bu öneri için henüz güvenilir bir gerekçe metni yok. Skor ve
-            sıralama bundan etkilenmiyor; yeniden hesaplayınca gerekçe tekrar
-            denenir.
+            Bu aday için açıklama henüz hazır değil. Uyum ve sıralama bundan
+            etkilenmiyor; “Yeniden hesapla” ile tekrar denenir.
           </p>
         )}
       </section>
@@ -395,11 +387,11 @@ function OneriKarti({
 
       <section className="flex flex-col gap-3">
         <h4 className="font-heading text-sm font-semibold text-ana">
-          Somut çıktılar
+          Çalışmaları
         </h4>
         {kart.somut_ciktilar.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Bu karta henüz somut çıktı eklenmemiş.
+            Bu karta henüz çalışma eklenmemiş.
           </p>
         ) : (
           kart.somut_ciktilar.map((cikti) => (
@@ -414,14 +406,10 @@ function OneriKarti({
             <Button type="button" size="lg" onClick={onIlgileniyorum}>
               İlgileniyorum
             </Button>
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              onClick={onSimdilikDegil}
-            >
-              Şimdilik değil
-            </Button>
+            <SimdilikDegilDugmesi
+              adayAdi={onerininAdayAdi(oneri)}
+              onOnayla={onSimdilikDegil}
+            />
             <span className="text-xs text-pretty text-muted-foreground">
               İlgilenirseniz iletişim bilgileriniz paylaşılır ve iş birliği
               başlar.
@@ -518,7 +506,7 @@ function FirmaAdayiKarti({
           <p className="text-sm text-pretty">{oneri.gerekce_metni}</p>
         ) : (
           <p className="text-sm text-pretty text-muted-foreground">
-            Bu öneri için açıklama henüz hazır değil. Uyum ve sıralama bundan
+            Bu aday için açıklama henüz hazır değil. Uyum ve sıralama bundan
             etkilenmiyor; “Yeniden hesapla” ile tekrar denenir.
           </p>
         )}
@@ -552,14 +540,10 @@ function FirmaAdayiKarti({
             <Button type="button" size="lg" onClick={onIlgileniyorum}>
               İlgileniyorum
             </Button>
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              onClick={onSimdilikDegil}
-            >
-              Şimdilik değil
-            </Button>
+            <SimdilikDegilDugmesi
+              adayAdi={onerininAdayAdi(oneri)}
+              onOnayla={onSimdilikDegil}
+            />
             <span className="text-xs text-pretty text-muted-foreground">
               İlgilenirseniz iletişim bilgileriniz paylaşılır ve iş birliği
               başlar.
@@ -604,5 +588,41 @@ function FirmaAdayiKarti({
         <IletisimSatiri iletisim={oneri.iletisim} karsiTaraf="genc" />
       ) : null}
     </BelgeKarti>
+  );
+}
+
+/**
+ * "Şimdilik değil": onay kartın içinde (rehber § 5.6); adaya nedeni yazılmaz.
+ */
+function SimdilikDegilDugmesi({
+  adayAdi,
+  onOnayla,
+}: {
+  adayAdi: string;
+  onOnayla: () => void;
+}) {
+  const [acik, setAcik] = useState(false);
+  if (acik) {
+    return (
+      <OnayAlani
+        soru={`${adayAdi} için “Şimdilik değil” denilsin mi? Adaya bu fırsatın kapandığı bildirilir; neden yazılmaz.`}
+        onayEtiketi="Şimdilik değil"
+        onOnayla={() => {
+          setAcik(false);
+          onOnayla();
+        }}
+        onVazgec={() => setAcik(false)}
+      />
+    );
+  }
+  return (
+    <Button
+      type="button"
+      size="lg"
+      variant="outline"
+      onClick={() => setAcik(true)}
+    >
+      Şimdilik değil
+    </Button>
   );
 }

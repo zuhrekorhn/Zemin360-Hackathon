@@ -25,18 +25,18 @@ import { type Hata, hatayaCevir, tekrarDenenebilirMi } from "@/lib/hata";
  */
 
 const SECENEKLER = [
-  { puan: 1, etiket: "1 — Bu iş böyle olmadı" },
-  { puan: 2, etiket: "2 — Katkısı sınırlıydı" },
-  { puan: 3, etiket: "3 — Ne iyi ne kötü" },
-  { puan: 4, etiket: "4 — Anlatıldığı gibi yaptı" },
-  { puan: 5, etiket: "5 — Anlatılandan da fazlasını yaptı" },
+  { puan: 1, etiket: "1. Bu çalışma böyle olmadı" },
+  { puan: 2, etiket: "2. Katkısı sınırlıydı" },
+  { puan: 3, etiket: "3. Ne iyi ne kötü" },
+  { puan: 4, etiket: "4. Anlatıldığı gibi yaptı" },
+  { puan: 5, etiket: "5. Anlatılandan da fazlasını yaptı" },
 ];
 
 const KAPALI_MESAJLARI: Record<string, string> = {
   yanitlandi:
     "Bu referans isteği zaten yanıtlanmış. Link tek kullanımlık; yeniden yanıt vermeniz gerekmiyor.",
   yanit_yok:
-    "Bu referans isteğinin süresi doldu (7 gün). Yanıt gelmemesi kimse için olumsuz bir işaret değil — iddia yalnızca üçüncü taraf onayı olmadan değerlendirildi.",
+    "Bu referans isteğinin süresi doldu (7 gün). Yanıt gelmemesi kimse için olumsuz bir işaret değil; çalışma referans yanıtı olmadan değerlendirildi.",
 };
 
 export default function ReferansSayfasi() {
@@ -106,7 +106,7 @@ function ReferansFormu() {
     <Sayfa>
       <SayfaBasligi
         baslik="Bir referans isteği"
-        aciklama="Biri, birlikte çalıştığınız bir işi Zemin360’ta kendi yetenek kartına ekledi ve sizi referans gösterdi. Üye olmanız gerekmiyor; tek bir soruluk bir şey."
+        aciklama="Biri, birlikte yürüttüğünüz bir çalışmayı Zemin360’ta kendi yetenek kartına ekledi ve sizi referans gösterdi. Üye olmanız gerekmiyor; tek bir soruluk bir şey."
       />
 
       {hata ? (
@@ -124,7 +124,7 @@ function ReferansFormu() {
             aria-hidden="true"
             className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
           />
-          İstek okunuyor…
+          İstek yükleniyor…
         </p>
       ) : null}
 
@@ -155,12 +155,12 @@ function ReferansFormu() {
         >
           <fieldset className="flex flex-col gap-3">
             <legend className="font-heading text-base font-semibold text-ana">
-              Anlatılan iş, sizin gördüğünüz kadarıyla doğru mu?
+              Anlatılan çalışma, sizin gördüğünüz kadarıyla doğru mu?
             </legend>
             <p className="text-sm text-muted-foreground">
               Yanıtınız dört başlıktan yalnızca birine etki eder. Olumsuz yanıt
-              da işimize yarar — amacımız kimseyi cezalandırmak değil, iddiayı
-              yerine oturtmak.
+              da işimize yarar; amacımız kimseyi cezalandırmak değil, çalışmayı
+              doğru yere oturtmak.
             </p>
 
             {SECENEKLER.map((secenek) => (
@@ -195,7 +195,7 @@ function ReferansFormu() {
               value={yorum}
               onChange={(olay) => setYorum(olay.target.value)}
               rows={3}
-              placeholder="Örn. sistemi kendisi kurdu, hâlâ kullanıyoruz."
+              placeholder="ör. sistemi kendisi kurdu, hâlâ kullanıyoruz."
               className="w-full resize-y rounded-2xl border border-kenar bg-card px-4 py-3 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
             />
           </FormAlani>
@@ -223,7 +223,7 @@ function Iddia({ bilgi }: { bilgi: ReferansIstegiBilgisi }) {
   return (
     <article className="rounded-sm border border-kenar bg-card">
       <div className="border-b border-kenar px-5 py-4">
-        <p className="text-xs text-muted-foreground">İddia sahibi</p>
+        <p className="text-xs text-muted-foreground">Çalışmanın sahibi</p>
         <p className="text-sm">{bilgi.iddia_sahibi_adi}</p>
       </div>
       <div className="flex flex-col gap-1 px-5 py-4">
@@ -253,13 +253,13 @@ function Tesekkur({ sonuc }: { sonuc: ReferansYanitiSonucu }) {
         Teşekkürler, yanıtınız kaydedildi
       </h2>
       <p className="text-sm text-pretty">
-        “{sonuc.baslik}” iddiası için verdiğiniz yanıt işlendi. Bu linki tekrar
-        açmanıza gerek yok.
+        “{sonuc.baslik}” için verdiğiniz yanıt işlendi. Bu linki tekrar açmanıza
+        gerek yok.
       </p>
       <p className="text-sm text-pretty text-muted-foreground">
         Yanıtınız tek başına bir karar değil: dört başlıklı güven göstergesinin
-        yalnızca “üçüncü taraf onayı” kısmını besliyor, diğer üçü kanıtın
-        kendisinden geliyor.
+        yalnızca “Referans” kısmını besliyor, diğer üçü kanıtın kendisinden
+        geliyor.
       </p>
     </section>
   );

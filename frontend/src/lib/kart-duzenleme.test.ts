@@ -29,7 +29,11 @@ describe("degisenIsKalemiAlanlari", () => {
 
   it("aynı değer değişiklik sayılmaz; boş metin null", () => {
     expect(
-      degisenIsKalemiAlanlari(eski, { ...eski, baslik: " Kütüphane ", aciklama: "" }),
+      degisenIsKalemiAlanlari(eski, {
+        ...eski,
+        baslik: " Kütüphane ",
+        aciklama: "",
+      }),
     ).toEqual({});
   });
 
@@ -47,16 +51,20 @@ describe("referansSatiri", () => {
   const referans = (ek: Partial<ReferansDurumu>) =>
     ({ durum: "yanitlandi", guncel: true, ...ek }) as ReferansDurumu;
 
-  it("işin önceki hâline verilmiş yanıt: not ve yeniden iste", () => {
+  it("çalışmanın önceki hâline verilmiş yanıt: not ve yeniden iste", () => {
     expect(referansSatiri(referans({ guncel: false }))).toEqual({
-      not: "Bu yanıt işin önceki hâline verildi; güven göstergesine girmiyor.",
+      not: "Bu yanıt çalışmanın önceki hâline verildi; güven göstergesine girmiyor.",
       yenidenIstenebilir: true,
     });
   });
 
   it("güncel yanıt ve bekleyen istek yeniden istenemez; süresi dolan istenebilir", () => {
     expect(referansSatiri(referans({})).yenidenIstenebilir).toBe(false);
-    expect(referansSatiri(referans({ durum: "bekliyor" })).yenidenIstenebilir).toBe(false);
-    expect(referansSatiri(referans({ durum: "yanit_yok" })).yenidenIstenebilir).toBe(true);
+    expect(
+      referansSatiri(referans({ durum: "bekliyor" })).yenidenIstenebilir,
+    ).toBe(false);
+    expect(
+      referansSatiri(referans({ durum: "yanit_yok" })).yenidenIstenebilir,
+    ).toBe(true);
   });
 });

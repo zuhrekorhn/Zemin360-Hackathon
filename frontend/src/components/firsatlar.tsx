@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
+import { OnayAlani } from "@/components/onay-alani";
 import { DurumEtiketi, IletisimSatiri } from "@/components/panel";
 import { Button } from "@/components/ui/button";
 import type { GencEslesmesi, IhtiyacKartiYaniti } from "@/lib/api";
@@ -157,22 +158,17 @@ export function IlgiSatiri({
   onGeriCek: () => Promise<void>;
 }) {
   const [bekleniyor, setBekleniyor] = useState(false);
+  const [onayAcik, setOnayAcik] = useState(false);
   const ihtiyac = ilgi.ihtiyac_karti;
   const { geriCek } = gencEylemleri(ilgi.durum);
 
   async function cek() {
-    if (
-      !window.confirm(
-        `${ihtiyac.kurum.ad} fırsatına gösterdiğin ilgi geri çekilsin mi?`,
-      )
-    ) {
-      return;
-    }
     setBekleniyor(true);
     try {
       await onGeriCek();
     } finally {
       setBekleniyor(false);
+      setOnayAcik(false);
     }
   }
 
@@ -192,7 +188,16 @@ export function IlgiSatiri({
       {ilgi.iletisim ? (
         <IletisimSatiri iletisim={ilgi.iletisim} karsiTaraf="kurum" />
       ) : null}
-      {geriCek || ilgi.isbirligi_id ? (
+      {onayAcik ? (
+        <OnayAlani
+          soru={`${ihtiyac.kurum.ad} fırsatına gösterdiğin ilgi geri çekilsin mi? Fırsat yeniden “Sana uygun fırsatlar”a döner.`}
+          onayEtiketi="İlgimi geri çek"
+          bekleniyor={bekleniyor}
+          bekleniyorEtiketi="Geri çekiliyor…"
+          onOnayla={() => void cek()}
+          onVazgec={() => setOnayAcik(false)}
+        />
+      ) : geriCek || ilgi.isbirligi_id ? (
         <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-3">
           {geriCek ? (
             <Button
@@ -200,7 +205,7 @@ export function IlgiSatiri({
               size="sm"
               variant="outline"
               disabled={bekleniyor}
-              onClick={() => void cek()}
+              onClick={() => setOnayAcik(true)}
             >
               İlgimi geri çek
             </Button>

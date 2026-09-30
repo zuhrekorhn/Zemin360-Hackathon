@@ -111,7 +111,7 @@ describe("kartTamamlamaCagrisi", () => {
 
   it("kartı olmayan gence çağrı", () => {
     expect(kartTamamlamaCagrisi(genc(0))).toBe(
-      "Kartını tamamla, kurumlar seni görebilsin.",
+      "Kartını tamamla, firmalar seni görebilsin.",
     );
   });
   it("kartı varsa ya da kurumsa yok", () => {

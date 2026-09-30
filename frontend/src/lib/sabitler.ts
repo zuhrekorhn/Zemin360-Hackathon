@@ -146,7 +146,7 @@ export const KARIYER_DURUMLARI = Object.entries(KARIYER_DURUMU_ETIKETLERI).map(
 export const IS_TURU_ETIKETLERI: Record<string, string> = {
   proje: "Proje",
   staj: "Staj",
-  is: "İş",
+  is: "İş deneyimi",
   gonulluluk: "Gönüllülük",
   yarisma: "Yarışma",
 };

@@ -151,8 +151,8 @@ function KartIcerigi() {
         }
         aciklama={
           sahibi
-            ? "Her somut çıktıya kanıt ekleyip referans isteyebilirsin. Doğrulama Ajanı kanıtı dört ayrı başlıkta puanlar — tek bir “güven puanı”na indirmez."
-            : "Doğrulama Ajanı her somut çıktıyı dört ayrı başlıkta puanlar — tek bir “güven puanı”na indirmez."
+            ? "Her çalışman dört açıdan değerlendirilir: kanıt, sonuç, rol ve referans. Tek bir puana indirilmez; böylece neyin güçlü, neyin eksik olduğunu görürsün."
+            : "Her çalışma dört açıdan değerlendirilir: kanıt, sonuç, rol ve referans. Tek bir puana indirilmez; böylece neyin güçlü, neyin eksik olduğunu görürsünüz."
         }
       />
 
@@ -171,7 +171,7 @@ function KartIcerigi() {
             aria-hidden="true"
             className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
           />
-          Kart okunuyor…
+          Kart yükleniyor…
         </p>
       ) : null}
 
@@ -203,14 +203,18 @@ function KartIcerigi() {
             <EtiketSatiri etiket="Diller" degerler={kart.diller} />
             {sahibi ? (
               <p className="text-xs text-muted-foreground">
-                Kurumlar kartı adınla ({kart.genc_adi}) birlikte böyle görür.
-                E-postan yalnızca bir kurumun ilgisini kabul edince paylaşılır.
+                Firmalar kartını adınla ({kart.genc_adi}) birlikte böyle görür.
+                E-postan yalnızca karşılıklı ilgi oluşunca o firmayla
+                paylaşılır.
               </p>
             ) : null}
           </BelgeKarti>
 
           {kayitNotu ? (
-            <p className="text-sm text-pretty text-muted-foreground" role="status">
+            <p
+              className="text-sm text-pretty text-muted-foreground"
+              role="status"
+            >
               {kayitNotu}
             </p>
           ) : null}
@@ -251,15 +255,22 @@ function KartIcerigi() {
           ) : null}
 
           <section className="flex flex-col gap-6">
-            <h2 className="font-heading text-xl font-semibold text-ana">
-              Somut çıktılar
-            </h2>
+            <div className="flex flex-col gap-1">
+              <h2 className="font-heading text-xl font-semibold text-ana">
+                {sahibi ? "Çalışmaların" : "Çalışmaları"}
+              </h2>
+              {/* Rehber § 9.5: güven göstergesinin yapay zekâ açıklaması. */}
+              <p className="text-xs text-muted-foreground">
+                Kanıt, sonuç ve rol yapay zekâ desteğiyle değerlendirilir;
+                referans puanını referans kişi verir.
+              </p>
+            </div>
 
             {kart.somut_ciktilar.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {sahibi
-                  ? "Bu kartta henüz iş yok. Aşağıdan ekleyebilirsin."
-                  : "Bu kartta somut çıktı yok."}
+                  ? "Bu kartta henüz çalışma yok. Aşağıdan ekleyebilirsin."
+                  : "Bu kartta henüz çalışma yok."}
               </p>
             ) : (
               kart.somut_ciktilar.map((cikti) => (
@@ -301,7 +312,7 @@ function KartIcerigi() {
                   className="w-fit"
                   onClick={() => setIsEkleniyor(true)}
                 >
-                  İş ekle
+                  Çalışma ekle
                 </Button>
               )
             ) : null}

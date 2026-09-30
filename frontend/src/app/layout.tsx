@@ -28,9 +28,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zemin360 — Kurum ve genç yetenek buluşma platformu",
+  title: "Zemin360 · Firma ve genç yetenek buluşma platformu",
   description:
-    "Keşif, doğrulama, eşleşme ve iş birliği takibini tek bir paylaşılan veri katmanında birleştiren, altı uzman yapay zeka ajanından oluşan açık kaynak platform.",
+    "Gençlerin çalışmalarını kanıtlı yetenek kartlarına, firmaların ihtiyaçlarını ölçülebilir kartlara dönüştüren; eşleşmeyi ve iş birliğini yapay zekâ desteğiyle takip eden açık kaynak platform.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

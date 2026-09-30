@@ -167,21 +167,20 @@ function KesifSohbeti() {
   return (
     <Sayfa>
       <SayfaBasligi
-        baslik="Keşif Ajanı"
+        baslik="Yetenek kartını oluştur"
         aciklama={
           <>
-            Kısa bir sohbet. Ne yaptığını birlikte bir yetenek kartına
-            dönüştüreceğiz. Kart sen onaylamadan kaydedilmez.
-            {ilkKez
-            ? " Kayıtta verdiğin bilgileri tekrar sormayacağız."
-            : null}
+            Kısa bir sohbetle neler yaptığını birlikte bir yetenek kartına
+            dönüştüreceğiz. Bu sohbet yapay zekâ desteğiyle ilerler. Kartın sen
+            onaylamadan kaydedilmez.
+            {ilkKez ? " Kayıtta verdiğin bilgileri tekrar sormayacağız." : null}
           </>
         }
       >
         {ilkKez && asama !== "kaydedildi" ? (
           <p className="text-sm text-pretty text-muted-foreground">
-            Şimdi vaktin yoksa sonra da yapabilirsin; ama kartı olmayan genç
-            kurumlara önerilmez.{" "}
+            Şimdi vaktin yoksa sonra da yapabilirsin; ama kartın olmadan
+            firmalar seni göremez.{" "}
             <Link href="/genc" className="text-baglanti underline">
               Şimdilik atla
             </Link>
@@ -191,7 +190,7 @@ function KesifSohbeti() {
 
       {asama === "sohbet" || asama === "baslatiliyor" ? (
         <Sohbet
-          ajanAdi="Keşif Ajanı"
+          ajanAdi="Zemin360"
           mesajlar={mesajlar}
           bekleniyor={bekleniyor}
           sonMesajRef={sonMesaj}
@@ -324,42 +323,42 @@ function TaslakBolumu({
           }}
         >
           {profilSor ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormAlani etiket="Şehir" htmlFor="sehir">
-              {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormAlani etiket="Şehir" htmlFor="sehir">
+                {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
                   bozuyordu (bkz. backend/app/core/sehir.py). */}
-              <select
-                id="sehir"
-                value={sehir}
-                required
-                onChange={(olay) => setSehir(olay.target.value)}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
-              >
-                {SEHIR_SECENEKLERI.map((secenek) => (
-                  <option key={secenek.deger} value={secenek.deger}>
-                    {secenek.etiket}
-                  </option>
-                ))}
-              </select>
-            </FormAlani>
+                <select
+                  id="sehir"
+                  value={sehir}
+                  required
+                  onChange={(olay) => setSehir(olay.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+                >
+                  {SEHIR_SECENEKLERI.map((secenek) => (
+                    <option key={secenek.deger} value={secenek.deger}>
+                      {secenek.etiket}
+                    </option>
+                  ))}
+                </select>
+              </FormAlani>
 
-            <CokluSecim
-              baslik="Çalışma modeli"
-              ipucu="(kabul ettiklerini işaretle)"
-              aciklama="Nerede çalışacağın. Müsaitlik ayrı bir şey: ne kadar süreyle."
-              secenekler={CALISMA_MODELLERI}
-              secili={calismaModelleri}
-              onDegis={setCalismaModelleri}
-            />
+              <CokluSecim
+                baslik="Çalışma modeli"
+                ipucu="(kabul ettiklerini işaretle)"
+                aciklama="Nerede çalışacağın. Müsaitlik ayrı bir şey: ne kadar süreyle."
+                secenekler={CALISMA_MODELLERI}
+                secili={calismaModelleri}
+                onDegis={setCalismaModelleri}
+              />
 
-            <CokluSecim
-              baslik="Müsaitlik"
-              ipucu="(uygun olanların hepsini işaretle; boş bırakabilirsin)"
-              secenekler={MUSAITLIKLER}
-              secili={musaitlikler}
-              onDegis={setMusaitlikler}
-            />
-          </div>
+              <CokluSecim
+                baslik="Müsaitlik"
+                ipucu="(uygun olanların hepsini işaretle; boş bırakabilirsin)"
+                secenekler={MUSAITLIKLER}
+                secili={musaitlikler}
+                onDegis={setMusaitlikler}
+              />
+            </div>
           ) : null}
 
           <Button
@@ -422,10 +421,10 @@ function TaslakKarti({
       </dl>
 
       <div className="border-t border-kenar px-4 py-3">
-        <h3 className="text-xs text-muted-foreground">Somut çıktılar</h3>
+        <h3 className="text-xs text-muted-foreground">Çalışmaların</h3>
         {taslak.somut_ciktilar.length === 0 ? (
           <p className="mt-1 text-sm text-pretty">
-            Henüz yok — kartın “potansiyel” olarak kaydedilecek. Sonradan
+            Henüz yok. Kartın yine kaydedilir; çalışmalarını sonradan
             ekleyebilirsin.
           </p>
         ) : (
@@ -521,9 +520,9 @@ function KayitliKart({
       </h2>
       {kart.embedding_var ? (
         <p className="text-sm text-pretty text-muted-foreground">
-          Artık kurumların ihtiyaç kartlarıyla eşleştirilebilir.
+          Artık firmaların ihtiyaçlarıyla eşleştirilebilir.
           {kart.kanit_bekleyen
-            ? " Çıktılarının bir kısmı kanıt bekliyor — kanıt eklersen kartın daha güçlü görünür."
+            ? " Bazı çalışmaların kanıt bekliyor; kanıt eklersen kartın daha güçlü görünür."
             : null}
         </p>
       ) : (

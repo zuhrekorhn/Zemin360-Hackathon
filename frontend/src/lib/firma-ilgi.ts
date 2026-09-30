@@ -24,7 +24,7 @@ export function adayFirmaDurumEtiketi(durum: string): string {
 
 /** Açık onay: ilanı açan firma da ilgilenirse e-posta ayrıca sorulmadan paylaşılır. */
 export const FIRMA_ILETISIM_ONAYI =
-  "İlanı açan firma da ilgilenirse e-posta adresiniz, size ayrıca sorulmadan o firmayla paylaşılır.";
+  "İhtiyacın sahibi firma da ilgilenirse e-posta adresiniz, size ayrıca sorulmadan o firmayla paylaşılır.";
 
 /** Firmanın aday olduğu eşleşmeler üç bölüme: fırsatlar, gelen ilgiler, ilgilerimiz. */
 export function adayEslesmeleriniAyir(eslesmeler: FirmaAdayEslesmesi[]): {

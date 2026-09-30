@@ -51,6 +51,11 @@ describe("adimGorunumu", () => {
     expect(g.metin).toBe("Elif tamamlandı dedi; senin onayın bekleniyor.");
   });
 
+  it("firmaya siz diye yazar", () => {
+    const g = adimGorunumu(adim(true, false), DETAY, "kurum", "siz");
+    expect(g.metin).toBe("Elif tamamlandı dedi; sizin onayınız bekleniyor.");
+  });
+
   it("GİRVAK yönsüz görür, eylemi yoktur", () => {
     const g = adimGorunumu(adim(false, true), DETAY, null);
     expect(g.metin).toContain("Koop tamamlandı dedi");

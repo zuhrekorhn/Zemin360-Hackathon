@@ -28,7 +28,7 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
   {
     baslik: "Ne için kullanıyoruz",
     maddeler: [
-      "Yetenek kartını oluşturmak ve kurumların ihtiyaçlarıyla eşleştirmek.",
+      "Yetenek kartını oluşturmak ve firmaların ihtiyaçlarıyla eşleştirmek.",
       "Kanıtlarını ve referans yanıtlarını değerlendirip kartında güven göstergesi olarak göstermek.",
       "Eşleşme, iş birliği ve hatırlatmalarla ilgili uygulama içi bildirim göndermek.",
       "Programın hedeflerini ölçmek (yalnızca toplu sayılar; kişisel veri içermez).",
@@ -37,9 +37,9 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
   {
     baslik: "Kim görür",
     maddeler: [
-      "Adın ve yetenek kartın, eşleştiğin kurumlara görünür.",
-      "E-posta adresin yalnızca karşılıklı ilgi oluştuğunda (bir kurumun ilgisini kabul ettiğinde ya da ilgi gösterdiğin kurum da ilgilendiğinde) ve yalnızca o kurumla paylaşılır.",
-      "Referans kişinin e-posta adresi kurumlarla paylaşılmaz.",
+      "Adın ve yetenek kartın, eşleştiğin firmalara görünür.",
+      "E-posta adresin yalnızca karşılıklı ilgi oluştuğunda (bir firmanın ilgisini kabul ettiğinde ya da ilgi gösterdiğin firma da ilgilendiğinde) ve yalnızca o firmayla paylaşılır.",
+      "Referans kişinin e-posta adresi firmalarla paylaşılmaz.",
     ],
   },
   {

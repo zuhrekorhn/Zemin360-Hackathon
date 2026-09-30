@@ -173,14 +173,10 @@ function GencPaneliIcerigi() {
   return (
     <Sayfa>
       <SayfaBasligi
-        baslik={
-          <>
-            Merhaba{hesap.ad ? `, ${hesap.ad}` : ""}
-          </>
-        }
+        baslik={<>Merhaba{hesap.ad ? `, ${hesap.ad}` : ""}</>}
         aciklama={
           bekleyenIlgi > 0
-            ? `${bekleyenIlgi} kurum kartınla ilgileniyor ve yanıtını bekliyor.`
+            ? `${bekleyenIlgi} firma kartınla ilgileniyor ve yanıtını bekliyor.`
             : "Kartların, kanıtların ve sana gelen ilgiler burada."
         }
       />
@@ -287,8 +283,8 @@ function GencPaneliIcerigi() {
       <PanelBolumu id="kartlar" baslik="Kartlarım">
         {kartlar.length === 0 ? (
           <BosDurum
-            metin="Henüz yetenek kartın yok. Keşif Ajanı’yla kısa bir sohbet yap; ne yaptığını birlikte bir karta dönüştürelim."
-            eylem={{ href: "/kesif", etiket: "Kart oluştur" }}
+            metin="Henüz yetenek kartın yok. Birkaç soruyla neler yaptığını anlat, kartını birlikte oluşturalım."
+            eylem={{ href: "/kesif", etiket: "Kartını oluştur" }}
           />
         ) : (
           <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
@@ -307,7 +303,7 @@ function GencPaneliIcerigi() {
                       <DurumEtiketi metin="Kanıt bekliyor" />
                     ) : null}
                     {!kart.embedding_var ? (
-                      <DurumEtiketi metin="Eşleştirmeye hazır değil" />
+                      <DurumEtiketi metin="Henüz fırsatlarla eşleştirilmedi" />
                     ) : null}
                   </span>
                 </Link>
@@ -321,11 +317,11 @@ function GencPaneliIcerigi() {
         <PanelBolumu
           id="kanit"
           baslik="Kanıt bekleyenler"
-          aciklama="Kanıtı olmayan çıktı kartı elemez; ama kanıt ve referans eşleşmede kartını öne çıkarır."
+          aciklama="Kanıtı olmayan bir çalışma kartını elemez; ama kanıt ve referans kartını fırsatlarda öne çıkarır."
         >
           {kanitBekleyenler.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Tüm kartlarının çıktılarında kanıt var.
+              Tüm çalışmalarında kanıt var.
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
@@ -348,7 +344,7 @@ function GencPaneliIcerigi() {
       <PanelBolumu
         id="ilgiler"
         baslik="Bana gelen ilgiler"
-        aciklama="Bir kurum kartınla ilgilendiğinde burada görünür. Kabul edersen e-posta adresleriniz paylaşılır ve iş birliği açılır."
+        aciklama="Bir firma kartınla ilgilendiğinde burada görünür. Kabul edersen e-posta adresleriniz paylaşılır ve iş birliği açılır."
       >
         {ilgiler === null ? (
           <p className="text-sm text-muted-foreground" role="status">
@@ -359,11 +355,11 @@ function GencPaneliIcerigi() {
             metin={
               kartlar.length === 0
                 ? "İlgiler bir kartın olduğunda gelir. Önce kartını oluştur."
-                : "Henüz bir kurum kartınla ilgilenmedi. Bir kurum ilgilendiğinde bildirim alırsın."
+                : "Henüz bir firma kartınla ilgilenmedi. Bir firma ilgilendiğinde bildirim alırsın."
             }
             eylem={
               kartlar.length === 0
-                ? { href: "/kesif", etiket: "Kart oluştur" }
+                ? { href: "/kesif", etiket: "Kartını oluştur" }
                 : undefined
             }
           />
@@ -386,7 +382,7 @@ function GencPaneliIcerigi() {
             Yükleniyor…
           </p>
         ) : isbirlikleri.length === 0 ? (
-          <BosDurum metin="Bir kurumun ilgisini kabul ettiğinde iş birliği burada açılır." />
+          <BosDurum metin="Henüz iş birliğin yok. Bir firmanın ilgisini kabul ettiğinde iş birliği burada açılır." />
         ) : (
           <ul className="flex flex-col gap-4">
             {isbirlikleri.map((isbirligi) => (

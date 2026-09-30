@@ -8,7 +8,11 @@ type Alan = Exclude<keyof SomutCiktiTaslagi, "baslik"> | "baslik";
 
 const ALANLAR: { ad: Alan; etiket: string; ornek?: string; tur?: string }[] = [
   { ad: "baslik", etiket: "Başlık" },
-  { ad: "aciklama", etiket: "Ne yaptın, ne ortaya çıktı?" },
+  {
+    ad: "aciklama",
+    etiket: "Açıklama",
+    ornek: "ör. Ne yaptın, ne ortaya çıktı?",
+  },
   {
     ad: "olculebilir_sonuc",
     etiket: "Sonuç (sayıyla)",
@@ -22,13 +26,13 @@ const ALANLAR: { ad: Alan; etiket: string; ornek?: string; tur?: string }[] = [
   {
     ad: "kanit_linki",
     etiket: "Kanıt linki",
-    ornek: "github.com/… veya bir demo adresi",
+    ornek: "ör. github.com/… ya da bir demo adresi",
     tur: "url",
   },
   {
     ad: "referans_email",
     etiket: "Referans kişinin e-postası",
-    ornek: "işini doğrulayabilecek biri",
+    ornek: "ör. çalışmanı doğrulayabilecek birinin e-postası",
     tur: "email",
   },
 ];

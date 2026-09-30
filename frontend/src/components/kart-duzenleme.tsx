@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { IsKalemiFormu } from "@/components/is-kalemi-formu";
+import { OnayAlani } from "@/components/onay-alani";
 import { FormAlani } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +31,12 @@ import { DENEYIM_ETIKETLERI } from "@/lib/sabitler";
  * Metinler: docs/plans/genc-akisi-metinler.md.
  */
 
+// Rehber § 5.8: ne beklendiğini söyler, kesin süre vermez.
 export const YENIDEN_DEGERLENDIRME_NOTU =
-  "Kaydedildi. Değişen işin kanıtı yeniden değerlendiriliyor; güven göstergesi birkaç dakika içinde güncellenir.";
+  "Kaydedildi. Değişen çalışman yeniden değerlendiriliyor; güven göstergesi kısa süre içinde güncellenir. Sayfayı yenileyerek görebilirsin.";
 
 const SIFIRLAMA_ONAYI =
-  "Bu iş daha önce değerlendirildi. İçeriği ya da linki değişirse güven göstergesi sıfırlanır ve kanıt yeniden değerlendirilir; önceki referans yanıtları geçmiş olarak kalır. Devam edilsin mi?";
+  "Bu çalışma daha önce değerlendirildi. Kaydedersen güven göstergesi sıfırlanır ve yeniden değerlendirilir; önceki referans yanıtları geçmiş olarak kalır.";
 
 type Ortak = {
   kartId: string;
@@ -67,7 +69,9 @@ export function KartAlanlariFormu({
   const [deneyim, setDeneyim] = useState(kart.deneyim_seviyesi);
   const [sektor, setSektor] = useState(listeMetni(kart.sektor_ilgi_alani));
   const [araclar, setAraclar] = useState(listeMetni(kart.araclar_teknolojiler));
-  const [sertifikalar, setSertifikalar] = useState(listeMetni(kart.sertifikalar));
+  const [sertifikalar, setSertifikalar] = useState(
+    listeMetni(kart.sertifikalar),
+  );
   const [diller, setDiller] = useState(listeMetni(kart.diller));
   const [bekleniyor, setBekleniyor] = useState(false);
 
@@ -130,7 +134,7 @@ export function KartAlanlariFormu({
           <Input
             id={`kart-${kimlik}`}
             value={deger}
-            placeholder="Virgülle ayır"
+            placeholder="ör. eğitim, sivil toplum (virgülle ayır)"
             onChange={(olay) => degistir(olay.target.value)}
           />
         </FormAlani>
@@ -158,7 +162,7 @@ function taslakHali(cikti: SomutCiktiYaniti): SomutCiktiTaslagi {
   };
 }
 
-/** Bir iş kaleminin "Düzenle" ve "Sil" eylemleri. */
+/** Bir çalışmanın "Düzenle" ve "Sil" eylemleri; onaylar sayfa içinde (rehber § 5.6). */
 export function IsKalemiEylemleri({
   kartId,
   cikti,
@@ -168,6 +172,8 @@ export function IsKalemiEylemleri({
   const [acik, setAcik] = useState(false);
   const [taslak, setTaslak] = useState<SomutCiktiTaslagi>(taslakHali(cikti));
   const [bekleniyor, setBekleniyor] = useState(false);
+  const [silmeOnayi, setSilmeOnayi] = useState(false);
+  const [sifirlamaOnayi, setSifirlamaOnayi] = useState(false);
 
   async function kaydet(olay: React.FormEvent) {
     olay.preventDefault();
@@ -177,10 +183,22 @@ export function IsKalemiEylemleri({
       setAcik(false);
       return;
     }
-    const sifirlanir = gostergeSifirlanir(degisenler);
-    if (sifirlanir && cikti.guven_skoru && !window.confirm(SIFIRLAMA_ONAYI)) {
+    // Değerlendirilmiş çalışmanın göstergesi sıfırlanacaksa önce sorulur.
+    if (
+      gostergeSifirlanir(degisenler) &&
+      cikti.guven_skoru &&
+      !sifirlamaOnayi
+    ) {
+      setSifirlamaOnayi(true);
       return;
     }
+    await kaydetOnayli();
+  }
+
+  async function kaydetOnayli() {
+    const degisenler = degisenIsKalemiAlanlari(taslakHali(cikti), taslak);
+    const sifirlanir = gostergeSifirlanir(degisenler);
+    setSifirlamaOnayi(false);
     setBekleniyor(true);
     const tamam = await calistir(
       () => isKalemiGuncelle(kartId, cikti.id, degisenler),
@@ -192,14 +210,23 @@ export function IsKalemiEylemleri({
   }
 
   async function sil() {
-    if (
-      !window.confirm(
-        `“${cikti.baslik}” kartından silinsin mi? Kanıtı ve referans istekleri de silinir.`,
-      )
-    ) {
-      return;
-    }
+    setBekleniyor(true);
     await calistir(() => isKalemiSil(kartId, cikti.id), { onGuncel, onHata });
+    setBekleniyor(false);
+    setSilmeOnayi(false);
+  }
+
+  if (silmeOnayi) {
+    return (
+      <OnayAlani
+        soru={`“${cikti.baslik}” silinsin mi? Kanıtı ve referans istekleri de silinir.`}
+        onayEtiketi="Sil"
+        bekleniyor={bekleniyor}
+        bekleniyorEtiketi="Siliniyor…"
+        onOnayla={() => void sil()}
+        onVazgec={() => setSilmeOnayi(false)}
+      />
+    );
   }
 
   if (!acik) {
@@ -216,7 +243,12 @@ export function IsKalemiEylemleri({
         >
           Düzenle
         </Button>
-        <Button type="button" size="sm" variant="outline" onClick={sil}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => setSilmeOnayi(true)}
+        >
           Sil
         </Button>
       </div>
@@ -236,19 +268,30 @@ export function IsKalemiEylemleri({
           setTaslak((onceki) => ({ ...onceki, [alan]: deger }))
         }
       />
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" size="sm" disabled={bekleniyor}>
-          {bekleniyor ? "Kaydediliyor…" : "Kaydet"}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => setAcik(false)}
-        >
-          Vazgeç
-        </Button>
-      </div>
+      {sifirlamaOnayi ? (
+        <OnayAlani
+          soru={SIFIRLAMA_ONAYI}
+          onayEtiketi="Kaydet"
+          bekleniyor={bekleniyor}
+          bekleniyorEtiketi="Kaydediliyor…"
+          onOnayla={() => void kaydetOnayli()}
+          onVazgec={() => setSifirlamaOnayi(false)}
+        />
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" size="sm" disabled={bekleniyor}>
+            {bekleniyor ? "Kaydediliyor…" : "Kaydet"}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setAcik(false)}
+          >
+            Vazgeç
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
@@ -259,7 +302,7 @@ const BOS_IS_KALEMI: SomutCiktiTaslagi = {
   kanit_linki: null,
 };
 
-/** Formdan yeni iş kalemi (sohbetle ekleme ayrı: "Yeni iş ekle"). */
+/** Formdan yeni çalışma (sohbetle ekleme ayrı, dondurma sonrası). */
 export function IsKalemiEkleFormu({
   kartId,
   onGuncel,
@@ -309,11 +352,12 @@ export function IsKalemiEkleFormu({
         }
       />
       <p className="text-xs text-pretty text-muted-foreground">
-        Referans kişi eklemek için işi kaydettikten sonra kanıt bölümünü kullan.
+        Referans kişi eklemek için çalışmayı kaydettikten sonra kanıt bölümünü
+        kullan.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" disabled={bekleniyor}>
-          {bekleniyor ? "Ekleniyor…" : "İşi ekle"}
+          {bekleniyor ? "Ekleniyor…" : "Çalışmayı ekle"}
         </Button>
         <Button type="button" size="sm" variant="outline" onClick={onKapat}>
           Vazgeç

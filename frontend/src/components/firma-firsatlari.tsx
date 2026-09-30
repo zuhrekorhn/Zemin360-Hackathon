@@ -84,10 +84,10 @@ export function FirmaFirsatlari() {
       <PanelBolumu
         id="firsatlar"
         baslik="Size uygun iş birliği fırsatları"
-        aciklama="Firma kartınıza uyan iş birliği ilanları. İlgilendiğiniz ilanı açan firmaya bildirebilirsiniz; o da ilgilenirse iletişim bilgileriniz paylaşılır."
+        aciklama="Firma kartınıza uyan iş birliği fırsatları. İlgilendiğiniz fırsatı ihtiyacın sahibi firmaya bildirebilirsiniz; o da ilgilenirse iletişim bilgileriniz paylaşılır."
       >
         {firsatlar.length === 0 ? (
-          <BosDurum metin="Şu an kartınıza uyan bir ilan yok. Yeni ilanlar açıldıkça burada görünür." />
+          <BosDurum metin="Şu an kartınıza uyan bir fırsat yok. Firmalar yeni ihtiyaçlar tanımladıkça burada görünür." />
         ) : (
           <ul className="flex flex-col gap-3">
             {firsatlar.map((firsat) => (
@@ -105,7 +105,7 @@ export function FirmaFirsatlari() {
         <PanelBolumu
           id="gelen-ilgiler"
           baslik="Size gelen ilgiler"
-          aciklama="Bu firmalar iş birliği ilanları için sizinle ilgileniyor. Kabul ederseniz iletişim bilgileriniz paylaşılır ve iş birliği başlar."
+          aciklama="Bu firmalar iş birliği ihtiyaçları için sizinle ilgileniyor. Kabul ederseniz iletişim bilgileriniz paylaşılır ve iş birliği başlar."
         >
           <ul className="flex flex-col gap-3">
             {gelenler.map((satir) => (

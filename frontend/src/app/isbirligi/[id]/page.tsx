@@ -12,6 +12,7 @@ import {
   PanelBolumu,
   tarihYaz,
 } from "@/components/panel";
+import { OnayAlani } from "@/components/onay-alani";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,8 @@ import {
   planOnayla,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
-import { useOturum } from "@/lib/oturum";
+import { type Hitap, hitapla } from "@/lib/hitap";
+import { useHitap, useOturum } from "@/lib/oturum";
 import {
   ISBIRLIGI_DURUM_ETIKETLERI,
   type Taraf,
@@ -40,7 +42,8 @@ import {
 import { panelYolu } from "@/lib/yonlendirme";
 
 /**
- * İş birliği sayfası — Takip Ajanı (docs/faz-c-takip.md § 8).
+ * İş birliği sayfası, Takip Ajanı (docs/faz-c-takip.md § 8). Kullanıcıya
+ * "ajan" denmez; hitap bakan hesaba göre (rehber § 3).
  *
  * İki tarafa aynı sayfa. Üç hâl:
  *   plan_bekliyor — ajanın önerdiği plan düzenlenir, iki taraf onaylar;
@@ -66,6 +69,7 @@ function IsbirligiIcerigi() {
   const { id } = useParams<{ id: string }>();
   const hesap = useGirisliHesap();
   const { tazele } = useOturum();
+  const hitap = useHitap();
   // Taraf rolden değil eşleşmeden: ortak firmanın rolü de "kurum"
   // (docs/plans/firma-akisi.md § 9). Detay gelene kadar rolden tahmin.
   const rolTarafi = tarafim(hesap.rol);
@@ -159,13 +163,13 @@ function IsbirligiIcerigi() {
       </SayfaBasligi>
 
       {detay.durum === "tamamlandi" ? (
-        <TamamlandiBandi detay={detay} taraf={taraf} />
+        <TamamlandiBandi detay={detay} taraf={taraf} hitap={hitap} />
       ) : null}
 
       {detay.durum_ozeti ? (
         <section className="flex flex-col gap-1 rounded-sm border border-kenar bg-card px-4 py-3">
           <span className="text-xs text-muted-foreground">
-            Takip Ajanı’nın özeti · {tarihYaz(detay.ozet_tarihi, true)}
+            Durum özeti · {tarihYaz(detay.ozet_tarihi, true)}
           </span>
           <p className="text-sm text-pretty">{detay.durum_ozeti}</p>
         </section>
@@ -177,6 +181,7 @@ function IsbirligiIcerigi() {
         <PlanTaslagi
           detay={detay}
           taraf={taraf}
+          hitap={hitap}
           bekleniyor={bekleniyor}
           planBekleniyor={planBekleniyor && beklemeSayisi < PLAN_BEKLEME_EN_COK}
           yap={yap}
@@ -185,6 +190,7 @@ function IsbirligiIcerigi() {
         <ZamanCizelgesi
           detay={detay}
           taraf={taraf}
+          hitap={hitap}
           bekleniyor={bekleniyor}
           yap={yap}
         />
@@ -206,9 +212,11 @@ type Yap = (eylem: () => Promise<IsbirligiDetayi>) => Promise<void>;
 function TamamlandiBandi({
   detay,
   taraf,
+  hitap,
 }: {
   detay: IsbirligiDetayi;
   taraf: Taraf | null;
+  hitap: Hitap;
 }) {
   return (
     <section className="flex flex-col gap-2 rounded-sm border border-baglanti bg-card px-4 py-4">
@@ -221,14 +229,22 @@ function TamamlandiBandi({
       </p>
       {taraf === "genc" ? (
         <p className="text-sm text-pretty">
-          Kartına tamamlanmış pilot olarak eklendi; bundan sonraki eşleşmelerde
-          öne çıkarır.{" "}
-          <Link
-            href={`/kart/${detay.yetenek_karti_id}`}
-            className="text-baglanti underline"
-          >
-            Kartını gör
-          </Link>
+          {hitapla(
+            hitap,
+            "Kartında tamamlanan iş birliği olarak görünür; yeni fırsatlarda seni öne çıkarır.",
+            "Kartınızda tamamlanan iş birliği olarak görünür; yeni fırsatlarda sizi öne çıkarır.",
+          )}
+          {detay.yetenek_karti_id ? (
+            <>
+              {" "}
+              <Link
+                href={`/kart/${detay.yetenek_karti_id}`}
+                className="text-baglanti underline"
+              >
+                Kartını gör
+              </Link>
+            </>
+          ) : null}
         </p>
       ) : null}
     </section>
@@ -240,24 +256,27 @@ function TamamlandiBandi({
 function PlanTaslagi({
   detay,
   taraf,
+  hitap,
   bekleniyor,
   planBekleniyor,
   yap,
 }: {
   detay: IsbirligiDetayi;
   taraf: Taraf | null;
+  hitap: Hitap;
   bekleniyor: boolean;
   planBekleniyor: boolean;
   yap: Yap;
 }) {
-  const onay = planOnayGorunumu(detay, taraf);
+  const onay = planOnayGorunumu(detay, taraf, hitap);
   const adimlar = detay.milestonelar;
+  const [yenidenOnay, setYenidenOnay] = useState(false);
 
   return (
     <PanelBolumu
       id="plan"
       baslik="Plan"
-      aciklama="Takip Ajanı başarı ölçütünden bir plan önerir; iki taraf düzenleyip onaylar. Onaylanan plan değiştirilemez."
+      aciklama="Başarı ölçütünden bir plan önerisi hazırlanır; iki taraf düzenleyip onaylar. Onaylanan plan değiştirilemez."
     >
       <p className="text-sm text-pretty">{onay.metin}</p>
 
@@ -265,8 +284,12 @@ function PlanTaslagi({
         <div className="flex flex-col items-start gap-3 rounded-sm border border-dashed border-kenar px-5 py-4">
           <p className="text-sm text-pretty text-muted-foreground">
             {planBekleniyor
-              ? "Takip Ajanı planı hazırlıyor…"
-              : "Henüz plan yok. Ajandan plan isteyebilir ya da adımları kendin ekleyebilirsin."}
+              ? "Plan önerisi hazırlanıyor…"
+              : hitapla(
+                  hitap,
+                  "Henüz plan yok. Plan önerisi alabilir ya da adımları kendin ekleyebilirsin.",
+                  "Henüz plan yok. Plan önerisi alabilir ya da adımları kendiniz ekleyebilirsiniz.",
+                )}
           </p>
           {taraf ? (
             <Button
@@ -275,7 +298,7 @@ function PlanTaslagi({
               disabled={bekleniyor}
               onClick={() => void yap(() => planOner(detay.id))}
             >
-              {bekleniyor ? "Plan hazırlanıyor…" : "Ajandan plan iste"}
+              {bekleniyor ? "Plan hazırlanıyor…" : "Plan önerisi al"}
             </Button>
           ) : null}
         </div>
@@ -304,28 +327,36 @@ function PlanTaslagi({
               disabled={bekleniyor || adimlar.length === 0 || onay.benOnayladim}
               onClick={() => void yap(() => planOnayla(detay.id))}
             >
-              {onay.benOnayladim ? "Planı onayladın" : "Planı onayla"}
+              {onay.benOnayladim
+                ? hitapla(hitap, "Planı onayladın", "Planı onayladınız")
+                : "Planı onayla"}
             </Button>
-            {adimlar.length > 0 ? (
+            {adimlar.length > 0 && !yenidenOnay ? (
               <Button
                 type="button"
                 size="lg"
                 variant="outline"
                 disabled={bekleniyor}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Ajan yeni bir plan önerecek; mevcut adımlar silinir ve iki onay da sıfırlanır. Devam edilsin mi?",
-                    )
-                  ) {
-                    void yap(() => planOner(detay.id));
-                  }
-                }}
+                onClick={() => setYenidenOnay(true)}
               >
-                Ajandan yeniden öner
+                Yeni plan önerisi al
               </Button>
             ) : null}
           </div>
+          {yenidenOnay ? (
+            <OnayAlani
+              soru="Yeni bir plan önerisi hazırlanacak; mevcut adımlar silinir ve iki onay da sıfırlanır."
+              onayEtiketi="Yeni plan önerisi al"
+              bekleniyor={bekleniyor}
+              bekleniyorEtiketi="Plan hazırlanıyor…"
+              onOnayla={() =>
+                void yap(() => planOner(detay.id)).then(() =>
+                  setYenidenOnay(false),
+                )
+              }
+              onVazgec={() => setYenidenOnay(false)}
+            />
+          ) : null}
         </>
       ) : null}
     </PanelBolumu>
@@ -523,11 +554,13 @@ function AdimFormu({
 function ZamanCizelgesi({
   detay,
   taraf,
+  hitap,
   bekleniyor,
   yap,
 }: {
   detay: IsbirligiDetayi;
   taraf: Taraf | null;
+  hitap: Hitap;
   bekleniyor: boolean;
   yap: Yap;
 }) {
@@ -549,6 +582,7 @@ function ZamanCizelgesi({
             detay={detay}
             adim={adim}
             taraf={taraf}
+            hitap={hitap}
             eylemVar={eylemVar}
             bekleniyor={bekleniyor}
             yap={yap}
@@ -563,6 +597,7 @@ function CizelgeAdimi({
   detay,
   adim,
   taraf,
+  hitap,
   eylemVar,
   bekleniyor,
   yap,
@@ -570,11 +605,12 @@ function CizelgeAdimi({
   detay: IsbirligiDetayi;
   adim: MilestoneYaniti;
   taraf: Taraf | null;
+  hitap: Hitap;
   eylemVar: boolean;
   bekleniyor: boolean;
   yap: Yap;
 }) {
-  const gorunum = adimGorunumu(adim, detay, taraf);
+  const gorunum = adimGorunumu(adim, detay, taraf, hitap);
 
   return (
     <li className="relative flex flex-col gap-1.5">

@@ -46,13 +46,13 @@ type KayitRolu = "genc" | "kurum";
 const ROLLER: { deger: KayitRolu; baslik: string; aciklama: string }[] = [
   {
     deger: "genc",
-    baslik: "Gencim",
+    baslik: "Genç yetenek olarak katılıyorum",
     aciklama:
-      "Yaptıklarımı yetenek kartına dönüştürüp kurumlarla buluşmak istiyorum.",
+      "Yaptıklarımı yetenek kartına dönüştürüp firmalarla buluşmak istiyorum.",
   },
   {
     deger: "kurum",
-    baslik: "Kurum adına",
+    baslik: "Firma olarak katılıyorum",
     aciklama:
       "Bir ihtiyacımızı tanımlayıp ona uygun genç yetenekleri bulmak istiyoruz.",
   },
@@ -143,7 +143,9 @@ function KayitFormu() {
         aciklama={
           rol === "genc"
             ? "Kayıttan sonra kısa bir sohbetle yetenek kartını oluşturacağız."
-            : "Kayıttan sonra doğrudan paneline geçersin."
+            : rol === "kurum"
+              ? "Kayıttan sonra doğrudan panelinize geçersiniz."
+              : "Kayıttan sonra doğrudan paneline geçersin."
         }
       />
 
@@ -184,7 +186,7 @@ function KayitFormu() {
         </fieldset>
 
         <FormAlani
-          etiket={rol === "kurum" ? "Kurumun adı" : "Adın"}
+          etiket={rol === "kurum" ? "Firmanın adı" : "Adın"}
           htmlFor="ad"
         >
           <Input
@@ -197,8 +199,8 @@ function KayitFormu() {
         </FormAlani>
         {rol === "genc" ? (
           <p className="-mt-3 text-xs text-pretty text-muted-foreground">
-            Adın kartında kurumlara görünür. E-postan ise yalnızca bir kurumun
-            ilgisini kabul ettiğinde paylaşılır.
+            Adın kartında firmalara görünür. E-postan ise yalnızca karşılıklı
+            ilgi oluştuğunda o firmayla paylaşılır.
           </p>
         ) : null}
 

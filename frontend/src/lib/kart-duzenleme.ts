@@ -59,7 +59,7 @@ export function referansSatiri(referans: ReferansDurumu): {
 } {
   if (referans.durum === "yanitlandi" && !referans.guncel) {
     return {
-      not: "Bu yanıt işin önceki hâline verildi; güven göstergesine girmiyor.",
+      not: "Bu yanıt çalışmanın önceki hâline verildi; güven göstergesine girmiyor.",
       yenidenIstenebilir: true,
     };
   }

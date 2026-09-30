@@ -18,8 +18,8 @@ describe("turEtiketi", () => {
 
 describe("alicilarMetni", () => {
   it("tek ve iki alıcı", () => {
-    expect(alicilarMetni(["kurum"])).toBe("kurum");
-    expect(alicilarMetni(["genc", "kurum"])).toBe("genç ve kurum");
+    expect(alicilarMetni(["kurum"])).toBe("firma");
+    expect(alicilarMetni(["genc", "kurum"])).toBe("genç ve firma");
   });
 });
 

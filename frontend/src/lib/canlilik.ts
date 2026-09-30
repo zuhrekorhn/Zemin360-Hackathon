@@ -20,7 +20,7 @@ export function turEtiketi(tur: string): string {
   return CANLILIK_TUR_ETIKETLERI[tur] ?? tur;
 }
 
-const ROL_ADLARI: Record<string, string> = { genc: "genç", kurum: "kurum" };
+const ROL_ADLARI: Record<string, string> = { genc: "genç", kurum: "firma" };
 
 /** ["genc", "kurum"] → "genç ve kurum" */
 export function alicilarMetni(alicilar: string[]): string {

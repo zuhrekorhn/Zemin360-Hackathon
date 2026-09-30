@@ -108,7 +108,7 @@ export function FirmaProfilAlanlari({
             id="firma-site"
             value={form.web_sitesi}
             onChange={(olay) => alan("web_sitesi", olay.target.value)}
-            placeholder="ornekfirma.com"
+            placeholder="ör. ornekfirma.com"
             autoComplete="url"
           />
         </FormAlani>

@@ -161,17 +161,17 @@ function TanimlamaSohbeti() {
   return (
     <Sayfa>
       <SayfaBasligi
-        baslik="Tanımlama Ajanı"
+        baslik="İhtiyacınızı tanımlayın"
         aciklama={
           ortak
-            ? "Kısa bir sohbet. Bir iş birliği ortağıyla çözmek istediğiniz ihtiyacı ölçülebilir bir karta çevireceğiz; bu karta uyan firmalar önerilecek. Kart siz onaylamadan kaydedilmez."
-            : "Kısa bir sohbet. İhtiyacınızı birlikte ölçülebilir bir ihtiyaç kartına çevireceğiz. Kart siz onaylamadan kaydedilmez."
+            ? "Kısa bir sohbetle bir iş birliği ortağıyla çözmek istediğiniz ihtiyacı netleştireceğiz; ihtiyacınıza uyan firmaları göstereceğiz. Bu sohbet yapay zekâ desteğiyle ilerler. İhtiyacınız siz onaylamadan kaydedilmez."
+            : "Kısa bir sohbetle ihtiyacınızı ölçülebilir bir ihtiyaç kartına çevireceğiz. Bu sohbet yapay zekâ desteğiyle ilerler. İhtiyacınız siz onaylamadan kaydedilmez."
         }
       />
 
       {asama === "sohbet" ? (
         <Sohbet
-          ajanAdi="Tanımlama Ajanı"
+          ajanAdi="Zemin360"
           mesajlar={mesajlar}
           bekleniyor={bekleniyor}
           sonMesajRef={sonMesaj}
@@ -287,10 +287,10 @@ function TaslakBolumu({
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-xl font-semibold text-ana">
-            Kurum bilgileri
+            Firma bilgileri
           </h2>
           <p className="text-sm text-pretty text-muted-foreground">
-            Kurum adınız ve iletişim e-postanız kayıtta alındı. E-posta kartta
+            Firma adınız ve iletişim e-postanız kayıtta alındı. E-posta kartta
             görünmez; iletişim iki taraf da onaylayınca açılır.
           </p>
         </div>
@@ -327,7 +327,7 @@ function TaslakBolumu({
                   />
                 </FormAlani>
 
-                <FormAlani etiket="Kurumun şehri" htmlFor="sehir" istegeBagli>
+                <FormAlani etiket="Firmanın şehri" htmlFor="sehir" istegeBagli>
                   {/* Serbest metin değil: yazım farkı eşleştirmeyi sessizce
                       bozuyordu (bkz. backend/app/core/sehir.py). */}
                   <select
@@ -450,17 +450,17 @@ function TaslakBolumu({
             </p>
           ) : firmaBilgisiSor ? (
             <p className="text-xs text-pretty text-muted-foreground">
-              <span className="font-medium">Kurumun şehri</span> sizin
+              <span className="font-medium">Firmanın şehri</span> sizin
               bulunduğunuz yer;{" "}
               <span className="font-medium">aranan şehir</span> gencin nerede
-              olmasını istediğiniz. Çalışma modeli “Uzaktan” ise şehir filtresi
-              hiç uygulanmaz.
+              olmasını istediğiniz. Çalışma modeli “Uzaktan” ise aranan şehir
+              dikkate alınmaz.
             </p>
           ) : (
             <p className="text-xs text-pretty text-muted-foreground">
               <span className="font-medium">Aranan şehir</span>, adayın nerede
-              olmasını istediğiniz yer. Çalışma modeli “Uzaktan” ise şehir
-              filtresi uygulanmaz.
+              olmasını istediğiniz yer. Çalışma modeli “Uzaktan” ise aranan
+              şehir dikkate alınmaz.
             </p>
           )}
 
@@ -499,7 +499,7 @@ function TaslakKarti({
     <article className="rounded-sm border border-kenar bg-card">
       {kurumAdi ? (
         <div className="border-b border-kenar px-4 py-3">
-          <p className="text-xs text-muted-foreground">Kurum</p>
+          <p className="text-xs text-muted-foreground">Firma</p>
           <p className="text-sm break-words">{kurumAdi}</p>
         </div>
       ) : null}
@@ -600,7 +600,7 @@ function KayitliKart({
         <p className="text-sm text-pretty text-muted-foreground">
           {kart.aranan === "firma"
             ? "Artık firma kartlarıyla eşleştirilebilir."
-            : "Artık genç yeteneklerin yetenek kartlarıyla eşleştirilebilir."}
+            : "Artık gençlerin yetenek kartlarıyla eşleştirilebilir."}
         </p>
       ) : (
         <EslestirmeyeHazirla
@@ -620,7 +620,7 @@ function KayitliKart({
 
       <Button asChild size="lg" className="mt-1 w-fit">
         <Link href={`/kurum/oneriler?ihtiyac=${kart.id}`}>
-          Eşleştirme önerilerini gör
+          Uygun adayları gör
         </Link>
       </Button>
     </section>

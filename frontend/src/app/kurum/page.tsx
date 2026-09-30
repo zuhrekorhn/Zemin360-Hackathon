@@ -82,8 +82,8 @@ function KurumPaneliIcerigi() {
   return (
     <Sayfa>
       <SayfaBasligi
-        baslik={hesap.ad ?? "Kurum paneli"}
-        aciklama="İhtiyaç kartların, önerilerin ve açılan iş birliklerin burada."
+        baslik={hesap.ad ?? "Firma paneli"}
+        aciklama="İhtiyaçlarınız, adaylarınız ve iş birlikleriniz burada."
       />
 
       {/* İki kapı (docs/plans/firma-akisi.md § 0 karar 9). */}
@@ -135,8 +135,8 @@ function KurumPaneliIcerigi() {
       <PanelBolumu id="ihtiyaclar" baslik="İhtiyaç kartlarım">
         {kartlar.length === 0 ? (
           <BosDurum
-            metin="Henüz ihtiyaç kartın yok. Tanımlama Ajanı’yla kısa bir sohbet yap; ihtiyacını ölçülebilir bir karta çevirelim."
-            eylem={{ href: "/tanimlama", etiket: "İhtiyaç kartı oluştur" }}
+            metin="Henüz bir ihtiyaç tanımlamadınız. Kısa bir sohbetle ihtiyacınızı netleştirin, size uygun adayları gösterelim."
+            eylem={{ href: "/tanimlama", etiket: "İhtiyacınızı tanımlayın" }}
           />
         ) : (
           <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
@@ -157,13 +157,13 @@ function KurumPaneliIcerigi() {
                     {ilanKapali(kart) ? (
                       <DurumEtiketi metin="Kapandı" />
                     ) : !kart.embedding_var ? (
-                      " · eşleştirmeye hazır değil"
+                      " · henüz adaylarla eşleştirilmedi"
                     ) : null}
                   </span>
                 </div>
                 <Button asChild size="sm" className="w-fit shrink-0">
                   <Link href={`/kurum/oneriler?ihtiyac=${kart.id}`}>
-                    Önerileri gör
+                    Adayları gör
                   </Link>
                 </Button>
                 {ilanKapali(kart) ? null : (
@@ -185,8 +185,8 @@ function KurumPaneliIcerigi() {
 
       <PanelBolumu
         id="oneriler"
-        baslik="Önerilerim"
-        aciklama="Tüm ihtiyaç kartlarından; en son hareket olan önce. İlgini bir ihtiyaç kartının öneriler sayfasından bildirirsin."
+        baslik="Adaylarım"
+        aciklama="Tüm ihtiyaçlarınızdan, en son hareket olan önce. İlginizi ihtiyacın aday sayfasından bildirebilirsiniz."
       >
         {oneriler === null ? (
           <p className="text-sm text-muted-foreground" role="status">
@@ -196,15 +196,15 @@ function KurumPaneliIcerigi() {
           <BosDurum
             metin={
               kartlar.length === 0
-                ? "Öneriler bir ihtiyaç kartından çıkar. Önce kartını oluştur."
-                : "Henüz öneri yok. Bir ihtiyaç kartının önerilerini açtığında eşleştirme çalışır ve adaylar burada da listelenir."
+                ? "Adaylar bir ihtiyaçtan çıkar. Önce ihtiyacınızı tanımlayın."
+                : "Henüz aday yok. Bir ihtiyacın adaylarını açtığınızda uygun adaylar hesaplanır ve burada da listelenir."
             }
             eylem={
               kartlar.length === 0
-                ? { href: "/tanimlama", etiket: "İhtiyaç kartı oluştur" }
+                ? { href: "/tanimlama", etiket: "İhtiyacınızı tanımlayın" }
                 : {
                     href: `/kurum/oneriler?ihtiyac=${kartlar[0].id}`,
-                    etiket: "Önerileri gör",
+                    etiket: "Adayları gör",
                   }
             }
           />
@@ -256,7 +256,7 @@ function KurumPaneliIcerigi() {
                       href={`/kurum/oneriler?ihtiyac=${oneri.ihtiyac_karti_id}`}
                       className="w-fit text-sm text-baglanti underline"
                     >
-                      Gerekçeyi oku, ilgini bildir
+                      “Neden uygun?” açıklamasını okuyun
                     </Link>
                   ) : null}
                   {oneri.iletisim ? (
@@ -283,7 +283,7 @@ function KurumPaneliIcerigi() {
             Yükleniyor…
           </p>
         ) : isbirlikleri.length === 0 ? (
-          <BosDurum metin="Bir genç ilgini kabul ettiğinde iş birliği burada açılır ve e-postası görünür." />
+          <BosDurum metin="Henüz iş birliğiniz yok. Bir aday ilginizi kabul ettiğinde iş birliği burada açılır ve iletişim bilgileri görünür." />
         ) : (
           <ul className="flex flex-col gap-4">
             {isbirlikleri.map((isbirligi) => (

@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { hitapla } from "@/lib/hitap";
+import { useHitap } from "@/lib/oturum";
 
 /**
  * Keşif ve Tanımlama sohbetlerinin paylaştığı iki görsel parça.
@@ -55,7 +57,7 @@ export function Sohbet({
             aria-hidden="true"
             className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
           />
-          Ajan düşünüyor…
+          Yanıt hazırlanıyor…
         </p>
       ) : null}
 
@@ -75,6 +77,7 @@ export function HataKutusu({
   hata: SohbetHatasi;
   tekrarDene?: () => void;
 }) {
+  const hitap = useHitap();
   return (
     <div
       role="status"
@@ -89,7 +92,7 @@ export function HataKutusu({
           onClick={tekrarDene}
           className="w-fit shrink-0"
         >
-          Tekrar dene
+          {hitapla(hitap, "Tekrar dene", "Tekrar deneyin")}
         </Button>
       ) : null}
     </div>
@@ -108,6 +111,7 @@ export function CevapAlani({
   bekleniyor: boolean;
   gonder: () => void;
 }) {
+  const hitap = useHitap();
   return (
     <form
       onSubmit={(olay) => {
@@ -117,7 +121,7 @@ export function CevapAlani({
       className="flex flex-col gap-3"
     >
       <label htmlFor="cevap" className="sr-only">
-        Cevabın
+        {hitapla(hitap, "Yanıtın", "Yanıtınız")}
       </label>
       <textarea
         id="cevap"
@@ -131,7 +135,7 @@ export function CevapAlani({
         }}
         rows={3}
         disabled={bekleniyor}
-        placeholder="Yazmaya başla…"
+        placeholder={hitapla(hitap, "Yazmaya başla…", "Yazmaya başlayın…")}
         className="w-full resize-y rounded-2xl border border-kenar bg-card px-4 py-3 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30 disabled:opacity-60"
       />
       <div className="flex items-center justify-between gap-3">
@@ -139,7 +143,7 @@ export function CevapAlani({
           Enter gönderir, Shift+Enter satır atlar.
         </span>
         <Button type="submit" size="lg" disabled={bekleniyor || !girdi.trim()}>
-          Gönder
+          {hitapla(hitap, "Yanıtı gönder", "Yanıtı gönderin")}
         </Button>
       </div>
     </form>

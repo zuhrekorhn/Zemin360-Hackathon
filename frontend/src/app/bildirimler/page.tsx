@@ -18,6 +18,14 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
 import { bildirimHedefi } from "@/lib/yonlendirme";
 
+// Rehber § 3: gence "sen", firmaya ve GİRVAK'a "siz".
+const BOS_METINLERI: Record<string, string> = {
+  genc: "Henüz bildirimin yok. Bir firma kartınla ilgilendiğinde ya da sana uygun yeni bir fırsat çıktığında burada görünür.",
+  kurum:
+    "Henüz bildiriminiz yok. Bir aday ilginizi yanıtladığında ya da ihtiyacınıza yeni adaylar çıktığında burada görünür.",
+  girvak: "Henüz bildiriminiz yok.",
+};
+
 /**
  * Bildirimler (docs/faz-b-kimlik-ve-dongu.md § 6): en yeni önce. Bildirime
  * tıklamak onu okundu sayar ve ilgili yere götürür; "Hepsini okundu say"
@@ -118,7 +126,7 @@ function BildirimListesi() {
           Yükleniyor…
         </p>
       ) : liste.length === 0 ? (
-        <BosDurum metin="Henüz bildirimin yok. Bir kurum kartınla ilgilendiğinde, bir genç ilgini yanıtladığında ya da yeni öneri çıktığında burada görünür." />
+        <BosDurum metin={BOS_METINLERI[hesap.rol] ?? BOS_METINLERI.girvak} />
       ) : (
         <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
           {liste.map((bildirim) => (
