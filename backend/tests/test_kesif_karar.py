@@ -645,6 +645,10 @@ def test_teknik_rol_adlari_turkcelestirilmiyor():
 # açıklamayla yeniden sorulur ve hiçbir soru hakkı harcanmaz.
 
 OLCUT_SORUSU = "“Kütüphane sistemi” için sonucu sayıyla anlatabilir misin?"
+MODELIN_ACIKLAMASI = (
+    "Örneğin kütüphaneyi kaç üyenin kullandığını ya da ödünç takibinin ne kadar "
+    "hızlandığını yazabilirsin. Kütüphane sisteminin sonucunu sayıyla anlatır mısın?"
+)
 
 
 def aciklama_turu(**ek) -> dict:
@@ -657,15 +661,17 @@ def aciklama_turu(**ek) -> dict:
         "sonraki_soru": OLCUT_SORUSU,
         "bekleyen_soru": OLCUT_SORUSU,
         "son_aciklama_istedi": True,
-        "son_aciklama": "Örneğin kütüphaneyi kaç üye kullanıyor?",
+        "son_aciklama": MODELIN_ACIKLAMASI,
         "taslak_degisti": False,
         **ek,
     }
 
 
-def test_aciklama_isteginde_ayni_soru_aciklamayla_gelir():
+def test_aciklama_isteginde_modelin_mesaji_oldugu_gibi_gelir():
+    """Model açıklamayı ve aynı sorunun yeni ifadesini birlikte yazıyor; kod soruyu
+    sona eklemez. Eklediğinde soru, varsa övgü cümlesiyle birlikte ikinci kez geliyordu."""
     sonuc = karar(aciklama_turu())
-    assert sonuc["sonraki_soru"] == (f"Örneğin kütüphaneyi kaç üye kullanıyor?\n\n{OLCUT_SORUSU}")
+    assert sonuc["sonraki_soru"] == MODELIN_ACIKLAMASI
     assert sonuc["aciklama_sayisi"] == 1
     assert sonuc["taslak_hazir"] is False
 
@@ -676,15 +682,16 @@ def test_aciklama_turu_soru_hakkindan_dusmez():
         assert sayac not in sonuc
 
 
-def test_model_aciklama_yazmazsa_yedek_metin_gelir():
+def test_model_aciklama_yazmazsa_yedek_metin_ve_soru_gelir():
+    """Kullanıcı hiçbir zaman sorusuz kalmaz."""
     sonuc = karar(aciklama_turu(son_aciklama=None))
     assert sonuc["sonraki_soru"] == f"{KESIF.aciklama_yedegi}\n\n{OLCUT_SORUSU}"
 
 
-def test_ikinci_aciklamada_soru_iki_kez_yazilmaz():
-    """Gösterilen metin açıklama + soru; tekrar edilen ise yalnızca bekleyen soru."""
-    ilk_metin = f"Birinci açıklama\n\n{OLCUT_SORUSU}"
-    sonuc = karar(aciklama_turu(sonraki_soru=ilk_metin, aciklama_sayisi=1))
+def test_ikinci_yedek_aciklamada_soru_iki_kez_yazilmaz():
+    """Gösterilen metin açıklamalı; eklenen ise yalnızca bekleyen soru."""
+    ilk_metin = f"{KESIF.aciklama_yedegi}\n\n{OLCUT_SORUSU}"
+    sonuc = karar(aciklama_turu(son_aciklama=None, sonraki_soru=ilk_metin, aciklama_sayisi=1))
     assert sonuc["sonraki_soru"].count(OLCUT_SORUSU) == 1
     assert sonuc["aciklama_sayisi"] == 2
 
@@ -707,8 +714,9 @@ def test_yeni_soru_aciklama_sayacini_sifirlar():
 
 
 def test_bekleyen_sorusu_olmayan_eski_sohbette_son_soru_tekrarlanir():
-    """Bu alandan önce açılmış sohbette yalnızca `sonraki_soru` kayıtlı."""
-    durum = aciklama_turu()
+    """Bu alandan önce açılmış sohbette yalnızca `sonraki_soru` kayıtlı; model
+    açıklama yazmadığında yedek cümlenin ardından o soru gider."""
+    durum = aciklama_turu(son_aciklama=None)
     del durum["bekleyen_soru"]
     assert karar(durum)["sonraki_soru"].endswith(OLCUT_SORUSU)
 

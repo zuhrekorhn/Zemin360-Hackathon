@@ -80,8 +80,9 @@ class SohbetDurumu(TypedDict, total=False):
     # geliyordu. Her ek soru en fazla bir kez sorulur.
     sorulan_ekler: list[str]
     # Kullanıcıya gösterilen son metin (API'nin `soru` alanı). Açıklama
-    # turunda açıklama + soru; `bekleyen_soru` ise yalnızca sorunun kendisi,
-    # ikinci açıklamada soru iki kez yazılmasın diye ayrı tutuluyor.
+    # turunda açıklamalı yeni ifade; `bekleyen_soru` ise sorunun kendisi.
+    # Akış bekleyen soruya bakar, gösterilen metne değil: model soruyu başka
+    # sözcüklerle sorsa da sohbet kaymaz.
     sonraki_soru: str | None
     bekleyen_soru: str | None
     # Bekleyen soru için şimdiye kadar yapılan açıklama sayısı (MAKS_ACIKLAMA)
@@ -125,8 +126,10 @@ class SohbetCikarimi(BaseModel):
     aciklama: str | None = Field(
         default=None,
         description=(
-            "aciklama_istedi True ise: son soruyu, kullanıcının anlattıklarına uyan kısa "
-            "bir örnekle açıklayan 1-2 cümle. Soruyu tekrar yazma; sistem ekliyor."
+            "aciklama_istedi True ise kullanıcıya gidecek mesajın tamamı: son soruyu, "
+            "kullanıcının anlattıklarına uyan kısa bir örnekle açıklayan 1-2 cümle, "
+            "ardından AYNI soruyu kısaca yeniden sor. Başka bir konuya geçme; önceki "
+            "mesajdaki övgü ya da giriş cümlesini tekrarlama."
         ),
     )
 
@@ -419,16 +422,29 @@ def _bekleyen_soru(durum: Mapping[str, Any]) -> str | None:
 
 
 def aciklama_durumu(tanim: AjanTanimi, durum: Mapping[str, Any]) -> dict[str, Any]:
-    """Açıklama + aynı soru. Hiçbir soru sayacına dokunmaz: açıklama turu
+    """Açıklama ve aynı soru. Hiçbir soru sayacına dokunmaz: açıklama turu
     tur hakkından düşmez, sorulmuş ek soru listesi değişmez."""
-    aciklama = durum.get("son_aciklama") or tanim.aciklama_yedegi
-    metin = f"{aciklama}\n\n{_bekleyen_soru(durum)}"
+    metin = aciklama_metni(tanim, durum)
     return {
         "mesajlar": [AIMessage(content=metin)],
         "sonraki_soru": metin,
         "aciklama_sayisi": durum.get("aciklama_sayisi", 0) + 1,
         "taslak_hazir": False,
     }
+
+
+def aciklama_metni(tanim: AjanTanimi, durum: Mapping[str, Any]) -> str:
+    """Açıklama turunda kullanıcıya gidecek metin.
+
+    Modelin açıklaması soruyu kendi içinde yeniden soruyor (şemadaki kural);
+    kod bir şey eklemez. Eskiden bekleyen soru kelimesi kelimesine sona
+    ekleniyordu: soru "Harika bir çalışma olmuş." diye başladığında övgü de
+    ikinci kez geliyordu. Model açıklama yazmadıysa ajanın yedek cümlesi ve
+    bekleyen soru gider: kullanıcı hiçbir zaman sorusuz kalmaz.
+    """
+    if aciklama := durum.get("son_aciklama"):
+        return aciklama
+    return f"{tanim.aciklama_yedegi}\n\n{_bekleyen_soru(durum)}"
 
 
 def zorunlu_alan_sorusu(tanim: AjanTanimi, durum: dict[str, Any], eksikler: list[str]) -> str:
