@@ -12,6 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import EMBEDDING_DIM, Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
+    from app.models.eslesme import Eslesme
     from app.models.kurum import Kurum
 
 
@@ -53,3 +54,7 @@ class FirmaKarti(UUIDPrimaryKeyMixin, Base):
     )
 
     kurum: Mapped[Kurum] = relationship(back_populates="firma_karti")
+    # Ortak ilanlarına aday olarak (docs/plans/firma-akisi.md § 0 karar 11).
+    eslesmeler: Mapped[list[Eslesme]] = relationship(
+        back_populates="firma_karti", cascade="all, delete-orphan"
+    )

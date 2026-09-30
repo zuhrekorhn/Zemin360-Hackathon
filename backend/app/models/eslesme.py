@@ -4,7 +4,16 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Float, ForeignKey, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    Float,
+    ForeignKey,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,6 +21,7 @@ from app.db.base import Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.canlilik_olayi import CanlilikOlayi
+    from app.models.firma_karti import FirmaKarti
     from app.models.ihtiyac_karti import IhtiyacKarti
     from app.models.isbirligi import Isbirligi
     from app.models.yetenek_karti import YetenekKarti
@@ -22,10 +32,23 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
     # Bir ihtiyaç kartı ile bir yetenek kartı arasında tek eşleşme olur.
     # Arka plan işi ile GET /oneriler aynı anda çalışınca mükerrer satır
     # açılıyordu; pipeline artık bu kısıta ON CONFLICT ile dayanıyor.
-    __table_args__ = (UniqueConstraint("ihtiyac_karti_id", "yetenek_karti_id"),)
+    #
+    # Aday ya bir yetenek kartı (genç ilanı) ya bir firma kartıdır (ortak ilanı,
+    # docs/plans/firma-akisi.md § 0 karar 11): tam biri dolu. Aynı tablo, aynı
+    # durum makinesi, aynı iş birliği ilişkisi.
+    __table_args__ = (
+        UniqueConstraint("ihtiyac_karti_id", "yetenek_karti_id"),
+        UniqueConstraint("ihtiyac_karti_id", "firma_karti_id"),
+        CheckConstraint(
+            "num_nonnulls(yetenek_karti_id, firma_karti_id) = 1", name="eslesme_tek_aday"
+        ),
+    )
 
-    yetenek_karti_id: Mapped[uuid.UUID] = mapped_column(
+    yetenek_karti_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("yetenek_karti.id", ondelete="CASCADE"), index=True
+    )
+    firma_karti_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("firma_karti.id", ondelete="CASCADE"), index=True
     )
     ihtiyac_karti_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("ihtiyac_karti.id", ondelete="CASCADE"), index=True
@@ -50,7 +73,14 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
     genc_iletisim_onayi_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     kurum_ilgi_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    yetenek_karti: Mapped[YetenekKarti] = relationship(back_populates="eslesmeler")
+    yetenek_karti: Mapped[YetenekKarti | None] = relationship(back_populates="eslesmeler")
+    firma_karti: Mapped[FirmaKarti | None] = relationship(back_populates="eslesmeler")
+
+    @property
+    def aday_kimligi(self) -> uuid.UUID:
+        """Adayın kartı: yetenek kartı ya da firma kartı (tam biri dolu)."""
+        return self.yetenek_karti_id or self.firma_karti_id
+
     ihtiyac_karti: Mapped[IhtiyacKarti] = relationship(back_populates="eslesmeler")
     # ER: ESLESME ||--o| ISBIRLIGI (0 veya 1)
     isbirligi: Mapped[Isbirligi | None] = relationship(

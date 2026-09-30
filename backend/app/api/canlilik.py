@@ -196,6 +196,8 @@ async def pasif_adaylar(oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date
             .where(
                 Eslesme.durum.in_([DURUM_ONERILDI, DURUM_ILGILENILIYOR, DURUM_GENC_ILGILENDI]),
                 Eslesme.son_aktivite_tarihi <= esik,
+                # Firma–firma eşleşmeleri taranmaz (docs/plans/firma-akisi.md § 0 karar 18).
+                Eslesme.yetenek_karti_id.isnot(None),
             )
         )
     )
@@ -211,7 +213,11 @@ async def pasif_adaylar(oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date
                 .selectinload(IhtiyacKarti.kurum),
                 selectinload(Isbirligi.milestonelar),
             )
-            .where(Isbirligi.durum.in_([ISBIRLIGI_PLAN_BEKLIYOR, ISBIRLIGI_AKTIF]))
+            .join(Eslesme, Isbirligi.eslesme_id == Eslesme.id)
+            .where(
+                Isbirligi.durum.in_([ISBIRLIGI_PLAN_BEKLIYOR, ISBIRLIGI_AKTIF]),
+                Eslesme.yetenek_karti_id.isnot(None),
+            )
         )
     )
 

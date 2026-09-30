@@ -116,3 +116,10 @@ Denetime notlar:
 | 〃 | Kayıtlı ortak ilanı | Artık firma kartlarıyla eşleştirilebilir. | firma |
 
 Denetime not: Tanımlama sayfasının başlığı ve sohbet adı hâlâ "Tanımlama Ajanı" (mevcut metin); ortak kapısında da görünüyor.
+
+## 7a. adım — Firma–firma eşleştirme (backend)
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `backend/app/api/eslestirme.py` | 409 (geçici, 8. adımda kalkar) | Firmalarla ilgi ve iletişim yakında açılacak; şimdilik öneriyi görebilirsiniz. | firma |
+| `backend/app/agents/eslestirme.py` | Gerekçe istemi | Firma adayı için "Neden uygun?" metni; ilanı açan firmaya hitaben, aday firmadan üçüncü şahısla (genç gerekçesindeki bilinen sınırın aynısı: aday firma da aynı metni görecek) | firma |

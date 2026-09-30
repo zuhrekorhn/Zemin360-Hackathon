@@ -4,9 +4,10 @@ Kural app/core/firma_karti.py'de; burada veritabanı ve arka plan işi.
 
 Hazırlama, yetenek kartındaki desenin aynısı (app/servisler/kart_hazirlama.py):
 kart onaylanınca ya da firmanın ne yaptığını anlatan alanlar değişince
-yanıttan sonra embedding hesaplanır. İş başında kartın versiyonu beklenenden
-büyükse iş çıkar (daha yeni bir iş sırada). Ortak ilanlarıyla yeniden
-eşleştirme firma–firma eşleştirmesiyle birlikte eklenecek (plan § 12, adım 7).
+yanıttan sonra embedding hesaplanır, ardından kartla ilgili açık ortak
+ilanları için mevcut pipeline çalışır: sonradan gelen firma da mevcut
+ilanlarla eşleşir. İş başında kartın versiyonu beklenenden büyükse iş çıkar
+(daha yeni bir iş sırada). Pipeline ilan başına kilitli ve ON CONFLICT'li.
 
 Zamanlayıcı yok (CLAUDE.md). Hata yutulur: firma kartını zaten kaydetti.
 """
@@ -17,15 +18,21 @@ import logging
 import uuid
 from typing import Any
 
-from sqlalchemy import select
+from fastapi import HTTPException
+from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.agents.eslestirme import BENZERLIK_ALT_SINIRI, DURUM_ONERILDI
 from app.core.embeddings import EmbeddingHatasi, embedding_uret, firma_temsil_metni
 from app.core.firma_karti import EMBEDDING_ALANLARI
+from app.core.ilan import ARANAN_FIRMA
 from app.db.session import get_sessionmaker
+from app.models.eslesme import Eslesme
 from app.models.firma_karti import FirmaKarti
+from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kurum import Kurum
+from app.servisler import eslestirme as eslestirme_servisi
 
 logger = logging.getLogger("zemin360.firma_karti")
 
@@ -109,7 +116,61 @@ async def firma_kartini_hazirla_oturumla(
     )
     if kart is None or kart.versiyon > versiyon:
         return False
-    return await embedding_hesapla(oturum, kart)
+    if not await embedding_hesapla(oturum, kart):
+        # Embedding'siz kart eşleşmeye giremez; sonraki hazırlama yeniden dener.
+        return False
+    await firma_kartini_eslestir(oturum, kart_id)
+    return True
+
+
+async def ilgili_ortak_ilanlari(oturum: AsyncSession, kart_id: uuid.UUID) -> list[uuid.UUID]:
+    """Bu kart için pipeline'ı çalıştırılacak ortak ilanları (yetenek kartındaki desen).
+
+    (a) Açık, embedding'i olan, firmanın kendi ilanı olmayan ve kartla benzerliği
+        alt sınırı geçen ortak ilanları; (b) kartın hâlâ `onerildi` önerisi olan
+        ilanlar (kart artık uymuyorsa öneri temizlensin). Kesin şartlar pipeline'da.
+    """
+    kartin_firmasi = select(FirmaKarti.kurum_id).where(FirmaKarti.id == kart_id)
+    uzaklik = IhtiyacKarti.embedding.cosine_distance(
+        select(FirmaKarti.embedding).where(FirmaKarti.id == kart_id).scalar_subquery()
+    )
+    onerildigi = select(Eslesme.ihtiyac_karti_id).where(
+        Eslesme.firma_karti_id == kart_id, Eslesme.durum == DURUM_ONERILDI
+    )
+    satirlar = await oturum.scalars(
+        select(IhtiyacKarti.id).where(
+            IhtiyacKarti.embedding.isnot(None),
+            IhtiyacKarti.durum == eslestirme_servisi.IHTIYAC_ACIK,
+            IhtiyacKarti.aranan == ARANAN_FIRMA,
+            IhtiyacKarti.kurum_id != kartin_firmasi.scalar_subquery(),
+            or_(uzaklik <= 1.0 - BENZERLIK_ALT_SINIRI, IhtiyacKarti.id.in_(onerildigi)),
+        )
+    )
+    return list(satirlar)
+
+
+async def firma_kartini_eslestir(oturum: AsyncSession, kart_id: uuid.UUID) -> int:
+    """İlgili her ortak ilanı için mevcut pipeline. Döner: kaç ilan."""
+    ilan_idleri = await ilgili_ortak_ilanlari(oturum, kart_id)
+    for ilan_id in ilan_idleri:
+        ilan = await oturum.get(IhtiyacKarti, ilan_id)
+        if ilan is None:
+            continue
+        try:
+            await eslestirme_servisi.pipeline_calistir(oturum, ilan)
+        except HTTPException as hata:
+            logger.info("Eşleştirme atlandı (%s): %s", ilan_id, hata.detail)
+    return len(ilan_idleri)
+
+
+async def onerilerin_gerekcesini_bosalt(oturum: AsyncSession, kart_id: uuid.UUID) -> None:
+    """Kart değişince yalnızca `onerildi` önerilerin gerekçesi boşaltılır; pipeline
+    yenisini yazar. Karar verilmiş kayıtlara dokunulmaz (genç kartındaki kural)."""
+    await oturum.execute(
+        update(Eslesme)
+        .where(Eslesme.firma_karti_id == kart_id, Eslesme.durum == DURUM_ONERILDI)
+        .values(gerekce_metni=None)
+    )
 
 
 async def embedding_hesapla(oturum: AsyncSession, kart: FirmaKarti) -> bool:

@@ -23,8 +23,12 @@ from app.agents.eslestirme import (
     DURUM_GENC_ILGILENDI,
     DURUM_KABUL_EDILDI,
     Aday,
+    FirmaAdayi,
+    aday_ekle_ifadesi,
+    aday_kimligi,
     adaylari_getir,
-    eslesme_ekle_ifadesi,
+    firma_adaylarini_getir,
+    firma_gerekce_uret,
     gerekce_uret,
     kilit_anahtari,
     siralayip_ele,
@@ -37,6 +41,7 @@ from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_sessionmaker
 from app.models.bildirim import TUR_YENI_ONERI
 from app.models.eslesme import Eslesme
+from app.models.firma_karti import FirmaKarti
 from app.models.hesap import Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kurum import Kurum
@@ -51,9 +56,13 @@ IHTIYAC_KAPALI_MESAJI = "Bu ihtiyaç kapandı; yeni aday aranmıyor."
 
 
 def iliskileriyle(sorgu):
-    """İletişim bilgisi ve sahiplik için gereken ilişkiler: iki taraf ve iş birliği."""
+    """İletişim bilgisi ve sahiplik için gereken ilişkiler: iki taraf ve iş birliği.
+
+    Aday ya yetenek kartı (genci) ya firma kartı (firması); ikisi de yüklenir.
+    """
     return sorgu.options(
         selectinload(Eslesme.yetenek_karti).selectinload(YetenekKarti.kullanici),
+        selectinload(Eslesme.firma_karti).selectinload(FirmaKarti.kurum),
         selectinload(Eslesme.ihtiyac_karti).selectinload(IhtiyacKarti.kurum),
         selectinload(Eslesme.isbirligi),
     )
@@ -78,6 +87,12 @@ def iletisim(eslesme: Eslesme, hesap: Hesap | None) -> Iletisim | None:
         return None
     if eslesmedeki_taraf(hesap, eslesme) is None:
         return None
+    if eslesme.firma_karti is not None:
+        # Firma–firma: aday firmanın e-postası ayrı alanda (genç ekranları değişmez).
+        return Iletisim(
+            aday_firma_email=eslesme.firma_karti.kurum.iletisim_email,
+            kurum_email=eslesme.ihtiyac_karti.kurum.iletisim_email,
+        )
     return Iletisim(
         genc_email=eslesme.yetenek_karti.kullanici.email,
         kurum_email=eslesme.ihtiyac_karti.kurum.iletisim_email,
@@ -124,10 +139,6 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
     if ihtiyac.durum != IHTIYAC_ACIK:
         # Kapalı ihtiyaç için aday aranmaz; mevcut kayıtlar okunabilir kalır.
         raise HTTPException(status_code=409, detail=IHTIYAC_KAPALI_MESAJI)
-    if ihtiyac.aranan == ARANAN_FIRMA:
-        # Ortak ilanının adayları firmalar (docs/plans/firma-akisi.md § 4); gençler
-        # bu ilana önerilmez. Firma adayları eklenene kadar liste boş kalır.
-        return await eslesmeleri_oku(oturum, ihtiyac.id)
 
     # Aynı ihtiyaç kartı için pipeline'lar sıraya girer: kart onaylanınca
     # arka plan işi başlıyor, kurum da o sırada öneriler sayfasını açınca
@@ -143,29 +154,27 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
     if guncel_durum != IHTIYAC_ACIK:
         raise HTTPException(status_code=409, detail=IHTIYAC_KAPALI_MESAJI)
 
-    secilenler = siralayip_ele(await adaylari_getir(oturum, ihtiyac))
+    # Aday kaynağı ilana göre (docs/plans/firma-akisi.md § 4): genç ilanında
+    # yetenek kartları, ortak ilanında firma kartları. Gençler ortak ilanına,
+    # firmalar genç ilanına önerilmez. Buradan sonrası iki tür için aynı kod.
+    aday_kaynagi = firma_adaylarini_getir if ihtiyac.aranan == ARANAN_FIRMA else adaylari_getir
+    secilenler = siralayip_ele(await aday_kaynagi(oturum, ihtiyac))
     eskiler = await eslesmeleri_oku(oturum, ihtiyac.id)
-    mevcutlar = {e.yetenek_karti_id: e for e in eskiler}
+    mevcutlar = {aday_kimligi(e): e for e in eskiler}
 
     # Kural ya da kart değişmiş olabilir: artık seçilmeyen öneriler listede
     # kalmasın. Kurumun karar verdiği kayıtlara dokunulmuyor.
-    for eskimis in temizlenecekler(eskiler, [aday.yetenek_karti.id for aday in secilenler]):
-        mevcutlar.pop(eskimis.yetenek_karti_id, None)
+    for eskimis in temizlenecekler(eskiler, [aday.aday_kimligi for aday in secilenler]):
+        mevcutlar.pop(aday_kimligi(eskimis), None)
         await oturum.delete(eskimis)
 
     yeni_oneri = 0
     for aday in secilenler:
-        eslesme = mevcutlar.get(aday.yetenek_karti.id)
+        eslesme = mevcutlar.get(aday.aday_kimligi)
         if eslesme is None:
             # ON CONFLICT DO NOTHING: aynı anda çalışan başka bir pipeline
             # eklemişse rowcount 0, bildirimde iki kez sayılmaz.
-            eklenen = await oturum.execute(
-                eslesme_ekle_ifadesi(
-                    ihtiyac_karti_id=ihtiyac.id,
-                    yetenek_karti_id=aday.yetenek_karti.id,
-                    skor=aday.skor,
-                )
-            )
+            eklenen = await oturum.execute(aday_ekle_ifadesi(ihtiyac.id, aday))
             yeni_oneri += eklenen.rowcount
         elif eslesme.durum != DURUM_GENC_ILGILENDI:
             # Kurumun verdiği karar (ilgileniliyor/kabul/red) ezilmez;
@@ -174,14 +183,14 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
             eslesme.skor = aday.skor
 
     # Eklenenler ON CONFLICT ile yazıldı; ORM nesneleri yeniden okunarak alınır.
-    guncel = {e.yetenek_karti_id: e for e in await eslesmeleri_oku(oturum, ihtiyac.id)}
-    gerekce_bekleyenler: list[tuple[Eslesme, Aday]] = [
-        (guncel[aday.yetenek_karti.id], aday)
+    guncel = {aday_kimligi(e): e for e in await eslesmeleri_oku(oturum, ihtiyac.id)}
+    gerekce_bekleyenler: list[tuple[Eslesme, Aday | FirmaAdayi]] = [
+        (guncel[aday.aday_kimligi], aday)
         for aday in secilenler
-        if aday.yetenek_karti.id in guncel
-        and guncel[aday.yetenek_karti.id].gerekce_metni is None
-        # Gencin ilgi gösterdiği kaydın gerekçesi değiştirilmez (karar 14).
-        and guncel[aday.yetenek_karti.id].durum != DURUM_GENC_ILGILENDI
+        if aday.aday_kimligi in guncel
+        and guncel[aday.aday_kimligi].gerekce_metni is None
+        # Adayın ilgi gösterdiği kaydın gerekçesi değiştirilmez (karar 14).
+        and guncel[aday.aday_kimligi].durum != DURUM_GENC_ILGILENDI
     ]
 
     # Gerekçeler birbirinden bağımsız: sırayla beklemek Top-5'te kullanıcıyı
@@ -206,7 +215,7 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
     return await eslesmeleri_oku(oturum, ihtiyac.id)
 
 
-async def _gerekce(ihtiyac, aday: Aday) -> str | None:
+async def _gerekce(ihtiyac, aday: Aday | FirmaAdayi) -> str | None:
     """Gerekçeyi üretir; LLM erişilemezse eşleşmeyi gerekçesiz bırakır.
 
     Skor ve sıralama LLM'den bağımsız — hız sınırı ya da sağlayıcı arızası yüzünden
@@ -214,6 +223,8 @@ async def _gerekce(ihtiyac, aday: Aday) -> str | None:
     sonraki çalıştırmada yeniden denenir (arayüz bunu açıkça söylüyor).
     """
     try:
+        if isinstance(aday, FirmaAdayi):
+            return await firma_gerekce_uret(ihtiyac, aday)
         return await gerekce_uret(ihtiyac, aday)
     except (HizSinirHatasi, ModelMesgulHatasi):
         return None

@@ -94,6 +94,10 @@ IHTIYAC_YOK = "Kuruma ait ihtiyaç kartı yok"
 # kurumun ilgisiyle başladı.
 KURUM_ILGISI_DURUMLARI = ("ilgileniliyor", "kabul_edildi", "reddedildi")
 ESLESME_BULUNAMADI = "Eşleşme bulunamadı"
+# Geçici (firma-akisi § 12, adım 8'de kalkar). Firmaya "siz".
+FIRMA_ILGISI_KAPALI = (
+    "Firmalarla ilgi ve iletişim yakında açılacak; şimdilik öneriyi görebilirsiniz."
+)
 
 
 def _hedef_kurum(hesap: Hesap, istenen: uuid.UUID | None) -> uuid.UUID:
@@ -484,10 +488,16 @@ async def _gencin_eslesmesi(oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid
 async def _ilan_tarafinin_eslesmesi(
     oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid.UUID
 ) -> Eslesme:
-    """İlanın sahibi firmanın eşleşmesi (kilitli); değilse 404."""
+    """İlanın sahibi firmanın eşleşmesi (kilitli); değilse 404.
+
+    Firma adayına ilgi (firmalar arası ilgi) henüz açılmadı: 409, anlaşılır cümleyle
+    (docs/plans/firma-akisi.md § 12, adım 8).
+    """
     eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
     if eslesme is None or eslesmedeki_taraf(hesap, eslesme) != TARAF_ILAN:
         raise bulunamadi(ESLESME_BULUNAMADI)
+    if eslesme.firma_karti_id is not None:
+        raise HTTPException(status_code=409, detail=FIRMA_ILGISI_KAPALI)
     return eslesme
 
 

@@ -191,7 +191,8 @@ def test_karsilikli_ilgi_iletisimi_ve_is_birligini_acar(plan_arka_plan_isi_yok):
         )
         assert karsilik.status_code == 200
         assert karsilik.json()["durum"] == "kabul_edildi"
-        assert set(karsilik.json()["iletisim"].values()) == epostalar
+        # `aday_firma_email` genç eşleşmesinde boş (firma-akisi § 3).
+        assert set(karsilik.json()["iletisim"].values()) - {None} == epostalar
         assert karsilik.json()["isbirligi_id"] is not None
         assert plan_arka_plan_isi_yok == [uuid.UUID(karsilik.json()["isbirligi_id"])]
         # Çift tıklama: 200, ikinci iş birliği ve ikinci plan yok.

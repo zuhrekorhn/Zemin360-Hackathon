@@ -109,6 +109,7 @@ async def karti_duzenle(
     if yenile:
         # Eski vektör artık kartı temsil etmiyor: hazırlanana kadar eşleşmeye girmesin.
         kart.embedding = None
+        await servis.onerilerin_gerekcesini_bosalt(oturum, kart.id)
     kart_id, versiyon = kart.id, kart.versiyon
     await oturum.commit()
     if yenile:

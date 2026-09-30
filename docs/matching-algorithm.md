@@ -107,6 +107,18 @@ LLM'e verilenler: ihtiyaç kartı özeti, yetenek kartı özeti, doğrulama öze
 
 **Koruma:** güçlü kanıt yokken gerekçe "doğrulanmış / doğrulandı / kanıtlanmış" derse düzeltme notuyla bir kez yeniden üretilir; yine derse öneri gerekçesiz gösterilir (skor geçerli kalır, sonraki hesapta yeniden denenir). Kuruma yanlış bir "doğrulandı" göstermektense gerekçesiz öneri daha iyi. İstemin kendi başına işlediği `CANLI_TEST=1` ile çalışan bir testle ölçülüyor.
 
+## 7. Firma–firma eşleştirme (firma akışı)
+
+Plan: `plans/firma-akisi.md` § 0 kararlar 5, 11-14; § 4. Aynı pipeline (`app/servisler/eslestirme.py`), aynı kilit, aynı temizlik ve karar 14 koruması; fark aday kaynağında: ilanın `aranan`'ı `firma` ise adaylar firma kartları (`firma_adaylarini_getir`).
+
+- **Temsil metni:** firma kartı firmanın **ne yaptığını** anlatır: ne yapıyoruz, yetkinlikler, önceki işler, sektör (`firma_temsil_metni`). Aradığı ortak ve iş birliği türü girmez. İlan tarafı aynı: problem + başarı kriteri.
+- **Kesin şartlar (SQL, benzerlikten önce):** kartı ve hesabı olan firma; ilanı açan firma değil; ilan tür seçtiyse `kurum.tur` o türlerden; ilan şehir şartı koyduysa `kurum.sehir` eşit (varsayılan "fark etmez"). Sektör şart değil.
+- **Skor:** aynı formül, `0.75 × benzerlik + 0.25 × bonus`; aynı benzerlik alt sınırı (0.45), eşik (%40) ve ilk 5. Bonus: GİRVAK'ın doğruladığı firma +0.5, aday olarak en az bir tamamlanmış iş birliği +0.5, tavan 1.0. Bonus alakayı yaratmaz.
+- **Gerekçe:** ayrı istem (`FIRMA_GEREKCE_SABLONU`), ilanı açan firmaya hitaben, aday firmadan üçüncü şahısla. Doğrulanmamış firmayı "doğrulanmış" diye anlatırsa bir kez düzeltme notuyla yeniden üretilir; yine olursa gerekçesiz kalır (genç gerekçesindeki koruma).
+- **Ne zaman çalışır:** ortak ilanı onaylanınca (o ilan için) ve firma kartı onaylanınca/içeriği değişince (kartla ilgili açık ortak ilanları için; `servisler/firma_karti.py`). Kart içeriği değişince bekleyen önerilerin gerekçesi boşaltılır.
+- **Ayrım:** gençler ortak ilanına, firmalar genç ilanına önerilmez.
+- **Bilinen sınırlar:** 0.45 alt sınırı firma metinleri için ölçülmedi. Firma profili (tür, şehir, doğrulama) değişince mevcut öneriler kendiliğinden yeniden hesaplanmaz; bir sonraki pipeline çalışmasında güncellenir.
+
 ## İsteğe Bağlı Geliştirme — ESCO Taksonomi Eşleme
 
 Zaman kalırsa (Faz 3 veya sonrası), skor formülüne bir bileşen daha eklenir:

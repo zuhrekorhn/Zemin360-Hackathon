@@ -32,6 +32,7 @@ def _dunya():
     kullanici = SimpleNamespace(id=uuid.uuid4(), ad="Ayşe", hesap_id=genc_hesap)
     kurum = SimpleNamespace(id=uuid.uuid4(), ad="Koop Bir", hesap_id=kurum_hesap)
     eslesme = SimpleNamespace(
+        firma_karti=None,
         yetenek_karti=SimpleNamespace(kullanici_id=kullanici.id, kullanici=kullanici),
         ihtiyac_karti=SimpleNamespace(kurum_id=kurum.id, kurum=kurum),
     )

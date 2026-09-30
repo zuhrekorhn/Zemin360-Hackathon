@@ -115,7 +115,12 @@ def eslesmedeki_taraf(hesap: Hesap, eslesme: Eslesme) -> str | None:
 
     `eslesme` iki kartıyla ve sahipleriyle yüklenmiş olmalı.
     """
-    if yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti):
+    if eslesme.firma_karti is not None:
+        # Firma–firma: aday tarafı firma kartının firması. Kendi firması
+        # önerilmediği için bir firma iki tarafta birden olamaz.
+        if eslesme.firma_karti.kurum_id == kurum_id(hesap):
+            return TARAF_ADAY
+    elif yetenek_kartinin_sahibi_mi(hesap, eslesme.yetenek_karti):
         return TARAF_ADAY
     if ihtiyac_kartinin_sahibi_mi(hesap, eslesme.ihtiyac_karti):
         return TARAF_ILAN
@@ -128,6 +133,8 @@ def karsi_taraf(taraf: str) -> str:
 
 def taraf_hesabi(eslesme: Eslesme, taraf: str) -> uuid.UUID | None:
     """Tarafın hesabı (bildirim alıcısı)."""
+    if taraf == TARAF_ADAY and eslesme.firma_karti is not None:
+        return eslesme.firma_karti.kurum.hesap_id
     if taraf == TARAF_ADAY:
         return eslesme.yetenek_karti.kullanici.hesap_id
     return eslesme.ihtiyac_karti.kurum.hesap_id
@@ -135,6 +142,8 @@ def taraf_hesabi(eslesme: Eslesme, taraf: str) -> uuid.UUID | None:
 
 def taraf_adi(eslesme: Eslesme, taraf: str) -> str:
     """Tarafın kullanıcıya görünen adı (gencin adı ya da firmanın adı)."""
+    if taraf == TARAF_ADAY and eslesme.firma_karti is not None:
+        return eslesme.firma_karti.kurum.ad
     if taraf == TARAF_ADAY:
         return eslesme.yetenek_karti.kullanici.ad
     return eslesme.ihtiyac_karti.kurum.ad

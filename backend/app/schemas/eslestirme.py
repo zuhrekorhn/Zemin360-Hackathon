@@ -29,7 +29,9 @@ class Iletisim(BaseModel):
     Adlar burada değil: iletişim bilgisi sayılmıyor, kart görünümünde baştan var.
     """
 
-    genc_email: str
+    # Genç ilanında gencin, ortak ilanında aday firmanın e-postası (tam biri dolu).
+    genc_email: str | None = None
+    aday_firma_email: str | None = None
     kurum_email: str | None
 
 

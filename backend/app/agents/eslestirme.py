@@ -34,15 +34,20 @@ from sqlalchemy.orm import selectinload
 
 from app.agents.takip_durumu import ISBIRLIGI_TAMAMLANDI
 from app.core.calisma_modeli import sehir_eslesmeli_mi
+from app.core.firma_dogrulama import DOGRULANDI
+from app.core.firma_karti import ISBIRLIGI_TURU_ETIKETLERI
+from app.core.firma_profili import FIRMA_TURU_ETIKETLERI
 from app.core.is_kalemi import is_kalemi_metni
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 from app.core.metin import turkce_kucult
 from app.core.sehir import sehir_kanonik
 from app.models.eslesme import Eslesme
+from app.models.firma_karti import FirmaKarti
 from app.models.guven_skoru import GuvenSkoru
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
 from app.models.kullanici import Kullanici
+from app.models.kurum import Kurum
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 
@@ -134,6 +139,46 @@ class Aday:
     def skor(self) -> float:
         return skor_hesapla(self.benzerlik, self.dogrulama_bonus)
 
+    @property
+    def aday_kimligi(self) -> uuid.UUID:
+        return self.yetenek_karti.id
+
+
+# --- Firma adayı (docs/plans/firma-akisi.md § 0 kararlar 5, 13; § 4) -------------------
+#
+# Ortak ilanının adayları firma kartları. Aynı formül ve aynı iki sınır
+# (benzerlik alt sınırı, skor eşiği, ilk N); bonus firmaya göre: GİRVAK'ın
+# doğruladığı firma ve daha önce tamamlanmış bir iş birliği. Bonus alakayı
+# yaratmaz: alt sınır skordan önce (§ 5). Firma metinleri için 0.45'in ayarı
+# ölçülmedi (bilinen sınır).
+FIRMA_DOGRULAMA_BONUSU = 0.5
+FIRMA_ISBIRLIGI_BONUSU = 0.5
+
+
+def firma_bonusu(dogrulandi: bool, tamamlanan_isbirligi: int) -> float:
+    bonus = FIRMA_DOGRULAMA_BONUSU if dogrulandi else 0.0
+    if tamamlanan_isbirligi >= 1:
+        bonus += FIRMA_ISBIRLIGI_BONUSU
+    return min(1.0, bonus)
+
+
+@dataclass(frozen=True)
+class FirmaAdayi:
+    """Skorlanmış bir firma kartı; `siralayip_ele` için `Aday` ile aynı yüz."""
+
+    firma_karti: FirmaKarti
+    benzerlik: float
+    dogrulama_bonus: float
+    tamamlanan_isbirligi: int = 0
+
+    @property
+    def skor(self) -> float:
+        return skor_hesapla(self.benzerlik, self.dogrulama_bonus)
+
+    @property
+    def aday_kimligi(self) -> uuid.UUID:
+        return self.firma_karti.id
+
 
 # --- Saf hesap (LLM ve DB olmadan test edilebilir) -------------------------
 
@@ -168,7 +213,7 @@ def benzerlik_yeterli_mi(benzerlik: float) -> bool:
     return benzerlik >= BENZERLIK_ALT_SINIRI
 
 
-def siralayip_ele(adaylar: Sequence[Aday]) -> list[Aday]:
+def siralayip_ele(adaylar: Sequence[Aday | FirmaAdayi]) -> list[Aday | FirmaAdayi]:
     """Alakasızları eler, skora göre sıralar, eşik altını atar, TOP_N'i döner.
 
     Alaka elemesi skor hesabından önce: bir aday konuyla ilgisizse ne kadar
@@ -183,8 +228,13 @@ def siralayip_ele(adaylar: Sequence[Aday]) -> list[Aday]:
 class EslesmeGorunumu(Protocol):
     """Temizlik kararı için bir eşleşmenin gereken yüzü."""
 
-    yetenek_karti_id: uuid.UUID
+    yetenek_karti_id: uuid.UUID | None
     durum: str
+
+
+def aday_kimligi(eslesme: EslesmeGorunumu) -> uuid.UUID:
+    """Eşleşmenin aday kartı: yetenek kartı ya da firma kartı (tam biri dolu)."""
+    return eslesme.yetenek_karti_id or getattr(eslesme, "firma_karti_id", None)
 
 
 def temizlenecekler(
@@ -201,7 +251,7 @@ def temizlenecekler(
     return [
         eslesme
         for eslesme in mevcutlar
-        if eslesme.yetenek_karti_id not in kalanlar and eslesme.durum == DURUM_ONERILDI
+        if aday_kimligi(eslesme) not in kalanlar and eslesme.durum == DURUM_ONERILDI
     ]
 
 
@@ -216,23 +266,42 @@ def kilit_anahtari(ihtiyac_karti_id: uuid.UUID) -> int:
 
 
 def eslesme_ekle_ifadesi(
-    *, ihtiyac_karti_id: uuid.UUID, yetenek_karti_id: uuid.UUID, skor: float
+    *,
+    ihtiyac_karti_id: uuid.UUID,
+    skor: float,
+    yetenek_karti_id: uuid.UUID | None = None,
+    firma_karti_id: uuid.UUID | None = None,
 ) -> Insert:
     """Yeni öneriyi ekler; aynı çift zaten varsa hiçbir şey yapmaz.
 
     Asıl koruma pipeline'daki kilit. Bu ifade ikinci güvenlik ağı: kilit
-    bir gün atlanırsa bile UNIQUE kısıt ihlali 500'e dönüşmesin.
+    bir gün atlanırsa bile UNIQUE kısıt ihlali 500'e dönüşmesin. Aday ya
+    yetenek kartı ya firma kartı; çakışma sütunu ona göre.
     """
+    if (yetenek_karti_id is None) == (firma_karti_id is None):
+        raise ValueError("Tam bir aday kartı verilmeli (yetenek ya da firma)")
+    aday_sutunu = "yetenek_karti_id" if yetenek_karti_id else "firma_karti_id"
     return (
         pg_insert(Eslesme)
         .values(
             id=uuid.uuid4(),
             ihtiyac_karti_id=ihtiyac_karti_id,
             yetenek_karti_id=yetenek_karti_id,
+            firma_karti_id=firma_karti_id,
             skor=skor,
             durum=DURUM_ONERILDI,
         )
-        .on_conflict_do_nothing(index_elements=["ihtiyac_karti_id", "yetenek_karti_id"])
+        .on_conflict_do_nothing(index_elements=["ihtiyac_karti_id", aday_sutunu])
+    )
+
+
+def aday_ekle_ifadesi(ihtiyac_karti_id: uuid.UUID, aday: Aday | FirmaAdayi) -> Insert:
+    if isinstance(aday, FirmaAdayi):
+        return eslesme_ekle_ifadesi(
+            ihtiyac_karti_id=ihtiyac_karti_id, firma_karti_id=aday.aday_kimligi, skor=aday.skor
+        )
+    return eslesme_ekle_ifadesi(
+        ihtiyac_karti_id=ihtiyac_karti_id, yetenek_karti_id=aday.aday_kimligi, skor=aday.skor
     )
 
 
@@ -521,6 +590,183 @@ async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str | None:
         kart.id,
         metin,
     )
+    return None
+
+
+async def firma_adaylarini_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[FirmaAdayi]:
+    """Ortak ilanının firma adayları (docs/plans/firma-akisi.md § 0 karar 5, § 4).
+
+    Kesin şartlar SQL'de: kartı ve hesabı olan firma, ilanı açan firma değil,
+    ilan tür seçtiyse o türlerden, ilan şehir şartı koyduysa o şehirde (şehir
+    varsayılan olarak fark etmez). Sektör şart değil. Sonra benzerlik alt
+    sınırı; eşik ve ilk N `siralayip_ele`'de.
+    """
+    if ihtiyac.embedding is None:
+        return []
+    uzaklik = FirmaKarti.embedding.cosine_distance(ihtiyac.embedding)
+    sorgu = (
+        select(FirmaKarti, uzaklik.label("uzaklik"))
+        .join(Kurum, Kurum.id == FirmaKarti.kurum_id)
+        .options(selectinload(FirmaKarti.kurum))
+        .where(
+            FirmaKarti.embedding.isnot(None),
+            Kurum.hesap_id.isnot(None),
+            FirmaKarti.kurum_id != ihtiyac.kurum_id,
+            uzaklik <= 1.0 - BENZERLIK_ALT_SINIRI,
+        )
+    )
+    if ihtiyac.aranan_firma_turleri:
+        sorgu = sorgu.where(Kurum.tur.in_(list(ihtiyac.aranan_firma_turleri)))
+    if ihtiyac.sehir_tercihi:
+        sorgu = sorgu.where(Kurum.sehir == sehir_kanonik(ihtiyac.sehir_tercihi))
+
+    satirlar = (await oturum.execute(sorgu.order_by("uzaklik").limit(50))).all()
+    isbirlikleri = await firma_tamamlanan_isbirligi_sayilari(
+        oturum, [kart.id for kart, _ in satirlar]
+    )
+    return [
+        FirmaAdayi(
+            firma_karti=kart,
+            benzerlik=1.0 - float(uzaklik_degeri),
+            tamamlanan_isbirligi=isbirlikleri.get(kart.id, 0),
+            dogrulama_bonus=firma_bonusu(
+                kart.kurum.dogrulama_durumu == DOGRULANDI, isbirlikleri.get(kart.id, 0)
+            ),
+        )
+        for kart, uzaklik_degeri in satirlar
+    ]
+
+
+async def firma_tamamlanan_isbirligi_sayilari(
+    oturum: AsyncSession, kart_idler: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, int]:
+    """Firma kartı başına, aday olarak tamamladığı iş birliği sayısı (hesaplanır)."""
+    if not kart_idler:
+        return {}
+    satirlar = await oturum.execute(
+        select(Eslesme.firma_karti_id, func.count(Isbirligi.id))
+        .join(Isbirligi, Isbirligi.eslesme_id == Eslesme.id)
+        .where(
+            Eslesme.firma_karti_id.in_(list(kart_idler)),
+            Isbirligi.durum == ISBIRLIGI_TAMAMLANDI,
+        )
+        .group_by(Eslesme.firma_karti_id)
+    )
+    return {kart_id: sayi for kart_id, sayi in satirlar.all()}
+
+
+# --- Firma adayı gerekçesi ---------------------------------------------------------------
+
+FIRMA_GEREKCE_TALIMATI = """Bir firmanın iş birliği ortağı aradığı ilan ile aday
+bir firmanın kartı arasındaki uyumu açıklıyorsun. Açıklamayı ilanı açan firma
+okuyacak; aday firmadan üçüncü şahısla bahset.
+
+Kurallar:
+- 2-3 cümle. Daha uzun yazma.
+- SADECE ilanda ve kartta yazan somut şeylere atıf yap: ürün ya da hizmet,
+  yetkinlik, önceki iş, başarı kriteri. Kartta olmayan bir yetenek UYDURMA.
+- "Güçlü bir ortak", "harika bir eşleşme" gibi genel geçer ifadeler KULLANMA.
+- Zayıf tarafı gizleme: önceki iş yazılmamışsa bunu bir cümlede sakince belirt.
+- "Doğrulanmış", "doğrulandı" ifadelerini YALNIZCA güven bilgisinde firma
+  doğrulandı yazıyorsa kullan. Puan ya da oran verme.
+- Türkçe, sade, abartısız. Karar ilanı açan firmanın; sen yalnızca neden bu
+  firmanın önerildiğini anlat.
+"""
+
+FIRMA_GEREKCE_SABLONU = ChatPromptTemplate.from_messages(
+    [
+        ("system", FIRMA_GEREKCE_TALIMATI),
+        (
+            "human",
+            "İLAN (iş birliği ortağı aranıyor)\n"
+            "Problem: {problem}\n"
+            "Başarı kriteri: {basari_kriteri}\n"
+            "Kısıtlar: {kisitlar}\n"
+            "İş birliği türü: {isbirligi_turu}\n\n"
+            "ADAY FİRMA\n"
+            "Tür ve sektör: {firma_turu}, {sektor}\n"
+            "Ne yapıyor: {ne_yapiyoruz}\n"
+            "Yetkinlikler: {yetkinlikler}\n"
+            "Önceki işler: {onceki_isler}\n\n"
+            "GÜVEN BİLGİSİ\n"
+            "{guven}\n\n"
+            "{ek_not}Bu eşleşmenin gerekçesini yaz.",
+        ),
+    ]
+)
+
+
+def firma_guven_ozeti(dogrulandi: bool, tamamlanan_isbirligi: int) -> str:
+    satirlar = [
+        "Firma doğrulandı: program ekibi firmayı doğruladı."
+        if dogrulandi
+        else "Firma henüz doğrulanmadı; firmayı doğrulanmış diye anlatma."
+    ]
+    if tamamlanan_isbirligi >= 1:
+        satirlar.append(
+            f"Tamamlanan iş birliği: {tamamlanan_isbirligi} (platformda, iki tarafın her adımı "
+            "onaylamasıyla)."
+        )
+    else:
+        satirlar.append("Tamamlanan iş birliği: yok.")
+    return "\n".join(satirlar)
+
+
+def firma_gerekce_girdileri(ihtiyac: IhtiyacKarti, aday: FirmaAdayi, ek_not: str = "") -> dict:
+    kart = aday.firma_karti
+    kurum = kart.kurum
+    return {
+        "problem": ihtiyac.problem_tanimi,
+        "basari_kriteri": ihtiyac.basari_kriteri or "belirtilmedi",
+        "kisitlar": ihtiyac.kisitlar or "belirtilmedi",
+        "isbirligi_turu": ISBIRLIGI_TURU_ETIKETLERI.get(
+            ihtiyac.isbirligi_turu or "", "belirtilmedi"
+        ),
+        "firma_turu": FIRMA_TURU_ETIKETLERI.get(kurum.tur or "", "türü belirtilmemiş"),
+        "sektor": kurum.sektor or "sektörü belirtilmemiş",
+        "ne_yapiyoruz": kart.ne_yapiyoruz,
+        "yetkinlikler": ", ".join(kart.yetkinlikler) or "belirtilmedi",
+        "onceki_isler": kart.onceki_isler or "belirtilmedi",
+        "guven": firma_guven_ozeti(kurum.dogrulama_durumu == DOGRULANDI, aday.tamamlanan_isbirligi),
+        "ek_not": ek_not,
+    }
+
+
+@lru_cache
+def _firma_gerekce_zinciri() -> Runnable:
+    return yedekli_zincir(
+        "guclu", "eslestirme_firma_gerekce", lambda m: FIRMA_GEREKCE_SABLONU | m | StrOutputParser()
+    )
+
+
+FIRMA_DUZELTME_NOTU = (
+    'DİKKAT: Önceki denemede firmayı "doğrulanmış" diye anlattın, oysa firma henüz '
+    'doğrulanmadı. Bu kez "doğrulanmış" ya da "doğrulandı" deme.\n\n'
+)
+
+
+async def _firma_gerekce_cagir(girdiler: dict) -> str:
+    try:
+        metin = await _firma_gerekce_zinciri().ainvoke(girdiler)
+    except Exception as hata:
+        cevrilmis = llm_hatasini_cevir(hata)
+        raise cevrilmis from hata
+    return metin.strip()
+
+
+async def firma_gerekce_uret(ihtiyac: IhtiyacKarti, aday: FirmaAdayi) -> str | None:
+    """Genç gerekçesindeki korumanın aynısı: doğrulanmamış firma "doğrulanmış"
+    diye anlatılırsa bir kez düzeltme notuyla yeniden; yine olursa gerekçesiz."""
+    dogrulandi = aday.firma_karti.kurum.dogrulama_durumu == DOGRULANDI
+    metin = await _firma_gerekce_cagir(firma_gerekce_girdileri(ihtiyac, aday))
+    if dogrulandi or not dogrulama_iddiasi_var_mi(metin):
+        return metin
+    metin = await _firma_gerekce_cagir(
+        firma_gerekce_girdileri(ihtiyac, aday, ek_not=FIRMA_DUZELTME_NOTU)
+    )
+    if not dogrulama_iddiasi_var_mi(metin):
+        return metin
+    logger.warning("Firma gerekçesi iki denemede de 'doğrulanmış' dedi; gerekçesiz bırakılıyor")
     return None
 
 

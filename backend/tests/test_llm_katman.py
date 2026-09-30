@@ -39,6 +39,7 @@ ZINCIRLER = (
     tanimlama._cikarim_zinciri,
     firma_karti._cikarim_zinciri,
     eslestirme._gerekce_zinciri,
+    eslestirme._firma_gerekce_zinciri,
     dogrulama._rubrik_zinciri,
 )
 
@@ -106,7 +107,10 @@ def test_cikarim_isleri_hizli_katmanda(ortam, zincir):
     assert _ana_ve_yedek(zincir()) == ("hizli-ana", "hizli-yedek")
 
 
-@pytest.mark.parametrize("zincir", [eslestirme._gerekce_zinciri, dogrulama._rubrik_zinciri])
+@pytest.mark.parametrize(
+    "zincir",
+    [eslestirme._gerekce_zinciri, eslestirme._firma_gerekce_zinciri, dogrulama._rubrik_zinciri],
+)
 def test_gerekce_ve_rubrik_guclu_katmanda(ortam, zincir):
     assert _ana_ve_yedek(zincir()) == ("guclu-ana", "guclu-yedek")
 

@@ -94,6 +94,8 @@ def test_kabul_yolu_ve_eposta_gizliligi():
         assert govde["isbirligi_id"] is not None
         assert govde["iletisim"] == {
             "genc_email": d.genc1.hesap.email,
+            # Firma–firma alanı (firma-akisi § 3); genç eşleşmesinde boş.
+            "aday_firma_email": None,
             "kurum_email": d.kurum1.hesap.email,
         }
         assert await _aktivite(d, d.E1.id) > once
