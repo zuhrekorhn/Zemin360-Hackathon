@@ -25,7 +25,6 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any, Literal
 
-from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from pydantic import BaseModel, Field
@@ -55,6 +54,11 @@ FALLBACK_SORULARI = (
     "Küçük de olsa olur.",
     "Peki gönüllü olarak yaptığın bir şey — bir dernekte, okulda bir kulüpte, "
     "mahallende? Ya da kendi kendine öğrenirken yaptığın bir deneme?",
+)
+
+ACIKLAMA_YEDEGI = (
+    "Kesin ya da büyük bir şey olması gerekmiyor; aklına gelen ilk örneği kendi "
+    "cümlelerinle yazman yeterli."
 )
 
 ZORUNLU_ALANLAR = ("rol_alani", "deneyim_seviyesi", "sektor_ilgi_alani", "araclar_teknolojiler")
@@ -158,7 +162,7 @@ class SomutCiktiTaslak(BaseModel):
     )
 
 
-class TaslakCikarimi(BaseModel):
+class TaslakCikarimi(motor.SohbetCikarimi):
     """LLM'in her turda döndürdüğü yapılandırılmış çıkarım.
 
     Serbest metin parse edilmiyor; Gemini'nin structured output'u kullanılıyor.
@@ -213,13 +217,9 @@ def _fallback_dali(durum: dict[str, Any]) -> dict[str, Any] | None:
     if durum["taslak"].get("somut_ciktilar") or fallback_indeksi >= len(FALLBACK_SORULARI):
         return None
 
-    soru = FALLBACK_SORULARI[fallback_indeksi]
-    return {
-        "mesajlar": [AIMessage(content=soru)],
-        "fallback_indeksi": fallback_indeksi + 1,
-        "sonraki_soru": soru,
-        "taslak_hazir": False,
-    }
+    return motor.soru_durumu(
+        FALLBACK_SORULARI[fallback_indeksi], fallback_indeksi=fallback_indeksi + 1
+    )
 
 
 # Ajana özel ek sorular (ölçüt, rol, kanıt/referans) en fazla bu kadar tur.
@@ -307,6 +307,7 @@ KESIF = motor.AjanTanimi(
     acilis_sorusu=ACILIS_SORUSU,
     sistem_talimati=SISTEM_TALIMATI,
     cikarim_semasi=TaslakCikarimi,
+    aciklama_yedegi=ACIKLAMA_YEDEGI,
     skaler_alanlar=("rol_alani", "deneyim_seviyesi"),
     liste_alanlari=("sektor_ilgi_alani", "araclar_teknolojiler", "sertifikalar", "diller"),
     nesne_listeleri=(

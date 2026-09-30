@@ -20,7 +20,7 @@ from typing import Any, Literal
 
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.agents import sohbet_motoru as motor
 from app.agents.sohbet_motoru import SohbetDurumu
@@ -61,6 +61,10 @@ Sorunun konusu eksik bir zorunlu alan değilse sistem senin soruna yer vermez.
 """
 SISTEM_TALIMATI += KULLANICI_DILI_KURALLARI
 
+ACIKLAMA_YEDEGI = (
+    "Kesin bir cevap gerekmiyor; aklınıza gelen ilk örneği kendi cümlelerinizle yazmanız yeterli."
+)
+
 YEDEK_SORULAR = {
     "ne_yapiyoruz": (
         "Firmanızın sunduğu ürün ya da hizmeti bir-iki cümleyle anlatır mısınız? "
@@ -86,7 +90,7 @@ EK_SORULAR = {
 MAKS_EK_TURU = len(EK_SORULAR)
 
 
-class FirmaKartiCikarimi(BaseModel):
+class FirmaKartiCikarimi(motor.SohbetCikarimi):
     """LLM'in her turda döndürdüğü yapılandırılmış çıkarım.
 
     Boş gelen alan mevcut taslağın üzerine YAZMAZ (motor birleştirmesi).
@@ -137,6 +141,7 @@ FIRMA_KARTI = motor.AjanTanimi(
     acilis_sorusu=ACILIS_SORUSU,
     sistem_talimati=SISTEM_TALIMATI,
     cikarim_semasi=FirmaKartiCikarimi,
+    aciklama_yedegi=ACIKLAMA_YEDEGI,
     skaler_alanlar=("ne_yapiyoruz", "onceki_isler", "aranan_isbirligi"),
     liste_alanlari=("yetkinlikler", "isbirligi_turleri"),
     zorunlu_alanlar=ZORUNLU_ALANLAR,

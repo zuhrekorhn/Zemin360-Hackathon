@@ -568,3 +568,91 @@ def test_teknik_rol_adlari_turkcelestirilmiyor():
     assert '"backend geliştirici"' in talimat
     assert '"arka yüz geliştirici"' in talimat
     assert "sorduğun sorulardaki örnekler için de" in talimat
+
+
+# --- Açıklama isteği: "örnek verir misin?" ---------------------------------
+# Sahada görüldü: genç soruyu anlamayıp örnek istedi, cevaptan yeni alan
+# çıkmadığı için sistem sıradaki soruya geçti. Açıklama isteğinde aynı soru
+# açıklamayla yeniden sorulur ve hiçbir soru hakkı harcanmaz.
+
+OLCUT_SORUSU = "“Kütüphane sistemi” için sonucu sayıyla anlatabilir misin?"
+
+
+def aciklama_turu(**ek) -> dict:
+    return {
+        "taslak": dolu_taslak(),
+        "takip_turu": 0,
+        "ek_takip_turu": 1,
+        "sorulan_ekler": ["olcut:c1"],
+        "fallback_indeksi": 0,
+        "sonraki_soru": OLCUT_SORUSU,
+        "bekleyen_soru": OLCUT_SORUSU,
+        "son_aciklama_istedi": True,
+        "son_aciklama": "Örneğin kütüphaneyi kaç üye kullanıyor?",
+        "taslak_degisti": False,
+        **ek,
+    }
+
+
+def test_aciklama_isteginde_ayni_soru_aciklamayla_gelir():
+    sonuc = karar(aciklama_turu())
+    assert sonuc["sonraki_soru"] == (f"Örneğin kütüphaneyi kaç üye kullanıyor?\n\n{OLCUT_SORUSU}")
+    assert sonuc["aciklama_sayisi"] == 1
+    assert sonuc["taslak_hazir"] is False
+
+
+def test_aciklama_turu_soru_hakkindan_dusmez():
+    sonuc = karar(aciklama_turu())
+    for sayac in ("takip_turu", "ek_takip_turu", "sorulan_ekler", "bekleyen_soru"):
+        assert sayac not in sonuc
+
+
+def test_model_aciklama_yazmazsa_yedek_metin_gelir():
+    sonuc = karar(aciklama_turu(son_aciklama=None))
+    assert sonuc["sonraki_soru"] == f"{KESIF.aciklama_yedegi}\n\n{OLCUT_SORUSU}"
+
+
+def test_ikinci_aciklamada_soru_iki_kez_yazilmaz():
+    """Gösterilen metin açıklama + soru; tekrar edilen ise yalnızca bekleyen soru."""
+    ilk_metin = f"Birinci açıklama\n\n{OLCUT_SORUSU}"
+    sonuc = karar(aciklama_turu(sonraki_soru=ilk_metin, aciklama_sayisi=1))
+    assert sonuc["sonraki_soru"].count(OLCUT_SORUSU) == 1
+    assert sonuc["aciklama_sayisi"] == 2
+
+
+def test_aciklama_siniri_dolunca_sohbet_ilerler():
+    sonuc = karar(aciklama_turu(aciklama_sayisi=motor.MAKS_ACIKLAMA))
+    assert "hangi kısmı sen yaptın" in sonuc["sonraki_soru"]
+
+
+def test_hem_soran_hem_cevaplayan_kullanicida_sohbet_ilerler():
+    """Taslağa bu turda yeni bilgi girdiyse aynı soru boşuna tekrarlanmaz."""
+    sonuc = karar(aciklama_turu(taslak_degisti=True))
+    assert "hangi kısmı sen yaptın" in sonuc["sonraki_soru"]
+
+
+def test_yeni_soru_aciklama_sayacini_sifirlar():
+    sonuc = karar(aciklama_turu(son_aciklama_istedi=False, aciklama_sayisi=2))
+    assert sonuc["aciklama_sayisi"] == 0
+    assert sonuc["bekleyen_soru"] == sonuc["sonraki_soru"]
+
+
+def test_bekleyen_sorusu_olmayan_eski_sohbette_son_soru_tekrarlanir():
+    """Bu alandan önce açılmış sohbette yalnızca `sonraki_soru` kayıtlı."""
+    durum = aciklama_turu()
+    del durum["bekleyen_soru"]
+    assert karar(durum)["sonraki_soru"].endswith(OLCUT_SORUSU)
+
+
+def test_cikarim_aciklama_istegini_ve_taslak_degisimini_tasir():
+    class Zincir:
+        async def ainvoke(self, _mesajlar):
+            return TaslakCikarimi(aciklama_istedi=True, aciklama="Örneğin bir okul ödevi.")
+
+    cikar = motor._cikar_dugumu(KESIF, lambda: Zincir())
+    sonuc = asyncio.run(
+        cikar({"mesajlar": [HumanMessage(content="Örnek verir misin?")], "taslak": bos_taslak()})
+    )
+    assert sonuc["son_aciklama_istedi"] is True
+    assert sonuc["son_aciklama"] == "Örneğin bir okul ödevi."
+    assert sonuc["taslak_degisti"] is False

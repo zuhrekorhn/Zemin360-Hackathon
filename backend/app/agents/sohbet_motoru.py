@@ -29,7 +29,7 @@ from langchain_core.runnables import Runnable
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.core.llm import HizSinirHatasi, llm_hatasini_cevir, yedekli_zincir
 from app.core.metin import sade_anahtar
@@ -45,6 +45,9 @@ MAKS_TAKIP_TURU = 2
 # doğrudan skora yansıyor). Yine de sonsuz döngü olmasın diye bir sınır var;
 # tavana gelinirse alanlar yer tutucuyla doldurulup kart kapanıyor.
 MAKS_ZORUNLU_TURU = 6
+# Kullanıcı aynı soru için en fazla bu kadar açıklama alır; sonra sohbet
+# ilerler. Sınır yoksa "anlamadım" diyen biri aynı soruda takılı kalabilir.
+MAKS_ACIKLAMA = 2
 
 # Nesne listelerindeki her kaydın kalıcı kimliği (ör. "c1"). Model bir kaydın
 # başlığını her turda farklı yazabiliyor; kayıt başlıkla değil bununla bulunur.
@@ -74,7 +77,13 @@ class SohbetDurumu(TypedDict, total=False):
     # boş kalıyor; bu liste olmadan aynı soru kelimesi kelimesine tekrar
     # geliyordu. Her ek soru en fazla bir kez sorulur.
     sorulan_ekler: list[str]
+    # Kullanıcıya gösterilen son metin (API'nin `soru` alanı). Açıklama
+    # turunda açıklama + soru; `bekleyen_soru` ise yalnızca sorunun kendisi,
+    # ikinci açıklamada soru iki kez yazılmasın diye ayrı tutuluyor.
     sonraki_soru: str | None
+    bekleyen_soru: str | None
+    # Bekleyen soru için şimdiye kadar yapılan açıklama sayısı (MAKS_ACIKLAMA)
+    aciklama_sayisi: int
     taslak_hazir: bool
     # Son turun çıkarımından karar düğümüne taşınan takip sorusu önerisi
     son_takip_sorusu: str | None
@@ -82,6 +91,11 @@ class SohbetDurumu(TypedDict, total=False):
     # şemasındaki `takip_konusu`). Karar düğümü soruyu yalnızca konusu eksik
     # bir zorunlu alansa kullanır — bkz. `zorunlu_alan_sorusu`.
     son_takip_konusu: str | None
+    # Son turda kullanıcı soruyu cevaplamak yerine açıklama istedi mi, modelin
+    # yazdığı açıklama ve bu turda taslağa yeni bilgi girip girmediği.
+    son_aciklama_istedi: bool
+    son_aciklama: str | None
+    taslak_degisti: bool
     # Sohbetin başında bilinen, SORULMAYACAK bilgiler (Keşif'te kayıt formunun
     # profil alanları). Çıkarımda sistem talimatının ardından ayrı bir sistem
     # mesajı olarak gider; boşsa hiç gitmez (docs/plans/genc-akisi.md § 5.3).
@@ -89,6 +103,30 @@ class SohbetDurumu(TypedDict, total=False):
     # İhtiyaç sohbetinde ilanın kimi aradığı (genc | firma); hangi soru setinin
     # (grafik) devam edeceğini belirler (docs/plans/firma-akisi.md § 5).
     aranan: str | None
+
+
+class SohbetCikarimi(BaseModel):
+    """Her sohbet ajanının çıkarım şemasının tabanı: açıklama isteği.
+
+    Sahada görüldü: genç "örnek verir misin?" dedi, sistem cevaptan yeni bir
+    alan çıkmadığı için sıradaki soruya geçti. Açıklama isteği ayrı bir
+    bilgi olarak alınır; karar düğümü aynı soruyu açıklamayla yeniden sorar.
+    """
+
+    aciklama_istedi: bool = Field(
+        default=False,
+        description=(
+            "Kullanıcı bu turda son soruyu cevaplamak yerine açıklama ya da örnek "
+            "istediyse True ('örnek verir misin', 'anlamadım', 'ne demek istiyorsun')."
+        ),
+    )
+    aciklama: str | None = Field(
+        default=None,
+        description=(
+            "aciklama_istedi True ise: son soruyu, kullanıcının anlattıklarına uyan kısa "
+            "bir örnekle açıklayan 1-2 cümle. Soruyu tekrar yazma; sistem ekliyor."
+        ),
+    )
 
 
 @dataclass(frozen=True)
@@ -109,7 +147,10 @@ class AjanTanimi:
     ad: str
     acilis_sorusu: str
     sistem_talimati: str
-    cikarim_semasi: type[BaseModel]
+    cikarim_semasi: type[SohbetCikarimi]
+    # Model açıklama istendiğini söyleyip açıklama yazmazsa kullanılan metin.
+    # Ajana göre hitap değişiyor (gence "sen", firmaya "siz").
+    aciklama_yedegi: str
     # Üzerine yazılan alanlar (tek değer) ve tekrarsız eklenen liste alanları
     skaler_alanlar: tuple[str, ...] = ()
     liste_alanlari: tuple[str, ...] = ()
@@ -270,16 +311,14 @@ def istem_mesajlari(tanim: AjanTanimi, durum: Mapping[str, Any]) -> list[AnyMess
 def _acilis_dugumu(tanim: AjanTanimi, ek_baslangic: Mapping[str, Any]):
     async def acilis(durum: dict[str, Any]) -> dict[str, Any]:
         """Sohbeti açar. LLM çağrısı yok — açılış sorusu sabit."""
-        return {
-            "mesajlar": [AIMessage(content=tanim.acilis_sorusu)],
-            "taslak": bos_taslak(tanim),
-            "takip_turu": 0,
-            "ek_takip_turu": 0,
-            "sorulan_ekler": [],
-            "sonraki_soru": tanim.acilis_sorusu,
-            "taslak_hazir": False,
+        return soru_durumu(
+            tanim.acilis_sorusu,
+            taslak=bos_taslak(tanim),
+            takip_turu=0,
+            ek_takip_turu=0,
+            sorulan_ekler=[],
             **ek_baslangic,
-        }
+        )
 
     return acilis
 
@@ -296,21 +335,63 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
             cevrilmis = llm_hatasini_cevir(hata)
             raise cevrilmis from hata
 
+        onceki = durum.get("taslak") or bos_taslak(tanim)
+        taslak = birlestir(tanim, onceki, cikarim)
         return {
-            "taslak": birlestir(tanim, durum.get("taslak") or bos_taslak(tanim), cikarim),
+            "taslak": taslak,
+            "taslak_degisti": taslak != onceki,
             "son_takip_sorusu": getattr(cikarim, "takip_sorusu", None),
             "son_takip_konusu": getattr(cikarim, "takip_konusu", None),
+            "son_aciklama_istedi": cikarim.aciklama_istedi,
+            "son_aciklama": cikarim.aciklama,
             **(tanim.ek_cikarim_alanlari(cikarim) if tanim.ek_cikarim_alanlari else {}),
         }
 
     return cikar
 
 
-def _soru_durumu(soru: str, takip_turu: int) -> dict[str, Any]:
+def soru_durumu(soru: str, **guncellemeler: Any) -> dict[str, Any]:
+    """Kullanıcıya yeni bir soru: gösterilen metin ve bekleyen soru aynı,
+    açıklama sayacı sıfırdan başlar. Sayaç gibi ek alanlar `guncellemeler`le."""
     return {
         "mesajlar": [AIMessage(content=soru)],
-        "takip_turu": takip_turu + 1,
         "sonraki_soru": soru,
+        "bekleyen_soru": soru,
+        "aciklama_sayisi": 0,
+        "taslak_hazir": False,
+        **guncellemeler,
+    }
+
+
+def aciklama_gerekli(durum: Mapping[str, Any]) -> bool:
+    """Bekleyen soru açıklamayla yeniden sorulmalı mı?
+
+    Kullanıcı açıklama istediyse ve bu turda taslağa yeni bilgi girmediyse.
+    Hem soru sorup hem cevap veren kullanıcıda (taslak değişti) sohbet normal
+    ilerler; aynı soru boşuna tekrarlanmaz. Soru başına en fazla MAKS_ACIKLAMA.
+    """
+    return (
+        bool(durum.get("son_aciklama_istedi"))
+        and not durum.get("taslak_degisti")
+        and bool(_bekleyen_soru(durum))
+        and durum.get("aciklama_sayisi", 0) < MAKS_ACIKLAMA
+    )
+
+
+def _bekleyen_soru(durum: Mapping[str, Any]) -> str | None:
+    # Bu alandan önce açılmış sohbette yalnızca `sonraki_soru` var.
+    return durum.get("bekleyen_soru") or durum.get("sonraki_soru")
+
+
+def aciklama_durumu(tanim: AjanTanimi, durum: Mapping[str, Any]) -> dict[str, Any]:
+    """Açıklama + aynı soru. Hiçbir soru sayacına dokunmaz: açıklama turu
+    tur hakkından düşmez, sorulmuş ek soru listesi değişmez."""
+    aciklama = durum.get("son_aciklama") or tanim.aciklama_yedegi
+    metin = f"{aciklama}\n\n{_bekleyen_soru(durum)}"
+    return {
+        "mesajlar": [AIMessage(content=metin)],
+        "sonraki_soru": metin,
+        "aciklama_sayisi": durum.get("aciklama_sayisi", 0) + 1,
         "taslak_hazir": False,
     }
 
@@ -336,6 +417,11 @@ def zorunlu_alan_sorusu(tanim: AjanTanimi, durum: dict[str, Any], eksikler: list
 
 async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
     """Takip sorusu mu, ajana özel dal mı, yoksa taslak mı — tek karar noktası."""
+    # 0) Kullanıcı soruyu anlamadıysa sıradaki soruya geçilmez: aynı soru
+    #    açıklamayla yeniden sorulur.
+    if aciklama_gerekli(durum):
+        return aciklama_durumu(tanim, durum)
+
     taslak = durum["taslak"]
     eksikler = eksik_alanlar(tanim, taslak)
     takip_turu = durum.get("takip_turu", 0)
@@ -343,7 +429,8 @@ async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
     # 1) Zorunlu alan eksikse sormaya devam et. Kartı eksik kapatmak son
     #    çare; tavan yalnızca sonsuz döngüyü engelliyor.
     if eksikler and takip_turu < tanim.maks_zorunlu_turu:
-        return _soru_durumu(zorunlu_alan_sorusu(tanim, durum, eksikler), takip_turu)
+        soru = zorunlu_alan_sorusu(tanim, durum, eksikler)
+        return soru_durumu(soru, takip_turu=takip_turu + 1)
 
     # 2) Ajana özel eksikler (Keşif'te çıktı başına ölçülebilir sonuç ve rol).
     #    Zorunlu alanlardan sonra, kendi sayacıyla ve daha kısa bir tavanla
@@ -360,13 +447,9 @@ async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
         ]
         if sorulmamislar:
             anahtar, soru = sorulmamislar[0]
-            return {
-                "mesajlar": [AIMessage(content=soru)],
-                "ek_takip_turu": ek_takip_turu + 1,
-                "sorulan_ekler": [*sorulanlar, anahtar],
-                "sonraki_soru": soru,
-                "taslak_hazir": False,
-            }
+            return soru_durumu(
+                soru, ek_takip_turu=ek_takip_turu + 1, sorulan_ekler=[*sorulanlar, anahtar]
+            )
 
     # 3) Ajana özel dal (Keşif'te "hiç projem yok" zinciri; Tanımlama'da yok).
     if tanim.ek_dal is not None:

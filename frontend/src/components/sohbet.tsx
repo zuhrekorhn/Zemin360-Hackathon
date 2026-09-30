@@ -38,8 +38,8 @@ export function Sohbet({
           key={`${mesaj.kim}-${sira}`}
           className={
             mesaj.kim === "ajan"
-              ? "max-w-[85%] rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-sm text-pretty break-words ring-1 ring-kenar"
-              : "ml-auto max-w-[85%] rounded-3xl rounded-br-lg bg-ana px-4 py-3 text-sm text-pretty break-words text-zemin"
+              ? "max-w-[85%] rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-sm text-pretty break-words whitespace-pre-line ring-1 ring-kenar"
+              : "ml-auto max-w-[85%] rounded-3xl rounded-br-lg bg-ana px-4 py-3 text-sm text-pretty break-words whitespace-pre-line text-zemin"
           }
         >
           {mesaj.kim === "ajan" ? (

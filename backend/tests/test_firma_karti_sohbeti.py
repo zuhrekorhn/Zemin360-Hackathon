@@ -19,6 +19,8 @@ from app.agents.firma_karti import (
     bos_taslak,
     profil_baglami,
 )
+from app.agents.kesif import KESIF
+from app.agents.tanimlama import TANIMLAMA, TANIMLAMA_ORTAK
 from app.main import app
 from app.models.kurum import Kurum
 from app.servisler import firma_karti as servis
@@ -275,3 +277,10 @@ def test_hazir_taslakta_cevap_409():
         assert cevap.status_code == 409
 
     _grafikle(lambda d: SahteGrafik(d.kurum1.hesap.id, TASLAK), adimlar)
+
+
+def test_aciklama_yedekleri_firmaya_siz_der():
+    """Açıklama yedeği ajanın hitabıyla: gence "sen", firmaya "siz"."""
+    for tanim in (FIRMA_KARTI, TANIMLAMA, TANIMLAMA_ORTAK):
+        assert "aklınıza" in tanim.aciklama_yedegi
+    assert "aklına" in KESIF.aciklama_yedegi

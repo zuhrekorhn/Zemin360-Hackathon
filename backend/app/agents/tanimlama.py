@@ -18,7 +18,7 @@ from typing import Any, Literal
 
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.agents import sohbet_motoru as motor
 from app.agents.sohbet_motoru import SohbetDurumu
@@ -31,6 +31,10 @@ ACILIS_SORUSU = (
 )
 
 ZORUNLU_ALANLAR = ("problem_tanimi", "basari_kriteri")
+
+ACIKLAMA_YEDEGI = (
+    "Kesin bir cevap gerekmiyor; aklınıza gelen ilk örneği kendi cümlelerinizle yazmanız yeterli."
+)
 
 SISTEM_TALIMATI = """Sen Zemin360'ın Tanımlama Ajanı'sın. Bir kurum temsilcisiyle
 konuşuyorsun ve onun dağınık ihtiyacını yapılandırılmış bir ihtiyaç kartına çeviriyorsun.
@@ -89,7 +93,7 @@ YEDEK_SORULAR = {
 }
 
 
-class IhtiyacCikarimi(BaseModel):
+class IhtiyacCikarimi(motor.SohbetCikarimi):
     """LLM'in her turda döndürdüğü yapılandırılmış çıkarım.
 
     Boş gelen alan mevcut taslağın üzerine YAZMAZ (motor birleştirmesi).
@@ -147,6 +151,7 @@ TANIMLAMA = motor.AjanTanimi(
     acilis_sorusu=ACILIS_SORUSU,
     sistem_talimati=SISTEM_TALIMATI,
     cikarim_semasi=IhtiyacCikarimi,
+    aciklama_yedegi=ACIKLAMA_YEDEGI,
     skaler_alanlar=(
         "problem_tanimi",
         "basari_kriteri",
@@ -233,7 +238,7 @@ YEDEK_SORULAR_ORTAK = {
 }
 
 
-class OrtakIlanCikarimi(BaseModel):
+class OrtakIlanCikarimi(motor.SohbetCikarimi):
     """Ortak ilanı için yapılandırılmış çıkarım; boş alan taslağı ezmez."""
 
     problem_tanimi: str | None = None
@@ -268,6 +273,7 @@ TANIMLAMA_ORTAK = motor.AjanTanimi(
     acilis_sorusu=ACILIS_SORUSU_ORTAK,
     sistem_talimati=SISTEM_TALIMATI_ORTAK,
     cikarim_semasi=OrtakIlanCikarimi,
+    aciklama_yedegi=ACIKLAMA_YEDEGI,
     skaler_alanlar=(
         "problem_tanimi",
         "basari_kriteri",
