@@ -4,6 +4,9 @@
  * Karşılama sayfasının üst menüsü (brief § 3.1). Yalnızca / sayfasında ve
  * giriş yapılmamışken UstMenu'nün yerine gösterilir; diğer sayfalar ve
  * girişli kullanıcı her zamanki menüyü görür.
+ *
+ * Yapışkan: sayfa uzun, menü kaydırınca kaybolmasın. Bölümlerin scroll-mt
+ * değeri menünün yüksekliği (64px, lg'de 76px + çizgi); başlık altında kalmasın.
  */
 
 import { Menu, X } from "lucide-react";
@@ -38,7 +41,7 @@ export function KarsilamaMenusu() {
     ));
 
   return (
-    <header className="border-b border-kenar bg-zemin">
+    <header className="sticky top-0 z-40 border-b border-kenar bg-zemin">
       <nav
         aria-label="Ana menü"
         className={cn(KAPSAYICI, "flex h-16 items-center gap-4 lg:h-[76px]")}

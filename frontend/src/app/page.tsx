@@ -140,7 +140,7 @@ export default function AnaSayfa() {
         <section
           id="surec"
           aria-labelledby="surec-baslik"
-          className="scroll-mt-4 bg-muted py-16 sm:py-24 lg:py-[104px]"
+          className="scroll-mt-16 lg:scroll-mt-[77px] bg-muted py-16 sm:py-24 lg:py-[104px]"
         >
           <div className={cn(KAPSAYICI, "flex flex-col gap-8 lg:gap-12")}>
             <div className="flex max-w-[780px] flex-col gap-3.5">

@@ -42,7 +42,7 @@ export function NasilCalisir() {
     <section
       id="nasil"
       aria-labelledby="nasil-baslik"
-      className="scroll-mt-4 py-16 sm:py-24 lg:py-28"
+      className="scroll-mt-16 lg:scroll-mt-[77px] py-16 sm:py-24 lg:py-28"
     >
       <div className={cn(KAPSAYICI, "flex flex-col gap-8 lg:gap-11")}>
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between md:gap-10">
