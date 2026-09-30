@@ -26,6 +26,7 @@ from app.api.profil import gencin_profilini_guncelle
 from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
 from app.core.hatalar import HIZ_SINIRI_MESAJI
+from app.core.is_kalemi import kanit_bekliyor
 from app.core.metin import gecerli_eposta
 from app.db.session import get_session
 from app.models.hesap import ROL_GENC, Hesap
@@ -165,6 +166,7 @@ async def kart_onayla(
     if not kullanici.sehir:
         raise HTTPException(status_code=422, detail=SEHIR_GEREKLI)
 
+    is_kalemleri = [_is_kalemi(c) for c in taslak.somut_ciktilar]
     kart = YetenekKarti(
         oturum_id=istek.oturum_id,
         kullanici_id=kullanici.id,
@@ -174,9 +176,8 @@ async def kart_onayla(
         araclar_teknolojiler=taslak.araclar_teknolojiler,
         sertifikalar=taslak.sertifikalar,
         diller=taslak.diller,
-        # Kanıt linki olmayan bir çıktı varsa kart "kanıt bekleyen" sayılır.
-        kanit_bekleyen=any(not c.kanit_linki for c in taslak.somut_ciktilar),
-        somut_ciktilar=[_is_kalemi(c) for c in taslak.somut_ciktilar],
+        kanit_bekleyen=kanit_bekliyor(is_kalemleri),
+        somut_ciktilar=is_kalemleri,
     )
     oturum.add(kart)
     try:

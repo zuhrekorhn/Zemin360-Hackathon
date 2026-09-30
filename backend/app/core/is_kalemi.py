@@ -8,6 +8,7 @@ tek yerde.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sized
 from typing import Literal, Protocol
 
 PROJE = "proje"
@@ -63,3 +64,19 @@ def is_kalemi_metni(cikti: IsKalemiMetni) -> str | None:
         getattr(cikti, "olculebilir_sonuc", None),
         getattr(cikti, "kendi_rolu", None),
     )
+
+
+class KanitliKalem(Protocol):
+    kanit_linki: str | None
+    referans_istekleri: Sized
+
+
+def kanit_bekliyor(kalemler: Iterable[KanitliKalem]) -> bool:
+    """Kart kanıt bekliyor mu: ne linki ne referans isteği olan bir iş kalemi var mı?
+
+    Sohbet gence "link ya da doğrulayabilecek birinin e-postası, ikisi de olur"
+    diyor; referans veren gence yine "kanıt bekliyor" denmemeli. Yanıtı
+    beklenen ya da gelmemiş referans da sayılır: genç yapabileceğini yaptı.
+    Onay, kart düzenleme ve Doğrulama aynı kuralı buradan kullanır.
+    """
+    return any(not kalem.kanit_linki and not kalem.referans_istekleri for kalem in kalemler)

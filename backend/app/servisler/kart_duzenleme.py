@@ -20,6 +20,7 @@ from app.agents.kart_duzenleme import (
     dogrulama_sifirlanmali_mi,
 )
 from app.agents.kesif import potansiyel_kurali
+from app.core.is_kalemi import kanit_bekliyor
 from app.models.eslesme import Eslesme
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -77,7 +78,7 @@ async def kart_degisti(oturum: AsyncSession, kart: YetenekKarti) -> int:
       ilgilendi, kabul, red) dokunulmaz (plan § 0, karar 14).
     """
     kart.versiyon += 1
-    kart.kanit_bekleyen = any(not c.kanit_linki for c in kart.somut_ciktilar)
+    kart.kanit_bekleyen = kanit_bekliyor(kart.somut_ciktilar)
     kart.deneyim_seviyesi = potansiyel_kurali(kart.deneyim_seviyesi, len(kart.somut_ciktilar))
     await oturum.execute(
         update(Eslesme)

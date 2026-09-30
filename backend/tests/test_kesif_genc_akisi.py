@@ -22,7 +22,7 @@ from app.agents.kesif import (
 )
 from app.api.auth import hesap_olustur
 from app.api.kesif import KART_EKSIK
-from app.core.is_kalemi import birlesik_aciklama
+from app.core.is_kalemi import birlesik_aciklama, kanit_bekliyor
 from app.core.kimlik import token_uret
 from app.core.metin import gecerli_eposta
 from app.main import app
@@ -155,6 +155,18 @@ def test_referansi_verilmis_kaleme_kanit_sorulmaz():
     assert sonuc["taslak_hazir"] is True
 
 
+def test_referansi_olan_kalem_kanit_beklemez():
+    """Sohbet "link ya da e-posta, ikisi de olur" diyor; ikisi de kanıt sayılır."""
+
+    def kalem(link=None, referanslar=()):
+        return SimpleNamespace(kanit_linki=link, referans_istekleri=list(referanslar))
+
+    assert kanit_bekliyor([kalem(link="https://github.com/elif/x")]) is False
+    assert kanit_bekliyor([kalem(referanslar=["hoca@ornek.edu.tr"])]) is False
+    assert kanit_bekliyor([kalem(link="https://x.org"), kalem()]) is True
+    assert kanit_bekliyor([]) is False
+
+
 def test_birlesik_aciklama_eski_satirda_tekrar_etmez():
     """Bu alanlardan önceki satırlarda sonuç zaten açıklamanın içinde."""
     eski = "Ödünç takibi. 400 kitap takip ediliyor."
@@ -220,6 +232,7 @@ def test_onay_is_kalemi_alanlarini_ve_referansi_kaydeder(monkeypatch):
             assert cikti_yaniti["is_turu"] == "gonulluluk"
             assert cikti_yaniti["kendi_rolu"] == "backend'i ben yazdım"
             assert "Hoca@" not in yanit.text  # referans e-postası kart görünümünde yok
+            assert govde["kanit_bekleyen"] is False  # linksiz ama referanslı çalışma
 
             kart = await oturum.scalar(
                 select(YetenekKarti)

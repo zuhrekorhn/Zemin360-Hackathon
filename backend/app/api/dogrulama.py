@@ -30,6 +30,7 @@ from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
+from app.core.is_kalemi import kanit_bekliyor
 from app.core.llm import HizSinirHatasi
 from app.db.session import get_session
 from app.models.bildirim import TUR_REFERANS_YANITI
@@ -341,18 +342,17 @@ async def _rubrigi_yaz(
 
 
 async def _kanit_bekleyen_guncelle(oturum: AsyncSession, yetenek_karti_id: uuid.UUID) -> None:
-    """Kartın `kanit_bekleyen` bayrağını çıktılarla tutarlı tutar.
-
-    Bayrak Keşif'te kart oluşurken de aynı kuralla set ediliyordu: kanıt
-    linki olmayan bir çıktı varsa kart kanıt bekliyor sayılır.
-    """
+    """Kartın `kanit_bekleyen` bayrağını çıktılarla tutarlı tutar
+    (kural: app/core/is_kalemi.kanit_bekliyor; onay ve düzenleme de onu kullanır)."""
     kart = await oturum.scalar(
         select(YetenekKarti)
-        .options(selectinload(YetenekKarti.somut_ciktilar))
+        .options(
+            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.referans_istekleri)
+        )
         .where(YetenekKarti.id == yetenek_karti_id)
     )
     if kart is not None:
-        kart.kanit_bekleyen = any(not c.kanit_linki for c in kart.somut_ciktilar)
+        kart.kanit_bekleyen = kanit_bekliyor(kart.somut_ciktilar)
 
 
 async def _durum_yaniti(

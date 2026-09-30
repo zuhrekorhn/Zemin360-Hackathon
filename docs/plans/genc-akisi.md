@@ -101,7 +101,7 @@ Her bileşen 0-3 arası. Tek sayıya indirilmez, yan yana gösterilir.
   1. Keşif sohbetinde, iş kalemi başına (`SomutCiktiTaslak.kanit_linki` → `somut_cikti.kanit_linki`). Yani zaten iş kalemine bağlı, karta genel bir liste olarak değil.
   2. Kart sayfasındaki formdan, yine iş kalemi başına (`kanit-ekle`).
 - **Referans kişi yalnızca kart sayfasından** ekleniyor; sohbette sorulmuyor. Referans linki e-postayla gitmiyor, genç kendisi iletiyor.
-- **`kanit_bekleyen` bayrağı:** Kartın linksiz en az bir iş kalemi varsa `true`.
+- **`kanit_bekleyen` bayrağı:** Kartın ne linki ne referans isteği olan en az bir iş kalemi varsa `true` (30 Eyl: referans da kanıt sayılır; kural tek yerde, `app/core/is_kalemi.kanit_bekliyor`).
 
 ---
 
