@@ -171,6 +171,10 @@ Plan ve kararlar: [`plans/firma-akisi.md`](plans/firma-akisi.md). Özellik dondu
 - [x] GİRVAK sayıları, Canlılık süzgeci, demo verisi
 - [x] Belgeler ve deneme senaryosu (elle deneme: `plans/firma-akisi-deneme.md`)
 
+## Güvenlik: SSRF engeli (30 Eyl) ✓
+
+- [x] Kanıt linki kontrolü iç ağa istek atmaz (`backend/app/core/guvenli_istek.py`): şema/port sınırı, bütün çözülen IP'ler genel internette, yönlendirme adımları denetlenir, bağlantı denetlenen IP'ye sabitlenir (DNS yeniden bağlama kapalı).
+
 ## Gözden geçirme ve düzeltme günü (3 Eki)
 
 Yeni özellik değil; Faz B'de bilinçli olarak dışarıda bırakılan ve denemede

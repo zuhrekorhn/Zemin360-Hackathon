@@ -483,7 +483,7 @@ Eşleştirme pipeline'ı (`_pipeline_calistir`) `app/api/eslestirme.py` içinde 
 
 ## 14. Kapsam dışı notlar (düzeltilmeyecek, yalnızca not)
 
-- **SSRF:** Kanıt linki kontrolünde iç/özel IP engeli yok. Ayrı görev olarak ele alınacak.
+- **SSRF:** ~~Kanıt linki kontrolünde iç/özel IP engeli yok.~~ Kapandı (30 Eyl, `app/core/guvenli_istek.py`).
 - **Ana sayfa:** Hâlâ "Faz 2" diyor (`frontend/src/app/page.tsx:140`).
 - **Supervisor:** Belgelerdeki "LangGraph supervisor pattern" ifadesi kodla uyuşmuyor.
 
@@ -531,7 +531,7 @@ Eşleştirme pipeline'ı (`_pipeline_calistir`) `app/api/eslestirme.py` içinde 
 
 | İş | Öncelik | Not |
 |---|---|---|
-| Kanıt linki kontrolünde iç/özel IP engeli (SSRF) | **D** | Sunucu, gencin verdiği adrese istek atıyor; bulutta iç adresleri yoklatabilir |
+| ~~Kanıt linki kontrolünde iç/özel IP engeli (SSRF)~~ | **Kapandı** (30 Eyl) | `app/core/guvenli_istek.py`: iç ağ, şema/port, yönlendirme adımları ve DNS yeniden bağlama |
 | KVKK aydınlatma metninin hukuki onayı | **D** | `/kvkk` şu an platformun ne yaptığını anlatan taslak; GİRVAK'ın onayladığı metin gelmeli |
 | Tohum verinin genç akışı alanlarıyla hazırlanması | **D** | Faz E: kayıt alanları, ilgi gösterilmiş ve karşılıklı ilgili örnekler |
 | Faz E'nin kendi maddeleri | **D** | Canlı CORS, `TARAMA_ANAHTARI` ile cron, migration'ların sıfırdan çalışması |

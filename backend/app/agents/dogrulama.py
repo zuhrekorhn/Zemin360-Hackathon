@@ -16,6 +16,7 @@ docs/agent-specs.md § 4. Sınırlar oradan:
 from __future__ import annotations
 
 import datetime as dt
+import logging
 import math
 import re
 from collections.abc import Sequence
@@ -27,6 +28,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
 
+from app.core.guvenli_istek import GuvensizAdres, guvenli_get
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 
 # Referans yanıtı için tanınan süre (docs/agent-specs.md § 4.2: 5-7 gün).
@@ -43,6 +45,8 @@ DURUM_YANIT_YOK = "yanit_yok"
 # 3 ("ne iyi ne kötü") bir onay değildir, o yüzden 2'den fazlasını vermiyor;
 # tam puan yalnızca açık bir olumlu referansta (5) veriliyor.
 REFERANS_PUAN_ESLEMESI = {1: 0, 2: 1, 3: 1, 4: 2, 5: 3}
+
+logger = logging.getLogger("zemin360.dogrulama")
 
 LINK_TIMEOUT_SANIYE = 8
 # Sayfanın tamamı çekilmiyor: <head> bitene kadar okunuyor. Sabit bir ilk
@@ -256,20 +260,33 @@ def link_ozetini_cikar(html: str) -> str:
 # --- Kanıt kontrolü --------------------------------------------------------
 
 
-async def linki_kontrol_et(kanit_linki: str | None) -> LinkKontrolu:
-    """Link gerçekten açılıyor mu? İçerik analizi yok, erişilebilirlik var."""
+async def linki_kontrol_et(
+    kanit_linki: str | None, *, transport: httpx.AsyncBaseTransport | None = None
+) -> LinkKontrolu:
+    """Link gerçekten açılıyor mu? İçerik analizi yok, erişilebilirlik var.
+
+    İstek `app/core/guvenli_istek.py` üzerinden: iç ağa, desteklenmeyen şemaya
+    ya da porta giden adres (yönlendirme adımları dahil) hiç istenmez ve link
+    "açılmıyor" sayılır (SSRF engeli). `transport` yalnızca testler için.
+    """
     if not kanit_linki:
         return LinkKontrolu(False, None, "(kanıt linki verilmedi)", "kanıt linki yok")
 
     adres = linki_normalize_et(kanit_linki)
     try:
-        async with httpx.AsyncClient(timeout=LINK_TIMEOUT_SANIYE, follow_redirects=True) as istemci:
-            async with istemci.stream("GET", adres) as yanit:
-                if not yanit.is_success:
-                    return LinkKontrolu(
-                        False, yanit.status_code, "(sayfa açılmadı)", f"HTTP {yanit.status_code}"
-                    )
-                govde = await _basligi_oku(yanit)
+        async with guvenli_get(
+            adres, zaman_asimi=LINK_TIMEOUT_SANIYE, transport=transport
+        ) as yanit:
+            if not yanit.is_success:
+                return LinkKontrolu(
+                    False, yanit.status_code, "(sayfa açılmadı)", f"HTTP {yanit.status_code}"
+                )
+            govde = await _basligi_oku(yanit)
+    except GuvensizAdres as hata:
+        logger.info("Kanıt linki güvenli değil, istenmedi: %s (%s)", adres, hata)
+        return LinkKontrolu(
+            False, None, "(sayfa açılmadı)", "adres herkese açık bir web sayfası değil"
+        )
     except httpx.HTTPError as hata:
         return LinkKontrolu(False, None, "(sayfa açılmadı)", f"erişilemedi: {type(hata).__name__}")
 

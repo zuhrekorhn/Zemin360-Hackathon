@@ -25,7 +25,7 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 
 ## Şu An Neredeyiz
 
-Faz A-D, **genç akışı** (28-29 Eyl, `docs/plans/genc-akisi.md`) ve **firma akışı** (29-30 Eyl, `docs/plans/firma-akisi.md`) tamamlandı; altı ajan da çalışıyor. Takvim ve faz planı: `docs/roadmap.md` (her oturumda önce onu oku). Sırada SSRF engeli, sonra elle deneme, toplu metin denetimi (`docs/plans/*-metinler.md`) ve deploy hazırlığı.
+Faz A-D, **genç akışı** (28-29 Eyl, `docs/plans/genc-akisi.md`) ve **firma akışı** (29-30 Eyl, `docs/plans/firma-akisi.md`) tamamlandı; altı ajan da çalışıyor. Takvim ve faz planı: `docs/roadmap.md` (her oturumda önce onu oku). SSRF engeli de kapandı (`app/core/guvenli_istek.py`: sunucudan kullanıcı adresine atılan her istek oradan geçer). Sırada elle deneme, toplu metin denetimi (`docs/plans/*-metinler.md`) ve deploy hazırlığı.
 
 **Firma akışı (ayrıntı `docs/plans/firma-akisi.md` § 0):** firma kayıtta türünü (girişim/KOBİ/kurumsal), sektörünü, şehrini verir; isteğe bağlı firma kartını sohbetle çıkarır (`firma_karti`, aynı motor). Panelde iki kapı: genç yetenek ya da iş birliği ortağı (`ihtiyac_karti.aranan`). **Aynı eşleşme tablosu ve pipeline**: `eslesme`'de `yetenek_karti_id` ya da `firma_karti_id`, tam biri dolu; aday kaynağı ilana göre. Durum makinesindeki `genc` rolü "aday tarafı" demektir (karar 12): ortak firma o taraftadır, rol kontrolü `sahiplik.eslesmedeki_taraf` ile, hesabın rolünden değil. GİRVAK firmayı alan adı ipucuyla (ağ isteği yok) doğrular. Canlılık firma–firma eşleşmelerini taramaz.
 

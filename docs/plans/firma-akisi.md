@@ -199,7 +199,7 @@ Sıra, en değerli ve en az riskli parçalar önce bitsin diye böyle. Kayma olu
 - Firma–firma için Canlılık hatırlatmaları (karar 18).
 - Kolonların "aday/ilan" adıyla yeniden adlandırılması (karar 12).
 - Web sitesine bağlanarak doğrulama, vergi numarası, ticaret sicili.
-- SSRF engeli: sıradaki ayrı görev.
+- SSRF engeli: ayrı görev olarak kapandı (30 Eyl).
 - Toplu metin denetimi: ayrı adım; yeni metinler ise baştan rehbere uygun yazılır.
 
 ## 15. Kapanış (30 Eyl)
@@ -237,7 +237,7 @@ Sıra, en değerli ve en az riskli parçalar önce bitsin diye böyle. Kayma olu
 
 | İş | Öncelik |
 |---|---|
-| SSRF engeli (kanıt linki kontrolü) | **D**, sıradaki görev |
+| ~~SSRF engeli (kanıt linki kontrolü)~~ | **Kapandı** (30 Eyl), `app/core/guvenli_istek.py` |
 | Elle tarayıcı denemesi (genç + firma senaryoları) | **T** |
 | Toplu metin denetimi (`genc-akisi-metinler.md`, `firma-akisi-metinler.md`; rehbere aday firma sütunu) | **T** |
 | Kolonları "aday/ilan" adıyla yeniden adlandırma | **S** |

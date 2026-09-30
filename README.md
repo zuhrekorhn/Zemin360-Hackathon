@@ -218,7 +218,7 @@ Genç akışının kararları ve bilinen sınırları: [`docs/plans/genc-akisi.m
 
 **Takip kapsamı:** ajan plan ve özet önerir, karar vermez; tamamlanma bir kuraldır (son adım iki tarafça tamamlanınca). Onaylanan plan kilitlidir. Tamamlanmış pilot, Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125; pilotsuz kartın skoru değişmez, alakayı yaratmaz). Durum özeti kesilebilir iş: çökerse ya da kesilirse döngü aynen çalışır.
 
-Sırada: SSRF engeli, elle deneme, toplu metin denetimi ve yayına alma.
+Kanıt linki kontrolü iç ağa istek atmaz (SSRF engeli, `backend/app/core/guvenli_istek.py`). Sırada: elle deneme, toplu metin denetimi ve yayına alma.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım
