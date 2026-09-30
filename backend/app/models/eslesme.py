@@ -37,8 +37,16 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
     # docs/plans/firma-akisi.md § 0 karar 11): tam biri dolu. Aynı tablo, aynı
     # durum makinesi, aynı iş birliği ilişkisi.
     __table_args__ = (
-        UniqueConstraint("ihtiyac_karti_id", "yetenek_karti_id"),
-        UniqueConstraint("ihtiyac_karti_id", "firma_karti_id"),
+        # Adlar açık: kuraldaki "uq" adı yalnızca ilk sütunu içerdiği için iki
+        # kısıt aynı ada düşüyordu. Adlar veritabanındakilerle aynı.
+        UniqueConstraint(
+            "ihtiyac_karti_id", "yetenek_karti_id", name="uq_eslesme_ihtiyac_karti_id"
+        ),
+        UniqueConstraint(
+            "ihtiyac_karti_id",
+            "firma_karti_id",
+            name="eslesme_ihtiyac_karti_id_firma_karti_id_key",
+        ),
         CheckConstraint(
             "num_nonnulls(yetenek_karti_id, firma_karti_id) = 1", name="eslesme_tek_aday"
         ),
