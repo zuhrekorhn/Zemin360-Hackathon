@@ -8,6 +8,7 @@ import asyncio
 import uuid
 from types import SimpleNamespace
 
+import pytest
 from langchain_core.messages import HumanMessage, SystemMessage
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -20,6 +21,7 @@ from app.agents.kesif import (
     profil_baglami,
 )
 from app.api.auth import hesap_olustur
+from app.api.kesif import KART_EKSIK
 from app.core.is_kalemi import birlesik_aciklama
 from app.core.kimlik import token_uret
 from app.core.metin import gecerli_eposta
@@ -232,3 +234,61 @@ def test_onay_is_kalemi_alanlarini_ve_referansi_kaydeder(monkeypatch):
             assert [r.referans_email for r in referanslar] == ["hoca@ornek.edu.tr"]
 
     asyncio.run(senaryo())
+
+
+# --- Onay: boş ya da yer tutucu zorunlu alan kaydedilmez --------------------------------------
+
+
+@pytest.mark.parametrize(
+    "eksik",
+    [
+        {"rol_alani": None},
+        {"rol_alani": "   "},
+        {"deneyim_seviyesi": "belirtilmedi"},
+        {"sektor_ilgi_alani": []},
+    ],
+    ids=["rol-yok", "rol-bosluk", "deneyim-yer-tutucu", "sektor-yok"],
+)
+def test_onay_eksik_zorunlu_alani_kabul_etmez(monkeypatch, eksik):
+    yanit = asyncio.run(_taslagi_onayla(monkeypatch, {**taslak(), **eksik}))
+    assert yanit.status_code == 422
+    assert yanit.json()["detail"] == KART_EKSIK
+
+
+def test_onay_arac_listesi_bos_karti_kabul_eder(monkeypatch):
+    """Çalışması olmayan gencin araç listesi boş olabilir."""
+    yanit = asyncio.run(_taslagi_onayla(monkeypatch, {**taslak(), "araclar_teknolojiler": []}))
+    assert yanit.status_code == 201
+
+
+def test_duzeltilmis_taslakla_eksik_alan_tamamlanir(monkeypatch):
+    """Sohbet rolü çıkaramadı; genç taslak ekranında yazdı."""
+    duzeltilmis = {**taslak(), "rol_alani": "  veri analisti "}
+    yanit = asyncio.run(_taslagi_onayla(monkeypatch, {**taslak(), "rol_alani": None}, duzeltilmis))
+    assert yanit.status_code == 201
+    assert yanit.json()["rol_alani"] == "veri analisti"
+
+
+async def _taslagi_onayla(monkeypatch, sohbet_taslagi: dict, duzeltilmis: dict | None = None):
+    """Sohbeti verilen taslakla bitmiş sayar ve onay ucunu çağırır."""
+    _embedding_sahte(monkeypatch)
+    async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+        hesap = await hesap_olustur(
+            oturum,
+            email=f"test-{uuid.uuid4().hex[:8]}@ornek.com",
+            sifre="yeterince-uzun",
+            rol="genc",
+            ad="Elif",
+        )
+        kullanici = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
+        kullanici.sehir = "İzmir"
+        await oturum.commit()
+        app.state.kesif_grafigi = HazirTaslakGrafigi(hesap.id, sohbet_taslagi)
+        try:
+            return await istemci.post(
+                "/kesif/kart/onayla",
+                headers={"Authorization": f"Bearer {token_uret(hesap.id, 'genc')}"},
+                json={"oturum_id": str(uuid.uuid4()), "duzeltilmis_taslak": duzeltilmis},
+            )
+        finally:
+            del app.state.kesif_grafigi

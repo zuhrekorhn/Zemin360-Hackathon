@@ -217,6 +217,7 @@ def test_kart_onayi_hazirlamayi_siraya_koyar(monkeypatch, kart_hazirlama_arka_pl
             taslak = {
                 "rol_alani": "backend geliştirici",
                 "deneyim_seviyesi": "orta",
+                "sektor_ilgi_alani": ["eğitim"],
                 "somut_ciktilar": [{"baslik": "İş"}],
             }
             app.state.kesif_grafigi = HazirTaslakGrafigi(hesap.id, taslak)

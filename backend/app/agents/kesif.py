@@ -5,8 +5,8 @@ Grafik iskeleti, taslak birleştirme ve LLM zinciri ortak motorda
 
 docs/agent-specs.md § 1. Sınırlar oradan geliyor; üç sayaç birbirinden ayrı:
   - Zorunlu alanlar (rol, deneyim, sektör, araçlar) eksikken en fazla 6 tur
-    takip sorusu. Tavan yalnızca sonsuz döngüye karşı; gelinirse alanlar
-    "belirtilmedi" ile dolar (madde 2).
+    takip sorusu. Tavan yalnızca sonsuz döngüye karşı; gelinirse alan boş
+    kalır ve genç onu taslak ekranında doldurur (yer tutucu yazılmaz).
   - Çıktı başına ölçülebilir sonuç, kişinin kendi payı ve kanıt/referans:
     en fazla 4 soru, her biri BİR kez. Kullanıcı bilmiyorsa ısrar edilmez,
     sıradakine geçilir.
@@ -285,8 +285,11 @@ def potansiyel_kurali(deneyim_seviyesi: str | None, cikti_sayisi: int) -> str | 
 
 
 def _tamamla(taslak: dict[str, Any]) -> dict[str, Any]:
-    """Taslağı kapatmadan önceki son rötuş: potansiyel kuralı, boş zorunlu
-    alanlara yer tutucu.
+    """Taslağı kapatmadan önceki son rötuş: potansiyel kuralı.
+
+    Boş kalan zorunlu alana yer tutucu YAZILMAZ: "belirtilmedi" rolü ve
+    deneyimi karta, eşleştirme metnine ve gerekçelere giriyordu. Genç alanı
+    taslak ekranında doldurur; onay boş alanı kabul etmez (OnayliKart).
 
     Sonuç ve rol artık açıklamaya birleştirilmiyor: iş kaleminde ayrı alanlar
     (düzenlenebilsinler diye). Rubrik ve embedding onları birleşik okuyor
@@ -297,9 +300,7 @@ def _tamamla(taslak: dict[str, Any]) -> dict[str, Any]:
     son["deneyim_seviyesi"] = potansiyel_kurali(
         son.get("deneyim_seviyesi"), len(son["somut_ciktilar"])
     )
-    return motor.zorunlu_alanlari_doldur(
-        son, ZORUNLU_ALANLAR, metin_alanlari=("rol_alani", "deneyim_seviyesi")
-    )
+    return son
 
 
 KESIF = motor.AjanTanimi(

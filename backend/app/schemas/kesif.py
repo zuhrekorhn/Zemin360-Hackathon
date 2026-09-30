@@ -10,6 +10,7 @@ from pydantic import BaseModel, BeforeValidator, Field
 from app.core.is_kalemi import IsTuru, is_turu_hosgorulu
 from app.core.musaitlik import KatiMusaitlikler
 from app.schemas.dogrulama import GuvenSkoruYaniti
+from app.schemas.kart_duzenleme import DeneyimSeviyesi, DoluKisaMetin, Etiketler
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
 
 __all__ = ["SohbetBaslatIstegi", "SohbetCevapIstegi"]
@@ -39,6 +40,20 @@ class KartTaslagi(BaseModel):
     sertifikalar: list[str] = Field(default_factory=list)
     diller: list[str] = Field(default_factory=list)
     somut_ciktilar: list[SomutCiktiTaslagi] = Field(default_factory=list)
+
+
+class OnayliKart(BaseModel):
+    """Onayda kaydedilecek kartın zorunlu alanları.
+
+    Taslak (KartTaslagi) boş alan taşıyabilir, bu taşıyamaz. Tipler kart
+    düzenlemeyle aynı: sohbetin yer tutucusu ("belirtilmedi") ya da tanınmayan
+    bir deneyim seviyesi veritabanına giremez. Sektör eşleştirme metnine
+    girdiği için en az bir tane; araçlar boş olabilir (çalışması olmayan genç).
+    """
+
+    rol_alani: DoluKisaMetin
+    deneyim_seviyesi: DeneyimSeviyesi
+    sektor_ilgi_alani: Annotated[Etiketler, Field(min_length=1)]
 
 
 class SohbetYaniti(BaseModel):

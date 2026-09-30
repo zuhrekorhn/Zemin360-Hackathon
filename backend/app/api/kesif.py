@@ -9,6 +9,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,6 +35,7 @@ from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import (
     KartOnaylaIstegi,
     KartTaslagi,
+    OnayliKart,
     SohbetBaslatIstegi,
     SohbetCevapIstegi,
     SohbetYaniti,
@@ -48,6 +50,7 @@ SOHBET_BASLATILAMADI = "Sohbet şu an başlatılamadı. Biraz sonra yeniden dene
 SOHBET_YOK = "Bu sohbet bulunamadı. Yeni bir sohbet başlatabilirsin."
 
 SEHIR_GEREKLI = "Şehir gerekli: fırsatlar şehre göre eşleşiyor."
+KART_EKSIK = "Kartında rol, deneyim ve en az bir sektör ilgisi olmalı."
 
 
 def _grafik(request: Request):
@@ -150,8 +153,10 @@ async def kart_onayla(
             )
         }
     )
-    if not taslak.rol_alani or not taslak.deneyim_seviyesi:
-        raise HTTPException(status_code=422, detail="Kartında rol ve deneyim seviyesi olmalı.")
+    try:
+        onayli = OnayliKart.model_validate(taslak.model_dump())
+    except ValidationError as hata:
+        raise HTTPException(status_code=422, detail=KART_EKSIK) from hata
 
     # Kart token'daki hesabın profiline bağlanır; onay yalnızca eşleştirmeyi
     # etkileyen alanları günceller (docs/faz-b-kimlik-ve-dongu.md § 4).
@@ -163,9 +168,9 @@ async def kart_onayla(
     kart = YetenekKarti(
         oturum_id=istek.oturum_id,
         kullanici_id=kullanici.id,
-        rol_alani=taslak.rol_alani,
-        deneyim_seviyesi=taslak.deneyim_seviyesi,
-        sektor_ilgi_alani=taslak.sektor_ilgi_alani,
+        rol_alani=onayli.rol_alani,
+        deneyim_seviyesi=onayli.deneyim_seviyesi,
+        sektor_ilgi_alani=onayli.sektor_ilgi_alani,
         araclar_teknolojiler=taslak.araclar_teknolojiler,
         sertifikalar=taslak.sertifikalar,
         diller=taslak.diller,

@@ -43,7 +43,8 @@ MAKS_TAKIP_TURU = 2
 # Zorunlu alanlar için ayrı ve daha yüksek bir tavan: eksik alanla kart
 # kapatmak, sohbeti bir tur uzatmaktan kötü (boş "sektör ilgisi" eşleştirmede
 # doğrudan skora yansıyor). Yine de sonsuz döngü olmasın diye bir sınır var;
-# tavana gelinirse alanlar yer tutucuyla doldurulup kart kapanıyor.
+# tavana gelinirse taslak kapanır, boş alanı ajanın `tamamla`sı ya da
+# kullanıcı taslak ekranında tamamlar.
 MAKS_ZORUNLU_TURU = 6
 # Kullanıcı aynı soru için en fazla bu kadar açıklama alır; sonra sohbet
 # ilerler. Sınır yoksa "anlamadım" diyen biri aynı soruda takılı kalabilir.

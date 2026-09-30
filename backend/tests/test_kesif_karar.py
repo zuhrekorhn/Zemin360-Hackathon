@@ -94,7 +94,10 @@ def test_zorunlu_alan_icin_iki_turdan_sonra_da_sorulur():
 
 
 def test_zorunlu_tavaninda_kart_yine_de_kapanir():
-    """Sonsuz döngü olmasın: tavanda alanlar yer tutucuyla dolup kart çıkar.
+    """Sonsuz döngü olmasın: tavanda taslak kapanır, boş alan boş kalır.
+
+    Yer tutucu ("belirtilmedi") yazılmaz: karta ve eşleştirme metnine
+    giriyordu. Genç alanı taslak ekranında doldurur, onay boşu kabul etmez.
 
     Çıktının ölçüt ve rol bilgisi tam: ek sorular kendi sayacıyla ayrıca
     soruluyor (bkz. test_zorunlu_alanlar_uzun_surse_de_ek_soru_sorulur),
@@ -116,7 +119,7 @@ def test_zorunlu_tavaninda_kart_yine_de_kapanir():
         }
     )
     assert sonuc["taslak_hazir"] is True
-    assert sonuc["taslak"]["rol_alani"] == "belirtilmedi"
+    assert sonuc["taslak"]["rol_alani"] is None
 
 
 def test_cikti_olcutu_eksikse_sorulur():

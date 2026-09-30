@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { ReferansDurumu, SomutCiktiTaslagi } from "@/lib/api";
 import {
   degisenIsKalemiAlanlari,
+  eksikKartAlanlari,
   gostergeSifirlanir,
+  kartAlanDegerleri,
+  kartAlanlariniCevir,
   referansSatiri,
   virgulluListe,
 } from "@/lib/kart-duzenleme";
@@ -66,5 +69,62 @@ describe("referansSatiri", () => {
     expect(
       referansSatiri(referans({ durum: "yanit_yok" })).yenidenIstenebilir,
     ).toBe(true);
+  });
+});
+
+describe("kart alanları (taslak ve düzenleme ortak)", () => {
+  const bosTaslak = {
+    rol_alani: null,
+    deneyim_seviyesi: null,
+    sektor_ilgi_alani: [],
+    araclar_teknolojiler: [],
+  };
+
+  it("boş taslak boş form alanı olur, yer tutucu yazılmaz", () => {
+    expect(kartAlanDegerleri(bosTaslak)).toEqual({
+      rol: "",
+      deneyim: "",
+      sektor: "",
+      araclar: "",
+      sertifikalar: "",
+      diller: "",
+    });
+  });
+
+  it("onay için rol, deneyim ve en az bir sektör gerekir", () => {
+    expect(eksikKartAlanlari(kartAlanDegerleri(bosTaslak))).toEqual([
+      "rol",
+      "deneyim",
+      "sektor",
+    ]);
+    const dolu = kartAlanDegerleri({
+      ...bosTaslak,
+      rol_alani: "backend geliştirici",
+      deneyim_seviyesi: "orta",
+      sektor_ilgi_alani: ["eğitim"],
+    });
+    expect(eksikKartAlanlari(dolu)).toEqual([]);
+    // Yalnızca boşluk ya da virgül doldurmuş sayılmaz.
+    expect(eksikKartAlanlari({ ...dolu, rol: "  ", sektor: " , " })).toEqual([
+      "rol",
+      "sektor",
+    ]);
+  });
+
+  it("formdan API alanlarına: metin kırpılır, listeler ayrılır", () => {
+    const degerler = {
+      ...kartAlanDegerleri(bosTaslak),
+      rol: " veri analisti ",
+      deneyim: "baslangic",
+      sektor: "eğitim, sağlık",
+    };
+    expect(kartAlanlariniCevir(degerler)).toEqual({
+      rol_alani: "veri analisti",
+      deneyim_seviyesi: "baslangic",
+      sektor_ilgi_alani: ["eğitim", "sağlık"],
+      araclar_teknolojiler: [],
+      sertifikalar: [],
+      diller: [],
+    });
   });
 });

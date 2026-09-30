@@ -8,6 +8,7 @@ import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { CokluSecim } from "@/components/coklu-secim";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { IsKalemiFormu } from "@/components/is-kalemi-formu";
+import { KartAlanlari } from "@/components/kart-alanlari";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
   CevapAlani,
@@ -29,6 +30,11 @@ import {
   yetenekKartiHazirla,
 } from "@/lib/api";
 import { hatayaCevir } from "@/lib/hata";
+import {
+  eksikKartAlanlari,
+  kartAlanDegerleri,
+  kartAlanlariniCevir,
+} from "@/lib/kart-duzenleme";
 import { onaydaProfilSorulmali } from "@/lib/profil";
 import {
   CALISMA_MODELLERI,
@@ -258,8 +264,14 @@ function TaslakBolumu({
   onOnayla: (profil: GencProfili, duzeltilmisTaslak: KartTaslagi) => void;
 }) {
   // Sohbetten çıkan taslak üzerinde kullanıcı son sözü söylesin: ajan aynı işi
-  // iki kez yazmış ya da bir şeyi yanlış anlamış olabilir.
+  // iki kez yazmış, bir şeyi yanlış anlamış ya da bir alanı netleştirememiş
+  // olabilir (boş alan onayda doldurulur, yer tutucu yazılmaz).
+  const [alanlar, setAlanlar] = useState(() => kartAlanDegerleri(taslak));
   const [ciktilar, setCiktilar] = useState(taslak.somut_ciktilar);
+  // Açılışta boş gelen alanlar: uyarı yazılırken kaybolmasın diye sabit.
+  const [ilkEksikler] = useState(() =>
+    eksikKartAlanlari(kartAlanDegerleri(taslak)),
+  );
   const [sehir, setSehir] = useState("");
   // Kabul ettiği çalışma modelleri — çoklu. Konumdan ayrı bir şey.
   const [calismaModelleri, setCalismaModelleri] = useState<string[]>([]);
@@ -270,17 +282,46 @@ function TaslakBolumu({
     useGirisliHesap().eksik_profil_alanlari,
   );
 
+  function onayla(olay: React.FormEvent) {
+    olay.preventDefault();
+    if (bekleniyor || eksikKartAlanlari(alanlar).length > 0) return;
+    onOnayla(
+      // Boş profil kayıtlı değerleri silmez (backend kuralı).
+      profilSor
+        ? { sehir, calisma_modelleri: calismaModelleri, musaitlikler }
+        : {},
+      { ...taslak, ...kartAlanlariniCevir(alanlar), somut_ciktilar: ciktilar },
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-8">
+    <form className="flex flex-col gap-8" onSubmit={onayla}>
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-xl font-semibold text-ana">
           Kart taslağın
         </h2>
         <p className="text-sm text-pretty text-muted-foreground">
-          Sohbetten çıkan kart bu. Gözden geçir, doğruysa aşağıdan onayla.
+          Sohbetten çıkan kart bu. Gözden geçir, gerekirse düzelt, doğruysa
+          aşağıdan onayla.
         </p>
+        {ilkEksikler.length > 0 ? (
+          <p className="text-sm text-pretty">
+            Sohbette netleşmeyen alanlar boş kaldı; onaylamadan önce doldur.
+          </p>
+        ) : null}
         <TaslakKarti
           taslak={{ ...taslak, somut_ciktilar: ciktilar }}
+          ustAlanlar={
+            <div className="flex flex-col gap-3 px-4 py-4">
+              <KartAlanlari
+                kimlik="taslak"
+                degerler={alanlar}
+                onDegis={(alan, deger) =>
+                  setAlanlar((onceki) => ({ ...onceki, [alan]: deger }))
+                }
+              />
+            </div>
+          }
           duzenlenebilir
           onCiktiDegis={(sira, alan, deger) =>
             setCiktilar((oncekiler) =>
@@ -308,20 +349,7 @@ function TaslakBolumu({
           </p>
         </div>
 
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(olay) => {
-            olay.preventDefault();
-            if (bekleniyor) return;
-            onOnayla(
-              // Boş profil kayıtlı değerleri silmez (backend kuralı).
-              profilSor
-                ? { sehir, calisma_modelleri: calismaModelleri, musaitlikler }
-                : {},
-              { ...taslak, somut_ciktilar: ciktilar },
-            );
-          }}
-        >
+        <div className="flex flex-col gap-4">
           {profilSor ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <FormAlani etiket="Şehir" htmlFor="sehir">
@@ -369,9 +397,9 @@ function TaslakBolumu({
           >
             {bekleniyor ? "Kaydediliyor…" : "Kartı onayla"}
           </Button>
-        </form>
+        </div>
       </section>
-    </div>
+    </form>
   );
 }
 
@@ -379,11 +407,14 @@ function TaslakBolumu({
 
 function TaslakKarti({
   taslak,
+  ustAlanlar,
   duzenlenebilir = false,
   onCiktiDegis,
   onCiktiSil,
 }: {
   taslak: KartTaslagi;
+  /** Verilirse salt okunur özet satırlarının yerine geçer (taslak düzenleme). */
+  ustAlanlar?: React.ReactNode;
   /** Onaydan önce kullanıcı çıktıları düzeltebilsin diye. */
   duzenlenebilir?: boolean;
   onCiktiDegis?: (
@@ -395,30 +426,7 @@ function TaslakKarti({
 }) {
   return (
     <article className="rounded-sm border border-kenar bg-card">
-      <dl className="grid gap-px bg-kenar sm:grid-cols-2">
-        <KartSatiri etiket="Rol / alan" deger={taslak.rol_alani} />
-        <KartSatiri
-          etiket="Deneyim"
-          deger={etiketle(DENEYIM_ETIKETLERI, taslak.deneyim_seviyesi)}
-        />
-        <KartSatiri
-          etiket="Sektör ilgisi"
-          deger={taslak.sektor_ilgi_alani.join(", ")}
-        />
-        <KartSatiri
-          etiket="Araçlar"
-          deger={taslak.araclar_teknolojiler.join(", ")}
-        />
-        {taslak.sertifikalar?.length ? (
-          <KartSatiri
-            etiket="Sertifikalar"
-            deger={taslak.sertifikalar.join(", ")}
-          />
-        ) : null}
-        {taslak.diller?.length ? (
-          <KartSatiri etiket="Diller" deger={taslak.diller.join(", ")} />
-        ) : null}
-      </dl>
+      {ustAlanlar ?? <KartOzeti taslak={taslak} />}
 
       <div className="border-t border-kenar px-4 py-3">
         <h3 className="text-xs text-muted-foreground">Çalışmaların</h3>
@@ -488,6 +496,35 @@ function TaslakKarti({
         )}
       </div>
     </article>
+  );
+}
+
+function KartOzeti({ taslak }: { taslak: KartTaslagi }) {
+  return (
+    <dl className="grid gap-px bg-kenar sm:grid-cols-2">
+      <KartSatiri etiket="Rol / alan" deger={taslak.rol_alani} />
+      <KartSatiri
+        etiket="Deneyim"
+        deger={etiketle(DENEYIM_ETIKETLERI, taslak.deneyim_seviyesi)}
+      />
+      <KartSatiri
+        etiket="Sektör ilgisi"
+        deger={taslak.sektor_ilgi_alani.join(", ")}
+      />
+      <KartSatiri
+        etiket="Araçlar"
+        deger={taslak.araclar_teknolojiler.join(", ")}
+      />
+      {taslak.sertifikalar?.length ? (
+        <KartSatiri
+          etiket="Sertifikalar"
+          deger={taslak.sertifikalar.join(", ")}
+        />
+      ) : null}
+      {taslak.diller?.length ? (
+        <KartSatiri etiket="Diller" deger={taslak.diller.join(", ")} />
+      ) : null}
+    </dl>
   );
 }
 

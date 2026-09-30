@@ -3,7 +3,7 @@
  * Saf fonksiyonlar; testleri kart-duzenleme.test.ts'de.
  */
 
-import type { ReferansDurumu, SomutCiktiTaslagi } from "@/lib/api";
+import type { KartTaslagi, ReferansDurumu, SomutCiktiTaslagi } from "@/lib/api";
 
 /** "Python, FastAPI ,, Docker" → ["Python", "FastAPI", "Docker"] (tekrarsız, sıra korunur). */
 export function virgulluListe(metin: string): string[] {
@@ -16,6 +16,64 @@ export function virgulluListe(metin: string): string[] {
 
 export function listeMetni(liste: string[] | undefined): string {
   return (liste ?? []).join(", ");
+}
+
+/** Kartın üst alanları: taslakta boş olabilir, kayıtlı kartta dolu. */
+type KartAlanKaynagi = Pick<
+  KartTaslagi,
+  | "rol_alani"
+  | "deneyim_seviyesi"
+  | "sektor_ilgi_alani"
+  | "araclar_teknolojiler"
+  | "sertifikalar"
+  | "diller"
+>;
+
+/** Formun tuttuğu hâl: liste alanları virgüllü metin olarak düzenlenir. */
+export type KartAlanDegerleri = {
+  rol: string;
+  deneyim: string;
+  sektor: string;
+  araclar: string;
+  sertifikalar: string;
+  diller: string;
+};
+
+export function kartAlanDegerleri(kart: KartAlanKaynagi): KartAlanDegerleri {
+  return {
+    rol: kart.rol_alani ?? "",
+    deneyim: kart.deneyim_seviyesi ?? "",
+    sektor: listeMetni(kart.sektor_ilgi_alani),
+    araclar: listeMetni(kart.araclar_teknolojiler),
+    sertifikalar: listeMetni(kart.sertifikalar),
+    diller: listeMetni(kart.diller),
+  };
+}
+
+/** Formdan API'nin beklediği alanlara (kart düzenleme ve Keşif onayı aynı). */
+export function kartAlanlariniCevir(degerler: KartAlanDegerleri) {
+  return {
+    rol_alani: degerler.rol.trim(),
+    deneyim_seviyesi: degerler.deneyim,
+    sektor_ilgi_alani: virgulluListe(degerler.sektor),
+    araclar_teknolojiler: virgulluListe(degerler.araclar),
+    sertifikalar: virgulluListe(degerler.sertifikalar),
+    diller: virgulluListe(degerler.diller),
+  };
+}
+
+/**
+ * Onay için doldurulması gereken alanlar (backend'deki OnayliKart ile aynı):
+ * rol, deneyim ve en az bir sektör. Sohbet netleştiremediyse boş gelir.
+ */
+export function eksikKartAlanlari(
+  degerler: KartAlanDegerleri,
+): ("rol" | "deneyim" | "sektor")[] {
+  const eksikler: ("rol" | "deneyim" | "sektor")[] = [];
+  if (!degerler.rol.trim()) eksikler.push("rol");
+  if (!degerler.deneyim) eksikler.push("deneyim");
+  if (virgulluListe(degerler.sektor).length === 0) eksikler.push("sektor");
+  return eksikler;
 }
 
 /** Düzenleme formundaki alanlardan gerçekten değişenler (backend de aynı kuralı işletir). */
