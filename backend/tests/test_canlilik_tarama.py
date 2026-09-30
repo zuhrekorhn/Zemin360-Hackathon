@@ -59,7 +59,7 @@ def test_bakilmayan_oneriler_kuruma_tek_toplu_bildirim_ve_idempotent():
         assert {o.alici_hesap_id for o in olaylar} == {d.kurum1.hesap.id}
         kuruma = await bildirimleri(d, d.kurum1)
         assert [b.tur for b in kuruma] == ["oneri_bekliyor"]  # iki öneri, TEK bildirim
-        assert "2 öneri 10 gündür" in kuruma[0].metin
+        assert "2 aday 10 gündür" in kuruma[0].metin
 
         # Art arda ikinci tarama: bu dönemde zaten hatırlatıldı, hiçbir şey yazılmaz.
         await _tara(d)
@@ -278,7 +278,7 @@ async def _firsat_dunyasi(d, *, kart_gun, ihtiyac_gun):
     await d.oturum.commit()
 
 
-def test_yeni_ihtiyac_eski_karta_anonim_firsat_bir_kez():
+def test_yeni_ihtiyac_eski_karta_firsat_bir_kez():
     async def adimlar(istemci, d):
         await _firsat_dunyasi(d, kart_gun=20, ihtiyac_gun=2)
         await _tara(d)
@@ -288,8 +288,9 @@ def test_yeni_ihtiyac_eski_karta_anonim_firsat_bir_kez():
         [bildirim] = await bildirimleri(d, d.genc1)
         assert bildirim.tur == "yeni_firsat"
         assert "eğitim" in bildirim.metin
-        assert "Koop" not in bildirim.metin  # kurum adı yok
-        assert bildirim.eslesme_id is None  # eşleşmenin varlığı sızmaz
+        # Genç önerilmiş fırsatı zaten görüyor (genc-akisi.md § 0 karar 1): firma adı var.
+        assert "Koop Bir" in bildirim.metin
+        assert bildirim.eslesme_id is None  # bağlantı fırsatlar bölümüne
 
         # İkinci tarama ve araya giren hareket: fırsat bir kez gider.
         d.E1.son_aktivite_tarihi = SIMDI()
@@ -304,7 +305,7 @@ def test_yeni_ihtiyac_eski_karta_anonim_firsat_bir_kez():
     senaryo(adimlar)
 
 
-def test_firsat_llm_girdisinde_kurum_adi_yok(monkeypatch):
+def test_firsat_llm_girdisinde_firma_adi_var(monkeypatch):
     from app.agents import canlilik
 
     gorulen = []
@@ -319,7 +320,7 @@ def test_firsat_llm_girdisinde_kurum_adi_yok(monkeypatch):
         await _firsat_dunyasi(d, kart_gun=20, ihtiyac_gun=2)
         await _tara(d)
         firsatlar = [b for b in gorulen if b.tur == "yeni_firsat" and b.sektor == "eğitim"]
-        assert firsatlar and all(b.karsi_ad == "" for b in firsatlar)
+        assert firsatlar and all(b.karsi_ad == "Koop Bir" for b in firsatlar)
 
     senaryo(adimlar)
 

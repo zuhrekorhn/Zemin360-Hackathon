@@ -25,11 +25,12 @@ logger = logging.getLogger("zemin360")
 
 # Kullanıcıya gösterilen metin: ne olduğunu söyler, iç ayrıntı sızdırmaz.
 # Yığın izi ve hata mesajı log'a yazılır (sunucu günlüğü).
-BEKLENMEYEN_MESAJ = "Beklenmeyen bir hata oldu. Tekrar dene; sorun sürerse bu bir hatadır."
+# Hitapsız: genç ("sen") ve firma ("siz") aynı cümleyi görür (docs/icerik-rehberi.md § 3).
+BEKLENMEYEN_MESAJ = "Beklenmeyen bir sorun oldu, isteği tamamlayamadık."
 # 429: iki model de hız sınırına takıldı (ücretli katmanda dakikalık sınır;
 # ücretsiz katmandaki günlük kota değil). Birkaç saniye içinde geçer.
-HIZ_SINIRI_MESAJI = "Dil modeli şu an çok fazla istek alıyor. Biraz sonra tekrar dene."
-MESGUL_MESAJI = "Dil modeli şu an yoğun. Birkaç saniye sonra tekrar dene."
+HIZ_SINIRI_MESAJI = "Şu an çok yoğunuz, isteğe yanıt veremedik. Biraz sonra yeniden denenebilir."
+MESGUL_MESAJI = "Şu an yanıt veremedik. Birkaç saniye sonra yeniden denenebilir."
 
 
 def _cors_basliklari(istek: Request) -> dict[str, str]:

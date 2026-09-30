@@ -64,7 +64,8 @@ def test_iki_tarafli_isaret_adimi_ve_isbirligini_tamamlar():
         assert govde["tamamlanma_tarihi"] is not None
         assert govde["ilerleme"] == {"tamamlanan": 2, "toplam": 2, "geciken": 0}
         gence = (await bildirimleri(d, d.genc1))[-1]
-        assert gence.tur == "isbirligi_tamamlandi" and "pilot" in gence.metin
+        assert gence.tur == "isbirligi_tamamlandi"
+        assert "tamamlanan iş birliği" in gence.metin
         assert (await bildirimleri(d, d.kurum1))[-1].tur == "isbirligi_tamamlandi"
 
         # Tamamlanan iş birliğinde her şey 409.

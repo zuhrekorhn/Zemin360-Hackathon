@@ -21,9 +21,9 @@ from app.core.kimlik import TokenGecersiz, token_coz
 from app.db.session import get_session
 from app.models.hesap import Hesap
 
-GIRIS_GEREKLI = "Bu işlem için giriş yapman gerekiyor."
-OTURUM_GECERSIZ = "Oturumun geçersiz ya da süresi dolmuş; yeniden giriş yap."
-ROL_UYGUN_DEGIL = "Bu işlem senin hesap türün için değil."
+GIRIS_GEREKLI = "Bu işlem için giriş gerekiyor."
+OTURUM_GECERSIZ = "Oturumun süresi dolmuş; yeniden giriş gerekiyor."
+ROL_UYGUN_DEGIL = "Bu işlem bu hesap türü için değil."
 
 # auto_error=False: başlık yoksa FastAPI'nin İngilizce 403'ü yerine kendi 401'imiz.
 _bearer = HTTPBearer(auto_error=False)

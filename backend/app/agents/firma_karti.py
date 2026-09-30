@@ -26,6 +26,7 @@ from app.agents import sohbet_motoru as motor
 from app.agents.sohbet_motoru import SohbetDurumu
 from app.core.firma_karti import ZORUNLU_ALANLAR
 from app.core.firma_profili import FIRMA_TURU_ETIKETLERI
+from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 
 ACILIS_SORUSU = (
     "Firmanızın ne yaptığını birkaç cümleyle anlatın: hangi ürünü ya da hizmeti "
@@ -58,6 +59,7 @@ takip_sorusu ve takip_konusu: ne_yapiyoruz ya da yetkinlikler eksikse takip
 sorusunda ÖNCE bunlardan birini sor ve takip_konusu'na o alanın adını yaz.
 Sorunun konusu eksik bir zorunlu alan değilse sistem senin soruna yer vermez.
 """
+SISTEM_TALIMATI += KULLANICI_DILI_KURALLARI
 
 YEDEK_SORULAR = {
     "ne_yapiyoruz": (

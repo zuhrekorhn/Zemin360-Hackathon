@@ -94,7 +94,7 @@ from app.servisler.ilgi import firsat_kapandi_metni, isbirligini_ac
 
 router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
-IHTIYAC_YOK = "Kuruma ait ihtiyaç kartı yok"
+IHTIYAC_YOK = "İhtiyaç bulunamadı."
 # Faz B'de yalnızca kurum ilgi gösterebiliyordu: bu durumlardaki eski kayıtlar
 # kurumun ilgisiyle başladı.
 KURUM_ILGISI_DURUMLARI = ("ilgileniliyor", "kabul_edildi", "reddedildi")
@@ -109,7 +109,7 @@ def _hedef_kurum(hesap: Hesap, istenen: uuid.UUID | None) -> uuid.UUID:
     """
     if girvak_mi(hesap):
         if istenen is None:
-            raise HTTPException(status_code=422, detail="Hangi kurum için? kurum_id gerekli.")
+            raise HTTPException(status_code=422, detail="Hangi firma için olduğu seçilmeli.")
         return istenen
     kendi = hesabin_kurumu(hesap)
     if kendi is None or (istenen is not None and istenen != kendi):
@@ -331,7 +331,8 @@ async def kabul(
             oturum,
             taraf_hesabi(eslesme, TARAF_ILAN),
             TUR_KABUL,
-            f"{taraf_adi(eslesme, TARAF_ADAY)} ilgini kabul etti; iletişim bilgileri açıldı.",
+            f"{taraf_adi(eslesme, TARAF_ADAY)} ilginizi kabul etti; iletişim bilgileriniz "
+            "paylaşıldı.",
             eslesme.id,
         )
     # Durum, iş birliği ve bildirim aynı işlemde: biri yazılıp öbürü kaybolmasın.
@@ -632,7 +633,7 @@ def _ilgi_bildirimi(eslesme: Eslesme) -> str:
     ilan_firmasi = taraf_adi(eslesme, TARAF_ILAN)
     if eslesme.firma_karti_id:
         return (
-            f"{ilan_firmasi}, iş birliği ilanı için firmanızla ilgileniyor. "
+            f"{ilan_firmasi}, iş birliği ihtiyacı için firmanızla ilgileniyor. "
             "Kabul ederseniz e-posta adresleriniz paylaşılır."
         )
     return (
@@ -669,7 +670,7 @@ async def firma_ilgi(
     """
     eslesme = await _aday_firmanin_eslesmesi(oturum, hesap, eslesme_id)
     if eslesme.durum == DURUM_ONERILDI:
-        engel = ilgi_engeli(eslesme.skor, eslesme.ihtiyac_karti.durum)
+        engel = ilgi_engeli(eslesme.skor, eslesme.ihtiyac_karti.durum, siz=True)
         if engel:
             raise HTTPException(status_code=409, detail=engel)
     if _gecisi_uygula(eslesme, OLAY_GENC_ILGI, TARAF_ADAY):
@@ -680,7 +681,7 @@ async def firma_ilgi(
             oturum,
             taraf_hesabi(eslesme, TARAF_ILAN),
             TUR_GENC_ILGI,
-            f"{taraf_adi(eslesme, TARAF_ADAY)} iş birliği ilanınızla ilgileniyor. Siz de "
+            f"{taraf_adi(eslesme, TARAF_ADAY)} iş birliği ihtiyacınızla ilgileniyor. Siz de "
             "ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır.",
             eslesme.id,
         )
@@ -720,7 +721,8 @@ async def firma_kabul(
             oturum,
             taraf_hesabi(eslesme, TARAF_ILAN),
             TUR_KABUL,
-            f"{taraf_adi(eslesme, TARAF_ADAY)} ilginizi kabul etti; iletişim bilgileri açıldı.",
+            f"{taraf_adi(eslesme, TARAF_ADAY)} ilginizi kabul etti; iletişim bilgileriniz "
+            "paylaşıldı.",
             eslesme.id,
         )
     await oturum.commit()

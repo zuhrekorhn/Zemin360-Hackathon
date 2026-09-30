@@ -109,7 +109,7 @@ def test_kabul_yolu_ve_eposta_gizliligi():
         # Kabulden sonra red ve yeniden ilgi 409, mevcut durumu söyleyerek.
         red = await istemci.post(f"/eslestirme/{e1}/red", headers=d.genc1.baslik)
         assert red.status_code == 409
-        assert "kabul edildi" in red.json()["detail"]
+        assert "karşılıklı ilgi" in red.json()["detail"]
 
         # Kurum önerilerinde de iletişim açık; GİRVAK aynı listeyi görür ama e-postasız.
         oneri = (await istemci.get(oneriler_yolu, headers=d.kurum1.baslik)).json()
@@ -153,7 +153,7 @@ def test_red_yolu():
             "/eslestirme/ilgileniyorum", headers=d.kurum2.baslik, json={"eslesme_id": e2}
         )
         assert ilgi.status_code == 409
-        assert "reddedildi" in ilgi.json()["detail"]
+        assert "kapandı" in ilgi.json()["detail"]
         assert await _isbirligi_sayisi(d, d.E2.id) == 0
 
         # Reddedilen de gencin listesinde kalır (durumuyla).

@@ -54,7 +54,7 @@ from app.servisler.dogrulama import referans_guncel_mi, rubrigi_yaz, ucuncu_tara
 
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
 
-CIKTI_BULUNAMADI = "Somut çıktı bulunamadı"
+CIKTI_BULUNAMADI = "Çalışma bulunamadı."
 
 # Referans kişiye gönderilecek girişsiz yanıt adresi. Gerçek e-posta
 # göndermiyoruz (SMTP yok, MVP kararı) — link API yanıtında dönüyor.

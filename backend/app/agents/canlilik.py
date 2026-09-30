@@ -26,6 +26,7 @@ from app.agents.canlilik_kurallari import (
     PLAN_ONAYSIZ,
     YENI_FIRSAT,
 )
+from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.core.llm import yedekli_zincir
 from app.models.hesap import ROL_GENC
 
@@ -39,10 +40,17 @@ class HatirlatmaBaglami:
     tur: str
     alici: str  # "genc" | "kurum"
     gun: int  # kaç gündür hareketsiz / gecikmiş
-    karsi_ad: str  # karşı tarafın adı (genç için kurum, kurum için genç)
+    karsi_ad: str  # karşı tarafın adı (gence firmanın, firmaya gencin adı)
     adim: str | None = None  # adim_gecikti ve isbirligi_hareketsiz: adımın adı
     sayi: int = 1  # oneri_bekliyor: kaç öneri bekliyor
     sektor: str | None = None  # yeni_firsat
+    # Firma–firma iş birliğinde alıcı genç tarafında olsa da firmadır ("siz").
+    alici_firma: bool = False
+
+    @property
+    def siz(self) -> bool:
+        """Firmaya "siz", gence "sen" (docs/icerik-rehberi.md § 3)."""
+        return self.alici != ROL_GENC or self.alici_firma
 
 
 def _gun(gun: int) -> str:
@@ -50,38 +58,43 @@ def _gun(gun: int) -> str:
 
 
 def sablon_metni(b: HatirlatmaBaglami) -> str:
-    """Türün sabit metni; LLM yoksa hatırlatma bununla gider."""
+    """Türün sabit metni; LLM yoksa hatırlatma bununla gider. Firmaya "siz", gence "sen"."""
     if b.tur == ONERI_BEKLIYOR:
         return (
-            f"İhtiyaç kartın için {b.sayi} öneri {_gun(b.gun)} yanıt bekliyor; "
-            "gerekçelere göz atmak birkaç dakika sürer."
+            f"İhtiyacınız için {b.sayi} aday {_gun(b.gun)} yanıt bekliyor; “Neden uygun?” "
+            "açıklamalarına göz atmak birkaç dakika sürer."
         )
     if b.tur == ILGI_YANITSIZ_1:
+        if b.siz:
+            return (
+                f"{b.karsi_ad} {_gun(b.gun)} yanıtınızı bekliyor; kabul etmeniz de "
+                "etmemeniz de onlara yol gösterir."
+            )
         return (
-            f"{b.karsi_ad} {_gun(b.gun)} yanıtını bekliyor; kabul ya da ret, ikisi de "
+            f"{b.karsi_ad} {_gun(b.gun)} yanıtını bekliyor; kabul etmen de etmemen de "
             "onlara yol gösterir."
         )
     if b.tur == ILGI_YANITSIZ_2:
         if b.alici == ROL_GENC:
-            return (
-                f"{b.karsi_ad} {_gun(b.gun)} yanıtını bekliyor. Bu son hatırlatma; kabul ya "
-                "da ret, ikisi de onlara yol gösterir."
+            ek = (
+                "yanıtınızı bekliyor. Bu son hatırlatma; kabul etmeniz de etmemeniz de"
+                if b.siz
+                else "yanıtını bekliyor. Bu son hatırlatma; kabul etmen de etmemen de"
             )
+            return f"{b.karsi_ad} {_gun(b.gun)} {ek} onlara yol gösterir."
         return (
-            f"{b.karsi_ad} {_gun(b.gun)} yanıt vermedi; bu arada diğer önerilere de bakabilirsin."
+            f"{b.karsi_ad} {_gun(b.gun)} yanıt vermedi; bu arada diğer adaylara da bakabilirsiniz."
         )
     if b.tur == PLAN_ONAYSIZ:
-        return (
-            f"{b.karsi_ad} ile planınız {_gun(b.gun)} onay bekliyor; senin onayınla iş "
-            "birliği başlar."
-        )
+        onay = "sizin onayınızla" if b.siz else "senin onayınla"
+        return f"{b.karsi_ad} ile planınız {_gun(b.gun)} onay bekliyor; {onay} iş birliği başlar."
     if b.tur == ISBIRLIGI_HAREKETSIZ:
         sonraki = f" Sıradaki adım “{b.adim}”." if b.adim else ""
         return f"{b.karsi_ad} ile iş birliğinizde {_gun(b.gun)} hareket yok.{sonraki}"
     if b.tur == ADIM_GECIKTI:
+        eylem = "tamamlandıysa işaretleyin, değilse" if b.siz else "tamamlandıysa işaretle, değilse"
         return (
-            f"“{b.adim}” adımının hedef tarihi {b.gun} gün geçti; tamamlandıysa işaretle, "
-            f"değilse {b.karsi_ad} ile konuşun."
+            f"“{b.adim}” adımının hedef tarihi {b.gun} gün geçti; {eylem} {b.karsi_ad} ile konuşun."
         )
     if b.tur == GENC_ILGISI_YANITSIZ:
         # Firmaya "siz" (docs/icerik-rehberi.md § 3).
@@ -92,7 +105,11 @@ def sablon_metni(b: HatirlatmaBaglami) -> str:
         )
     if b.tur == YENI_FIRSAT:
         alan = f" ({b.sektor})" if b.sektor else ""
-        return f"Kartına uyan yeni bir ihtiyaç var{alan}. Kanıt eklemek kartını öne çıkarır."
+        # Genç önerilmiş fırsatı zaten görüyor (genc-akisi.md § 0 karar 1): ad gizlenmez.
+        return (
+            f"{b.karsi_ad}{alan} yeni bir fırsat açtı; kartına uyuyor. Kanıt eklemek "
+            "kartını öne çıkarır."
+        )
     raise ValueError(f"Bilinmeyen Canlılık türü: {b.tur}")
 
 
@@ -104,8 +121,8 @@ def sablon_metni(b: HatirlatmaBaglami) -> str:
 
 KISISEL_EN_UZUN = 280
 
-KISISEL_TALIMAT = """Sen Zemin360'ın Canlılık Ajanı'sın. Bir kurum ile genç yetenekler arasındaki
-bağlantıların sessizce ölmemesi için kısa, kişiye özel hatırlatmalar yazıyorsun.
+KISISEL_TALIMAT = """Zemin360'ta firmalar ile genç yetenekler arasındaki bağlantıların
+sessizce ölmemesi için kısa, kişiye özel hatırlatmalar yazıyorsun.
 
 Sana bir hatırlatmanın yapılandırılmış bilgisi ve anlamı aynı olan sade bir taslak veriliyor.
 Taslağı alıcıya hitap eden, sıcak ama resmî olmayan bir dille EN FAZLA İKİ CÜMLEYLE yeniden yaz.
@@ -119,15 +136,16 @@ Kurallar:
 - Suçlama, baskı ya da ceza dili kullanma ("ihmal", "hâlâ", "maalesef" gibi); destekleyici ol.
 - Bir sonraki adımı açıkça söyle (onayla, işaretle, göz at gibi).
 - E-posta adresi, bağlantı, emoji, başlık ya da madde işareti kullanma.
-- "Sen" diye hitap et; düz, sade Türkçe.
-- Yeni fırsat hatırlatmasında kurumun adını bilmiyorsun ve tahmin etme; yalnızca sektörü söyle."""
+- Girdideki "Hitap" alanına uy: "sen" ise sen diye (gence), "siz" ise siz diye (firmaya)
+  hitap et. Taslak da bu hitapla yazılmıştır; hitabı değiştirme. Düz, sade Türkçe."""
+KISISEL_TALIMAT += KULLANICI_DILI_KURALLARI
 
 KISISEL_SABLON = ChatPromptTemplate.from_messages(
     [
         ("system", KISISEL_TALIMAT),
         (
             "human",
-            "Tür: {tur}\nAlıcı: {alici}\nKarşı taraf: {karsi_ad}\nGün: {gun}\n"
+            "Tür: {tur}\nAlıcı: {alici}\nHitap: {hitap}\nKarşı taraf: {karsi_ad}\nGün: {gun}\n"
             "Adım: {adim}\nÖneri sayısı: {sayi}\nSektör: {sektor}\n\nTaslak: {taslak}",
         ),
     ]
@@ -150,10 +168,9 @@ def _kisisel_zincir() -> Runnable:
     )
 
 
-# Yalnızca şablonla giden türler. Kişiselleştirme istemi alıcıya "sen" diye
-# hitap ettiriyor; firmaya giden yeni türler rehber gereği "siz" (istem metin
-# denetiminde ele alınacak, docs/plans/genc-akisi-metinler.md).
-YALNIZ_SABLON = frozenset({GENC_ILGISI_YANITSIZ})
+# Yalnızca şablonla giden türler. İstem artık alıcının hitabını ("sen" / "siz")
+# girdiden alıyor; şu an şablona zorlanan tür yok, küme gerektiğinde kullanılır.
+YALNIZ_SABLON: frozenset[str] = frozenset()
 
 
 async def kisisel_metin(b: HatirlatmaBaglami) -> str | None:
@@ -161,8 +178,8 @@ async def kisisel_metin(b: HatirlatmaBaglami) -> str | None:
     taslak = sablon_metni(b)
     girdiler = {
         "tur": b.tur,
-        "alici": "genç" if b.alici == ROL_GENC else "kurum",
-        # Yeni fırsat anonim: karşı taraf (kurum) adı yok, "-" gider.
+        "alici": "firma" if b.siz else "genç",
+        "hitap": "siz" if b.siz else "sen",
         "karsi_ad": b.karsi_ad or "-",
         "gun": b.gun,
         "adim": b.adim or "-",

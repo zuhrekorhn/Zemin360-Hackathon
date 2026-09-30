@@ -63,7 +63,7 @@ def test_aday_firma_ilgi_gosterir_ilan_sahibi_karsilik_verir():
         assert ilgi.json()["iletisim"] is None
         metinler = await _bildirimler(d, d.kurum1.hesap.id, TUR_GENC_ILGI)
         assert metinler == [
-            "Aday Firma iş birliği ilanınızla ilgileniyor. Siz de ilgilenirseniz iletişim "
+            "Aday Firma iş birliği ihtiyacınızla ilgileniyor. Siz de ilgilenirseniz iletişim "
             "bilgileriniz karşılıklı paylaşılır."
         ]
 
@@ -104,7 +104,7 @@ def test_ilan_sahibi_once_ilgilenir_aday_kabul_ya_da_ret(plan_arka_plan_isi_yok)
         )
         assert ilgi.json()["durum"] == "ilgileniliyor"
         assert (await _bildirimler(d, aday.hesap.id, TUR_ILGI)) == [
-            "Koop Bir, iş birliği ilanı için firmanızla ilgileniyor. Kabul ederseniz "
+            "Koop Bir, iş birliği ihtiyacı için firmanızla ilgileniyor. Kabul ederseniz "
             "e-posta adresleriniz paylaşılır."
         ]
 
@@ -115,7 +115,7 @@ def test_ilan_sahibi_once_ilgilenir_aday_kabul_ya_da_ret(plan_arka_plan_isi_yok)
         assert isbirligi is not None
         assert plan_arka_plan_isi_yok == [isbirligi.id]
         assert (await _bildirimler(d, d.kurum1.hesap.id, TUR_KABUL)) == [
-            "Aday Firma ilginizi kabul etti; iletişim bilgileri açıldı."
+            "Aday Firma ilginizi kabul etti; iletişim bilgileriniz paylaşıldı."
         ]
 
         # Kabul edilmiş eşleşmede ret geçersiz geçiş: 409.

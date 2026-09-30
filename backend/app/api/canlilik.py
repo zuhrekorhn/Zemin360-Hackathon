@@ -315,8 +315,9 @@ async def firsat_adaylari(oturum: AsyncSession, simdi: dt.datetime) -> list[Aday
     """Yeni fırsat (§ 2) — kesilebilir dal.
 
     Son 7 günde açılmış ihtiyaç kartlarının `onerildi` önerileri; önerilen
-    kart en az 14 gün önce oluşturulmuşsa kartın sahibine anonim fırsat.
-    Kurumun adı bağlama hiç girmez: ne şablon ne LLM onu görebilir.
+    kart en az 14 gün önce oluşturulmuşsa kartın sahibine fırsat, firmanın
+    adıyla. Genç fırsatı zaten ana sayfasında firmanın adıyla görüyor (genç
+    akışı karar 1); bildirimde adı gizlemenin gerekçesi kalmadı.
     """
     eslesmeler = await oturum.scalars(
         select(Eslesme)
@@ -337,7 +338,7 @@ async def firsat_adaylari(oturum: AsyncSession, simdi: dt.datetime) -> list[Aday
                 tur=YENI_FIRSAT,
                 alici=ROL_GENC,
                 gun=0,
-                karsi_ad="",
+                karsi_ad=eslesme.ihtiyac_karti.kurum.ad,
                 sektor=eslesme.ihtiyac_karti.kurum.sektor,
             ),
         )

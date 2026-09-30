@@ -48,7 +48,7 @@ from app.servisler.eslestirme import IHTIYAC_ACIK
 
 router = APIRouter(prefix="/yetenek-kartlari", tags=["kart-duzenleme"])
 
-IS_KALEMI_BULUNAMADI = "İş kalemi bulunamadı"
+IS_KALEMI_BULUNAMADI = "Çalışma bulunamadı."
 
 
 async def _sahibinin_karti(oturum: AsyncSession, hesap: Hesap, kart_id: uuid.UUID) -> YetenekKarti:

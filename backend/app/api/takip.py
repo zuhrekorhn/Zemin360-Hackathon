@@ -80,7 +80,7 @@ ISBIRLIGI_BULUNAMADI = "İş birliği bulunamadı"
 ADIM_BULUNAMADI = "Adım bulunamadı"
 KANIT_ONAYDAN_SONRA = "Kanıt linki, plan iki tarafça onaylandıktan sonra eklenir."
 PLAN_ONERILEMEDI = (
-    "Plan şu an önerilemedi. Adımları elle ekleyebilir ya da biraz sonra yeniden deneyebilirsin."
+    "Plan önerisi şu an alınamadı. Adımlar elle eklenebilir ya da biraz sonra yeniden denenebilir."
 )
 
 
@@ -154,6 +154,14 @@ def taraf_hesabi(isbirligi: Isbirligi, rol: str) -> uuid.UUID | None:
 
 
 karsi_rol = karsi_taraf
+
+
+def siz_mi(isbirligi: Isbirligi, taraf: str) -> bool:
+    """Bu taraftaki alıcıya "siz" mi? Firmaya "siz", gence "sen" (docs/icerik-rehberi.md § 3).
+
+    Firma–firma iş birliğinde iki taraf da firma.
+    """
+    return taraf == ROL_KURUM or isbirligi.eslesme.firma_karti_id is not None
 
 
 def aktivite(isbirligi: Isbirligi) -> None:
@@ -268,7 +276,7 @@ def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> I
 
 
 async def plan_duzenlendi_bildir(
-    oturum: AsyncSession, isbirligi: Isbirligi, rol: str, metin: str
+    oturum: AsyncSession, isbirligi: Isbirligi, rol: str, eylem: str
 ) -> None:
     """Karşı tarafa "plan değişti" der; okunmamış aynı bildirim varsa yenisini yazmaz.
 
@@ -287,6 +295,8 @@ async def plan_duzenlendi_bildir(
         )
     )
     if bekleyen is None:
+        onay = "onayınızı" if siz_mi(isbirligi, karsi_rol(rol)) else "onayını"
+        metin = f"{taraf_adi(isbirligi, rol)} {eylem}; son hâli {onay} bekliyor."
         bildirim_ekle(oturum, alici, TUR_PLAN_DUZENLENDI, metin, isbirligi.eslesme_id)
 
 
@@ -311,7 +321,7 @@ async def _duzenle(oturum: AsyncSession, isbirligi: Isbirligi, rol: str) -> None
         oturum,
         isbirligi,
         rol,
-        f"{taraf_adi(isbirligi, rol)} planı düzenledi; son hâli onayını bekliyor.",
+        "planı düzenledi",
     )
 
 
@@ -350,7 +360,7 @@ async def plan_oner(
         oturum,
         isbirligi,
         rol,
-        f"{taraf_adi(isbirligi, rol)} ajandan yeni bir plan istedi; son hâli onayını bekliyor.",
+        "yeni bir plan önerisi aldı",
     )
     await oturum.commit()
     return detay(isbirligi, hesap)
@@ -383,8 +393,15 @@ async def plani_arka_planda_oner(isbirligi_id: uuid.UUID) -> None:
                     oturum,
                     taraf_hesabi(isbirligi, rol),
                     TUR_PLAN_ONERILDI,
-                    f"{taraf_adi(isbirligi, karsi_rol(rol))} ile iş birliğin için bir plan "
-                    "önerildi; gözden geçir ve onayla.",
+                    (
+                        f"{taraf_adi(isbirligi, karsi_rol(rol))} ile iş birliğiniz için bir plan "
+                        "önerildi; gözden geçirip onaylayın."
+                    )
+                    if siz_mi(isbirligi, rol)
+                    else (
+                        f"{taraf_adi(isbirligi, karsi_rol(rol))} ile iş birliğin için bir plan "
+                        "önerildi; gözden geçir ve onayla."
+                    ),
                     isbirligi.eslesme_id,
                 )
             await oturum.commit()
@@ -504,7 +521,12 @@ async def plan_onayla(
                 oturum,
                 taraf_hesabi(isbirligi, karsi_rol(rol)),
                 TUR_PLAN_ONAYI,
-                f"{taraf_adi(isbirligi, rol)} planı onayladı; senin onayın bekleniyor.",
+                f"{taraf_adi(isbirligi, rol)} planı onayladı; "
+                + (
+                    "sizin onayınız bekleniyor."
+                    if siz_mi(isbirligi, karsi_rol(rol))
+                    else "senin onayın bekleniyor."
+                ),
                 isbirligi.eslesme_id,
             )
     await oturum.commit()
@@ -602,7 +624,11 @@ def _isaret_bildirimleri(
             taraf_hesabi(isbirligi, karsi_rol(rol)),
             TUR_ADIM_ISARETLENDI,
             f"{taraf_adi(isbirligi, rol)} “{milestone.baslik}” adımını tamamlandı olarak "
-            "işaretledi; sen de onayla.",
+            + (
+                "işaretledi; siz de onaylayın."
+                if siz_mi(isbirligi, karsi_rol(rol))
+                else "işaretledi; sen de onayla."
+            ),
             isbirligi.eslesme_id,
         )
         return
@@ -612,8 +638,15 @@ def _isaret_bildirimleri(
         isbirligi.durum = ISBIRLIGI_TAMAMLANDI
         isbirligi.tamamlanma_tarihi = simdi
         metinler = {
-            ROL_GENC: f"{taraf_adi(isbirligi, ROL_KURUM)} ile iş birliğin tamamlandı; "
-            "kartına tamamlanmış pilot olarak eklendi.",
+            ROL_GENC: (
+                f"{taraf_adi(isbirligi, ROL_KURUM)} ile iş birliğiniz tamamlandı; firma "
+                "kartınızda tamamlanan iş birliği olarak görünüyor."
+            )
+            if siz_mi(isbirligi, ROL_GENC)
+            else (
+                f"{taraf_adi(isbirligi, ROL_KURUM)} ile iş birliğin tamamlandı; kartında "
+                "tamamlanan iş birliği olarak görünüyor."
+            ),
             ROL_KURUM: f"{taraf_adi(isbirligi, ROL_GENC)} ile iş birliğiniz tamamlandı.",
         }
         for taraf, metin in metinler.items():

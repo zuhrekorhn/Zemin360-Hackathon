@@ -52,7 +52,7 @@ def test_ilgi_kabul_ve_red_bildirimleri():
             assert yanit.status_code == 200
         kabul = await _bildirimler(d, d.kurum1)
         assert [b.tur for b in kabul] == ["kabul"]
-        assert kabul[0].metin == "Elif ilgini kabul etti; iletişim bilgileri açıldı."
+        assert kabul[0].metin == ("Elif ilginizi kabul etti; iletişim bilgileriniz paylaşıldı.")
 
         red = await istemci.post(f"/eslestirme/{d.E2.id}/red", headers=d.genc2.baslik)
         assert red.status_code == 200
@@ -168,7 +168,7 @@ def test_pipeline_yalnizca_yeni_oneri_icin_bildirim_yazar(monkeypatch):
         sayi = len(ilk.json()["oneriler"])
         assert sayi >= 1
         bildirimler = await _bildirimler(d, kurum)
-        assert [b.metin for b in bildirimler] == [f"İhtiyaç kartın için {sayi} yeni öneri var."]
+        assert [b.metin for b in bildirimler] == [f"İhtiyacınız için {sayi} yeni aday var."]
 
         ikinci = await istemci.post("/eslestirme/calistir", headers=kurum.baslik, json={})
         assert ikinci.status_code == 200

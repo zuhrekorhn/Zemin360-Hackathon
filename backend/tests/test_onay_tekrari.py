@@ -250,7 +250,7 @@ def test_embedding_ucu_servis_yoksa_503_ve_net_mesaj(monkeypatch):
         app.dependency_overrides.clear()
 
     assert yanit.status_code == 503
-    assert "Kart kayıtlı" in yanit.json()["detail"]
+    assert "Kart kaydedildi" in yanit.json()["detail"]
 
 
 # --- Tanımlama: embedding yoksa eşleştirme başlamaz -------------------------

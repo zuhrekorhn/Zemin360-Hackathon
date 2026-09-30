@@ -45,12 +45,15 @@ from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
 
 router = APIRouter(prefix="/tanimlama", tags=["tanimlama"])
 
+SOHBET_BASLATILAMADI = "Sohbet şu an başlatılamadı. Biraz sonra yeniden deneyin."
+SOHBET_YOK = "Bu sohbet bulunamadı. Yeni bir sohbet başlatabilirsiniz."
+
 
 def _grafik(request: Request, aranan: str = ARANAN_GENC):
     ad = "tanimlama_ortak_grafigi" if aranan == ARANAN_FIRMA else "tanimlama_grafigi"
     grafik = getattr(request.app.state, ad, None)
     if grafik is None:
-        raise HTTPException(status_code=503, detail="Tanımlama Ajanı hazır değil")
+        raise HTTPException(status_code=503, detail=SOHBET_BASLATILAMADI)
     return grafik
 
 
@@ -95,9 +98,9 @@ async def sohbet_cevap(
     # aynı; devam edecek grafik durumdaki kapıdan seçilir.
     mevcut = await _grafik(request).aget_state(config)
     if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
-        raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
+        raise HTTPException(status_code=404, detail=SOHBET_YOK)
     if mevcut.values.get("taslak_hazir"):
-        raise HTTPException(status_code=409, detail="Taslak hazır; sıradaki adım onay")
+        raise HTTPException(status_code=409, detail="Taslağınız hazır; sıradaki adım onay.")
     grafik = _grafik(request, _aranan(mevcut.values))
 
     try:
@@ -105,7 +108,7 @@ async def sohbet_cevap(
     except HizSinirHatasi as hata:
         raise HTTPException(
             status_code=429,
-            detail=f"{HIZ_SINIRI_MESAJI} Sohbetin kayıtlı.",
+            detail=f"{HIZ_SINIRI_MESAJI} Sohbetiniz kayıtlı.",
         ) from hata
 
     return _yanit(istek.oturum_id, durum)
@@ -128,7 +131,7 @@ async def kart_onayla(
     config = {"configurable": {"thread_id": str(istek.oturum_id)}}
     mevcut = await _grafik(request).aget_state(config)
     if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
-        raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
+        raise HTTPException(status_code=404, detail=SOHBET_YOK)
 
     onceki = await _oturumun_karti(oturum, istek.oturum_id)
     if onceki is not None:
@@ -136,11 +139,11 @@ async def kart_onayla(
         return await _mevcut_karti_don(oturum, onceki, arka_plan)
 
     if not mevcut.values.get("taslak_hazir"):
-        raise HTTPException(status_code=409, detail="Taslak henüz hazır değil")
+        raise HTTPException(status_code=409, detail="Taslağınız henüz hazır değil.")
 
     taslak = istek.duzeltilmis_taslak or IhtiyacTaslagi(**mevcut.values["taslak"])
     if not taslak.problem_tanimi:
-        raise HTTPException(status_code=422, detail="Taslakta problem tanımı zorunlu")
+        raise HTTPException(status_code=422, detail="İhtiyacınızda problem tanımı olmalı.")
     ortak = _aranan(mevcut.values) == ARANAN_FIRMA
 
     # Kart token'daki hesabın kurumuna bağlanır (docs/faz-b-kimlik-ve-dongu.md § 4).

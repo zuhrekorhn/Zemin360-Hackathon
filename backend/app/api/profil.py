@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.kart_duzenleme import degisen_alanlar, yeniden_eslestirme_gerekir_mi
 from app.api.kimlik import rol_gerekli
 from app.core import calisma_modeli, firma_dogrulama, firma_profili
+from app.core.alan_adlari import FIRMA_ALAN_ADLARI, GENC_ALAN_ADLARI, bos_alan_mesaji
 from app.core.genc_profili import ZORUNLU_ALANLAR, eksik_profil_alanlari
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
@@ -131,7 +132,7 @@ async def profil_guncelle(
     bosalanlar = bosaltilan_zorunlular(gonderilenler)
     if bosalanlar:
         raise HTTPException(
-            status_code=422, detail=f"Bu alanlar boş bırakılamaz: {', '.join(bosalanlar)}"
+            status_code=422, detail=bos_alan_mesaji(bosalanlar, GENC_ALAN_ADLARI, siz=False)
         )
     kullanici = hesap.kullanici
     oncesi = {alan: getattr(kullanici, alan) for alan in PROFIL_ALANLARI}
@@ -234,7 +235,7 @@ async def firma_profili_guncelle(
     )
     if bosalanlar:
         raise HTTPException(
-            status_code=422, detail=f"Bu alanlar boş bırakılamaz: {', '.join(bosalanlar)}"
+            status_code=422, detail=bos_alan_mesaji(bosalanlar, FIRMA_ALAN_ADLARI, siz=True)
         )
     kurum = hesap.kurum
     if "web_sitesi" in gonderilenler and firma_dogrulama.dogrulama_sifirlanir_mi(

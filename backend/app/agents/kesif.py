@@ -40,11 +40,12 @@ from app.agents.sohbet_motoru import (  # noqa: F401 — dışarıya tek kapı b
 from app.core import calisma_modeli, musaitlik
 from app.core.genc_profili import KARIYER_ETIKETLERI
 from app.core.is_kalemi import IsTuru
+from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 
 ACILIS_SORUSU = (
     "Merhaba! Seni tanımak istiyorum. Son bir yılda bitirdiğin, sonucunu "
-    "görebildiğin bir iş anlat — okuldan, işten ya da gönüllü bir işten olabilir. "
-    "Ne yaptın, ne ortaya çıktı?"
+    "görebildiğin bir çalışmanı anlat: okuldan, işten ya da gönüllü bir işten "
+    "olabilir. Ne yaptın, ne ortaya çıktı?"
 )
 
 # "Hiç projem yok" dalında sırayla sorulacak sorular (agent-specs.md § 1.4).
@@ -103,6 +104,7 @@ takip_sorusu ve takip_konusu:
 - takip_konusu'na sorunun hedeflediği alanı yaz (örn. "sektor_ilgi_alani").
   Sorunun konusu bu alanlardan biri değilse sistem senin soruna yer vermez.
 """
+SISTEM_TALIMATI += KULLANICI_DILI_KURALLARI
 
 YEDEK_SORULAR = {
     "rol_alani": "Kendini hangi alanda görüyorsun? Kısaca nasıl tanımlarsın?",
@@ -228,29 +230,30 @@ def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
     """
     eksikler: list[tuple[str, str]] = []
     for cikti in taslak.get("somut_ciktilar") or []:
-        baslik = cikti.get("baslik") or "bu iş"
+        baslik = cikti.get("baslik") or "bu çalışma"
         if not cikti.get("olculebilir_sonuc"):
             eksikler.append(
                 (
                     f"olcut:{baslik}",
-                    f"“{baslik}” için sonucu sayıyla anlatabilir misin? "
-                    "Kaç kişi kullandı, ne kadar zaman kazandırdı gibi.",
+                    f"“{baslik}” için sonucu sayıyla anlatabilir misin? Örneğin kaç "
+                    "kişi kullandı ya da ne kadar zaman kazandırdı. Bilmiyorsan geçebiliriz.",
                 )
             )
         if not cikti.get("kendi_rolu"):
             eksikler.append(
                 (
                     f"rol:{baslik}",
-                    f"“{baslik}” işinde senin payın neydi? Tek başına mıydın, "
-                    "ekipçe miydi — hangi kısmı sen yaptın?",
+                    f"“{baslik}” üzerinde tek başına mı çalıştın, ekipçe mi? "
+                    "Ekipçeyse hangi kısmı sen yaptın?",
                 )
             )
         if not cikti.get("kanit_linki") and not cikti.get("referans_email"):
             eksikler.append(
                 (
                     f"kanit:{baslik}",
-                    f"“{baslik}” işini gösteren bir link var mı (repo, demo, yayın)? "
-                    "Ya da işini doğrulayabilecek birinin e-postası? İkisi de isteğe bağlı.",
+                    f"“{baslik}” çalışmanı gösteren bir link var mı (kod deposu, demo, "
+                    "yayın)? Ya da bu çalışmayı doğrulayabilecek birinin e-postası? İkisi de "
+                    "isteğe bağlı.",
                 )
             )
     return eksikler

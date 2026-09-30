@@ -69,10 +69,10 @@ OLAYIN_ROLU: dict[str, str] = {olay: rol for (olay, _), (rol, _) in GECISLER.ite
 # 409 cümleleri arayüzde görünür (docs/icerik-rehberi.md).
 DURUM_ETIKETLERI = {
     DURUM_ONERILDI: "önerildi",
-    DURUM_ILGILENILIYOR: "kurum ilgileniyor, gencin yanıtı bekleniyor",
-    DURUM_KABUL_EDILDI: "kabul edildi",
-    DURUM_REDDEDILDI: "reddedildi",
-    DURUM_GENC_ILGILENDI: "ilgi iletildi, firmanın yanıtı bekleniyor",
+    DURUM_ILGILENILIYOR: "ilgi iletildi, yanıt bekleniyor",
+    DURUM_KABUL_EDILDI: "karşılıklı ilgi",
+    DURUM_REDDEDILDI: "kapandı",
+    DURUM_GENC_ILGILENDI: "ilgi iletildi, yanıt bekleniyor",
     DURUM_KAPANDI: "kapandı",
 }
 
@@ -93,7 +93,7 @@ class GecersizGecis(Exception):
     def __init__(self, durum: str, olay: str):
         self.durum, self.olay = durum, olay
         etiket = DURUM_ETIKETLERI.get(durum, durum)
-        super().__init__(f"Bu eşleşme şu an '{etiket}' durumunda; {OLAY_ETIKETLERI[olay]}.")
+        super().__init__(f"Bu eşleşme şu an “{etiket}” durumunda; {OLAY_ETIKETLERI[olay]}.")
 
 
 class RolUygunDegil(Exception):
@@ -136,10 +136,12 @@ def _tekrar_mi(durum: str, olay: str, baslatan: str | None) -> bool:
 
 IHTIYAC_ACIK = "acik"
 ESIK_ALTI = "Bu fırsat için ilgi gösterilemiyor; uyumun yeterli değil."
+# Aday firmaya "siz" (docs/plans/firma-akisi.md § 8).
+ESIK_ALTI_SIZ = "Bu fırsat için ilgi gösterilemiyor; uyumunuz yeterli değil."
 IHTIYAC_KAPALI = "Bu fırsat kapandı."
 
 
-def ilgi_engeli(skor: float, ihtiyac_durumu: str) -> str | None:
+def ilgi_engeli(skor: float, ihtiyac_durumu: str, *, siz: bool = False) -> str | None:
     """Genç bu eşleşmeye ilgi gösterebilir mi? Gösteremiyorsa nedeni (409).
 
     Yalnızca eşik üstü ve açık ihtiyaç. Eşik altı bir aday için zaten öneri
@@ -148,5 +150,5 @@ def ilgi_engeli(skor: float, ihtiyac_durumu: str) -> str | None:
     if ihtiyac_durumu != IHTIYAC_ACIK:
         return IHTIYAC_KAPALI
     if skor < SKOR_ESIGI:
-        return ESIK_ALTI
+        return ESIK_ALTI_SIZ if siz else ESIK_ALTI
     return None

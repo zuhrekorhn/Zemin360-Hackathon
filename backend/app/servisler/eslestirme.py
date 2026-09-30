@@ -50,6 +50,10 @@ from app.schemas.eslestirme import Iletisim
 
 logger = logging.getLogger("zemin360.eslestirme")
 
+IHTIYAC_HAZIR_DEGIL = (
+    "Bu ihtiyaç henüz adaylarla eşleştirilmeye hazır değil. Biraz sonra yeniden deneyin."
+)
+
 IHTIYAC_ACIK = "acik"
 # Firmaya görünür (docs/icerik-rehberi.md: "siz", teknik terim yok).
 IHTIYAC_KAPALI_MESAJI = "Bu ihtiyaç kapandı; yeni aday aranmıyor."
@@ -133,9 +137,7 @@ async def ihtiyac_kilidi(oturum: AsyncSession, ihtiyac_karti_id: uuid.UUID) -> N
 async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Eslesme]:
     """Adayları seçer, eşleşmeleri yazar, gerekçeleri üretir; güncel eşleşmeleri döner."""
     if ihtiyac.embedding is None:
-        raise HTTPException(
-            status_code=409, detail="İhtiyaç kartının embedding'i yok; kart yeniden onaylanmalı"
-        )
+        raise HTTPException(status_code=409, detail=IHTIYAC_HAZIR_DEGIL)
     if ihtiyac.durum != IHTIYAC_ACIK:
         # Kapalı ihtiyaç için aday aranmaz; mevcut kayıtlar okunabilir kalır.
         raise HTTPException(status_code=409, detail=IHTIYAC_KAPALI_MESAJI)
@@ -207,7 +209,7 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
             oturum,
             await oturum.scalar(select(Kurum.hesap_id).where(Kurum.id == ihtiyac.kurum_id)),
             TUR_YENI_ONERI,
-            f"İhtiyaç kartın için {yeni_oneri} yeni öneri var.",
+            f"İhtiyacınız için {yeni_oneri} yeni aday var.",
         )
 
     await oturum.commit()

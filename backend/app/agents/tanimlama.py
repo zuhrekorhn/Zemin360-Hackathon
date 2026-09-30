@@ -22,10 +22,11 @@ from pydantic import BaseModel, Field
 
 from app.agents import sohbet_motoru as motor
 from app.agents.sohbet_motoru import SohbetDurumu
+from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.core.musaitlik import Musaitlik
 
 ACILIS_SORUSU = (
-    "Merhaba! Çözmeye çalıştığınız problemi anlatın — ne yaşıyorsunuz, "
+    "Merhaba! Çözmeye çalıştığınız problemi anlatın: ne yaşıyorsunuz, "
     "kim etkileniyor? Henüz net değilse de olur, birlikte netleştiririz."
 )
 
@@ -74,6 +75,7 @@ takip_sorusu ve takip_konusu: problem_tanimi ya da basari_kriteri eksikse
 takip sorusunda ÖNCE bunlardan birini sor ve takip_konusu'na o alanın adını
 yaz. Sorunun konusu eksik bir zorunlu alan değilse sistem senin soruna yer vermez.
 """
+SISTEM_TALIMATI += KULLANICI_DILI_KURALLARI
 
 YEDEK_SORULAR = {
     "problem_tanimi": (
@@ -82,7 +84,7 @@ YEDEK_SORULAR = {
     ),
     "basari_kriteri": (
         "Bu iş bittiğinde neye bakıp “oldu” diyeceksiniz? Sayıyla ifade edebilir "
-        "misiniz — bir oran, bir süre ya da bir adet?"
+        "misiniz? Örneğin bir oran, bir süre ya da bir adet."
     ),
 }
 
@@ -217,6 +219,7 @@ Alanlar:
 takip_sorusu ve takip_konusu: problem_tanimi ya da basari_kriteri eksikse takip
 sorusunda ÖNCE bunlardan birini sor ve takip_konusu'na o alanın adını yaz.
 """
+SISTEM_TALIMATI_ORTAK += KULLANICI_DILI_KURALLARI
 
 YEDEK_SORULAR_ORTAK = {
     "problem_tanimi": (

@@ -29,6 +29,7 @@ from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
 
 from app.core.guvenli_istek import GuvensizAdres, guvenli_get
+from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 
 # Referans yanıtı için tanınan süre (docs/agent-specs.md § 4.2: 5-7 gün).
@@ -99,6 +100,7 @@ gerekce_metni: 2 cümle. Hangi bileşene neden o puanı verdiğini, kanıttaki
 somut şeylere atıfla açıkla. Genel geçer laf etme. İtiraz notunu dikkate
 aldıysan bunu söyle.
 """
+RUBRIK_TALIMATI += KULLANICI_DILI_KURALLARI
 
 RUBRIK_SABLONU = ChatPromptTemplate.from_messages(
     [

@@ -140,7 +140,7 @@ def test_cikti_rolu_eksikse_sorulur():
         }
     )
     assert sonuc["taslak_hazir"] is False
-    assert "payın" in sonuc["sonraki_soru"]
+    assert "hangi kısmı sen yaptın" in sonuc["sonraki_soru"]
 
 
 def test_cikti_detaylari_tamsa_kart_kapanir():
@@ -199,7 +199,7 @@ def test_bilmiyorum_denen_ek_soru_tekrarlanmaz():
         }
     )
     assert "sayıyla" not in sonuc["sonraki_soru"]
-    assert "payın" in sonuc["sonraki_soru"]
+    assert "hangi kısmı sen yaptın" in sonuc["sonraki_soru"]
     assert sonuc["sorulan_ekler"] == ["olcut:Kütüphane sistemi", "rol:Kütüphane sistemi"]
 
 
@@ -441,7 +441,7 @@ def test_gozlenen_sohbette_rol_konusu_bir_kez_sorulur():
         sorular.append(sonuc["sonraki_soru"])
         durum = {**durum, **{k: v for k, v in sonuc.items() if k != "mesajlar"}}
 
-    rol_sorulari = [s for s in sorular if "rol" in s.lower() or "payın" in s]
+    rol_sorulari = [s for s in sorular if "hangi kısmı sen yaptın" in s]
     assert len(rol_sorulari) == 1, sorular
 
 

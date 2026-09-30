@@ -35,7 +35,7 @@ TARAFLAR = (ROL_GENC, ROL_KURUM)
 
 PLAN_KILITLI = "Plan iki tarafça onaylandı; artık değiştirilemez."
 ISBIRLIGI_BITTI = "İş birliği tamamlandı; değişiklik yapılamaz."
-PLAN_BOS = "Önce en az bir milestone ekleyin."
+PLAN_BOS = "Önce en az bir adım eklenmeli."
 PLAN_ONAYSIZ = "Plan iki tarafça onaylanmadan adımlar işaretlenemez."
 ADIM_KAPANDI = "Bu adım iki tarafça tamamlandı; işaret geri alınamaz."
 

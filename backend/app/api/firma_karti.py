@@ -26,6 +26,7 @@ from app.agents.firma_karti import profil_baglami
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, sohbet_baslangici, sohbetin_sahibi_mi
+from app.core.alan_adlari import KART_ALAN_ADLARI, bos_alan_mesaji
 from app.core.firma_karti import ZORUNLU_ALANLAR
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.db.session import get_session
@@ -44,11 +45,13 @@ from app.servisler import firma_karti as servis
 
 router = APIRouter(prefix="/kurum/kart", tags=["firma-karti"])
 
+SOHBET_BASLATILAMADI = "Sohbet şu an başlatılamadı. Biraz sonra yeniden deneyin."
+
 KART_YOK = "Firma kartınız henüz yok."
 KART_VAR = "Firma kartınız zaten var; kart sayfasından düzenleyebilirsiniz."
-OTURUM_YOK = "Sohbet oturumu bulunamadı"
-TASLAK_HAZIR = "Taslak hazır; sıradaki adım onay"
-TASLAK_HAZIR_DEGIL = "Taslak henüz hazır değil"
+OTURUM_YOK = "Bu sohbet bulunamadı. Yeni bir sohbet başlatabilirsiniz."
+TASLAK_HAZIR = "Taslağınız hazır; sıradaki adım onay."
+TASLAK_HAZIR_DEGIL = "Taslağınız henüz hazır değil."
 TASLAK_EKSIK = "Kartta firmanın ne yaptığı ve en az bir yetkinlik olmalı."
 
 
@@ -90,7 +93,7 @@ async def karti_duzenle(
     bosalanlar = sorted(a for a in ZORUNLU_ALANLAR if a in gonderilenler and not gonderilenler[a])
     if bosalanlar:
         raise HTTPException(
-            status_code=422, detail=f"Bu alanlar boş bırakılamaz: {', '.join(bosalanlar)}"
+            status_code=422, detail=bos_alan_mesaji(bosalanlar, KART_ALAN_ADLARI, siz=True)
         )
     # Kimlik işlem başında alınır: geri almadan sonra `hesap.kurum`un süresi dolar.
     kurum_id = hesap.kurum.id
@@ -124,7 +127,7 @@ async def karti_duzenle(
 def _grafik(request: Request):
     grafik = getattr(request.app.state, "firma_karti_grafigi", None)
     if grafik is None:
-        raise HTTPException(status_code=503, detail="Kart sohbeti şu an hazır değil")
+        raise HTTPException(status_code=503, detail=SOHBET_BASLATILAMADI)
     return grafik
 
 

@@ -44,7 +44,10 @@ from app.servisler import kart_hazirlama
 
 router = APIRouter(prefix="/kesif", tags=["kesif"])
 
-SEHIR_GEREKLI = "Şehir gerekli: eşleştirme adayları şehre göre süzüyor."
+SOHBET_BASLATILAMADI = "Sohbet şu an başlatılamadı. Biraz sonra yeniden dene."
+SOHBET_YOK = "Bu sohbet bulunamadı. Yeni bir sohbet başlatabilirsin."
+
+SEHIR_GEREKLI = "Şehir gerekli: fırsatlar şehre göre eşleşiyor."
 
 
 def _grafik(request: Request):
@@ -52,7 +55,7 @@ def _grafik(request: Request):
     if grafik is None:
         # Checkpointer uygulama açılışında kuruluyor; kurulamadıysa sessizce
         # bozuk bir sohbet yürütmek yerine açıkça söyle.
-        raise HTTPException(status_code=503, detail="Keşif Ajanı hazır değil")
+        raise HTTPException(status_code=503, detail=SOHBET_BASLATILAMADI)
     return grafik
 
 
@@ -88,9 +91,9 @@ async def sohbet_cevap(
 
     mevcut = await grafik.aget_state(config)
     if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
-        raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
+        raise HTTPException(status_code=404, detail=SOHBET_YOK)
     if mevcut.values.get("taslak_hazir"):
-        raise HTTPException(status_code=409, detail="Taslak hazır; sıradaki adım onay")
+        raise HTTPException(status_code=409, detail="Taslağın hazır; sıradaki adım onay.")
 
     try:
         durum = await grafik.ainvoke({"mesajlar": [kullanici_mesaji(istek.cevap)]}, config=config)
@@ -127,7 +130,7 @@ async def kart_onayla(
     config = {"configurable": {"thread_id": str(istek.oturum_id)}}
     mevcut = await _grafik(request).aget_state(config)
     if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
-        raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
+        raise HTTPException(status_code=404, detail=SOHBET_YOK)
 
     onceki = await _oturumun_karti(oturum, istek.oturum_id)
     if onceki is not None:
@@ -135,7 +138,7 @@ async def kart_onayla(
         return await _mevcut_karti_don(oturum, onceki, arka_plan)
 
     if not mevcut.values.get("taslak_hazir"):
-        raise HTTPException(status_code=409, detail="Taslak henüz hazır değil")
+        raise HTTPException(status_code=409, detail="Taslağın henüz hazır değil.")
 
     taslak = istek.duzeltilmis_taslak or KartTaslagi(**mevcut.values["taslak"])
     # Kullanıcı taslak ekranında tüm çıktıları çıkarmış olabilir: sohbetin
@@ -148,7 +151,7 @@ async def kart_onayla(
         }
     )
     if not taslak.rol_alani or not taslak.deneyim_seviyesi:
-        raise HTTPException(status_code=422, detail="Taslakta rol ve deneyim seviyesi zorunlu")
+        raise HTTPException(status_code=422, detail="Kartında rol ve deneyim seviyesi olmalı.")
 
     # Kart token'daki hesabın profiline bağlanır; onay yalnızca eşleştirmeyi
     # etkileyen alanları günceller (docs/faz-b-kimlik-ve-dongu.md § 4).

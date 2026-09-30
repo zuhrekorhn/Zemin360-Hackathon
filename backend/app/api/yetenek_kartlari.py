@@ -39,8 +39,8 @@ router = APIRouter(tags=["yetenek-kartlari"])
 KART_BULUNAMADI = "Yetenek kartı bulunamadı"
 
 EMBEDDING_HATA_MESAJI = (
-    "Kart kayıtlı, ama eşleştirmeye hazırlanamadı (vektör servisine ulaşılamadı). "
-    "Biraz sonra tekrar dene."
+    "Kart kaydedildi, ancak şu an eşleşmeye hazırlanamadı. Biraz sonra "
+    "“Eşleştirmeye hazırla” ile yeniden denenebilir."
 )
 
 

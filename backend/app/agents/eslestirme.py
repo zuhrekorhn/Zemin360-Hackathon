@@ -38,6 +38,7 @@ from app.core.firma_dogrulama import DOGRULANDI
 from app.core.firma_karti import ISBIRLIGI_TURU_ETIKETLERI
 from app.core.firma_profili import FIRMA_TURU_ETIKETLERI
 from app.core.is_kalemi import is_kalemi_metni
+from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 from app.core.metin import turkce_kucult
 from app.core.sehir import sehir_kanonik
@@ -101,6 +102,7 @@ Kurallar:
 - Türkçe, sade, abartısız. Karar kurumun; sen sadece neden bu kartın önerildiğini
   anlat.
 """
+GEREKCE_TALIMATI += KULLANICI_DILI_KURALLARI
 
 GEREKCE_SABLONU = ChatPromptTemplate.from_messages(
     [
@@ -672,6 +674,7 @@ Kurallar:
 - Türkçe, sade, abartısız. Karar ilanı açan firmanın; sen yalnızca neden bu
   firmanın önerildiğini anlat.
 """
+FIRMA_GEREKCE_TALIMATI += KULLANICI_DILI_KURALLARI
 
 FIRMA_GEREKCE_SABLONU = ChatPromptTemplate.from_messages(
     [

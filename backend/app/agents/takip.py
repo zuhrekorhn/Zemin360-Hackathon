@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 
 from app.core import calisma_modeli, musaitlik
 from app.core.firma_karti import ISBIRLIGI_TURU_ETIKETLERI
+from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 from app.models.firma_karti import FirmaKarti
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -65,6 +66,7 @@ Kurallar:
 - Müsaitliği ve çalışma modelini hesaba kat: yarı zamanlı bir gence 2 haftada büyük iş verme.
 - Teknik rol ve araç adlarını Türkçeleştirme (backend, API, FastAPI gibi yaygın adları koru).
 - Düz, sade Türkçe; başlıklar kısa ve eylem bildiren."""
+SISTEM_TALIMATI += KULLANICI_DILI_KURALLARI
 
 PLAN_SABLONU = ChatPromptTemplate.from_messages(
     [
@@ -274,6 +276,7 @@ Kurallar:
   beklendiğini söyle.
 - İş birliği tamamlandıysa bunu ve kaç adımda tamamlandığını söyle.
 - Madde işareti, başlık ya da emoji kullanma; düz, sade Türkçe."""
+OZET_TALIMATI += KULLANICI_DILI_KURALLARI
 
 OZET_SABLONU = ChatPromptTemplate.from_messages(
     [("system", OZET_TALIMATI), ("human", "{durum_bilgisi}")]

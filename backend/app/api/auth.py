@@ -44,8 +44,8 @@ from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
 
 router = APIRouter(tags=["kimlik"])
 
-EPOSTA_KAYITLI = "Bu e-postayla bir hesap zaten var. Giriş yapmayı dene."
-GIRIS_HATALI = "E-posta ya da şifre hatalı."
+EPOSTA_KAYITLI = "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene."
+GIRIS_HATALI = "E-posta ya da şifre eşleşmedi."
 
 
 class EpostaKayitli(Exception):

@@ -43,7 +43,7 @@ aşımıyla ve Takip gecikmesiyle aynı desen; yeni bir "pasif" alanı saklanmaz
 | `plan_onaysiz` | İş birliği `plan_bekliyor` | **5 gün** hareketsiz | Planı henüz onaylamamış taraf(lar) | "Planınız 5 gündür onay bekliyor; senin onayınla iş birliği başlar." |
 | `isbirligi_hareketsiz` | İş birliği `aktif` | **14 gün** hareketsiz | İki taraf | "İki haftadır adımlarda hareket yok; sıradaki adım 'Kayıt ekranı'." |
 | `adim_gecikti` | `aktif` iş birliğinde gecikmiş adım | Hedef tarihten **1 gün** sonra | Adımı henüz işaretlememiş taraf(lar) | "'Kayıt ekranı' adımının hedef tarihi 3 gün geçti; tamamlandıysa işaretle, değilse karşı tarafla konuşun." |
-| `yeni_firsat` | Yeni ihtiyacın önerisi (§ 2) | — | Genç | "Kartına uyan yeni bir ihtiyaç var (sektör: sivil toplum). Kanıt eklemek kartını öne çıkarır." |
+| `yeni_firsat` | Yeni ihtiyacın önerisi (§ 2) | — | Genç | "Koop Bir (sivil toplum) yeni bir fırsat açtı; kartına uyuyor. Kanıt eklemek kartını öne çıkarır." *(30 Eyl, metin denetimi)* |
 | `genc_ilgisi_yanitsiz` *(genç akışı, 29 Eyl)* | Eşleşme `genc_ilgilendi` | **5 gün** hareketsiz, tek kademe | Firma | "Elif 5 gündür ihtiyacınızla ilgili yanıtınızı bekliyor. İlgileniyorsanız karşılıklı ilgiyi başlatabilir ya da “Şimdilik değil” diyebilirsiniz." Yalnızca şablon: kişiselleştirme istemi "sen" diye hitap ettiriyor, firmaya "siz" gitmeli (`plans/genc-akisi.md` § 7.1) |
 
 **Kurallar:**
@@ -61,7 +61,7 @@ ilgilenince görüyor.
 
 - **Ne olur:** Tarama, **son 7 gün içinde** açılmış ihtiyaç kartlarının `onerildi` önerilerine bakar. Önerilen yetenek kartı **en az 14 gün önce** oluşturulmuşsa ("eski kart"), kartın sahibine `yeni_firsat` bildirimi gider. Bildirim her (genç, ihtiyaç kartı) çifti için bir kez gider. Genç çoğu zaman yeni kartı yeni oluşturmuş olur; o zaman fırsat dalı gereksizdir, eski kart eşiği bu yüzden var.
 - **Ne söylenir:** → **Karar 3.**
-  - **Öneri, anonim:** Kurumun adı ve ihtiyacın metni söylenmez; yalnızca sektör ve "kartını güçlendir" çağrısı (kanıt ekle). Bağlantı gencin kendi kart sayfasına gider. Faz B'nin "genç, kurum ilgilenmeden eşleşmeyi görmez" kararı bozulmaz.
+  - *(30 Eyl: artık anonim değil, firmanın adı söylenir; bkz. § karar 3. Bağlantı `/genc#firsatlar`.)* **Eski hâli, anonim:** Kurumun adı ve ihtiyacın metni söylenmez; yalnızca sektör ve "kartını güçlendir" çağrısı (kanıt ekle). Bağlantı gencin kendi kart sayfasına gider. Faz B'nin "genç, kurum ilgilenmeden eşleşmeyi görmez" kararı bozulmaz.
   - **Alternatif:** İhtiyaç kartını gence baştan göstermek. Faz B'nin sahiplik tablosunu (§ 3) değiştirir; gencin "ilgi göstermeden önce kurumu görme" hakkı olur.
 - **Ne yapmaz:** Gence "başvur" düğmesi açmaz (tek yönlü başvuru akışı yok); eşleşmenin durumunu değiştirmez.
 - **Kesilebilir:** Roadmap kesim çizgisi (2). Hatırlatmalar onsuz tam çalışır.
@@ -178,6 +178,7 @@ Genç ve kurum bu uçları çağıramaz (403). Onlar hatırlatmayı bildirim ola
 2. **Hedef tanımları:** Öneri § 7'deki tablo. "Başvuru" için alternatif: kayıtlı her genç hesabı.
 3. **Yeni fırsat ne söyler:** *(Değişti, 28 Eyl: genç akışında genç önerilmiş fırsatları zaten görüyor — `plans/genc-akisi.md` § 0 karar 1; anonimliğin gerekçesi kalmadı. Bildirimin metni ve bağlantısı genç ana sayfası adımında fırsatlar bölümüne yönlenecek.)*
    - **Öneri:** Anonim; kurum adı ve ihtiyaç metni yok, sektör ve "kartını güçlendir" var.
+   - **Uygulandı (30 Eyl, metin denetimi):** Metin firmanın adını ve sektörünü söyler, ihtiyacın metnini söylemez; bağlantı `/genc#firsatlar`. Bildirim yine eşleşmeye bağlanmaz (`eslesme_id` boş).
    - **Alternatif:** İhtiyaç kartını gence göstermek; Faz B sahiplik kuralını değiştirir.
 4. **Eşik değerleri:** Öneri § 1'deki tablo (7 / 3 ve 10 / 5 / 14 gün, gecikmede 1 gün; fırsatta 7 günlük yeni ihtiyaç ve 14 günlük eski kart).
 
