@@ -2,7 +2,7 @@
 
 /**
  * Üst menü, role göre (docs/faz-b-kimlik-ve-dongu.md § 7):
- *   Girişsiz: Giriş, Kayıt
+ *   Girişsiz: Giriş, Kayıt (/ sayfasında karşılama menüsü)
  *   Genç:     Panelim, Yeni kart (Keşif), Bildirimler (rozet), Çıkış
  *   Kurum:    Panelim, Yeni ihtiyaç (Tanımlama), Bildirimler (rozet), Çıkış
  *   GİRVAK:   Panel, Çıkış
@@ -14,6 +14,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+import { KarsilamaMenusu } from "@/components/karsilama/menu";
 import { cn } from "@/lib/utils";
 import { useOturum } from "@/lib/oturum";
 import { panelYolu } from "@/lib/yonlendirme";
@@ -24,6 +25,12 @@ export function UstMenu() {
   const { oturum, cikisYap } = useOturum();
   const pathname = usePathname();
   const router = useRouter();
+
+  // Karşılama sayfası kendi menüsünü taşır (brief § 3.1); girişli kullanıcı
+  // / sayfasında da her zamanki menüyü görür.
+  if (pathname === "/" && oturum.durum !== "girisli") {
+    return <KarsilamaMenusu />;
+  }
 
   let baglantilar: Baglanti[] = [];
   if (oturum.durum === "girissiz") {
