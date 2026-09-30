@@ -1,27 +1,40 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { SomutCiktiTaslagi } from "@/lib/api";
 import { IS_TURU_ETIKETLERI } from "@/lib/sabitler";
 
 type Alan = Exclude<keyof SomutCiktiTaslagi, "baslik"> | "baslik";
 
-const ALANLAR: { ad: Alan; etiket: string; ornek?: string; tur?: string }[] = [
+type AlanTanimi = {
+  ad: Alan;
+  etiket: string;
+  ornek?: string;
+  tur?: "url" | "email";
+  /** Cümle uzunluğundaki metinler tek satırda kesilmesin diye. */
+  cokSatir?: boolean;
+};
+
+const ALANLAR: AlanTanimi[] = [
   { ad: "baslik", etiket: "Başlık" },
   {
     ad: "aciklama",
     etiket: "Açıklama",
     ornek: "ör. Ne yaptın, ne ortaya çıktı?",
+    cokSatir: true,
   },
   {
     ad: "olculebilir_sonuc",
     etiket: "Sonuç (sayıyla)",
     ornek: "ör. 400 kitap ve 120 üye takip ediliyor",
+    cokSatir: true,
   },
   {
     ad: "kendi_rolu",
     etiket: "Senin payın",
-    ornek: "ör. backend'i ben yazdım",
+    ornek: "ör. Backend'i ben yazdım",
+    cokSatir: true,
   },
   {
     ad: "kanit_linki",
@@ -85,23 +98,50 @@ export function IsKalemiFormu({
             >
               {alan.etiket}
             </label>
-            <Input
-              id={`${kimlik}-${alan.ad}`}
-              value={(cikti[alan.ad] as string | null | undefined) ?? ""}
-              placeholder={alan.ornek}
-              inputMode={
-                alan.tur === "url"
-                  ? "url"
-                  : alan.tur === "email"
-                    ? "email"
-                    : undefined
-              }
-              required={alan.ad === "baslik"}
-              onChange={(olay) => onDegis(alan.ad, olay.target.value)}
+            <AlanKutusu
+              kimlik={`${kimlik}-${alan.ad}`}
+              alan={alan}
+              deger={(cikti[alan.ad] as string | null | undefined) ?? ""}
+              onDegis={(deger) => onDegis(alan.ad, deger)}
             />
           </div>
         ),
       )}
     </div>
+  );
+}
+
+function AlanKutusu({
+  kimlik,
+  alan,
+  deger,
+  onDegis,
+}: {
+  kimlik: string;
+  alan: AlanTanimi;
+  deger: string;
+  onDegis: (deger: string) => void;
+}) {
+  const ortak = {
+    id: kimlik,
+    value: deger,
+    placeholder: alan.ornek,
+    required: alan.ad === "baslik",
+  };
+  if (alan.cokSatir) {
+    return (
+      <Textarea
+        {...ortak}
+        rows={2}
+        onChange={(olay) => onDegis(olay.target.value)}
+      />
+    );
+  }
+  return (
+    <Input
+      {...ortak}
+      inputMode={alan.tur}
+      onChange={(olay) => onDegis(olay.target.value)}
+    />
   );
 }
