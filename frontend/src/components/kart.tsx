@@ -108,13 +108,27 @@ export function EtiketSatiri({
   );
 }
 
-/** Somut çıktı + (varsa) rubriği. Rubrik yoksa "doğrulanmamış" denir. */
+/**
+ * Somut çıktı + (varsa) rubriği. Rubrik yoksa "doğrulanmamış" denir.
+ * Hem gencin kendi kart sayfası hem firmanın öneri ekranı kullanır; sahibe
+ * özgü metinler isteğe bağlı özelliklerle açılır, varsayılan firma görünümü.
+ */
 export function CiktiOzeti({
   cikti,
   eylem,
+  sahibiBakiyor = false,
+  referansVar = false,
 }: {
   cikti: SomutCiktiYaniti;
   eylem?: React.ReactNode;
+  /** Genç kendi kartına bakıyor: "Payın" (firma gencin payını okur: "Payı"). */
+  sahibiBakiyor?: boolean;
+  /**
+   * Çalışmanın referans isteği var. Referans da kanıt sayılır
+   * (backend: core/is_kalemi.kanit_bekliyor); linki yok diye "Kanıt
+   * eklenmemiş" denmez. Referans listesi yalnızca sahibin sayfasında.
+   */
+  referansVar?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2 rounded-sm border border-kenar">
@@ -141,7 +155,9 @@ export function CiktiOzeti({
           </p>
         ) : null}
         {cikti.kendi_rolu ? (
-          <p className="text-sm text-pretty">Payı: {cikti.kendi_rolu}</p>
+          <p className="text-sm text-pretty">
+            {sahibiBakiyor ? "Payın" : "Payı"}: {cikti.kendi_rolu}
+          </p>
         ) : null}
         {cikti.kanit_linki ? (
           <a
@@ -157,7 +173,11 @@ export function CiktiOzeti({
             {cikti.kanit_linki}
           </a>
         ) : (
-          <p className="text-sm text-muted-foreground">Kanıt eklenmemiş.</p>
+          <p className="text-sm text-muted-foreground">
+            {referansVar
+              ? "Kanıt linki yok; referansın aşağıda."
+              : "Kanıt eklenmemiş."}
+          </p>
         )}
       </div>
 

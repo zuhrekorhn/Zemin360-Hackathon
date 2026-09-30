@@ -275,7 +275,13 @@ function KartIcerigi() {
             ) : (
               kart.somut_ciktilar.map((cikti) => (
                 <div key={cikti.id} className="flex flex-col gap-3">
-                  <CiktiOzeti cikti={cikti} />
+                  <CiktiOzeti
+                    cikti={cikti}
+                    sahibiBakiyor={sahibi}
+                    referansVar={
+                      (kanitlar[cikti.id]?.referanslar.length ?? 0) > 0
+                    }
+                  />
                   {sahibi ? (
                     <IsKalemiEylemleri
                       kartId={kart.id}
