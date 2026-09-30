@@ -45,6 +45,7 @@
       - (c) Mevcut `onerildi` temizlik davranışı değişmez.
 15. **Arayüz metinleri:** `docs/icerik-rehberi.md`'ye bakınız (28 Eyl'de onaylandı; bu kararın geçici kuralının yerini aldı). Yeni ya da değişen her kullanıcı metni `docs/plans/genc-akisi-metinler.md` listesine eklenir; rehberde karşılığı olmayan terim uydurulmaz, listeye not düşülür. Mevcut metinlere genç akışı bitene kadar dokunulmaz; toplu denetim ayrı bir adım. Kod içindeki alan ve değişken adları (`somut_cikti`, `kurum`…) değişmez.
 16. **8. adım ertelendi** (28 Eyl): "Yeni iş ekle" mini sohbeti özellik dondurmasından sonraya kaldı. Gerekçe: 7. adımdaki formla ekleme (`POST /yetenek-kartlari/{id}/ciktilar`) aynı ihtiyacı karşılıyor; mini sohbet üçüncü bir sohbet grafiği, yeni uçlar ve checkpointer kaydı istiyor, takvimde karşılığı yok. `somut_cikti.oturum_id` sütunu (1. adım) yerinde duruyor; ileride tekrar kuralı için kullanılacak.
+17. **Gencin tek kartı var** (1 Eki, Keşif incelemesi madde 7): kart genç büyüdükçe düzenlenir ve çalışma eklenerek güçlenir, yenisi açılmaz. `yetenek_karti.kullanici_id` tekil (veritabanı kuralı); Keşif kartı olana 409, menüde "Yeni kart" yerine "Kartım", `/me` tek `yetenek_karti` döner. Gerekçe: menü çok kartı davet ederken panel `kartlar[0]`'a bakıyordu ve eşleştirme aynı genci aynı ilana iki kartla önerebiliyordu.
 
 **Uygulama sırası** (§ 10'un güncel hâli). Her adım ayrı commit; her adımda backend ve frontend testlerinin tamamı:
 

@@ -4,7 +4,7 @@
 
 ```mermaid
 erDiagram
-  KULLANICI ||--o{ YETENEK_KARTI : sahiptir
+  KULLANICI ||--o| YETENEK_KARTI : sahiptir
   YETENEK_KARTI ||--o{ SOMUT_CIKTI : icerir
   SOMUT_CIKTI ||--o| GUVEN_SKORU : degerlendirilir
   SOMUT_CIKTI ||--o{ REFERANS_ISTEGI : ister
@@ -195,6 +195,7 @@ erDiagram
 - **`iletisim_email` (KURUM).** `KULLANICI.email`'in kurum karşılığı — Keşif Ajanı'nda kart onaylanırken email üzerinden `Kullanici` bulunup/oluşturuluyordu, Tanımlama Ajanı'nda `Kurum` için aynı mekanizma gerekiyor. Tanımlama Ajanı'nın backend'i yazılırken fark edildi.
 - **`puan` (REFERANS_ISTEGI) ve çok referanslı hesap.** Referansın 1-5 puanı kaydediliyor, çünkü `GUVEN_SKORU.ucuncu_taraf_onayi` tek bir yanıttan değil, **yanıtlamış tüm referansların ortalamasından** hesaplanıyor (1-5 → 0-3 çevrimi sonrası, 0.5 yukarı yuvarlanarak). En yüksek puanı almak "olumlu diyen birini bulana kadar referans sor" davranışını ödüllendirirdi; ortalama, zayıf bir referansın puanı aşağı çekmesine izin verir. Yuvarlama aşağı değil normal: aşağı yuvarlamada iki güçlü referans (5+4 → 2.5 → 2) tek bir 5'ten (3) düşük puan alıyordu — referans eklemek iddiayı zayıflatmamalı. Puan saklanmadan bu hesap yapılamıyordu — son yanıt öncekinin üzerine yazıyordu. Doğrulama Ajanı denenirken fark edildi.
 - **`olusturma_tarihi` (REFERANS_ISTEGI).** Zaman aşımı dalı (`bekliyor` → `yanit_yok`, 5-7 gün) bir tarih olmadan hesaplanamıyordu. Ayrı bir zamanlayıcı kurulmadığı için bu geçiş okuma anında hesaplanıyor; alan onun dayanağı. Doğrulama Ajanı yazılırken eklendi.
+- **`kullanici_id` (YETENEK_KARTI) UNIQUE: gencin tek kartı** (1 Eki, Keşif incelemesi madde 7). Genç yeni kart açmaz; kartını düzenler ve çalışma ekleyerek güçlendirir, böylece aynı ilanın önerilerinde iki kez çıkmaz. Kural veritabanında ki eşzamanlı iki onay da ikinci kartı açamasın; Keşif kartı olan gence 409 döner, `/me` tek `yetenek_karti` taşır. Migration (`a3d7e1c9b5f2`) tekrar eden kart varsa durur, veri silmez.
 - **`oturum_id` (YETENEK_KARTI, IHTIYAC_KARTI), nullable + UNIQUE.** Kartı doğuran sohbetin kimliği. Onay tekrarlanabilir olsun diye: aynı sohbet ikinci kez onaylanınca (çift tıklama, embedding hatası sonrası yeniden deneme) yeni kart açılmaz, mevcut kart döner. Eşzamanlı iki onayda ikincisi UNIQUE kısıta takılır ve mevcut kartı alır. Faz A'da inceleme bulgusu olarak eklendi.
 - **`(ihtiyac_karti_id, yetenek_karti_id)` (ESLESME), UNIQUE.** Bir çift için tek eşleşme. Arka plan eşleştirmesi ile öneri okuması aynı anda çalışınca mükerrer satır açılıyordu; pipeline artık ihtiyaç kartı başına advisory lock ile sıraya giriyor, yeni satırlar `ON CONFLICT DO NOTHING` ile yazılıyor.
 - **`olusturma_tarihi` (IHTIYAC_KARTI).** Eşleştirme Ajanı "kurumun en son ihtiyaç kartı"nı bulmak için `id` sırasına bakıyordu — ama `id` rastgele üretilen bir UUID (v4), zaman bilgisi taşımıyor, sıralaması kronolojik değil. Eşleştirme Ajanı yazılırken fark edildi, gerçek bir tarih alanıyla düzeltiliyor.
