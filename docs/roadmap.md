@@ -167,7 +167,7 @@ Plan ve kararlar: [`plans/firma-akisi.md`](plans/firma-akisi.md). Özellik dondu
 - [x] Firma kartı (sohbet + düzenleme)
 - [x] Ortak ilanı ve iki kapı
 - [x] Firma–firma eşleştirme
-- [ ] Firmalar arası ilgi ve iş birliği
+- [x] Firmalar arası ilgi ve iş birliği
 - [ ] GİRVAK sayıları, Canlılık süzgeci, demo verisi
 - [ ] Belgeler ve deneme senaryosu
 
