@@ -36,6 +36,16 @@ TANITIM_EN_UZUN = 300
 ZORUNLU_ALANLAR: tuple[str, ...] = ("tur", "sektor", "sehir")
 
 
+def firma_turlerini_temizle(degerler) -> list[str]:
+    """Hoşgörülü: tanınmayanı atar, sıra `FIRMA_TURLERI`'ndeki gibi, tekrarsız.
+
+    Sohbet taslağından (checkpoint) okunan değer için; formdan gelen girdi
+    şemada katı doğrulanıyor.
+    """
+    secilen = set(degerler or [])
+    return [tur for tur in FIRMA_TURLERI if tur in secilen]
+
+
 def kurulus_yili_dogrula(yil: int | None, bugun: dt.date | None = None) -> int | None:
     if yil is None:
         return None

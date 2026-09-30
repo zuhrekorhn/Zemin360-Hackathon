@@ -30,3 +30,38 @@ export function ilanlariSirala<T extends Pick<IhtiyacKartiOzeti, "durum">>(
     ...ilanlar.filter(ilanKapali),
   ];
 }
+
+/* --- İki kapı (docs/plans/firma-akisi.md § 0 kararlar 4-5) --------------- */
+
+export type Aranan = "genc" | "firma";
+
+/** `/tanimlama?aranan=` değeri; tanınmayan ya da boş değer genç kapısı. */
+export function arananParametresi(deger: string | null): Aranan {
+  return deger === "firma" ? "firma" : "genc";
+}
+
+export const KAPILAR: {
+  aranan: Aranan;
+  baslik: string;
+  aciklama: string;
+  yol: string;
+}[] = [
+  {
+    aranan: "genc",
+    baslik: "Genç yetenek bul",
+    aciklama: "Bir ihtiyacınızı tanımlayın, ona uygun genç yetenekleri görün.",
+    yol: "/tanimlama",
+  },
+  {
+    aranan: "firma",
+    baslik: "İş birliği ortağı bul",
+    aciklama:
+      "Bir iş için ortak arayın: girişim, KOBİ ya da kurumsal firmalar önerilsin.",
+    yol: "/tanimlama?aranan=firma",
+  },
+];
+
+/** Panelde ortak ilanının yanındaki etiket; genç ilanında etiket yok. */
+export function arananEtiketi(aranan: Aranan): string | null {
+  return aranan === "firma" ? "İş birliği ortağı" : null;
+}

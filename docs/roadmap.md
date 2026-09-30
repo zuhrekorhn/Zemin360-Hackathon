@@ -165,7 +165,7 @@ Plan ve kararlar: [`plans/firma-akisi.md`](plans/firma-akisi.md). Özellik dondu
 - [x] İlan kapatma (nedenli)
 - [x] Firma doğrulaması (alan adı ipucu + GİRVAK onayı)
 - [x] Firma kartı (sohbet + düzenleme)
-- [ ] Ortak ilanı ve iki kapı
+- [x] Ortak ilanı ve iki kapı
 - [ ] Firma–firma eşleştirme
 - [ ] Firmalar arası ilgi ve iş birliği
 - [ ] GİRVAK sayıları, Canlılık süzgeci, demo verisi

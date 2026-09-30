@@ -25,7 +25,7 @@ import { firmaKartiCagrisi } from "@/lib/firma-karti";
 import { firmaProfilBandi } from "@/lib/firma-profil";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { firmaDurumEtiketi } from "@/lib/ilgi";
-import { ilanKapali, ilanlariSirala } from "@/lib/ilan";
+import { KAPILAR, arananEtiketi, ilanKapali, ilanlariSirala } from "@/lib/ilan";
 import { useOturum } from "@/lib/oturum";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 
@@ -88,6 +88,24 @@ function KurumPaneliIcerigi() {
         </p>
       </header>
 
+      {/* İki kapı (docs/plans/firma-akisi.md § 0 karar 9). */}
+      <nav aria-label="Ne arıyorsunuz?" className="grid gap-3 sm:grid-cols-2">
+        {KAPILAR.map((kapi) => (
+          <Link
+            key={kapi.aranan}
+            href={kapi.yol}
+            className="flex flex-col gap-1 rounded-sm border border-kenar bg-card px-4 py-4 transition-colors hover:border-ana"
+          >
+            <span className="font-heading text-lg font-semibold text-ana">
+              {kapi.baslik}
+            </span>
+            <span className="text-sm text-pretty text-muted-foreground">
+              {kapi.aciklama}
+            </span>
+          </Link>
+        ))}
+      </nav>
+
       {kartCagrisi ? (
         // Engellemez (karar 9): yalnızca iş birliği ortağı olarak bulunmak için gerekli.
         <div
@@ -135,6 +153,9 @@ function KurumPaneliIcerigi() {
                   </span>
                   <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {tarihYaz(kart.olusturma_tarihi)}
+                    {arananEtiketi(kart.aranan) ? (
+                      <DurumEtiketi metin={arananEtiketi(kart.aranan) ?? ""} />
+                    ) : null}
                     {ilanKapali(kart) ? (
                       <DurumEtiketi metin="Kapandı" />
                     ) : !kart.embedding_var ? (

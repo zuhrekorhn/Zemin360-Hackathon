@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+
+import { CokluSecim } from "@/components/coklu-secim";
 
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
@@ -24,8 +27,10 @@ import {
   tanimlamaBaslat,
   tanimlamaCevap,
 } from "@/lib/api";
-import { onaydaFirmaBilgisiSorulmali } from "@/lib/firma-profil";
+import { ISBIRLIGI_TURLERI, isbirligiTuruEtiketi } from "@/lib/firma-karti";
+import { FIRMA_TURLERI, onaydaFirmaBilgisiSorulmali } from "@/lib/firma-profil";
 import { hatayaCevir } from "@/lib/hata";
+import { type Aranan, arananParametresi } from "@/lib/ilan";
 import {
   CALISMA_MODELI_ETIKETLERI,
   CALISMA_MODELLERI,
@@ -49,12 +54,17 @@ type Asama = "sohbet" | "taslak" | "kaydedildi";
 export default function TanimlamaSayfasi() {
   return (
     <GirisKapisi roller={["kurum"]}>
-      <TanimlamaSohbeti />
+      <Suspense fallback={null}>
+        <TanimlamaSohbeti />
+      </Suspense>
     </GirisKapisi>
   );
 }
 
 function TanimlamaSohbeti() {
+  // İki kapı (docs/plans/firma-akisi.md § 0 karar 4): ortak ilanı `?aranan=firma`.
+  const aranan: Aranan = arananParametresi(useSearchParams().get("aranan"));
+  const ortak = aranan === "firma";
   const [asama, setAsama] = useState<Asama>("sohbet");
   const [oturumId, setOturumId] = useState<string | null>(null);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);
@@ -79,7 +89,7 @@ function TanimlamaSohbeti() {
     setHata(null);
     setBekleniyor(true);
     try {
-      const yanit = await tanimlamaBaslat();
+      const yanit = await tanimlamaBaslat(aranan);
       setOturumId(yanit.oturum_id);
       setMesajlar(yanit.soru ? [{ kim: "ajan", metin: yanit.soru }] : []);
       setTaslak(yanit.taslak);
@@ -88,7 +98,7 @@ function TanimlamaSohbeti() {
     } finally {
       setBekleniyor(false);
     }
-  }, [hatayiYaz]);
+  }, [hatayiYaz, aranan]);
 
   useEffect(() => {
     // StrictMode efekti iki kez çalıştırıyor; ikinci oturum açılmasın.
@@ -154,8 +164,9 @@ function TanimlamaSohbeti() {
           Tanımlama Ajanı
         </h1>
         <p className="text-sm text-pretty text-muted-foreground">
-          Kısa bir sohbet. İhtiyacınızı birlikte ölçülebilir bir ihtiyaç kartına
-          çevireceğiz. Kart siz onaylamadan kaydedilmez.
+          {ortak
+            ? "Kısa bir sohbet. Bir iş birliği ortağıyla çözmek istediğiniz ihtiyacı ölçülebilir bir karta çevireceğiz; bu karta uyan firmalar önerilecek. Kart siz onaylamadan kaydedilmez."
+            : "Kısa bir sohbet. İhtiyacınızı birlikte ölçülebilir bir ihtiyaç kartına çevireceğiz. Kart siz onaylamadan kaydedilmez."}
         </p>
       </header>
 
@@ -182,6 +193,7 @@ function TanimlamaSohbeti() {
       {asama === "taslak" && taslak ? (
         <TaslakBolumu
           taslak={taslak}
+          ortak={ortak}
           bekleniyor={bekleniyor}
           onOnayla={async (kurumProfili, duzeltilmisTaslak) => {
             if (!oturumId) return;
@@ -221,10 +233,12 @@ function TanimlamaSohbeti() {
 
 function TaslakBolumu({
   taslak,
+  ortak,
   bekleniyor,
   onOnayla,
 }: {
   taslak: IhtiyacTaslagi;
+  ortak: boolean;
   bekleniyor: boolean;
   onOnayla: (
     kurumProfili: KurumProfili,
@@ -250,6 +264,14 @@ function TaslakBolumu({
   );
   // Eşleştirmenin sert filtresi; ajan yanlış anlamış olabilir, kurum düzeltsin.
   const [musaitlik, setMusaitlik] = useState(taslak.musaitlik_tercihi ?? "");
+  // Ortak ilanı (docs/plans/firma-akisi.md § 5): aranan firma türleri ve iş
+  // birliği türü; çalışma modeli ve müsaitlik sorulmaz.
+  const [firmaTurleri, setFirmaTurleri] = useState<string[]>(
+    taslak.aranan_firma_turleri ?? [],
+  );
+  const [isbirligiTuru, setIsbirligiTuru] = useState(
+    taslak.isbirligi_turu ?? "",
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -260,7 +282,7 @@ function TaslakBolumu({
         <p className="text-sm text-pretty text-muted-foreground">
           Sohbetten çıkan kart bu. Gözden geçirin, doğruysa aşağıdan onaylayın.
         </p>
-        <TaslakKarti taslak={taslak} />
+        <TaslakKarti taslak={taslak} ortak={ortak} />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -287,8 +309,10 @@ function TaslakBolumu({
               {
                 ...taslak,
                 sehir_tercihi: aranilanSehir || null,
-                calisma_modeli: calismaModeli || null,
-                musaitlik_tercihi: musaitlik || null,
+                calisma_modeli: ortak ? null : calismaModeli || null,
+                musaitlik_tercihi: ortak ? null : musaitlik || null,
+                aranan_firma_turleri: ortak ? firmaTurleri : [],
+                isbirligi_turu: ortak ? isbirligiTuru || null : null,
               },
             );
           }}
@@ -341,49 +365,91 @@ function TaslakBolumu({
               >
                 {SEHIR_SECENEKLERI.map((secenek) => (
                   <option key={secenek.deger} value={secenek.deger}>
-                    {secenek.etiket}
+                    {/* Ortak ilanında şehir varsayılan olarak fark etmez (karar 5). */}
+                    {ortak && secenek.deger === ""
+                      ? "Fark etmez"
+                      : secenek.etiket}
                   </option>
                 ))}
               </select>
             </FormAlani>
           </div>
 
-          <FormAlani
-            etiket="Çalışma modeli"
-            htmlFor="calisma-modeli"
-            istegeBagli
-          >
-            <select
-              id="calisma-modeli"
-              value={calismaModeli}
-              onChange={(olay) => setCalismaModeli(olay.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
-            >
-              <option value="">Belirtmek istemiyorum</option>
-              {CALISMA_MODELLERI.map((model) => (
-                <option key={model.deger} value={model.deger}>
-                  {model.etiket}
-                </option>
-              ))}
-            </select>
-          </FormAlani>
+          {ortak ? (
+            <>
+              <CokluSecim
+                baslik="Aradığınız firma türleri"
+                ipucu="(hiçbiri seçilmezse hepsi)"
+                secenekler={FIRMA_TURLERI}
+                secili={firmaTurleri}
+                onDegis={setFirmaTurleri}
+              />
+              <FormAlani
+                etiket="İş birliği türü"
+                htmlFor="isbirligi-turu"
+                istegeBagli
+              >
+                <select
+                  id="isbirligi-turu"
+                  value={isbirligiTuru}
+                  onChange={(olay) => setIsbirligiTuru(olay.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+                >
+                  <option value="">Belirtmek istemiyorum</option>
+                  {ISBIRLIGI_TURLERI.map((tur) => (
+                    <option key={tur.deger} value={tur.deger}>
+                      {tur.etiket}
+                    </option>
+                  ))}
+                </select>
+              </FormAlani>
+            </>
+          ) : (
+            <>
+              <FormAlani
+                etiket="Çalışma modeli"
+                htmlFor="calisma-modeli"
+                istegeBagli
+              >
+                <select
+                  id="calisma-modeli"
+                  value={calismaModeli}
+                  onChange={(olay) => setCalismaModeli(olay.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+                >
+                  <option value="">Belirtmek istemiyorum</option>
+                  {CALISMA_MODELLERI.map((model) => (
+                    <option key={model.deger} value={model.deger}>
+                      {model.etiket}
+                    </option>
+                  ))}
+                </select>
+              </FormAlani>
 
-          <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istegeBagli>
-            <select
-              id="musaitlik"
-              value={musaitlik}
-              onChange={(olay) => setMusaitlik(olay.target.value)}
-              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
-            >
-              {MUSAITLIK_SECENEKLERI.map((secenek) => (
-                <option key={secenek.deger} value={secenek.deger}>
-                  {secenek.etiket}
-                </option>
-              ))}
-            </select>
-          </FormAlani>
+              <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istegeBagli>
+                <select
+                  id="musaitlik"
+                  value={musaitlik}
+                  onChange={(olay) => setMusaitlik(olay.target.value)}
+                  className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+                >
+                  {MUSAITLIK_SECENEKLERI.map((secenek) => (
+                    <option key={secenek.deger} value={secenek.deger}>
+                      {secenek.etiket}
+                    </option>
+                  ))}
+                </select>
+              </FormAlani>
+            </>
+          )}
 
-          {firmaBilgisiSor ? (
+          {ortak ? (
+            <p className="text-xs text-pretty text-muted-foreground">
+              <span className="font-medium">Aranan şehir</span> yalnızca ortağın
+              belirli bir şehirde olması şartsa seçilir; seçilmezse şehir fark
+              etmez.
+            </p>
+          ) : firmaBilgisiSor ? (
             <p className="text-xs text-pretty text-muted-foreground">
               <span className="font-medium">Kurumun şehri</span> sizin
               bulunduğunuz yer;{" "}
@@ -423,9 +489,11 @@ function TaslakBolumu({
 
 function TaslakKarti({
   taslak,
+  ortak = false,
   kurumAdi,
 }: {
   taslak: IhtiyacTaslagi;
+  ortak?: boolean;
   kurumAdi?: string;
 }) {
   return (
@@ -462,21 +530,56 @@ function TaslakKarti({
         <div className="bg-card px-4 py-3">
           <dt className="text-xs text-muted-foreground">Aranan şehir</dt>
           <dd className="text-sm break-words">
-            {sehirEtiketi(taslak.sehir_tercihi)}
+            {ortak && !taslak.sehir_tercihi
+              ? "Fark etmez"
+              : sehirEtiketi(taslak.sehir_tercihi)}
           </dd>
         </div>
-        <div className="bg-card px-4 py-3">
-          <dt className="text-xs text-muted-foreground">Çalışma modeli</dt>
-          <dd className="text-sm break-words">
-            {etiketle(CALISMA_MODELI_ETIKETLERI, taslak.calisma_modeli)}
-          </dd>
-        </div>
-        <div className="bg-card px-4 py-3">
-          <dt className="text-xs text-muted-foreground">Müsaitlik tercihi</dt>
-          <dd className="text-sm break-words">
-            {etiketle(MUSAITLIK_ETIKETLERI, taslak.musaitlik_tercihi)}
-          </dd>
-        </div>
+        {ortak ? (
+          <>
+            <div className="bg-card px-4 py-3">
+              <dt className="text-xs text-muted-foreground">
+                Aranan firma türleri
+              </dt>
+              <dd className="text-sm break-words">
+                {taslak.aranan_firma_turleri?.length
+                  ? taslak.aranan_firma_turleri
+                      .map(
+                        (tur) =>
+                          FIRMA_TURLERI.find((t) => t.deger === tur)?.etiket ??
+                          tur,
+                      )
+                      .join(", ")
+                  : "Hepsi"}
+              </dd>
+            </div>
+            <div className="bg-card px-4 py-3">
+              <dt className="text-xs text-muted-foreground">İş birliği türü</dt>
+              <dd className="text-sm break-words">
+                {taslak.isbirligi_turu
+                  ? isbirligiTuruEtiketi(taslak.isbirligi_turu)
+                  : "—"}
+              </dd>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="bg-card px-4 py-3">
+              <dt className="text-xs text-muted-foreground">Çalışma modeli</dt>
+              <dd className="text-sm break-words">
+                {etiketle(CALISMA_MODELI_ETIKETLERI, taslak.calisma_modeli)}
+              </dd>
+            </div>
+            <div className="bg-card px-4 py-3">
+              <dt className="text-xs text-muted-foreground">
+                Müsaitlik tercihi
+              </dt>
+              <dd className="text-sm break-words">
+                {etiketle(MUSAITLIK_ETIKETLERI, taslak.musaitlik_tercihi)}
+              </dd>
+            </div>
+          </>
+        )}
       </dl>
     </article>
   );
@@ -496,7 +599,9 @@ function KayitliKart({
       </h2>
       {kart.embedding_var ? (
         <p className="text-sm text-pretty text-muted-foreground">
-          Artık genç yeteneklerin yetenek kartlarıyla eşleştirilebilir.
+          {kart.aranan === "firma"
+            ? "Artık firma kartlarıyla eşleştirilebilir."
+            : "Artık genç yeteneklerin yetenek kartlarıyla eşleştirilebilir."}
         </p>
       ) : (
         <EslestirmeyeHazirla
@@ -504,7 +609,11 @@ function KayitliKart({
         />
       )}
 
-      <TaslakKarti taslak={kart} kurumAdi={kart.kurum.ad} />
+      <TaslakKarti
+        taslak={kart}
+        ortak={kart.aranan === "firma"}
+        kurumAdi={kart.kurum.ad}
+      />
 
       <p className="font-mono text-xs text-muted-foreground">
         kart no: <span className="break-all">{kart.id}</span>

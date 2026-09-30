@@ -100,6 +100,8 @@ export type IhtiyacKartiOzeti = {
   embedding_var: boolean;
   /** acik | kapandi (docs/plans/firma-akisi.md § 7) */
   durum: string;
+  /** genc | firma: hangi kapıdan açıldı */
+  aranan: "genc" | "firma";
 };
 
 /** Giriş yapmış hesap; kart ve kurum kimliği buradan okunur. */
@@ -603,10 +605,15 @@ export type IhtiyacTaslagi = {
   /** Tek seçim: is_yerinde | hibrit | uzaktan. */
   calisma_modeli: string | null;
   musaitlik_tercihi: string | null;
+  /** Ortak ilanı (docs/plans/firma-akisi.md § 5); genç ilanında boş. */
+  aranan_firma_turleri?: string[];
+  isbirligi_turu?: string | null;
 };
 
 export type TanimlamaSohbetYaniti = {
   oturum_id: string;
+  /** genc | firma: hangi kapıdan açıldı */
+  aranan: "genc" | "firma";
   soru: string | null;
   taslak: IhtiyacTaslagi;
   taslak_hazir: boolean;
@@ -641,6 +648,9 @@ export type IhtiyacKartiYaniti = {
   kurum: KurumYaniti;
   /** acik | kapandi. Kapanma nedeni yalnızca GİRVAK sayılarında. */
   durum: string;
+  aranan: "genc" | "firma";
+  aranan_firma_turleri: string[];
+  isbirligi_turu: string | null;
 };
 
 /** POST /ihtiyac-kartlari/{id}/kapat — firma ilanını nedenle kapatır; tekrar 200. */
@@ -665,10 +675,12 @@ export function ihtiyacKartiHazirla(
 }
 
 /** POST /tanimlama/sohbet/baslat */
-export function tanimlamaBaslat(): Promise<TanimlamaSohbetYaniti> {
+export function tanimlamaBaslat(
+  aranan: "genc" | "firma" = "genc",
+): Promise<TanimlamaSohbetYaniti> {
   return apiIstek<TanimlamaSohbetYaniti>("/tanimlama/sohbet/baslat", {
     method: "POST",
-    body: JSON.stringify({}),
+    body: JSON.stringify({ aranan }),
   });
 }
 

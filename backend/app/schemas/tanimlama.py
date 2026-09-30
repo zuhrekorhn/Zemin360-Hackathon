@@ -9,7 +9,9 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core.ilan import KapanmaNedeni
+from app.core.firma_karti import IsbirligiTuru
+from app.core.firma_profili import FirmaTuru
+from app.core.ilan import Aranan, KapanmaNedeni
 from app.core.musaitlik import HosgoruluMusaitlik, KatiMusaitlik
 
 
@@ -30,6 +32,9 @@ class IhtiyacTaslagi(BaseModel):
     # filtresi uygulanmaz.
     calisma_modeli: str | None = None
     musaitlik_tercihi: HosgoruluMusaitlik = None
+    # Ortak ilanı (docs/plans/firma-akisi.md § 5); genç ilanında boş.
+    aranan_firma_turleri: list[str] = []
+    isbirligi_turu: str | None = None
 
 
 class IhtiyacTaslagiGirdisi(IhtiyacTaslagi):
@@ -40,10 +45,21 @@ class IhtiyacTaslagiGirdisi(IhtiyacTaslagi):
     """
 
     musaitlik_tercihi: KatiMusaitlik = None
+    aranan_firma_turleri: list[FirmaTuru] = []
+    isbirligi_turu: IsbirligiTuru | None = None
+
+
+class TanimlamaBaslatIstegi(BaseModel):
+    """Hangi kapı: genç yetenek (varsayılan) ya da iş birliği ortağı."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    aranan: Aranan = "genc"
 
 
 class TanimlamaSohbetYaniti(BaseModel):
     oturum_id: uuid.UUID
+    aranan: str = "genc"
     soru: str | None = None
     taslak: IhtiyacTaslagi
     taslak_hazir: bool
@@ -103,6 +119,10 @@ class IhtiyacKartiYaniti(BaseModel):
     kurum: KurumYaniti
     # acik | kapandi. Kapanma nedeni burada yok: yalnızca GİRVAK görür.
     durum: str = "acik"
+    # genc | firma (docs/plans/firma-akisi.md § 0 kararlar 4-5)
+    aranan: str = "genc"
+    aranan_firma_turleri: list[str] = []
+    isbirligi_turu: str | None = None
 
 
 class IhtiyacKartiKapatIstegi(BaseModel):

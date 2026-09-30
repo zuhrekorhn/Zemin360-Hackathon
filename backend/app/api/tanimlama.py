@@ -2,6 +2,11 @@
 
 Keşif ile aynı desen: sohbet durumu LangGraph checkpointer'ında, `oturum_id`
 thread_id olarak kullanılıyor.
+
+İki kapı (docs/plans/firma-akisi.md § 0 kararlar 4-5, § 5): genç yetenek
+(varsayılan) ve iş birliği ortağı. Aynı motor, iki soru seti (iki grafik), tek
+checkpointer; kapı sohbetin başında seçilir ve durumda (`aranan`) saklanır.
+Sonraki istekler grafiği durumdan seçer; eski sohbetlerde alan yoksa genç.
 """
 
 from __future__ import annotations
@@ -13,22 +18,27 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.firma_karti import profil_baglami
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.profil import kurumun_profilini_guncelle
 from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.core import calisma_modeli
+from app.core.firma_karti import ISBIRLIGI_TURLERI
+from app.core.firma_profili import firma_turlerini_temizle
 from app.core.hatalar import HIZ_SINIRI_MESAJI
+from app.core.ilan import ARANAN_FIRMA, ARANAN_GENC
 from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.hesap import ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
-from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
+from app.schemas.sohbet import SohbetCevapIstegi
 from app.schemas.tanimlama import (
     IhtiyacKartiOnaylaIstegi,
     IhtiyacKartiYaniti,
     IhtiyacTaslagi,
+    TanimlamaBaslatIstegi,
     TanimlamaSohbetYaniti,
 )
 from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
@@ -36,16 +46,22 @@ from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
 router = APIRouter(prefix="/tanimlama", tags=["tanimlama"])
 
 
-def _grafik(request: Request):
-    grafik = getattr(request.app.state, "tanimlama_grafigi", None)
+def _grafik(request: Request, aranan: str = ARANAN_GENC):
+    ad = "tanimlama_ortak_grafigi" if aranan == ARANAN_FIRMA else "tanimlama_grafigi"
+    grafik = getattr(request.app.state, ad, None)
     if grafik is None:
         raise HTTPException(status_code=503, detail="Tanımlama Ajanı hazır değil")
     return grafik
 
 
+def _aranan(degerler: dict) -> str:
+    return degerler.get("aranan") or ARANAN_GENC
+
+
 def _yanit(oturum_id: uuid.UUID, durum: dict) -> TanimlamaSohbetYaniti:
     return TanimlamaSohbetYaniti(
         oturum_id=oturum_id,
+        aranan=_aranan(durum),
         soru=durum.get("sonraki_soru"),
         taslak=IhtiyacTaslagi(**(durum.get("taslak") or {})),
         taslak_hazir=bool(durum.get("taslak_hazir")),
@@ -54,12 +70,18 @@ def _yanit(oturum_id: uuid.UUID, durum: dict) -> TanimlamaSohbetYaniti:
 
 @router.post("/sohbet/baslat", response_model=TanimlamaSohbetYaniti)
 async def sohbet_baslat(
-    _: SohbetBaslatIstegi, request: Request, hesap: Hesap = Depends(rol_gerekli(ROL_KURUM))
+    istek: TanimlamaBaslatIstegi,
+    request: Request,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
 ) -> TanimlamaSohbetYaniti:
     oturum_id = uuid.uuid4()
     # Oturumu açan hesap checkpoint'e yazılır; cevap ve onay yalnızca ondan.
-    durum = await _grafik(request).ainvoke(
-        sohbet_baslangici(hesap), config={"configurable": {"thread_id": str(oturum_id)}}
+    baslangic = {**sohbet_baslangici(hesap), "aranan": istek.aranan}
+    if istek.aranan == ARANAN_FIRMA:
+        # Firmanın kayıt bilgileri sorulmaz, bağlam olarak gider (§ 5).
+        baslangic["profil_baglami"] = profil_baglami(hesap.kurum)
+    durum = await _grafik(request, istek.aranan).ainvoke(
+        baslangic, config={"configurable": {"thread_id": str(oturum_id)}}
     )
     return _yanit(oturum_id, durum)
 
@@ -69,13 +91,14 @@ async def sohbet_cevap(
     istek: SohbetCevapIstegi, request: Request, hesap: Hesap = Depends(rol_gerekli(ROL_KURUM))
 ) -> TanimlamaSohbetYaniti:
     config = {"configurable": {"thread_id": str(istek.oturum_id)}}
-    grafik = _grafik(request)
-
-    mevcut = await grafik.aget_state(config)
+    # İki grafik aynı checkpointer'ı paylaşıyor: durum hangisinden okunursa okunsun
+    # aynı; devam edecek grafik durumdaki kapıdan seçilir.
+    mevcut = await _grafik(request).aget_state(config)
     if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
         raise HTTPException(status_code=404, detail="Sohbet oturumu bulunamadı")
     if mevcut.values.get("taslak_hazir"):
         raise HTTPException(status_code=409, detail="Taslak hazır; sıradaki adım onay")
+    grafik = _grafik(request, _aranan(mevcut.values))
 
     try:
         durum = await grafik.ainvoke({"mesajlar": [kullanici_mesaji(istek.cevap)]}, config=config)
@@ -118,6 +141,7 @@ async def kart_onayla(
     taslak = istek.duzeltilmis_taslak or IhtiyacTaslagi(**mevcut.values["taslak"])
     if not taslak.problem_tanimi:
         raise HTTPException(status_code=422, detail="Taslakta problem tanımı zorunlu")
+    ortak = _aranan(mevcut.values) == ARANAN_FIRMA
 
     # Kart token'daki hesabın kurumuna bağlanır (docs/faz-b-kimlik-ve-dongu.md § 4).
     kurum_id = hesap.kurum.id
@@ -130,10 +154,18 @@ async def kart_onayla(
         basari_kriteri=taslak.basari_kriteri,
         kisitlar=taslak.kisitlar,
         sehir_tercihi=sehir_kanonik(taslak.sehir_tercihi),
+        # Çalışma modeli ve müsaitlik genç ilanına özel; ortak ilanında yazılmaz.
         calisma_modeli=(
-            taslak.calisma_modeli if calisma_modeli.gecerli_mi(taslak.calisma_modeli) else None
+            taslak.calisma_modeli
+            if not ortak and calisma_modeli.gecerli_mi(taslak.calisma_modeli)
+            else None
         ),
-        musaitlik_tercihi=taslak.musaitlik_tercihi,
+        musaitlik_tercihi=None if ortak else taslak.musaitlik_tercihi,
+        aranan=ARANAN_FIRMA if ortak else ARANAN_GENC,
+        aranan_firma_turleri=firma_turlerini_temizle(taslak.aranan_firma_turleri) if ortak else [],
+        isbirligi_turu=(
+            taslak.isbirligi_turu if ortak and taslak.isbirligi_turu in ISBIRLIGI_TURLERI else None
+        ),
     )
     oturum.add(kart)
     try:

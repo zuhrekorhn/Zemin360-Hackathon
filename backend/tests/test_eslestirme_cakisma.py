@@ -67,7 +67,9 @@ class KayitTutanOturum:
 
 def test_kilit_eslesmeler_okunmadan_once_alinir(monkeypatch):
     """İkinci pipeline, birincinin yazdıklarını görmeden okumaya başlamamalı."""
-    ihtiyac = SimpleNamespace(id=uuid.uuid4(), kurum_id=uuid.uuid4(), embedding=[0.1], durum="acik")
+    ihtiyac = SimpleNamespace(
+        id=uuid.uuid4(), kurum_id=uuid.uuid4(), embedding=[0.1], durum="acik", aranan="genc"
+    )
     okunanlar: list[str] = []
 
     async def adaylar(oturum, ihtiyac_karti):

@@ -38,6 +38,7 @@ from sqlalchemy.orm import selectinload
 from app.agents.dogrulama import otomatik_puanlanir_mi
 from app.agents.eslestirme import BENZERLIK_ALT_SINIRI, DURUM_ONERILDI
 from app.api.yetenek_kartlari import embedding_hesapla
+from app.core.ilan import ARANAN_GENC
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_sessionmaker
 from app.models.eslesme import Eslesme
@@ -141,6 +142,8 @@ async def ilgili_ihtiyac_kartlari(oturum: AsyncSession, kart_id: uuid.UUID) -> l
         select(IhtiyacKarti.id).where(
             IhtiyacKarti.embedding.isnot(None),
             IhtiyacKarti.durum == IHTIYAC_ACIK,
+            # Yetenek kartı yalnızca genç ilanlarına aday (firma-akisi § 4).
+            IhtiyacKarti.aranan == ARANAN_GENC,
             or_(uzaklik <= 1.0 - BENZERLIK_ALT_SINIRI, IhtiyacKarti.id.in_(onerildigi)),
         )
     )

@@ -127,7 +127,11 @@ def test_kapali_ilana_pipeline_oneri_yazmaz():
 
         # Bayat görünüm: çağıran kapatmadan önce okumuş, hâlâ "acik" görüyor.
         bayat = SimpleNamespace(
-            id=ilan.id, kurum_id=ilan.kurum_id, embedding=ilan.embedding, durum="acik"
+            id=ilan.id,
+            kurum_id=ilan.kurum_id,
+            embedding=ilan.embedding,
+            durum="acik",
+            aranan="genc",
         )
         try:
             await eslestirme_servisi.pipeline_calistir(d.oturum, bayat)

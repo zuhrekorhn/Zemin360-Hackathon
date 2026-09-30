@@ -32,6 +32,7 @@ from app.agents.eslestirme import (
 )
 from app.api.bildirimler import bildirim_ekle
 from app.api.sahiplik import eslesmedeki_taraf
+from app.core.ilan import ARANAN_FIRMA
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_sessionmaker
 from app.models.bildirim import TUR_YENI_ONERI
@@ -123,6 +124,10 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
     if ihtiyac.durum != IHTIYAC_ACIK:
         # Kapalı ihtiyaç için aday aranmaz; mevcut kayıtlar okunabilir kalır.
         raise HTTPException(status_code=409, detail=IHTIYAC_KAPALI_MESAJI)
+    if ihtiyac.aranan == ARANAN_FIRMA:
+        # Ortak ilanının adayları firmalar (docs/plans/firma-akisi.md § 4); gençler
+        # bu ilana önerilmez. Firma adayları eklenene kadar liste boş kalır.
+        return await eslesmeleri_oku(oturum, ihtiyac.id)
 
     # Aynı ihtiyaç kartı için pipeline'lar sıraya girer: kart onaylanınca
     # arka plan işi başlıyor, kurum da o sırada öneriler sayfasını açınca

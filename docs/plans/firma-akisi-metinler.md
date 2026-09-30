@@ -101,3 +101,18 @@ Denetime not: "Bu alanlar boş bırakılamaz: ne_yapiyoruz" 422 cümlesi alan ad
 Denetime notlar:
 - Sohbet balonundaki bekleme metni "Ajan düşünüyor…" ortak bileşenden geliyor (`components/sohbet.tsx`); firma kartı sohbetinde de görünüyor. Metin denetiminde değiştirilmeli.
 - "Kartınız eşleştirmeye hazırlanıyor": "eşleştirme" mevcut firma metinlerinde de geçiyor; rehberde terim olarak yok, denetimde bakılsın.
+
+## 6. adım — Ortak ilanı ve iki kapı
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `lib/ilan.ts`, `app/kurum/page.tsx` | Kapılar | Genç yetenek bul · "Bir ihtiyacınızı tanımlayın, ona uygun genç yetenekleri görün." · İş birliği ortağı bul · "Bir iş için ortak arayın: girişim, KOBİ ya da kurumsal firmalar önerilsin." | firma |
+| 〃 | İlan etiketi | İş birliği ortağı | firma |
+| `backend/app/agents/tanimlama.py` | Ortak açılış | Merhaba! Bir iş birliği ortağıyla çözmek istediğiniz problemi anlatın: bugün ne yaşıyorsunuz ve ortaktan ne bekliyorsunuz? | firma |
+| 〃 | Ortak soruları | Ortak firma işe başladığında hangi sorunu çözecek? Bugün o iş nasıl yürüyor ve nerede tıkanıyor? · Bu iş birliği bittiğinde neye bakıp “oldu” diyeceksiniz? Sayıyla ifade edebilir misiniz: bir oran, bir süre ya da bir adet? | firma |
+| `app/tanimlama/page.tsx` | Ortak giriş | Kısa bir sohbet. Bir iş birliği ortağıyla çözmek istediğiniz ihtiyacı ölçülebilir bir karta çevireceğiz; bu karta uyan firmalar önerilecek. Kart siz onaylamadan kaydedilmez. | firma |
+| 〃 | Ortak onay formu | Aradığınız firma türleri (hiçbiri seçilmezse hepsi) · İş birliği türü · Belirtmek istemiyorum · Fark etmez · "Aranan şehir yalnızca ortağın belirli bir şehirde olması şartsa seçilir; seçilmezse şehir fark etmez." | firma |
+| 〃 | Taslak kartı | Aranan firma türleri · Hepsi · İş birliği türü | firma |
+| 〃 | Kayıtlı ortak ilanı | Artık firma kartlarıyla eşleştirilebilir. | firma |
+
+Denetime not: Tanımlama sayfasının başlığı ve sohbet adı hâlâ "Tanımlama Ajanı" (mevcut metin); ortak kapısında da görünüyor.

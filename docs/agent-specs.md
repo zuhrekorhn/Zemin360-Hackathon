@@ -27,6 +27,8 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 
 **Nasıl sağlayacak:** Keşif Ajanı ile **aynı sohbet motorunu paylaşır** (ayrı yazılmaz), sadece soru seti farklıdır. Sokratik sorularla belirsiz ifadeyi ("dijitalleşmek istiyoruz") ölçülebilir hale getirir ("tier-1 biletlerin %50'sini insan olmadan çöz" gibi). Her alan kurum temsilcisine onaylatılır.
 
+**İki kapı** (firma akışı, `plans/firma-akisi.md` § 5): aynı motorda ikinci bir `AjanTanimi` (`TANIMLAMA_ORTAK`, `app/agents/tanimlama.py`) iş birliği ortağı arayan ilanı çıkarır. Çalışma modeli ve müsaitlik sorulmaz; iş birliği türü, aranan firma türleri ve varsa şehir şartı alınır. Firmanın kayıt bilgileri bağlam olarak gider, sorulmaz. Ortak tarifi ("bir yapay zekâ girişimi arıyoruz") problem sayılmaz; ortağın çözeceği sorun sorulur. Genç kapısının soru seti değişmedi.
+
 ## 3. Eşleştirme Ajanı
 
 **Ne sağlayacak:** İhtiyaç kartı ile yetenek kartını semantik olarak karşılaştırma; her öneri için "neden eşleşti" gerekçesi; doğrulama durumunu sıralamaya dahil etme.

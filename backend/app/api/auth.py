@@ -191,6 +191,7 @@ async def me(
                 olusturma_tarihi=kart.olusturma_tarihi,
                 embedding_var=kart.embedding is not None,
                 durum=kart.durum,
+                aranan=kart.aranan,
             )
             for kart in kartlar
         ]

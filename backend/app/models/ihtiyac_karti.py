@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import DateTime, ForeignKey, String, Text, func, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import EMBEDDING_DIM, Base, UUIDPrimaryKeyMixin
@@ -44,6 +44,14 @@ class IhtiyacKarti(UUIDPrimaryKeyMixin, Base):
     # eşleştirmeye girmez; bekleyen ilgiler "kapandı" olur. Kapanan ilan tekrar
     # açılmaz (docs/plans/firma-akisi.md § 0, karar 7).
     durum: Mapped[str] = mapped_column(String, default="acik", server_default=text("'acik'"))
+    # Kimi arıyor (docs/plans/firma-akisi.md § 0 kararlar 4-5): genc | firma.
+    # Mevcut ilanlar genç ilanı. Ortak ilanında aranan firma türleri (boş =
+    # hepsi) ve iş birliği türü; çalışma modeli ve müsaitlik genç ilanına özel.
+    aranan: Mapped[str] = mapped_column(String, default="genc", server_default=text("'genc'"))
+    aranan_firma_turleri: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), default=list, server_default=text("'{}'")
+    )
+    isbirligi_turu: Mapped[str | None] = mapped_column(String)
     # Firmanın kapatırken seçtiği neden (app/core/ilan.py); yalnızca GİRVAK görür.
     kapanma_nedeni: Mapped[str | None] = mapped_column(String)
     kapanma_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

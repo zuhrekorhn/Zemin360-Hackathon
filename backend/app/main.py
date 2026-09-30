@@ -10,6 +10,7 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from app.agents.firma_karti import grafik_derle as firma_karti_grafigi_derle
 from app.agents.kesif import grafik_derle as kesif_grafigi_derle
 from app.agents.tanimlama import grafik_derle as tanimlama_grafigi_derle
+from app.agents.tanimlama import ortak_grafik_derle
 from app.api import (
     auth,
     bildirimler,
@@ -58,6 +59,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await checkpointer.setup()
         app.state.kesif_grafigi = kesif_grafigi_derle(checkpointer)
         app.state.tanimlama_grafigi = tanimlama_grafigi_derle(checkpointer)
+        app.state.tanimlama_ortak_grafigi = ortak_grafik_derle(checkpointer)
         app.state.firma_karti_grafigi = firma_karti_grafigi_derle(checkpointer)
         yield
     model_kontrolu.cancel()

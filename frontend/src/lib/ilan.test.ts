@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { KAPANMA_NEDENLERI, ilanKapali, ilanlariSirala } from "@/lib/ilan";
+import {
+  KAPANMA_NEDENLERI,
+  KAPILAR,
+  arananEtiketi,
+  arananParametresi,
+  ilanKapali,
+  ilanlariSirala,
+} from "@/lib/ilan";
 
 describe("KAPANMA_NEDENLERI", () => {
   it("backend'deki üç neden, sabit sırada", () => {
@@ -31,5 +38,25 @@ describe("ilanlariSirala", () => {
   it("ilanKapali", () => {
     expect(ilanKapali({ durum: "kapandi" })).toBe(true);
     expect(ilanKapali({ durum: "acik" })).toBe(false);
+  });
+});
+
+describe("iki kapı", () => {
+  it("parametre: yalnızca 'firma' ortak kapısı", () => {
+    expect(arananParametresi("firma")).toBe("firma");
+    expect(arananParametresi(null)).toBe("genc");
+    expect(arananParametresi("herkes")).toBe("genc");
+  });
+
+  it("kapılar tanımlama sayfasına doğru parametreyle gider", () => {
+    expect(KAPILAR.map((k) => [k.aranan, k.yol])).toEqual([
+      ["genc", "/tanimlama"],
+      ["firma", "/tanimlama?aranan=firma"],
+    ]);
+  });
+
+  it("etiket yalnızca ortak ilanında", () => {
+    expect(arananEtiketi("firma")).toBe("İş birliği ortağı");
+    expect(arananEtiketi("genc")).toBeNull();
   });
 });

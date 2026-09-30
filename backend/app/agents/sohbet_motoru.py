@@ -74,6 +74,9 @@ class SohbetDurumu(TypedDict, total=False):
     # profil alanları). Çıkarımda sistem talimatının ardından ayrı bir sistem
     # mesajı olarak gider; boşsa hiç gitmez (docs/plans/genc-akisi.md § 5.3).
     profil_baglami: str | None
+    # İhtiyaç sohbetinde ilanın kimi aradığı (genc | firma); hangi soru setinin
+    # (grafik) devam edeceğini belirler (docs/plans/firma-akisi.md § 5).
+    aranan: str | None
 
 
 @dataclass(frozen=True)

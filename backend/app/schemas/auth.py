@@ -73,6 +73,8 @@ class IhtiyacKartiOzeti(BaseModel):
     embedding_var: bool
     # acik | kapandi (panel kapalı ilanı ayrı gösterir)
     durum: str = "acik"
+    # genc | firma: hangi kapıdan açıldı
+    aranan: str = "genc"
 
 
 class MeYaniti(BaseModel):

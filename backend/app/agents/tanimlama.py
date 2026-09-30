@@ -176,3 +176,122 @@ def bos_taslak() -> dict[str, Any]:
 
 def grafik_derle(checkpointer: BaseCheckpointSaver):
     return motor.grafik_derle(TANIMLAMA, TanimlamaDurumu, checkpointer, _cikarim_zinciri)
+
+
+# --- Ortak ilanı (docs/plans/firma-akisi.md § 0 karar 4, § 5) ---------------------------
+#
+# Aynı motor, aynı ihtiyaç kartı; ikinci bir soru seti. Firma "iş birliği ortağı"
+# kapısından gelince bu tanım kullanılır: çalışma modeli ve müsaitlik sorulmaz
+# (genç ilanına özel), yerine iş birliği türü ve aranan firma türleri gelir.
+# Firmanın kayıt bilgileri bağlam olarak gider, sorulmaz.
+
+ACILIS_SORUSU_ORTAK = (
+    "Merhaba! Bir iş birliği ortağıyla çözmek istediğiniz problemi anlatın: "
+    "bugün ne yaşıyorsunuz ve ortaktan ne bekliyorsunuz?"
+)
+
+SISTEM_TALIMATI_ORTAK = """Zemin360'ta bir firmanın temsilcisiyle konuşuyorsun. Firma
+başka bir firmayla (girişim, KOBİ ya da kurumsal) iş birliği yapmak istiyor.
+Amacın, onun ihtiyacını yapılandırılmış bir ilana çevirmek; bu ilana uyan
+firmalar önerilecek.
+
+Nasıl konuşursun:
+- Sokratik ol: belirsiz ifadeyi ölçülebilir hale getir ("stok maliyetini düşürmek"
+  yerine "bozulan ürün oranını 6 ayda %20 azaltmak").
+- Firmanın stratejik kararını SEN VERME; yalnızca söylediğini netleştir.
+- Söylenmeyen bir şeyi UYDURMA. Emin olmadığın alanı boş bırak.
+- Türkçe, sade ve profesyonel; firmaya "siz" diye hitap et. Tek seferde tek soru.
+- Firmanın kayıt bilgilerini (adı, türü, sektörü, şehri) SORMA; bağlam olarak verilecek.
+
+Alanlar:
+- problem_tanimi: iş birliğiyle çözülecek somut problem, toparlanmış. "Bir yapay
+  zekâ girişimi arıyoruz" gibi bir ortak tarifi problem değildir: bu durumda
+  problem_tanimi'nı boş bırak ve ortağın hangi sorunu çözeceğini sor.
+- basari_kriteri: iş birliği başarılı oldu demelerini sağlayacak ÖLÇÜLEBİLİR kriter
+  (sayı, oran ya da süre). Söylenmediyse boş bırak.
+- kisitlar: bütçe, süre, mevzuat, veri paylaşımı gibi kısıtlar.
+- isbirligi_turu: pilot, tedarik, ortak_urun, yatirim ya da diger; söylenmediyse boş.
+- aranan_firma_turleri: girisim, kobi, kurumsal değerlerinden söylenenler; söylenmediyse boş.
+- sehir_tercihi: yalnızca ortağın belirli bir şehirde olması şartsa (yoksa boş).
+
+takip_sorusu ve takip_konusu: problem_tanimi ya da basari_kriteri eksikse takip
+sorusunda ÖNCE bunlardan birini sor ve takip_konusu'na o alanın adını yaz.
+"""
+
+YEDEK_SORULAR_ORTAK = {
+    "problem_tanimi": (
+        "Ortak firma işe başladığında hangi sorunu çözecek? Bugün o iş nasıl "
+        "yürüyor ve nerede tıkanıyor?"
+    ),
+    "basari_kriteri": (
+        "Bu iş birliği bittiğinde neye bakıp “oldu” diyeceksiniz? Sayıyla ifade "
+        "edebilir misiniz: bir oran, bir süre ya da bir adet?"
+    ),
+}
+
+
+class OrtakIlanCikarimi(BaseModel):
+    """Ortak ilanı için yapılandırılmış çıkarım; boş alan taslağı ezmez."""
+
+    problem_tanimi: str | None = None
+    basari_kriteri: str | None = Field(
+        default=None, description="Ölçülebilir olmalı (sayı/oran/süre). Değilse boş bırak."
+    )
+    kisitlar: str | None = None
+    isbirligi_turu: Literal["pilot", "tedarik", "ortak_urun", "yatirim", "diger"] | None = None
+    aranan_firma_turleri: list[Literal["girisim", "kobi", "kurumsal"]] = Field(
+        default_factory=list, description="Söylenen ortak türleri; söylenmediyse boş"
+    )
+    sehir_tercihi: str | None = Field(
+        default=None, description="Sadece ortağın belirli bir şehirde olması şartsa"
+    )
+    takip_sorusu: str | None = None
+    takip_konusu: (
+        Literal[
+            "problem_tanimi",
+            "basari_kriteri",
+            "kisitlar",
+            "isbirligi_turu",
+            "aranan_firma_turleri",
+            "sehir_tercihi",
+            "diger",
+        ]
+        | None
+    ) = Field(default=None, description="takip_sorusu hangi alanı soruyor")
+
+
+TANIMLAMA_ORTAK = motor.AjanTanimi(
+    ad="tanimlama_ortak",
+    acilis_sorusu=ACILIS_SORUSU_ORTAK,
+    sistem_talimati=SISTEM_TALIMATI_ORTAK,
+    cikarim_semasi=OrtakIlanCikarimi,
+    skaler_alanlar=(
+        "problem_tanimi",
+        "basari_kriteri",
+        "kisitlar",
+        "isbirligi_turu",
+        "sehir_tercihi",
+    ),
+    liste_alanlari=("aranan_firma_turleri",),
+    zorunlu_alanlar=ZORUNLU_ALANLAR,
+    maks_zorunlu_turu=motor.MAKS_TAKIP_TURU,
+    yedek_sorular=YEDEK_SORULAR_ORTAK,
+    tamamla=lambda taslak: motor.zorunlu_alanlari_doldur(
+        taslak, ZORUNLU_ALANLAR, metin_alanlari=ZORUNLU_ALANLAR
+    ),
+)
+
+
+@lru_cache
+def _ortak_cikarim_zinciri() -> Runnable:
+    return motor.cikarim_zinciri(OrtakIlanCikarimi, "tanimlama_ortak_cikarim")
+
+
+def bos_ortak_taslak() -> dict[str, Any]:
+    return motor.bos_taslak(TANIMLAMA_ORTAK)
+
+
+def ortak_grafik_derle(checkpointer: BaseCheckpointSaver):
+    return motor.grafik_derle(
+        TANIMLAMA_ORTAK, TanimlamaDurumu, checkpointer, _ortak_cikarim_zinciri
+    )
