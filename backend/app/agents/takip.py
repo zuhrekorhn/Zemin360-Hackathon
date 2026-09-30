@@ -22,7 +22,9 @@ from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
 
 from app.core import calisma_modeli, musaitlik
+from app.core.firma_karti import ISBIRLIGI_TURU_ETIKETLERI
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
+from app.models.firma_karti import FirmaKarti
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.yetenek_karti import YetenekKarti
 
@@ -166,6 +168,94 @@ async def plan_oner(
     return None
 
 
+# --- Firma–firma plan önerisi (docs/plans/firma-akisi.md § 9) ------------------------------
+#
+# Aynı kurallar ve aynı geçerlilik kontrolü; istem iki firma arasındaki iş birliğine
+# göre (genç istemi değişmedi). Aday tarafı firma kartıyla anlatılır.
+
+SISTEM_TALIMATI_FIRMA = SISTEM_TALIMATI.replace(
+    "Bir kurum ile genç bir yetenek arasında\nyeni açılan bir pilot iş birliği",
+    "İki firma arasında (ilanı açan firma ile\nortak firma) yeni açılan bir iş birliği",
+).replace(
+    "- Müsaitliği ve çalışma modelini hesaba kat: "
+    "yarı zamanlı bir gence 2 haftada büyük iş verme.\n",
+    "- İki firmanın ayrı ekipleri olduğunu hesaba kat: "
+    "her adımda kimin ne teslim edeceği açık olsun.\n",
+)
+
+PLAN_SABLONU_FIRMA = ChatPromptTemplate.from_messages(
+    [
+        ("system", SISTEM_TALIMATI_FIRMA),
+        (
+            "human",
+            """İlan (ilanı açan firma: {kurum_adi})
+- Problem: {problem_tanimi}
+- Başarı kriteri: {basari_kriteri}
+- Kısıtlar: {kisitlar}
+- İş birliği türü: {isbirligi_turu}
+
+Ortak firma ({ortak_adi})
+- Ne yapıyor: {ne_yapiyoruz}
+- Yetkinlikler: {yetkinlikler}
+- Önceki işler: {onceki_isler}
+{ek_not}""",
+        ),
+    ]
+)
+
+
+def firma_plan_girdileri(
+    ihtiyac: IhtiyacKarti, kart: FirmaKarti, kurum_adi: str, ek_not: str = ""
+) -> dict:
+    """İstem girdileri; iletişim bilgisi (e-posta) hiç girmez."""
+    return {
+        "kurum_adi": kurum_adi,
+        "problem_tanimi": ihtiyac.problem_tanimi,
+        "basari_kriteri": ihtiyac.basari_kriteri or "(yazılmamış)",
+        "kisitlar": ihtiyac.kisitlar or "(yok)",
+        "isbirligi_turu": ISBIRLIGI_TURU_ETIKETLERI.get(
+            ihtiyac.isbirligi_turu or "", "(belirtilmemiş)"
+        ),
+        "ortak_adi": kart.kurum.ad,
+        "ne_yapiyoruz": kart.ne_yapiyoruz,
+        "yetkinlikler": ", ".join(kart.yetkinlikler or []) or "(belirtilmemiş)",
+        "onceki_isler": kart.onceki_isler or "(yazılmamış)",
+        "ek_not": ek_not,
+    }
+
+
+@lru_cache
+def _firma_plan_zinciri() -> Runnable:
+    return yedekli_zincir(
+        "guclu",
+        "takip_plan_firma",
+        lambda m: PLAN_SABLONU_FIRMA | m.with_structured_output(PlanOnerisi),
+    )
+
+
+async def _firma_plan_cagir(girdiler: dict) -> PlanOnerisi:
+    try:
+        return await _firma_plan_zinciri().ainvoke(girdiler)
+    except Exception as hata:
+        raise llm_hatasini_cevir(hata) from hata
+
+
+async def firma_plan_oner(
+    ihtiyac: IhtiyacKarti, kart: FirmaKarti, kurum_adi: str
+) -> list[AdimOnerisi] | None:
+    """`plan_oner`'in firma–firma karşılığı: aynı kural, bir kez düzeltme, sonra None."""
+    oneri = await _firma_plan_cagir(firma_plan_girdileri(ihtiyac, kart, kurum_adi))
+    if plan_gecerli_mi(oneri):
+        return oneri.adimlar
+    oneri = await _firma_plan_cagir(
+        firma_plan_girdileri(ihtiyac, kart, kurum_adi, ek_not=DUZELTME_NOTU)
+    )
+    if plan_gecerli_mi(oneri):
+        return oneri.adimlar
+    logger.warning("Firma planı iki denemede de kurala uymadı; plan boş bırakılıyor: %s", oneri)
+    return None
+
+
 # --- Durum özeti (docs/faz-c-takip.md § 5) — kesilebilir iş --------------------------------
 #
 # Döngü onsuz da tam çalışır: özet yalnızca `isbirligi.durum_ozeti`'ne yazılır,
@@ -210,11 +300,15 @@ def ozet_girdisi(
     adimlar: list[AdimDurumu],
     son_hareket: dt.date | None,
     bugun: dt.date,
+    aday_etiketi: str = "genç",
 ) -> str:
-    """Özet istemine giden, tamamen yapılandırılmış durum bilgisi (saf)."""
+    """Özet istemine giden, tamamen yapılandırılmış durum bilgisi (saf).
+
+    `genc_adi` aday tarafının adı; firma–firma'da `aday_etiketi="ortak firma"`.
+    """
     tamam = sum(a.tamamlandi for a in adimlar)
     satirlar = [
-        f"Taraflar: genç {genc_adi}, kurum {kurum_adi}.",
+        f"Taraflar: {aday_etiketi} {genc_adi}, kurum {kurum_adi}.",
         f"İş birliği durumu: {DURUM_ADLARI.get(durum, durum)}.",
         f"Adımlar: {len(adimlar)} adımın {tamam} tanesi iki tarafça tamamlandı.",
     ]

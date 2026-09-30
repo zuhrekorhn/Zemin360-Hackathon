@@ -13,10 +13,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import kullanici_id, kurum_id
+from app.api.sahiplik import TARAF_ADAY, kullanici_id, kurum_id, taraf_adi
 from app.api.takip import ilerleme_hesapla
 from app.db.session import get_session
 from app.models.eslesme import Eslesme
+from app.models.firma_karti import FirmaKarti
 from app.models.hesap import ROL_GENC, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
@@ -33,7 +34,9 @@ def _taraf_kosulu(hesap: Hesap):
     if (gencin := kullanici_id(hesap)) is not None:
         kosullar.append(YetenekKarti.kullanici_id == gencin)
     if (kurumun := kurum_id(hesap)) is not None:
+        # Firma iki tarafta da olabilir: ilanın sahibi ya da ortak (aday) firma.
         kosullar.append(IhtiyacKarti.kurum_id == kurumun)
+        kosullar.append(FirmaKarti.kurum_id == kurumun)
     return or_(false(), *kosullar)
 
 
@@ -49,12 +52,17 @@ async def isbirliklerim(
     isbirlikleri = await oturum.scalars(
         select(Isbirligi)
         .join(Eslesme, Isbirligi.eslesme_id == Eslesme.id)
-        .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
+        # Aday yetenek kartı ya da firma kartı: ikisi de dış birleşim.
+        .outerjoin(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
+        .outerjoin(FirmaKarti, Eslesme.firma_karti_id == FirmaKarti.id)
         .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
         .options(
             selectinload(Isbirligi.eslesme)
             .selectinload(Eslesme.yetenek_karti)
             .selectinload(YetenekKarti.kullanici),
+            selectinload(Isbirligi.eslesme)
+            .selectinload(Eslesme.firma_karti)
+            .selectinload(FirmaKarti.kurum),
             selectinload(Isbirligi.eslesme)
             .selectinload(Eslesme.ihtiyac_karti)
             .selectinload(IhtiyacKarti.kurum),
@@ -77,9 +85,11 @@ async def isbirliklerim(
                 durum=isbirligi.durum,
                 baslangic_tarihi=isbirligi.baslangic_tarihi,
                 eslesme_id=eslesme.id,
-                genc_adi=eslesme.yetenek_karti.kullanici.ad,
+                aday_turu="firma" if eslesme.firma_karti_id else "genc",
+                aday_adi=taraf_adi(eslesme, TARAF_ADAY),
+                genc_adi=eslesme.yetenek_karti.kullanici.ad if eslesme.yetenek_karti else None,
                 kurum_adi=eslesme.ihtiyac_karti.kurum.ad,
-                rol_alani=eslesme.yetenek_karti.rol_alani,
+                rol_alani=eslesme.yetenek_karti.rol_alani if eslesme.yetenek_karti else None,
                 problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
                 iletisim=acik,
                 ilerleme=ilerleme_hesapla(isbirligi.milestonelar),

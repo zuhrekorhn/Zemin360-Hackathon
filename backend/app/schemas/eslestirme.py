@@ -202,9 +202,12 @@ class IsbirligiOzeti(BaseModel):
     durum: str
     baslangic_tarihi: dt.date | None
     eslesme_id: uuid.UUID
-    genc_adi: str
+    # Aday tarafı: genç ya da ortak firma (docs/plans/firma-akisi.md § 9).
+    aday_turu: Literal["genc", "firma"] = "genc"
+    aday_adi: str
+    genc_adi: str | None = None
     kurum_adi: str
-    rol_alani: str
+    rol_alani: str | None = None
     problem_tanimi: str
     iletisim: Iletisim
     # Takip (Faz C): plan_bekliyor | aktif | tamamlandi ve adım ilerlemesi.

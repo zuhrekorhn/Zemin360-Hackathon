@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -34,11 +35,17 @@ class IsbirligiDetayi(BaseModel):
     baslangic_tarihi: dt.date | None
     tamamlanma_tarihi: dt.datetime | None
     eslesme_id: uuid.UUID
-    yetenek_karti_id: uuid.UUID
     ihtiyac_karti_id: uuid.UUID
-    genc_adi: str
+    # Aday tarafı: genç (yetenek kartı) ya da ortak firma (firma kartı);
+    # adı `aday_adi`'nda (docs/plans/firma-akisi.md § 9). `genc_*` alanları
+    # yalnızca genç adayında dolu.
+    aday_turu: Literal["genc", "firma"] = "genc"
+    aday_adi: str
+    yetenek_karti_id: uuid.UUID | None = None
+    firma_karti_id: uuid.UUID | None = None
+    genc_adi: str | None = None
     kurum_adi: str
-    rol_alani: str
+    rol_alani: str | None = None
     problem_tanimi: str
     basari_kriteri: str | None
     genc_plan_onayi: dt.datetime | None

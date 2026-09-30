@@ -242,3 +242,8 @@ Notun kararlarından sapma yok; notta yazmayan ama uygulamada gereken ayrıntıl
 - **Özet yalnız kendi alanlarını yazar:** arka plan işi `UPDATE … SET durum_ozeti, ozet_tarihi`; LLM beklenirken yapılan başka bir değişikliği ezmiyor.
 - **Bildirim zamanı:** `olusturma_tarihi` INSERT anında `clock_timestamp()` ile atanıyor (aynı işlemdeki bildirimlerin sırası kararlı; `now()` işlem başlangıcını dönüyordu).
 - **Testlerde arka plan işleri:** kabulün plan önerisi ve özet `tests/conftest.py`'de sahteyle değiştiriliyor; gerçek işi sınayan testler fonksiyonu içe aktarma anında yakalıyor.
+
+
+## Ek: Firma–firma iş birliği (firma akışı)
+
+Aynı tablo, aynı kurallar, aynı uçlar (`plans/firma-akisi.md` § 9). Ortak (aday) firma takip kurallarında "genç" tarafının yerindedir: `genc_plan_onayi`, `genc_isaret` onun alanlarıdır (karar 12, kolon adları değişmedi). Plan önerisi için ayrı istem (`app/agents/takip.py` › `firma_plan_oner`), geçerlilik kuralı aynı. `IsbirligiDetayi` ve `IsbirligiOzeti` `aday_turu` ve `aday_adi` taşır; `genc_adi`/`rol_alani` yalnızca genç adayında dolu. Tamamlanan firma–firma iş birliği aday firmanın eşleştirme bonusuna girer (`matching-algorithm.md` § 7).

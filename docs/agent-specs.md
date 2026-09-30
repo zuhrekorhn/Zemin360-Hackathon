@@ -89,3 +89,5 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 5. **Tamamlanmış pilot** — Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125); pilotsuz kartın skoru değişmez, alakayı yaratmaz.
 
 Kurallar iki saf fonksiyonda (`app/agents/takip_durumu.py`), ajan `app/agents/takip.py`, uçlar `app/api/takip.py`. Sohbet ajanı değil; `sohbet_motoru.py`'yi kullanmaz.
+
+**Firma–firma iş birliği** (firma akışı, `plans/firma-akisi.md` § 9): aynı kurallar ve aynı ekran; ortak firma takipte aday tarafıdır (onay ve işaret alanları `genc_*`, karar 12). Plan önerisinin istemi ayrı (`SISTEM_TALIMATI_FIRMA`, `firma_plan_oner`): iki firmanın ekipleri, ilanın iş birliği türü ve ortak firmanın kartı; genç istemi değişmedi. Durum özetinde taraf "ortak firma" diye anılır. Tamamlanan iş birliği aday firmanın eşleştirme bonusuna girer.

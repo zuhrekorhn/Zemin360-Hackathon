@@ -57,6 +57,7 @@ from app.models.bildirim import (
     Bildirim,
 )
 from app.models.eslesme import Eslesme
+from app.models.firma_karti import FirmaKarti
 from app.models.hesap import ROL_GENC, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
@@ -92,6 +93,7 @@ def _iliskileriyle(sorgu):
     return sorgu.options(
         eslesme.selectinload(Eslesme.yetenek_karti).selectinload(YetenekKarti.kullanici),
         eslesme.selectinload(Eslesme.yetenek_karti).selectinload(YetenekKarti.somut_ciktilar),
+        eslesme.selectinload(Eslesme.firma_karti).selectinload(FirmaKarti.kurum),
         eslesme.selectinload(Eslesme.ihtiyac_karti).selectinload(IhtiyacKarti.kurum),
         selectinload(Isbirligi.milestonelar),
     )
@@ -244,10 +246,13 @@ def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> I
         tamamlanma_tarihi=isbirligi.tamamlanma_tarihi,
         eslesme_id=eslesme.id,
         yetenek_karti_id=eslesme.yetenek_karti_id,
+        firma_karti_id=eslesme.firma_karti_id,
         ihtiyac_karti_id=eslesme.ihtiyac_karti_id,
-        genc_adi=eslesme.yetenek_karti.kullanici.ad,
+        aday_turu="firma" if eslesme.firma_karti_id else "genc",
+        aday_adi=sahiplik.taraf_adi(eslesme, sahiplik.TARAF_ADAY),
+        genc_adi=eslesme.yetenek_karti.kullanici.ad if eslesme.yetenek_karti else None,
         kurum_adi=eslesme.ihtiyac_karti.kurum.ad,
-        rol_alani=eslesme.yetenek_karti.rol_alani,
+        rol_alani=eslesme.yetenek_karti.rol_alani if eslesme.yetenek_karti else None,
         problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
         basari_kriteri=eslesme.ihtiyac_karti.basari_kriteri,
         genc_plan_onayi=isbirligi.genc_plan_onayi,
@@ -311,6 +316,11 @@ async def _duzenle(oturum: AsyncSession, isbirligi: Isbirligi, rol: str) -> None
 
 async def _ajana_sor(isbirligi: Isbirligi) -> list[takip.AdimOnerisi] | None:
     eslesme = isbirligi.eslesme
+    if eslesme.firma_karti is not None:
+        # Firma–firma (docs/plans/firma-akisi.md § 9): ayrı istem, aynı kurallar.
+        return await takip.firma_plan_oner(
+            eslesme.ihtiyac_karti, eslesme.firma_karti, eslesme.ihtiyac_karti.kurum.ad
+        )
     return await takip.plan_oner(
         eslesme.ihtiyac_karti, eslesme.yetenek_karti, eslesme.ihtiyac_karti.kurum.ad
     )
@@ -645,8 +655,9 @@ async def ozeti_arka_planda_yaz(isbirligi_id: uuid.UUID) -> None:
             eslesme = isbirligi.eslesme
             girdi = takip.ozet_girdisi(
                 durum=isbirligi.durum,
-                genc_adi=eslesme.yetenek_karti.kullanici.ad,
+                genc_adi=sahiplik.taraf_adi(eslesme, sahiplik.TARAF_ADAY),
                 kurum_adi=eslesme.ihtiyac_karti.kurum.ad,
+                aday_etiketi="ortak firma" if eslesme.firma_karti_id else "genç",
                 adimlar=[
                     takip.AdimDurumu(
                         baslik=m.baslik,
