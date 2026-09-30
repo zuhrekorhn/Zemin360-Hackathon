@@ -285,6 +285,14 @@ def test_kart_alanlari_ve_is_kalemi_ekle_sil(kart_hazirlama_arka_plani_yok):
             assert son.json()["deneyim_seviyesi"] == "potansiyel"  # Keşif'teki kural
             assert son.json()["versiyon"] == 6
 
+            # Ters yön: potansiyel karta çalışma eklenince seviye "başlangıç" olur.
+            yeniden = await istemci.post(
+                f"/yetenek-kartlari/{kart.id}/ciktilar",
+                headers=baslik,
+                json={"baslik": "Kulüp web sitesi"},
+            )
+            assert yeniden.json()["deneyim_seviyesi"] == "baslangic"
+
     asyncio.run(senaryo())
 
 

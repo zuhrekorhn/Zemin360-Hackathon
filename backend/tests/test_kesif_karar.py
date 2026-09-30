@@ -15,6 +15,7 @@ from app.agents.kesif import (
     KESIF,
     MAKS_EK_TURU,
     MAKS_TAKIP_TURU,
+    POTANSIYEL,
     YEDEK_SORULAR,
     SomutCiktiTaslak,
     TaslakCikarimi,
@@ -22,6 +23,7 @@ from app.agents.kesif import (
     _cikti_eksikleri,
     _karar,
     bos_taslak,
+    potansiyel_kurali,
 )
 from app.core.is_kalemi import is_kalemi_metni
 
@@ -488,11 +490,15 @@ def test_bos_taslak_modele_gitmez():
 
 def test_potansiyel_kurali_ciktisiz_karti_etiketler():
     """Sohbet kapanışı ve onay aynı kuralı kullanıyor (app/api/kesif.py)."""
-    from app.agents.kesif import POTANSIYEL, potansiyel_kurali
-
     assert potansiyel_kurali("orta", 0) == POTANSIYEL
     assert potansiyel_kurali(None, 0) == POTANSIYEL
     assert potansiyel_kurali("orta", 1) == "orta"
+
+
+def test_calismasi_olan_kart_potansiyel_kalmaz():
+    """Model çalışması olan gence "potansiyel" dediyse kural seviyeyi düzeltir."""
+    assert potansiyel_kurali("potansiyel", 1) == "baslangic"
+    assert potansiyel_kurali(None, 1) is None  # boş seviyeyi onay yakalar
 
 
 # --- Zorunlu fazda modelin sorusu yalnızca zorunlu konudaysa -------------------

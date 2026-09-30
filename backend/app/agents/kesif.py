@@ -64,6 +64,7 @@ ACIKLAMA_YEDEGI = (
 )
 
 POTANSIYEL = "potansiyel"
+BASLANGIC = "baslangic"
 
 ZORUNLU_ALANLAR = ("rol_alani", "deneyim_seviyesi", "sektor_ilgi_alani", "araclar_teknolojiler")
 
@@ -313,16 +314,22 @@ def _calisma_sorulari(cikti: dict[str, Any], *, ayrintili: bool) -> list[tuple[s
 
 
 def potansiyel_kurali(deneyim_seviyesi: str | None, cikti_sayisi: int) -> str | None:
-    """Çıktısı olmayan kart "potansiyel" etiketiyle çıkar — Doğrulama Ajanı'nı
-    atlayıp doğrudan Eşleştirme'ye gider (agent-specs.md § 1.4).
+    """Potansiyel seviye ancak ve ancak çalışması olmayan kart (agent-specs.md § 1.4).
 
-    İki yerde uygulanıyor ve ikisi aynı kuralı işletmeli: sohbet taslağı
-    kapatırken (`_tamamla`) ve onay anında (app/api/kesif.py). İkincisi
-    gerekli çünkü kullanıcı taslak ekranında tüm çıktıları "Çıkar"
-    diyebiliyor; arayüz o anda "potansiyel olarak kaydedilecek" diyordu ama
-    kart sohbetteki eski seviyeyle kaydediliyordu.
+    İki yönlü: çalışması olmayan kart "potansiyel" olur ve Doğrulama'yı atlar;
+    çalışması olan kart "potansiyel" kalamaz, "başlangıç" olur. Tek yönlüyken
+    model çalışması olan gence "potansiyel" deyince bu değer kalıyordu, genç
+    sonradan çalışma eklediğinde de kart potansiyel görünmeye devam ediyordu.
+
+    Üç yerde uygulanıyor ve üçü aynı kuralı işletmeli: sohbet taslağı
+    kapatırken (`_tamamla`), onay anında (app/api/kesif.py; genç taslakta
+    çalışmaları çıkarabiliyor) ve kart düzenlemede (app/servisler/kart_duzenleme.py).
     """
-    return POTANSIYEL if cikti_sayisi == 0 else deneyim_seviyesi
+    if cikti_sayisi == 0:
+        return POTANSIYEL
+    if deneyim_seviyesi == POTANSIYEL:
+        return BASLANGIC
+    return deneyim_seviyesi
 
 
 def _tamamla(taslak: dict[str, Any]) -> dict[str, Any]:
