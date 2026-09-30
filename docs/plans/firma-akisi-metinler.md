@@ -181,3 +181,33 @@ Denetime notlar:
 | `app/girvak/page.tsx` | Bölüm | Genç–firma ve firma–firma · "Yukarıdaki toplamların eşleşme türüne göre dağılımı. Firma–firma, bir firmanın iş birliği ortağı aradığı ilanlardan çıkan eşleşmeler." | GİRVAK |
 | 〃 | Sayı etiketleri | Genç–firma karşılıklı ilgi · Genç–firma iş birliği · Genç–firma tamamlanan · Firma–firma öneri · Firma–firma karşılıklı ilgi · Firma–firma iş birliği · Firma–firma tamamlanan | GİRVAK |
 | `backend/scripts/demo_hesaplari.py` | Demo firmaları | Tazele Analitik (girişim) · Anadolu Market Zinciri A.Ş. (kurumsal); kart, ilan ve tanıtım metinleri demo içeriği | — |
+
+## Toplu metin denetimi (30 Eyl): kapandı
+
+Rehbere (`docs/icerik-rehberi.md`) göre bütün ekranlar ve kullanıcıya dönen backend
+cümleleri tarandı. Yukarıdaki "Denetime not" satırları ve adım tablolarındaki
+bilinen uyumsuzluklar bu turda düzeltildi; tablolardaki eski metinler tarih kaydı
+olarak duruyor. Son onay Zühre'de (rehber § 8).
+
+**Genel kurallar, uygulandığı yer:**
+
+| Kural | Nasıl uygulandı |
+|---|---|
+| "Ajan" gösterilmez (§ 4) | Sayfa başlıkları "Yetenek kartını oluştur" / "İhtiyacınızı tanımlayın"; sohbet balonunun adı "Zemin360"; iş birliği sayfasında "Durum özeti", "Plan önerisi al", "Yeni plan önerisi al"; GİRVAK'ta "Son hatırlatmalar" |
+| Yapay zekâ bir kez söylenir (§ 9.5) | Keşif, Tanımlama ve firma kartı sohbetinin açıklamasında; kart sayfasında "Çalışmaların" başlığının altında güven göstergesi notu |
+| Hitap (§ 3) | Ortak ekranlar bakan hesaba göre: `lib/hitap.ts` (`hitapRolden`, `hitapla`) ve `useHitap()`; iş birliği sayfası, sohbet alanı, bildirimler boş durumu, takip ve canlılık bildirimleri (`siz_mi`) |
+| "kurum" → "firma", "ilan" → "ihtiyaç / fırsat" | Kayıt (rol kartları § 9.4, "Firmanın adı"), KVKK maddeleri, profil bandı, panel ve öneri ekranları, GİRVAK sayaçları |
+| "çalışma" (§ 9.1) | Kart sayfası "Çalışmaların" / "Çalışmaları", "Çalışma ekle", Keşif taslağı, referans sayfası ("Anlatılan çalışma", "Çalışmanın sahibi") |
+| Güven göstergesi başlıkları | Kanıt · Sonuç · Rol · Referans; rozet "tamamlanan iş birliği" |
+| Skor / eşik gösterilmez | "%72 uyum"; eşik cümleleri "yeterince uyan" diliyle; GİRVAK'ta "hareketsizlik süresi" |
+| Onaylar sayfa içinde (§ 5.6) | `components/onay-alani.tsx`; çalışma silme ve gösterge sıfırlama, fırsattan ilgiyi geri çekme, "Şimdilik değil", yeni plan önerisi. `window.confirm` kalmadı |
+| Uzun tire yok (§ 6) | Cümlelerden kaldırıldı. Boş değer hücrelerindeki tek başına "—" işareti metin değil, bırakıldı |
+| Yer tutucu "ör." ile | Kalan iki yer tutucu düzeltildi |
+| Hatalar (§ 5.4) | İngilizce şema metinleri gösterilmez (`lib/ayrinti.ts`); ağ hatası "Şu an bağlantı kuramadık."; 401/403/404/409/422 için cümleler (`lib/hata.ts`); backend'de boş alan cümleleri tek yerde (`app/core/alan_adlari.py`) |
+| LLM'in yazdığı kullanıcı metni | Tüm istemlere `app/core/kullanici_dili.py` › `KULLANICI_DILI_KURALLARI` eklendi |
+
+**Bilinen sınırlar (bilinçli bırakıldı):**
+
+- "Neden uygun?" açıklaması firmaya hitaben 3. şahısla yazılıyor ve gence de aynen gösteriliyor (§ 9.2).
+- "Pilot uygulama" firma kartında bir iş birliği türünün adı; rehber yalnızca tek başına "pilot"u yasaklıyor.
+- Kart sayfasındaki "kart no · sürüm" satırı teknik ama kullanıcıyı yanıltmıyor; kaldırılması ayrıca konuşulabilir.

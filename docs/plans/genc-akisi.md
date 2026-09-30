@@ -539,7 +539,7 @@ Eşleştirme pipeline'ı (`_pipeline_calistir`) `app/api/eslestirme.py` içinde 
 | Ana sayfadaki "Faz 2" yazısı | **T** | `frontend/src/app/page.tsx`; tek satır, metin denetimine girebilir |
 | Belgelerdeki "LangGraph supervisor pattern" ifadesi | **T** | Kodda supervisor yok; README, CLAUDE.md ve architecture'da düzeltilmeli, jüri sorabilir |
 | README eksikleri | **T** | Proje adı yer tutucu, canlı adres, ekran görüntüleri; README MIT diyor ama `LICENSE` dosyası yok (Faz F) |
-| `yeni_firsat` bildirim metni hâlâ anonim | **T** | Karar 1'den sonra anonimliğin gerekçesi kalmadı; metin denetiminde firma adı eklenebilir |
+| ~~`yeni_firsat` bildirim metni hâlâ anonim~~ | **T** | **Kapandı (30 Eyl):** metin denetiminde firma adı eklendi (`faz-d-canlilik.md` karar 3) |
 | Firma tarafı | **T** | Sıradaki görev: firma profili ve düzenlemesi, ihtiyaç kapatma düğmesi, girişim/startup kapsam kararı |
 | "Yeni iş ekle" sohbeti | **S** | Karar 16 |
 | Onay pencereleri için özel bileşen | **S** | Eylem adlı düğmeler için; denetimde istenirse T |
