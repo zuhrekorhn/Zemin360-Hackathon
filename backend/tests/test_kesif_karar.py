@@ -15,6 +15,7 @@ from app.agents.kesif import (
     KESIF,
     MAKS_EK_TURU,
     MAKS_TAKIP_TURU,
+    YEDEK_SORULAR,
     SomutCiktiTaslak,
     TaslakCikarimi,
     _birlestir,
@@ -503,8 +504,6 @@ ROL_SORUSU_LLM = "Bu çalışmayı tek başına mı geliştirdin? Senin rolün n
 
 
 def test_zorunlu_fazda_ek_konulu_llm_sorusu_kullanilmaz():
-    from app.agents.kesif import YEDEK_SORULAR
-
     sonuc = karar(
         {
             "taslak": dolu_taslak(sektor_ilgi_alani=[]),
@@ -533,8 +532,6 @@ def test_zorunlu_konulu_llm_sorusu_kullanilir():
 
 
 def test_konusu_belirtilmemis_llm_sorusu_kullanilmaz():
-    from app.agents.kesif import YEDEK_SORULAR
-
     sonuc = karar(
         {
             "taslak": dolu_taslak(rol_alani=None),
@@ -674,3 +671,74 @@ def test_cikarim_aciklama_istegini_ve_taslak_degisimini_tasir():
     assert sonuc["son_aciklama_istedi"] is True
     assert sonuc["son_aciklama"] == "Örneğin bir okul ödevi."
     assert sonuc["taslak_degisti"] is False
+
+
+# --- "Hiç projem yok" diyen genç ------------------------------------------
+# Eskiden bayrak modelden okunuyor ama hiçbir yerde kullanılmıyordu: okul
+# ödevi soruları zorunlu alanlardan sonra geliyor, çalışması olmayan gence önce
+# "bu alanda ne kadar zamandır uğraşıyorsun?" soruluyordu.
+
+
+def calismasiz_genc(**ek) -> dict:
+    return {
+        "taslak": {**bos_taslak(), "deneyim_seviyesi": "potansiyel"},
+        "takip_turu": 0,
+        "fallback_indeksi": 0,
+        "cikti_yok_dedi": True,
+        **ek,
+    }
+
+
+def test_calismam_yok_diyene_once_okul_odevi_sorulur():
+    sonuc = karar(calismasiz_genc())
+    assert sonuc["sonraki_soru"] == FALLBACK_SORULARI[0]
+    assert sonuc["fallback_indeksi"] == 1
+    assert "takip_turu" not in sonuc  # zorunlu alan hakkı harcanmaz
+
+
+def test_zincir_bitince_deneyim_sorulmaz_rol_sorulur():
+    sonuc = karar(calismasiz_genc(fallback_indeksi=len(FALLBACK_SORULARI)))
+    assert sonuc["sonraki_soru"] == YEDEK_SORULAR["rol_alani"]
+
+
+def test_odev_anlatan_genc_normal_akisa_doner():
+    """Okul ödevi çalışma oldu: sıradaki soru o çalışmanın ayrıntısı."""
+    sonuc = karar(calismasiz_genc(taslak=dolu_taslak(), fallback_indeksi=1))
+    assert "sayıyla" in sonuc["sonraki_soru"]
+
+
+def test_calismam_yok_bayragi_sonraki_turda_kaybolmaz():
+    class Zincir:
+        async def ainvoke(self, _mesajlar):
+            return TaslakCikarimi(somut_cikti_yok_dedi=False)
+
+    cikar = motor._cikar_dugumu(KESIF, lambda: Zincir())
+    sonuc = asyncio.run(
+        cikar(
+            {
+                "mesajlar": [HumanMessage(content="Yok, hiç yapmadım.")],
+                "taslak": bos_taslak(),
+                "cikti_yok_dedi": True,
+            }
+        )
+    )
+    assert sonuc["cikti_yok_dedi"] is True
+    assert sonuc["taslak"]["deneyim_seviyesi"] == "potansiyel"
+
+
+def test_calismasi_olan_gencin_deneyimine_dokunulmaz():
+    class Zincir:
+        async def ainvoke(self, _mesajlar):
+            return TaslakCikarimi()
+
+    cikar = motor._cikar_dugumu(KESIF, lambda: Zincir())
+    sonuc = asyncio.run(
+        cikar(
+            {
+                "mesajlar": [HumanMessage(content="Kütüphane sistemi yaptım.")],
+                "taslak": dolu_taslak(),
+                "cikti_yok_dedi": True,
+            }
+        )
+    )
+    assert sonuc["taslak"]["deneyim_seviyesi"] == "orta"

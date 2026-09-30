@@ -13,8 +13,8 @@ Motorun bildiği üç şey var:
 
 Ajana özel olan her şey (`AjanTanimi`) dışarıdan verilir: açılış sorusu,
 sistem talimatı, çıkarım şeması, zorunlu alanlar. Bir ajanın kendine has bir
-dalı varsa (Keşif'in "hiç projem yok" fallback zinciri gibi) `ek_dal` ile
-eklenir — motorun içinde ajana özel dal yok.
+dalı varsa (Keşif'in "hiç projem yok" fallback zinciri gibi) `oncelikli_dal`
+ya da `ek_dal` ile eklenir — motorun içinde ajana özel dal yok.
 """
 
 from __future__ import annotations
@@ -167,12 +167,19 @@ class AjanTanimi:
     ek_eksikler: Callable[[dict[str, Any]], list[tuple[str, str]]] | None = None
     # LLM takip sorusu üretmezse kullanılan sabit metinler
     yedek_sorular: Mapping[str, str] = field(default_factory=dict)
-    # Takip soruları bittikten sonra çalışan, ajana özel dal. Bir durum
-    # güncellemesi dönerse sohbet devam eder, None dönerse taslak kapanır.
+    # Ajana özel dallar. Bir durum güncellemesi dönerse sohbet o soruyla devam
+    # eder, None dönerse karar sıradaki adıma geçer. `oncelikli_dal` zorunlu
+    # alanlardan ÖNCE, `ek_dal` takip soruları bittikten SONRA çalışır (Keşif'te
+    # "hiç projem yok" diyen gence okul ödevi soruları hemen, söylemeyene sonda).
+    oncelikli_dal: Callable[[dict[str, Any]], dict[str, Any] | None] | None = None
     ek_dal: Callable[[dict[str, Any]], dict[str, Any] | None] | None = None
-    # Çıkarımdan taslağa değil, doğrudan duruma yazılacak bayraklar
-    # (Keşif'te "kullanıcı projesi olmadığını söyledi" gibi).
-    ek_cikarim_alanlari: Callable[[BaseModel], dict[str, Any]] | None = None
+    # Çıkarımdan taslağa değil, doğrudan duruma yazılacak bayraklar (Keşif'te
+    # "kullanıcı projesi olmadığını söyledi"). Önceki durumu da görür ki bir
+    # kez söylenen şey sonraki turda kaybolmasın.
+    ek_cikarim_alanlari: Callable[[SohbetCikarimi, Mapping[str, Any]], dict[str, Any]] | None = None
+    # Her çıkarımdan sonra taslağa uygulanan ajan kuralı; güncel durumu görür
+    # (Keşif'te çalışması olmadığını söyleyen gencin deneyimi "potansiyel").
+    taslak_kurali: Callable[[dict[str, Any], Mapping[str, Any]], dict[str, Any]] | None = None
     # Taslağı kapatmadan önceki son rötuş (örn. "potansiyel" etiketi)
     tamamla: Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
@@ -336,8 +343,11 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
             cevrilmis = llm_hatasini_cevir(hata)
             raise cevrilmis from hata
 
+        bayraklar = tanim.ek_cikarim_alanlari(cikarim, durum) if tanim.ek_cikarim_alanlari else {}
         onceki = durum.get("taslak") or bos_taslak(tanim)
         taslak = birlestir(tanim, onceki, cikarim)
+        if tanim.taslak_kurali is not None:
+            taslak = tanim.taslak_kurali(taslak, {**durum, **bayraklar})
         return {
             "taslak": taslak,
             "taslak_degisti": taslak != onceki,
@@ -345,7 +355,7 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
             "son_takip_konusu": getattr(cikarim, "takip_konusu", None),
             "son_aciklama_istedi": cikarim.aciklama_istedi,
             "son_aciklama": cikarim.aciklama,
-            **(tanim.ek_cikarim_alanlari(cikarim) if tanim.ek_cikarim_alanlari else {}),
+            **bayraklar,
         }
 
     return cikar
@@ -422,6 +432,12 @@ async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
     #    açıklamayla yeniden sorulur.
     if aciklama_gerekli(durum):
         return aciklama_durumu(tanim, durum)
+
+    # 0b) Ajanın zorunlu alanlardan önce gelen dalı.
+    if tanim.oncelikli_dal is not None:
+        oncelikli = tanim.oncelikli_dal(durum)
+        if oncelikli is not None:
+            return oncelikli
 
     taslak = durum["taslak"]
     eksikler = eksik_alanlar(tanim, taslak)

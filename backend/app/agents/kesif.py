@@ -23,6 +23,7 @@ değerlendirilmez.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any, Literal
 
@@ -61,6 +62,8 @@ ACIKLAMA_YEDEGI = (
     "Kesin ya da büyük bir şey olması gerekmiyor; aklına gelen ilk örneği kendi "
     "cümlelerinle yazman yeterli."
 )
+
+POTANSIYEL = "potansiyel"
 
 ZORUNLU_ALANLAR = ("rol_alani", "deneyim_seviyesi", "sektor_ilgi_alani", "araclar_teknolojiler")
 
@@ -212,7 +215,7 @@ class KesifDurumu(SohbetDurumu, total=False):
 def _fallback_dali(durum: dict[str, Any]) -> dict[str, Any] | None:
     """Somut çıktı yoksa fallback zinciri (okul ödevi → gönüllü iş).
 
-    Zincir bitmişse None döner ve taslak kapanır.
+    Zincir bitmişse ya da taslakta bir çalışma varsa None döner.
     """
     fallback_indeksi = durum.get("fallback_indeksi", 0)
     if durum["taslak"].get("somut_ciktilar") or fallback_indeksi >= len(FALLBACK_SORULARI):
@@ -221,6 +224,32 @@ def _fallback_dali(durum: dict[str, Any]) -> dict[str, Any] | None:
     return motor.soru_durumu(
         FALLBACK_SORULARI[fallback_indeksi], fallback_indeksi=fallback_indeksi + 1
     )
+
+
+def _calismasiz_genc_dali(durum: dict[str, Any]) -> dict[str, Any] | None:
+    """Çalışmam yok diyen gence okul ödevi ve gönüllülük soruları HEMEN.
+
+    Eskiden bu sorular zorunlu alanlardan sonra geliyordu: çalışması olmayan
+    gence önce "bu alanda ne kadar zamandır uğraşıyorsun?" soruluyordu. Bir
+    ödev anlatırsa o ödev çalışma olur ve akış normal devam eder; söylemeyen
+    gence zincir yine takip sorularından sonra sorulur (`ek_dal`).
+    """
+    return _fallback_dali(durum) if durum.get("cikti_yok_dedi") else None
+
+
+def _cikti_yok_bayragi(cikarim: TaslakCikarimi, durum: Mapping[str, Any]) -> dict[str, Any]:
+    """Bir kez söylenen "çalışmam yok" kalıcı: model sonraki turda yeniden
+    işaretlemese de kaybolmaz."""
+    return {"cikti_yok_dedi": bool(durum.get("cikti_yok_dedi")) or cikarim.somut_cikti_yok_dedi}
+
+
+def _taslak_kurali(taslak: dict[str, Any], durum: Mapping[str, Any]) -> dict[str, Any]:
+    """Çalışması olmadığını söyleyen gencin deneyimi "potansiyel": deneyim
+    sorusu sorulmaz. Sonradan çalışma anlatırsa kapanışta potansiyel kuralı
+    seviyeyi düzeltir."""
+    if durum.get("cikti_yok_dedi") and not taslak.get("somut_ciktilar"):
+        return {**taslak, "deneyim_seviyesi": POTANSIYEL}
+    return taslak
 
 
 # Sonuç, pay ve kanıt sorularının üçü de bu kadar çalışmaya sorulur; sonraki
@@ -283,9 +312,6 @@ def _calisma_sorulari(cikti: dict[str, Any], *, ayrintili: bool) -> list[tuple[s
     return sorular
 
 
-POTANSIYEL = "potansiyel"
-
-
 def potansiyel_kurali(deneyim_seviyesi: str | None, cikti_sayisi: int) -> str | None:
     """Çıktısı olmayan kart "potansiyel" etiketiyle çıkar — Doğrulama Ajanı'nı
     atlayıp doğrudan Eşleştirme'ye gider (agent-specs.md § 1.4).
@@ -333,8 +359,10 @@ KESIF = motor.AjanTanimi(
     yedek_sorular=YEDEK_SORULAR,
     ek_eksikler=_cikti_eksikleri,
     maks_ek_turu=MAKS_EK_TURU,
+    oncelikli_dal=_calismasiz_genc_dali,
     ek_dal=_fallback_dali,
-    ek_cikarim_alanlari=lambda cikarim: {"cikti_yok_dedi": cikarim.somut_cikti_yok_dedi},
+    ek_cikarim_alanlari=_cikti_yok_bayragi,
+    taslak_kurali=_taslak_kurali,
     tamamla=_tamamla,
 )
 
