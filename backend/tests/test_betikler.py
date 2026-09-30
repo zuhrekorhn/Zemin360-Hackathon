@@ -23,6 +23,7 @@ from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.auth import GirisIstegi
+from app.servisler import firma_karti as firma_servisi
 from scripts import demo_hesaplari, yerel_sifirla
 from tests.veritabani import geri_alinan_oturum
 
@@ -65,6 +66,8 @@ def test_demo_adresleri_giris_formundan_gecer():
         demo_hesaplari.GENC_EPOSTA,
         demo_hesaplari.KURUM_EPOSTA,
         demo_hesaplari.GIRVAK_EPOSTA,
+        demo_hesaplari.GIRISIM_EPOSTA,
+        demo_hesaplari.KURUMSAL_EPOSTA,
     ):
         assert GirisIstegi(email=email, sifre="x").email == email
 
@@ -103,6 +106,8 @@ def test_demo_hesaplari_acilir_tekrar_calismasi_guvenli_ve_kartlar_eslesir(monke
     monkeypatch.setattr(demo_hesaplari, "GENC_EPOSTA", f"genc-{ek}@demo.zemin360.example")
     monkeypatch.setattr(demo_hesaplari, "KURUM_EPOSTA", f"kurum-{ek}@demo.zemin360.example")
     monkeypatch.setattr(demo_hesaplari, "GIRVAK_EPOSTA", f"girvak-{ek}@demo.zemin360.example")
+    monkeypatch.setattr(demo_hesaplari, "GIRISIM_EPOSTA", f"girisim-{ek}@demo.zemin360.example")
+    monkeypatch.setattr(demo_hesaplari, "KURUMSAL_EPOSTA", f"kurumsal-{ek}@demo.zemin360.example")
     vektor = [0.0] * EMBEDDING_DIM
     vektor[7] = 1.0
 
@@ -111,6 +116,7 @@ def test_demo_hesaplari_acilir_tekrar_calismasi_guvenli_ve_kartlar_eslesir(monke
 
     monkeypatch.setattr(yetenek_kartlari, "embedding_uret", sahte_embedding)
     monkeypatch.setattr(ihtiyac_kartlari, "embedding_uret", sahte_embedding)
+    monkeypatch.setattr(firma_servisi, "embedding_uret", sahte_embedding)
 
     async def senaryo():
         async with geri_alinan_oturum() as oturum:
@@ -126,6 +132,9 @@ def test_demo_hesaplari_acilir_tekrar_calismasi_guvenli_ve_kartlar_eslesir(monke
                 ("genc", True),
                 ("kurum", True),
                 ("girvak", True),
+                # Firma akışı demosu: girişim ve kurumsal (firma-akisi § 0 karar 20).
+                ("kurum", True),
+                ("kurum", True),
             ]
             ikinci = await demo_hesaplari.demo_ac("yeterince-uzun")
             assert not any(s.yeni for s in ikinci)
@@ -227,3 +236,21 @@ def test_zaman_kaydirma_pasiflesmeyi_gosterir(monkeypatch):
         assert olaylar == ["oneri_bekliyor"]
 
     senaryo(adimlar)
+
+
+def test_demo_firmalari_birbirine_uyar():
+    """Firma akışı demosu (firma-akisi § 0 karar 20): kurumsalın ortak ilanı yalnızca
+    girişim arıyor, demo girişim kesin şartlardan geçer; ipucu "uyuşuyor"."""
+    from app.core.firma_dogrulama import UYUSUYOR, alan_adi_ipucu
+    from app.core.firma_profili import eksik_firma_alanlari
+
+    ilan = demo_hesaplari.kurumsalin_ilani(None)
+    girisim = demo_hesaplari.GIRISIM_PROFILI
+    assert ilan.aranan == "firma"
+    assert girisim.tur in ilan.aranan_firma_turleri
+    assert ilan.sehir_tercihi is None  # şehir fark etmez
+    kart = demo_hesaplari.girisimin_karti(None)
+    assert kart.ne_yapiyoruz and kart.yetkinlikler
+    for profil in (girisim, demo_hesaplari.KURUMSAL_PROFILI, demo_hesaplari.KURUM_PROFILI):
+        assert eksik_firma_alanlari(tur=profil.tur, sektor=profil.sektor, sehir=profil.sehir) == []
+    assert alan_adi_ipucu(demo_hesaplari.GIRISIM_EPOSTA, girisim.web_sitesi) == UYUSUYOR

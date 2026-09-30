@@ -1154,6 +1154,15 @@ export type GirvakSayilari = {
     vazgecildi: number;
     nedensiz: number;
   };
+  /** Toplamların eşleşme türüne göre kırılımı (docs/plans/firma-akisi.md § 0 karar 19). */
+  kirilim: { genc_firma: TurSayilari; firma_firma: TurSayilari };
+};
+
+export type TurSayilari = {
+  oneri: number;
+  karsilikli_ilgi: number;
+  isbirligi: number;
+  tamamlanan: number;
 };
 
 export type ProgramHedefi = {

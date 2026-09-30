@@ -146,3 +146,30 @@ def test_iki_firma_plani_onaylar_tamamlar_bonusa_girer():
         assert sayilar == {aday.kart.id: 1}
 
     senaryo(adimlar)
+
+
+def test_girvak_kirilimi_turleri_ayri_sayar():
+    """Toplamlar iki türü birlikte sayar; kırılım ayrı (firma-akisi § 0 karar 19).
+
+    Sayılar bütün veritabanını sayıyor (yerelde başka kayıtlar olabilir): fark ölçülür.
+    """
+
+    async def adimlar(istemci, d):
+        async def sayilar():
+            return (await istemci.get("/girvak/sayilar", headers=d.girvak.baslik)).json()
+
+        once = await sayilar()
+        await _karsilikli(istemci, d)
+        sonra = await sayilar()
+
+        def fark(tur, alan):
+            return sonra["kirilim"][tur][alan] - once["kirilim"][tur][alan]
+
+        assert fark("firma_firma", "karsilikli_ilgi") == 1
+        assert fark("firma_firma", "isbirligi") == 1
+        assert fark("genc_firma", "karsilikli_ilgi") == 0
+        assert fark("genc_firma", "isbirligi") == 0
+        # Toplam firma–firma'yı da sayar.
+        assert sonra["eslesme"]["kabul_edildi"] - once["eslesme"]["kabul_edildi"] == 1
+
+    senaryo(adimlar)

@@ -31,6 +31,25 @@ class IsbirligiSayilari(BaseModel):
     tamamlandi: int
 
 
+class TurSayilari(BaseModel):
+    """Bir eşleşme türünün (genç–firma ya da firma–firma) sayıları."""
+
+    oneri: int = 0
+    karsilikli_ilgi: int = 0
+    isbirligi: int = 0
+    tamamlanan: int = 0
+
+
+class EslesmeKirilimi(BaseModel):
+    """Toplam sayıların eşleşme türüne göre kırılımı (docs/plans/firma-akisi.md § 0 karar 19).
+
+    Toplamlar (`eslesme`, `isbirligi_durumlari`, hedefler) iki türü birlikte sayar.
+    """
+
+    genc_firma: TurSayilari = TurSayilari()
+    firma_firma: TurSayilari = TurSayilari()
+
+
 class KapananIhtiyaclar(BaseModel):
     """Kapanan ilanlar, firmanın seçtiği nedene göre (firma-akisi § 0 karar 7).
 
@@ -63,8 +82,9 @@ class Sayilar(BaseModel):
     isbirligi_durumlari: IsbirligiSayilari
     # Faz D: program hedefleri (app/core/program.py), sabit sırayla.
     hedefler: list[HedefSayisi]
-    # Firma akışı: kapanan ilanlar nedenleriyle.
+    # Firma akışı: kapanan ilanlar nedenleriyle ve eşleşme türüne göre kırılım.
     kapanan_ihtiyaclar: KapananIhtiyaclar = KapananIhtiyaclar()
+    kirilim: EslesmeKirilimi = EslesmeKirilimi()
 
 
 class OnayBekleyenFirma(BaseModel):

@@ -173,3 +173,11 @@ Denetime notlar:
 - Rehber § 5.9'da "aday firma" sütunu yok; aday firmanın etiketleri gencin sütununun "siz" hâli olarak yazıldı. Rehbere sütun eklenmeli.
 - Firmanın gördüğü "Kurumun e-postası" (mevcut `IletisimSatiri` etiketi) → "Firmanın e-postası".
 - Firma panelindeki mevcut "İş birliklerim" boş durumu gence göre yazılı ("Bir genç ilgini kabul ettiğinde…"); firmaya "sen" ve iki tür ortağı kapsamıyor.
+
+## 9. adım — GİRVAK kırılımı ve demo verisi
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `app/girvak/page.tsx` | Bölüm | Genç–firma ve firma–firma · "Yukarıdaki toplamların eşleşme türüne göre dağılımı. Firma–firma, bir firmanın iş birliği ortağı aradığı ilanlardan çıkan eşleşmeler." | GİRVAK |
+| 〃 | Sayı etiketleri | Genç–firma karşılıklı ilgi · Genç–firma iş birliği · Genç–firma tamamlanan · Firma–firma öneri · Firma–firma karşılıklı ilgi · Firma–firma iş birliği · Firma–firma tamamlanan | GİRVAK |
+| `backend/scripts/demo_hesaplari.py` | Demo firmaları | Tazele Analitik (girişim) · Anadolu Market Zinciri A.Ş. (kurumsal); kart, ilan ve tanıtım metinleri demo içeriği | — |

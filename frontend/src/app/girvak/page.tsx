@@ -246,6 +246,44 @@ function GirvakSayfasi() {
           </PanelBolumu>
 
           <PanelBolumu
+            baslik="Genç–firma ve firma–firma"
+            aciklama="Yukarıdaki toplamların eşleşme türüne göre dağılımı. Firma–firma, bir firmanın iş birliği ortağı aradığı ilanlardan çıkan eşleşmeler."
+          >
+            <SayiIzgarasi
+              ogeler={[
+                {
+                  etiket: "Genç–firma karşılıklı ilgi",
+                  sayi: sayilar.kirilim.genc_firma.karsilikli_ilgi,
+                },
+                {
+                  etiket: "Genç–firma iş birliği",
+                  sayi: sayilar.kirilim.genc_firma.isbirligi,
+                },
+                {
+                  etiket: "Genç–firma tamamlanan",
+                  sayi: sayilar.kirilim.genc_firma.tamamlanan,
+                },
+                {
+                  etiket: "Firma–firma öneri",
+                  sayi: sayilar.kirilim.firma_firma.oneri,
+                },
+                {
+                  etiket: "Firma–firma karşılıklı ilgi",
+                  sayi: sayilar.kirilim.firma_firma.karsilikli_ilgi,
+                },
+                {
+                  etiket: "Firma–firma iş birliği",
+                  sayi: sayilar.kirilim.firma_firma.isbirligi,
+                },
+                {
+                  etiket: "Firma–firma tamamlanan",
+                  sayi: sayilar.kirilim.firma_firma.tamamlanan,
+                },
+              ]}
+            />
+          </PanelBolumu>
+
+          <PanelBolumu
             baslik="Kapanan ihtiyaçlar"
             aciklama="Firmaların ihtiyacı kapatırken seçtiği neden. Nedeni yalnızca siz görürsünüz."
           >

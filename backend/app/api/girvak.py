@@ -45,6 +45,7 @@ from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.girvak import (
+    EslesmeKirilimi,
     EslesmeSayilari,
     FirmaDogrulamaIstegi,
     HedefSayisi,
@@ -53,6 +54,7 @@ from app.schemas.girvak import (
     KapananIhtiyaclar,
     OnayBekleyenFirma,
     Sayilar,
+    TurSayilari,
 )
 from app.servisler.ilgi import IHTIYAC_KAPANDI
 
@@ -100,7 +102,32 @@ async def sayilar(
         ),
         hedefler=await hedef_sayilari(oturum, durumlar, isbirlikleri),
         kapanan_ihtiyaclar=await kapanan_ihtiyaclar(oturum),
+        kirilim=await eslesme_kirilimi(oturum),
     )
+
+
+async def eslesme_kirilimi(oturum: AsyncSession) -> EslesmeKirilimi:
+    """Genç–firma ve firma–firma ayrı sayılır (docs/plans/firma-akisi.md § 0 karar 19)."""
+    firma_mi = Eslesme.firma_karti_id.isnot(None).label("firma_mi")
+    eslesmeler = await oturum.execute(
+        select(firma_mi, Eslesme.durum, func.count()).group_by(firma_mi, Eslesme.durum)
+    )
+    isbirlikleri = await oturum.execute(
+        select(firma_mi, Isbirligi.durum, func.count())
+        .join(Eslesme, Isbirligi.eslesme_id == Eslesme.id)
+        .group_by(firma_mi, Isbirligi.durum)
+    )
+    sayilar = {False: TurSayilari(), True: TurSayilari()}
+    for firma, durum, sayi in eslesmeler.all():
+        if durum == DURUM_ONERILDI:
+            sayilar[firma].oneri += sayi
+        elif durum == DURUM_KABUL_EDILDI:
+            sayilar[firma].karsilikli_ilgi += sayi
+    for firma, durum, sayi in isbirlikleri.all():
+        sayilar[firma].isbirligi += sayi
+        if durum == ISBIRLIGI_TAMAMLANDI:
+            sayilar[firma].tamamlanan += sayi
+    return EslesmeKirilimi(genc_firma=sayilar[False], firma_firma=sayilar[True])
 
 
 async def kapanan_ihtiyaclar(oturum: AsyncSession) -> KapananIhtiyaclar:

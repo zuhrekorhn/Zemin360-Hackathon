@@ -168,8 +168,8 @@ Plan ve kararlar: [`plans/firma-akisi.md`](plans/firma-akisi.md). Özellik dondu
 - [x] Ortak ilanı ve iki kapı
 - [x] Firma–firma eşleştirme
 - [x] Firmalar arası ilgi ve iş birliği
-- [ ] GİRVAK sayıları, Canlılık süzgeci, demo verisi
-- [ ] Belgeler ve deneme senaryosu
+- [x] GİRVAK sayıları, Canlılık süzgeci, demo verisi
+- [x] Belgeler ve deneme senaryosu (elle deneme: `plans/firma-akisi-deneme.md`)
 
 ## Gözden geçirme ve düzeltme günü (3 Eki)
 
