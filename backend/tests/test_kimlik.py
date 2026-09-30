@@ -190,7 +190,7 @@ def test_genc_kaydi_hesap_ve_profil_acar_token_doner():
             assert govde["ad"] == "Elif"
             assert govde["kullanici_id"] is not None
             assert govde["kurum_id"] is None
-            assert govde["yetenek_kartlari"] == []
+            assert govde["yetenek_karti"] is None  # Keşif'i henüz tamamlamadı
 
     asyncio.run(senaryo())
 

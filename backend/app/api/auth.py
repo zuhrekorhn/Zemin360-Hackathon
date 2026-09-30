@@ -149,23 +149,21 @@ async def me(
     if hesap.kullanici is not None:
         kullanici = await oturum.scalar(
             select(Kullanici)
-            .options(selectinload(Kullanici.yetenek_kartlari))
+            .options(selectinload(Kullanici.yetenek_karti))
             .where(Kullanici.id == hesap.kullanici.id)
         )
         yanit.ad = kullanici.ad
         yanit.kullanici_id = kullanici.id
         yanit.eksik_profil_alanlari = profilin_eksikleri(kullanici)
         yanit.kvkk_onayli = hesap.kvkk_onay_tarihi is not None
-        yanit.yetenek_kartlari = [
-            YetenekKartiOzeti(
+        if (kart := kullanici.yetenek_karti) is not None:
+            yanit.yetenek_karti = YetenekKartiOzeti(
                 id=kart.id,
                 rol_alani=kart.rol_alani,
                 deneyim_seviyesi=kart.deneyim_seviyesi,
                 kanit_bekleyen=kart.kanit_bekleyen,
                 embedding_var=kart.embedding is not None,
             )
-            for kart in kullanici.yetenek_kartlari
-        ]
 
     if hesap.kurum is not None:
         kartlar = await oturum.scalars(

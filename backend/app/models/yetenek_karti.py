@@ -20,8 +20,12 @@ if TYPE_CHECKING:
 class YetenekKarti(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "yetenek_karti"
 
+    # Gencin tek kartı (madde 7, 1 Eki): kart genç büyüdükçe düzenlenir ve
+    # çalışma eklenerek güçlenir, yenisi açılmaz. Kural veritabanında ki
+    # eşzamanlı iki onay da ikinci kartı açamasın; tekillik indeksi aramaları
+    # da karşılıyor, ayrı indeks gerekmiyor.
     kullanici_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("kullanici.id", ondelete="CASCADE"), index=True
+        UUID(as_uuid=True), ForeignKey("kullanici.id", ondelete="CASCADE"), unique=True
     )
     rol_alani: Mapped[str] = mapped_column(String)
     deneyim_seviyesi: Mapped[str] = mapped_column(String)
@@ -54,7 +58,7 @@ class YetenekKarti(UUIDPrimaryKeyMixin, Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    kullanici: Mapped[Kullanici] = relationship(back_populates="yetenek_kartlari")
+    kullanici: Mapped[Kullanici] = relationship(back_populates="yetenek_karti")
     somut_ciktilar: Mapped[list[SomutCikti]] = relationship(
         back_populates="yetenek_karti", cascade="all, delete-orphan"
     )

@@ -20,6 +20,7 @@ from types import SimpleNamespace
 from sqlalchemy import select
 
 from app.api.auth import hesap_olustur
+from app.api.kesif import KART_ZATEN_VAR
 from app.core.kimlik import token_uret
 from app.main import app
 from app.models.eslesme import Eslesme
@@ -347,15 +348,32 @@ def test_yeni_sohbet_acanin_kimligini_checkpointe_yazar():
                 girdiler.append(girdi)
                 return await super().ainvoke(girdi, config)
 
-        app.state.kesif_grafigi = KaydedenGrafik(d.genc1.hesap.id)
+        # genc1'in kartı var (tek kart kuralı); sohbeti kartı olmayan genç açar.
+        yeni_genc = await _hesap(d.oturum, "genc", "Deniz")
+        app.state.kesif_grafigi = KaydedenGrafik(yeni_genc.hesap.id)
         try:
-            yanit = await istemci.post("/kesif/sohbet/baslat", json={}, headers=d.genc1.baslik)
+            yanit = await istemci.post("/kesif/sohbet/baslat", json={}, headers=yeni_genc.baslik)
         finally:
             del app.state.kesif_grafigi
         assert yanit.status_code == 200
         assert len(girdiler) == 1
-        assert girdiler[0]["sahip_hesap_id"] == str(d.genc1.hesap.id)
+        assert girdiler[0]["sahip_hesap_id"] == str(yeni_genc.hesap.id)
         # Kayıt formunun bilgileri bağlam olarak gider (plan § 5.3); profil boşsa None.
         assert "profil_baglami" in girdiler[0]
+
+    senaryo(adimlar)
+
+
+def test_karti_olan_genc_yeni_sohbet_acamaz():
+    """Gencin tek kartı var (madde 7): ikinci sohbet açılmaz."""
+
+    async def adimlar(istemci, d):
+        app.state.kesif_grafigi = SahipliGrafik(d.genc1.hesap.id)
+        try:
+            yanit = await istemci.post("/kesif/sohbet/baslat", json={}, headers=d.genc1.baslik)
+        finally:
+            del app.state.kesif_grafigi
+        assert yanit.status_code == 409
+        assert yanit.json()["detail"] == KART_ZATEN_VAR
 
     senaryo(adimlar)

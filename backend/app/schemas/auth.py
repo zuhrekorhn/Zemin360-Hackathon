@@ -88,7 +88,8 @@ class MeYaniti(BaseModel):
     ad: str | None
     kullanici_id: uuid.UUID | None = None
     kurum_id: uuid.UUID | None = None
-    yetenek_kartlari: list[YetenekKartiOzeti] = Field(default_factory=list)
+    # Gencin tek kartı (madde 7); Keşif'i tamamlamadıysa None.
+    yetenek_karti: YetenekKartiOzeti | None = None
     ihtiyac_kartlari: list[IhtiyacKartiOzeti] = Field(default_factory=list)
     # Bildirimler Faz B'nin 5. adımında; o zamana kadar 0.
     okunmamis_bildirim: int = 0

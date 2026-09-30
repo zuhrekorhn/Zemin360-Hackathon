@@ -69,7 +69,7 @@ class GencProfili(BaseModel):
 
     Kimlik artık token'daki hesaptan geliyor; ad ve e-posta kayıtta alındı,
     burada yok. Boş gelen alan kayıtlı değeri SİLMEZ (Faz A'daki kural):
-    ikinci kartını onaylayan genç şehrini yeniden yazmak zorunda değil.
+    profili kayıt formunda dolduran gencin onayı boş profil gönderir.
     """
 
     # Profilde şehir yoksa onay 422 döner: eşleştirmenin sert filtresi buna

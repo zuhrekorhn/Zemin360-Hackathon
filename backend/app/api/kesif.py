@@ -44,6 +44,7 @@ from app.schemas.kesif import (
     YetenekKartiYaniti,
 )
 from app.servisler import kart_hazirlama
+from app.servisler.genc_karti import gencin_karti
 
 router = APIRouter(prefix="/kesif", tags=["kesif"])
 
@@ -52,6 +53,9 @@ SOHBET_YOK = "Bu sohbet bulunamadı. Yeni bir sohbet başlatabilirsin."
 
 SEHIR_GEREKLI = "Şehir gerekli: fırsatlar şehre göre eşleşiyor."
 KART_EKSIK = "Kartında rol, deneyim ve en az bir sektör ilgisi olmalı."
+KART_ZATEN_VAR = (
+    "Kartın zaten var. Yeni kart yerine onu düzenleyebilir, çalışma ekleyerek güçlendirebilirsin."
+)
 
 
 def _grafik(request: Request):
@@ -74,8 +78,14 @@ def _yanit(oturum_id: uuid.UUID, durum: dict) -> SohbetYaniti:
 
 @router.post("/sohbet/baslat", response_model=SohbetYaniti)
 async def sohbet_baslat(
-    _: SohbetBaslatIstegi, request: Request, hesap: Hesap = Depends(rol_gerekli(ROL_GENC))
+    _: SohbetBaslatIstegi,
+    request: Request,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
 ) -> SohbetYaniti:
+    # Gencin tek kartı var (madde 7): kartı olana ikinci sohbet açılmaz.
+    if await gencin_karti(oturum, hesap.kullanici.id) is not None:
+        raise HTTPException(status_code=409, detail=KART_ZATEN_VAR)
     oturum_id = uuid.uuid4()
     # Oturumu açan hesap checkpoint'e yazılır; cevap ve onay yalnızca ondan.
     # Kayıt formundan bilinenler bağlam olarak gider ve sorulmaz (plan § 5.3).
@@ -143,6 +153,9 @@ async def kart_onayla(
 
     if not mevcut.values.get("taslak_hazir"):
         raise HTTPException(status_code=409, detail="Taslağın henüz hazır değil.")
+    # Sohbet, kart başka bir sohbetten açılmadan önce başlamış olabilir.
+    if await gencin_karti(oturum, hesap.kullanici.id) is not None:
+        raise HTTPException(status_code=409, detail=KART_ZATEN_VAR)
 
     taslak = istek.duzeltilmis_taslak or KartTaslagi(**mevcut.values["taslak"])
     # Kullanıcı taslak ekranında tüm çıktıları çıkarmış olabilir: sohbetin
@@ -183,11 +196,12 @@ async def kart_onayla(
     try:
         await oturum.commit()
     except IntegrityError:
-        # Aynı oturum için eşzamanlı ikinci onay: diğer istek kartı yazdı.
+        # Eşzamanlı ikinci onay. Aynı sohbetinse diğer istek kartı yazdı, o
+        # döner; başka bir sohbetinse gencin tek kartı kuralı devreye girdi.
         await oturum.rollback()
         onceki = await _oturumun_karti(oturum, istek.oturum_id)
         if onceki is None:
-            raise
+            raise HTTPException(status_code=409, detail=KART_ZATEN_VAR) from None
         yanit.status_code = 200
         return await _mevcut_karti_don(oturum, onceki, arka_plan)
 

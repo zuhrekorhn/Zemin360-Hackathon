@@ -10,19 +10,22 @@ import asyncio
 import uuid
 from types import SimpleNamespace
 
+import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.agents.eslestirme import adaylari_getir
 from app.api import ihtiyac_kartlari as ihtiyac_api
 from app.api import tanimlama as tanimlama_api
 from app.api import yetenek_kartlari as yetenek_api
 from app.api.auth import hesap_olustur
-from app.api.kesif import SEHIR_GEREKLI
+from app.api.kesif import KART_ZATEN_VAR, SEHIR_GEREKLI
 from app.api.profil import gencin_profilini_guncelle, kurumun_profilini_guncelle
 from app.core.kimlik import token_uret
 from app.core.metin import eposta_normalize
 from app.db.base import EMBEDDING_DIM
 from app.main import app
+from app.models.hesap import ROL_GENC
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
@@ -118,44 +121,46 @@ def _embedding_sahte(monkeypatch):
     monkeypatch.setattr(ihtiyac_api, "embedding_uret", uret)
 
 
+async def _genc_hesabi(oturum):
+    hesap = await hesap_olustur(
+        oturum,
+        email=f"test-{uuid.uuid4().hex[:8]}@ornek.com",
+        sifre="yeterince-uzun",
+        rol="genc",
+        ad="Elif",
+    )
+    return hesap, {"Authorization": f"Bearer {token_uret(hesap.id, ROL_GENC)}"}
+
+
+async def _onayla(istemci, baslik, profil: dict):
+    return await istemci.post(
+        "/kesif/kart/onayla",
+        headers=baslik,
+        json={"oturum_id": str(uuid.uuid4()), "profil": profil},
+    )
+
+
 def test_yetenek_karti_hesabin_profiline_baglanir_ve_profil_bosla_silinmez(monkeypatch):
+    """Kayıtta verilen profil, boş profil gönderen onayla silinmez; kart hesaba
+    bağlanır ve /me'de gencin tek kartı olarak döner."""
     _embedding_sahte(monkeypatch)
 
     async def senaryo():
         async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
-            hesap = await hesap_olustur(
-                oturum,
-                email=f"test-{uuid.uuid4().hex[:8]}@ornek.com",
-                sifre="yeterince-uzun",
-                rol="genc",
-                ad="Elif",
-            )
-            baslik = {"Authorization": f"Bearer {token_uret(hesap.id, 'genc')}"}
+            hesap, baslik = await _genc_hesabi(oturum)
+            profil = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
+            profil.sehir = "İzmir"
+            profil.calisma_modelleri = ["hibrit"]
+            profil.musaitlikler = ["yarim_zamanli", "staj"]
+            await oturum.commit()
+
             app.state.kesif_grafigi = HazirTaslakGrafigi(hesap.id, YETENEK_TASLAGI)
             try:
-                ilk = await istemci.post(
-                    "/kesif/kart/onayla",
-                    headers=baslik,
-                    json={
-                        "oturum_id": str(uuid.uuid4()),
-                        "profil": {
-                            "sehir": "izmir",
-                            "calisma_modelleri": ["hibrit"],
-                            "musaitlikler": ["yarim_zamanli", "staj"],
-                        },
-                    },
-                )
-                # İkinci kart: profil alanları gönderilmedi, eskisi kalmalı
-                ikinci = await istemci.post(
-                    "/kesif/kart/onayla",
-                    headers=baslik,
-                    json={"oturum_id": str(uuid.uuid4()), "profil": {}},
-                )
+                yanit = await _onayla(istemci, baslik, profil={})
             finally:
                 del app.state.kesif_grafigi
 
-            assert ilk.status_code == ikinci.status_code == 201
-            profil = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
+            assert yanit.status_code == 201
             await oturum.refresh(profil)
             assert (profil.sehir, profil.calisma_modelleri, profil.musaitlikler) == (
                 "İzmir",
@@ -163,12 +168,54 @@ def test_yetenek_karti_hesabin_profiline_baglanir_ve_profil_bosla_silinmez(monke
                 ["yarim_zamanli", "staj"],
             )
             assert profil.email == hesap.email  # iletişim e-postası kayıttaki
-            kartlar = (
-                await oturum.scalars(
-                    select(YetenekKarti.id).where(YetenekKarti.kullanici_id == profil.id)
+            me = (await istemci.get("/me", headers=baslik)).json()
+            assert me["yetenek_karti"]["id"] == yanit.json()["id"]
+
+    asyncio.run(senaryo())
+
+
+def test_ikinci_kart_acilmaz(monkeypatch):
+    """Gencin tek kartı var (madde 7): başka bir sohbetin onayı 409, kart sayısı bir."""
+    _embedding_sahte(monkeypatch)
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            hesap, baslik = await _genc_hesabi(oturum)
+            app.state.kesif_grafigi = HazirTaslakGrafigi(hesap.id, YETENEK_TASLAGI)
+            try:
+                ilk = await _onayla(
+                    istemci, baslik, profil={"sehir": "izmir", "calisma_modelleri": ["hibrit"]}
                 )
-            ).all()
-            assert {str(k) for k in kartlar} == {ilk.json()["id"], ikinci.json()["id"]}
+                ikinci = await _onayla(istemci, baslik, profil={})
+            finally:
+                del app.state.kesif_grafigi
+
+            assert (ilk.status_code, ikinci.status_code) == (201, 409)
+            assert ikinci.json()["detail"] == KART_ZATEN_VAR
+            profil = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
+            await oturum.refresh(profil)
+            assert profil.sehir == "İzmir"  # yazım kanonikleşir
+            kartlar = await oturum.scalars(
+                select(YetenekKarti.id).where(YetenekKarti.kullanici_id == profil.id)
+            )
+            assert [str(k) for k in kartlar] == [ilk.json()["id"]]
+
+    asyncio.run(senaryo())
+
+
+def test_veritabani_ikinci_karti_reddeder():
+    """Kural uygulamada değil veritabanında: eşzamanlı iki onay da ikinci kartı açamaz."""
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum:
+            hesap, _ = await _genc_hesabi(oturum)
+            profil = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
+            for rol in ("backend geliştirici", "veri analisti"):
+                oturum.add(
+                    YetenekKarti(kullanici_id=profil.id, rol_alani=rol, deneyim_seviyesi="orta")
+                )
+            with pytest.raises(IntegrityError):
+                await oturum.flush()
 
     asyncio.run(senaryo())
 

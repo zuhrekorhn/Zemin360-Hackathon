@@ -57,6 +57,7 @@ class Kullanici(UUIDPrimaryKeyMixin, Base):
     portfolyo_url: Mapped[str | None] = mapped_column(String)
 
     hesap: Mapped[Hesap | None] = relationship(back_populates="kullanici")
-    yetenek_kartlari: Mapped[list[YetenekKarti]] = relationship(
-        back_populates="kullanici", cascade="all, delete-orphan"
+    # Gencin tek kartı; henüz Keşif'i tamamlamadıysa None.
+    yetenek_karti: Mapped[YetenekKarti | None] = relationship(
+        back_populates="kullanici", cascade="all, delete-orphan", uselist=False
     )

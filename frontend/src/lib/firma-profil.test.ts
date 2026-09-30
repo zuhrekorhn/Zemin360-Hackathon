@@ -25,7 +25,7 @@ function hesap(ek: Partial<MeYaniti> = {}): MeYaniti {
     ad: "Market X",
     kullanici_id: null,
     kurum_id: "k",
-    yetenek_kartlari: [],
+    yetenek_karti: null,
     ihtiyac_kartlari: [],
     okunmamis_bildirim: 0,
     eksik_profil_alanlari: [],

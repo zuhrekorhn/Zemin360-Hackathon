@@ -36,14 +36,13 @@ def test_program_hedefleri_iki_parcali_etiket_ve_olcum():
         assert once["basvuru"]["program_adi"] == "startup başvurusu"
         assert once["basvuru"]["olcum"] == "en az bir yetenek kartı olan genç"
 
-        # Kartı olmayan genç başvuru sayılmaz; kartı olan sayılır. Bir gencin iki
-        # kartı iki başvuru değildir.
+        # Kartı olmayan genç başvuru sayılmaz; kartı olan sayılır (gencin tek
+        # kartı var: yetenek_karti.kullanici_id tekil).
         kartsiz = await _hesap(d.oturum, "genc", "Kartsız")
         kartli = await _hesap(d.oturum, "genc", "Kartlı")
-        for _ in range(2):
-            d.oturum.add(
-                YetenekKarti(kullanici_id=kartli.profil.id, rol_alani="r", deneyim_seviyesi="orta")
-            )
+        d.oturum.add(
+            YetenekKarti(kullanici_id=kartli.profil.id, rol_alani="r", deneyim_seviyesi="orta")
+        )
         # İhtiyaç kartı olan kurum sayılır.
         kurum = await _hesap(d.oturum, "kurum", "Yeni Koop")
         d.oturum.add(IhtiyacKarti(kurum_id=kurum.profil.id, problem_tanimi="p"))

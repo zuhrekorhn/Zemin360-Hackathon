@@ -112,7 +112,8 @@ export type MeYaniti = {
   ad: string | null;
   kullanici_id: string | null;
   kurum_id: string | null;
-  yetenek_kartlari: YetenekKartiOzeti[];
+  /** Gencin tek kartı (madde 7); Keşif'i tamamlamadıysa null. */
+  yetenek_karti: YetenekKartiOzeti | null;
   ihtiyac_kartlari: IhtiyacKartiOzeti[];
   okunmamis_bildirim: number;
   /** Genç ve firma: doldurulması gereken zorunlu profil alanları (eski hesaplar için bant). */

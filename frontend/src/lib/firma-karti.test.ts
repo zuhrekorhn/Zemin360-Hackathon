@@ -92,7 +92,7 @@ describe("firmaKartiCagrisi", () => {
     ad: "Market X",
     kullanici_id: null,
     kurum_id: "f",
-    yetenek_kartlari: [],
+    yetenek_karti: null,
     ihtiyac_kartlari: [],
     okunmamis_bildirim: 0,
     eksik_profil_alanlari: [],

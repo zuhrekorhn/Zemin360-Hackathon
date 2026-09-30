@@ -101,25 +101,23 @@ describe("onaydaProfilSorulmali", () => {
 });
 
 describe("kartTamamlamaCagrisi", () => {
-  const genc = (kartSayisi: number) =>
+  const genc = (kartVar: boolean) =>
     ({
       rol: "genc",
-      yetenek_kartlari: Array.from({ length: kartSayisi }, (_, i) => ({
-        id: String(i),
-      })),
+      yetenek_karti: kartVar ? { id: "1" } : null,
     }) as MeYaniti;
 
   it("kartı olmayan gence çağrı", () => {
-    expect(kartTamamlamaCagrisi(genc(0))).toBe(
+    expect(kartTamamlamaCagrisi(genc(false))).toBe(
       "Kartını tamamla, firmalar seni görebilsin.",
     );
   });
   it("kartı varsa ya da kurumsa yok", () => {
-    expect(kartTamamlamaCagrisi(genc(1))).toBeNull();
+    expect(kartTamamlamaCagrisi(genc(true))).toBeNull();
     expect(
       kartTamamlamaCagrisi({
         rol: "kurum",
-        yetenek_kartlari: [],
+        yetenek_karti: null,
       } as unknown as MeYaniti),
     ).toBeNull();
   });

@@ -179,6 +179,6 @@ export function onaydaProfilSorulmali(eksikAlanlar: string[]): boolean {
  * Kartı varsa null.
  */
 export function kartTamamlamaCagrisi(hesap: MeYaniti): string | null {
-  if (hesap.rol !== "genc" || hesap.yetenek_kartlari.length > 0) return null;
+  if (hesap.rol !== "genc" || hesap.yetenek_karti) return null;
   return "Kartını tamamla, firmalar seni görebilsin.";
 }

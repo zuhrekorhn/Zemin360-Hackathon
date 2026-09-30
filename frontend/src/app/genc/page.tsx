@@ -45,8 +45,8 @@ import {
 } from "@/lib/sabitler";
 
 /**
- * Genç paneli (docs/faz-b-kimlik-ve-dongu.md § 7): kartlarım, kanıt
- * bekleyenler, bana gelen ilgiler (kabul et / reddet), iş birliklerim.
+ * Genç paneli (docs/faz-b-kimlik-ve-dongu.md § 7): tek kartı (madde 7),
+ * güçlendirme, bana gelen ilgiler (kabul et / reddet), iş birliklerim.
  *
  * Kabulden önce kurum gencin e-postasını görmez; kabul edince iki tarafın
  * e-postası açılır ve iş birliği başlar (§ 5).
@@ -76,12 +76,12 @@ function GencPaneliIcerigi() {
   const [benimIlgilerim, setBenimIlgilerim] = useState<GencEslesmesi[] | null>(
     null,
   );
-  const [guclendirmeler, setGuclendirmeler] = useState<
-    { kartId: string; satir: Guclendirme }[]
-  >([]);
+  const [guclendirmeler, setGuclendirmeler] = useState<Guclendirme[]>([]);
   const [hata, setHata] = useState<Hata | null>(null);
   const okundu = useRef(false);
-  const kartIdleri = hesap.yetenek_kartlari.map((kart) => kart.id).join(",");
+  // Gencin tek kartı (madde 7); Keşif'i tamamlamadıysa null.
+  const kart = hesap.yetenek_karti;
+  const kartId = kart?.id ?? null;
 
   const firsatlariOku = useCallback(async () => {
     const [yeni, benim] = await Promise.all([firsatlarim(), ilgilerim()]);
@@ -92,24 +92,19 @@ function GencPaneliIcerigi() {
   const oku = useCallback(async () => {
     setHata(null);
     try {
-      const idler = kartIdleri ? kartIdleri.split(",") : [];
       const [gelen, acik, guclendir] = await Promise.all([
         banaGelenler(),
         isbirliklerim(),
-        Promise.all(
-          idler.map(async (kartId) =>
-            (await kartGuclendir(kartId)).map((satir) => ({ kartId, satir })),
-          ),
-        ),
+        kartId ? kartGuclendir(kartId) : Promise.resolve([]),
         firsatlariOku(),
       ]);
       setIlgiler(gelen);
       setIsbirlikleri(acik);
-      setGuclendirmeler(guclendir.flat());
+      setGuclendirmeler(guclendir);
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
     }
-  }, [kartIdleri, firsatlariOku]);
+  }, [kartId, firsatlariOku]);
 
   async function ilgiGoster(firsat: GencEslesmesi) {
     setHata(null);
@@ -156,17 +151,15 @@ function GencPaneliIcerigi() {
         ),
       );
       if (kabul) setIsbirlikleri(await isbirliklerim());
-      // İlgi bildirimi okunmuş sayılmaz ama panel güncel /me ister (kartlar).
+      // İlgi bildirimi okunmuş sayılmaz ama panel güncel /me ister (kart).
       void tazele();
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
     }
   }
 
-  const kartlar = hesap.yetenek_kartlari;
   const bant = profilBandi(hesap);
   const kartCagrisi = kartTamamlamaCagrisi(hesap);
-  const kanitBekleyenler = kartlar.filter((kart) => kart.kanit_bekleyen);
   const bekleyenIlgi =
     ilgiler?.filter((ilgi) => ilgi.durum === "ilgileniliyor").length ?? 0;
 
@@ -177,7 +170,7 @@ function GencPaneliIcerigi() {
         aciklama={
           bekleyenIlgi > 0
             ? `${bekleyenIlgi} firma kartınla ilgileniyor ve yanıtını bekliyor.`
-            : "Kartların, kanıtların ve sana gelen ilgiler burada."
+            : "Kartın, kanıtların ve sana gelen ilgiler burada."
         }
       />
 
@@ -206,7 +199,7 @@ function GencPaneliIcerigi() {
 
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
-      {kartlar.length > 0 ? (
+      {kart ? (
         <PanelBolumu
           id="firsatlar"
           baslik="Sana uygun fırsatlar"
@@ -219,7 +212,7 @@ function GencPaneliIcerigi() {
           ) : firsatlar.length === 0 ? (
             <BosDurum
               metin="Şu an sana uygun bir fırsat yok. Kanıt eklemek ve kartını güncel tutmak, yeni fırsatlarda öne çıkmanı sağlar."
-              eylem={{ href: `/kart/${kartlar[0].id}`, etiket: "Kartına git" }}
+              eylem={{ href: `/kart/${kart.id}`, etiket: "Kartına git" }}
             />
           ) : (
             <ul className="flex flex-col gap-4">
@@ -242,7 +235,7 @@ function GencPaneliIcerigi() {
           aciklama="Kanıt eklediğin çalışmalar güven göstergeni güçlendirir."
         >
           <ul className="flex flex-col gap-3">
-            {guclendirmeler.map(({ kartId, satir }) => (
+            {guclendirmeler.map((satir) => (
               <li
                 key={satir.somut_cikti_id}
                 className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar px-4 py-3"
@@ -280,66 +273,32 @@ function GencPaneliIcerigi() {
         </PanelBolumu>
       ) : null}
 
-      <PanelBolumu id="kartlar" baslik="Kartlarım">
-        {kartlar.length === 0 ? (
+      <PanelBolumu id="kart" baslik="Kartım">
+        {kart ? (
+          <Link
+            href={`/kart/${kart.id}`}
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-kenar px-4 py-3 hover:bg-muted"
+          >
+            <span className="font-medium text-ana">{kart.rol_alani}</span>
+            <span className="text-sm text-muted-foreground">
+              {etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}
+            </span>
+            <span className="ml-auto flex gap-2">
+              {kart.kanit_bekleyen ? (
+                <DurumEtiketi metin="Kanıt bekliyor" />
+              ) : null}
+              {!kart.embedding_var ? (
+                <DurumEtiketi metin="Henüz fırsatlarla eşleştirilmedi" />
+              ) : null}
+            </span>
+          </Link>
+        ) : (
           <BosDurum
             metin="Henüz yetenek kartın yok. Birkaç soruyla neler yaptığını anlat, kartını birlikte oluşturalım."
             eylem={{ href: "/kesif", etiket: "Kartını oluştur" }}
           />
-        ) : (
-          <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
-            {kartlar.map((kart) => (
-              <li key={kart.id}>
-                <Link
-                  href={`/kart/${kart.id}`}
-                  className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-muted"
-                >
-                  <span className="font-medium text-ana">{kart.rol_alani}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}
-                  </span>
-                  <span className="ml-auto flex gap-2">
-                    {kart.kanit_bekleyen ? (
-                      <DurumEtiketi metin="Kanıt bekliyor" />
-                    ) : null}
-                    {!kart.embedding_var ? (
-                      <DurumEtiketi metin="Henüz fırsatlarla eşleştirilmedi" />
-                    ) : null}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
         )}
       </PanelBolumu>
-
-      {kartlar.length > 0 ? (
-        <PanelBolumu
-          id="kanit"
-          baslik="Kanıt bekleyenler"
-          aciklama="Kanıtı olmayan bir çalışma kartını elemez; ama kanıt ve referans kartını fırsatlarda öne çıkarır."
-        >
-          {kanitBekleyenler.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Tüm çalışmalarında kanıt var.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {kanitBekleyenler.map((kart) => (
-                <li
-                  key={kart.id}
-                  className="flex flex-wrap items-center gap-3 text-sm"
-                >
-                  <span>{kart.rol_alani}</span>
-                  <Button asChild size="sm" variant="outline">
-                    <Link href={`/kart/${kart.id}`}>Kanıt ekle</Link>
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </PanelBolumu>
-      ) : null}
 
       <PanelBolumu
         id="ilgiler"
@@ -353,14 +312,12 @@ function GencPaneliIcerigi() {
         ) : ilgiler.length === 0 ? (
           <BosDurum
             metin={
-              kartlar.length === 0
-                ? "İlgiler bir kartın olduğunda gelir. Önce kartını oluştur."
-                : "Henüz bir firma kartınla ilgilenmedi. Bir firma ilgilendiğinde bildirim alırsın."
+              kart
+                ? "Henüz bir firma kartınla ilgilenmedi. Bir firma ilgilendiğinde bildirim alırsın."
+                : "İlgiler bir kartın olduğunda gelir. Önce kartını oluştur."
             }
             eylem={
-              kartlar.length === 0
-                ? { href: "/kesif", etiket: "Kartını oluştur" }
-                : undefined
+              kart ? undefined : { href: "/kesif", etiket: "Kartını oluştur" }
             }
           />
         ) : (

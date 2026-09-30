@@ -110,7 +110,7 @@ export function bildirimHedefi(
     case "ilgi":
       return "/genc#ilgiler";
     case "referans_yaniti":
-      return "/genc#kartlar";
+      return "/genc#kart";
     case "yeni_oneri":
       return "/kurum#ihtiyaclar";
     case "kabul":
