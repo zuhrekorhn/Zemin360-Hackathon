@@ -587,7 +587,10 @@ function KayitliKart({
       </p>
 
       <Button asChild size="lg" className="mt-1 w-fit">
-        <Link href={`/kart/${kart.id}`}>Kanıt ekle ve doğrulat</Link>
+        <Link href={`/kart/${kart.id}`}>
+          {/* Her çalışmanın linki ya da referansı varsa eklenecek kanıt yok. */}
+          {kart.kanit_bekleyen ? "Kanıt ekle ve doğrulat" : "Kartına git"}
+        </Link>
       </Button>
     </section>
   );
