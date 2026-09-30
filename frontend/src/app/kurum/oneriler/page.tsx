@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
   BelgeKarti,
@@ -22,11 +23,14 @@ import {
   simdilikDegil,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { isbirligiTuruEtiketi } from "@/lib/firma-karti";
+import { FIRMA_TURLERI } from "@/lib/firma-profil";
 import {
   NEDEN_UYGUN,
   firmaDurumEtiketi,
   firmaEylemleri,
   ilgiGosterenleriAyir,
+  onerininAdayAdi,
 } from "@/lib/ilgi";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
@@ -142,7 +146,7 @@ function OnerilerIcerigi() {
   function simdilikDegilDe(oneri: Oneri) {
     if (
       !window.confirm(
-        `${oneri.yetenek_karti.genc_adi} için “Şimdilik değil” demek istiyor musunuz? Adaya bu fırsatın kapandığı bildirilir; neden yazılmaz.`,
+        `${onerininAdayAdi(oneri)} için “Şimdilik değil” demek istiyor musunuz? Adaya bu fırsatın kapandığı bildirilir; neden yazılmaz.`,
       )
     ) {
       return;
@@ -153,6 +157,8 @@ function OnerilerIcerigi() {
   const gosterilenKart = veri
     ? hesap.ihtiyac_kartlari.find((kart) => kart.id === veri.ihtiyac_karti_id)
     : undefined;
+  // Ortak ilanının adayları firmalar (docs/plans/firma-akisi.md § 4).
+  const ortak = gosterilenKart?.aranan === "firma";
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
@@ -161,8 +167,9 @@ function OnerilerIcerigi() {
           Eşleştirme önerileri
         </h1>
         <p className="text-sm text-pretty text-muted-foreground">
-          İhtiyaç kartınla eşleşen yetenek kartları, skoruyla ve neden
-          önerildiğinin gerekçesiyle birlikte. Karar senin.
+          {ortak
+            ? "İlanınıza uyan firmalar, uyumuyla ve neden önerildikleriyle birlikte. Karar sizin."
+            : "İhtiyaç kartınla eşleşen yetenek kartları, skoruyla ve neden önerildiğinin gerekçesiyle birlikte. Karar senin."}
         </p>
         {gosterilenKart ? (
           <p className="border-l-2 border-kenar pl-3 text-sm text-pretty">
@@ -193,6 +200,7 @@ function OnerilerIcerigi() {
       {!yukleniyor && veri ? (
         <OneriListesi
           veri={veri}
+          ortak={ortak}
           onIlgileniyorum={ilgilendigimiSoyle}
           onSimdilikDegil={simdilikDegilDe}
         />
@@ -239,14 +247,30 @@ function KurumYok() {
 
 function OneriListesi({
   veri,
+  ortak,
   onIlgileniyorum,
   onSimdilikDegil,
 }: {
   veri: Oneriler;
+  ortak: boolean;
   onIlgileniyorum: (oneri: Oneri) => void;
   onSimdilikDegil: (oneri: Oneri) => void;
 }) {
   const { ilgiGosterenler, digerleri } = ilgiGosterenleriAyir(veri.oneriler);
+  if (veri.oneriler.length === 0 && ortak) {
+    return (
+      <div className="flex flex-col gap-2 rounded-sm border border-kenar bg-card px-5 py-4">
+        <p className="text-sm text-pretty">
+          Şu an ilanınıza yeterince uyan bir firma yok. Firmalar kartlarını
+          oluşturdukça yeni öneriler çıkabilir.
+        </p>
+        <p className="text-sm text-pretty text-muted-foreground">
+          İlanınızdaki problemi ve başarı kriterini netleştirmek de yardımcı
+          olur.
+        </p>
+      </div>
+    );
+  }
   if (veri.oneriler.length === 0) {
     return (
       <div className="flex flex-col gap-2 rounded-sm border border-kenar bg-card px-5 py-4">
@@ -321,7 +345,9 @@ function OneriKarti({
   onIlgileniyorum: () => void;
   onSimdilikDegil: () => void;
 }) {
+  if (oneri.firma_karti) return <FirmaAdayiKarti oneri={oneri} />;
   const kart = oneri.yetenek_karti;
+  if (!kart) return null;
   const eylemler = firmaEylemleri(oneri.durum);
   const ilgiGosterdi = oneri.durum === "genc_ilgilendi";
 
@@ -437,6 +463,74 @@ function OneriKarti({
           </dd>
         </dl>
       ) : null}
+    </BelgeKarti>
+  );
+}
+
+/**
+ * Ortak ilanında önerilen firma (docs/plans/firma-akisi.md § 0 kararlar 16-17).
+ * Firmalar arası ilgi bir sonraki adımda; şimdilik öneri ve gerekçe görünür.
+ */
+function FirmaAdayiKarti({ oneri }: { oneri: Oneri }) {
+  const firma = oneri.firma_karti;
+  if (!firma) return null;
+  const tur = FIRMA_TURLERI.find((t) => t.deger === firma.tur)?.etiket;
+  return (
+    <BelgeKarti
+      baslik={firma.firma_adi}
+      altbaslik={[tur, firma.sektor, firma.sehir].filter(Boolean).join(" · ")}
+      rozet={
+        <span className="flex flex-wrap gap-2">
+          <DogrulanmisFirma dogrulandi={firma.dogrulandi} />
+          {firma.tamamlanan_isbirligi > 0 ? (
+            <span className="rounded-sm border border-baglanti px-2.5 py-1 text-xs text-baglanti">
+              {firma.tamamlanan_isbirligi} tamamlanan iş birliği
+            </span>
+          ) : null}
+          <SkorRozeti skor={oneri.skor} />
+        </span>
+      }
+    >
+      <section className="flex flex-col gap-1.5">
+        <h4 className="font-heading text-sm font-semibold text-ana">
+          {NEDEN_UYGUN}
+        </h4>
+        {oneri.gerekce_metni ? (
+          <p className="text-sm text-pretty">{oneri.gerekce_metni}</p>
+        ) : (
+          <p className="text-sm text-pretty text-muted-foreground">
+            Bu öneri için açıklama henüz hazır değil. Uyum ve sıralama bundan
+            etkilenmiyor; “Yeniden hesapla” ile tekrar denenir.
+          </p>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-1.5">
+        <h4 className="font-heading text-sm font-semibold text-ana">
+          Ne yapıyor?
+        </h4>
+        <p className="text-sm text-pretty">{firma.ne_yapiyoruz}</p>
+      </section>
+      <EtiketSatiri etiket="Yetkinlikler" degerler={firma.yetkinlikler} />
+      {firma.onceki_isler ? (
+        <section className="flex flex-col gap-1.5">
+          <h4 className="font-heading text-sm font-semibold text-ana">
+            Önceki işler
+          </h4>
+          <p className="text-sm text-pretty">{firma.onceki_isler}</p>
+        </section>
+      ) : null}
+      {firma.isbirligi_turleri.length > 0 ? (
+        <EtiketSatiri
+          etiket="İş birliği türleri"
+          degerler={firma.isbirligi_turleri.map(isbirligiTuruEtiketi)}
+        />
+      ) : null}
+
+      <p className="border-t border-kenar pt-4 text-xs text-pretty text-muted-foreground">
+        Firmalarla ilgi ve iletişim yakında açılacak; şimdilik öneriyi
+        görebilirsiniz.
+      </p>
     </BelgeKarti>
   );
 }

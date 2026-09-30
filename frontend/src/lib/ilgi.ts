@@ -83,3 +83,11 @@ export function ilgiGosterenleriAyir<T extends { durum: string }>(
     digerleri: oneriler.filter((o) => o.durum !== "genc_ilgilendi"),
   };
 }
+
+/** Önerinin adayının adı: gencin adı ya da firmanın adı. */
+export function onerininAdayAdi(oneri: {
+  yetenek_karti: { genc_adi: string } | null;
+  firma_karti: { firma_adi: string } | null;
+}): string {
+  return oneri.firma_karti?.firma_adi ?? oneri.yetenek_karti?.genc_adi ?? "";
+}

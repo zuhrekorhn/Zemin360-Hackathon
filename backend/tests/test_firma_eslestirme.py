@@ -314,3 +314,33 @@ def test_canlilik_firma_eslesmelerini_taramaz():
         assert eslesme.id not in {e.id for e, _, _ in adaylar}
 
     senaryo(adimlar)
+
+
+def test_oneriler_ucu_firma_karti_doner_eposta_yok():
+    async def adimlar(istemci, d):
+        await _firma(d, "Dogrulu", dogrulandi=True)
+        ilan = await _ortak_ilan(d)
+        await servis.pipeline_calistir(d.oturum, ilan)
+
+        yanit = await istemci.get(
+            f"/eslestirme/oneriler/{d.kurum1.profil.id}",
+            params={"ihtiyac_karti_id": str(ilan.id)},
+            headers=d.kurum1.baslik,
+        )
+        assert yanit.status_code == 200
+        oneri = yanit.json()["oneriler"][0]
+        assert oneri["aday_turu"] == "firma"
+        assert oneri["yetenek_karti"] is None
+        firma = oneri["firma_karti"]
+        assert firma["firma_adi"] == "Dogrulu"
+        assert firma["dogrulandi"] is True
+        assert firma["yetkinlikler"] == ["x"]
+        assert "@" not in yanit.text  # e-posta yok (karşılıklı ilgi yok)
+
+        panel = (await istemci.get("/eslestirme/onerilerim", headers=d.kurum1.baslik)).json()
+        satir = next(s for s in panel if s["ihtiyac_karti_id"] == str(ilan.id))
+        assert satir["aday_turu"] == "firma"
+        assert satir["aday_adi"] == "Dogrulu"
+        assert satir["genc_adi"] is None
+
+    senaryo(adimlar)

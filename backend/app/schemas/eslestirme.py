@@ -35,6 +35,28 @@ class Iletisim(BaseModel):
     kurum_email: str | None
 
 
+class FirmaAdayKarti(BaseModel):
+    """Ortak ilanında önerilen firma (docs/plans/firma-akisi.md § 0 kararlar 16-17).
+
+    İletişim e-postası YOK: yalnızca karşılıklı ilgide `iletisim`'de açılır.
+    Doğrulama durumunun kendisi değil, yalnızca işareti.
+    """
+
+    firma_karti_id: uuid.UUID
+    kurum_id: uuid.UUID
+    firma_adi: str
+    tur: str | None
+    sektor: str | None
+    sehir: str | None
+    dogrulandi: bool
+    ne_yapiyoruz: str
+    yetkinlikler: list[str]
+    onceki_isler: str | None
+    isbirligi_turleri: list[str]
+    # Aday olarak tamamladığı iş birlikleri ("tamamlanan iş birliği" rozeti)
+    tamamlanan_isbirligi: int = 0
+
+
 class OneriYaniti(BaseModel):
     """Kuruma gösterilen tek bir öneri.
 
@@ -46,7 +68,11 @@ class OneriYaniti(BaseModel):
     skor: float
     durum: str
     gerekce_metni: str | None
-    yetenek_karti: YetenekKartiYaniti
+    # Aday türü ilanın kapısına göre: genç ilanında yetenek kartı, ortak
+    # ilanında firma kartı (tam biri dolu; docs/plans/firma-akisi.md § 4).
+    aday_turu: Literal["genc", "firma"] = "genc"
+    yetenek_karti: YetenekKartiYaniti | None = None
+    firma_karti: FirmaAdayKarti | None = None
     iletisim: Iletisim | None = None
     # Genç ilgi gösterdi, firmanın yanıtı bekleniyor. Skoru değiştirmez;
     # firma ekranında ayrı bir işaret ve bölüm (plan § 7.1).
@@ -130,9 +156,14 @@ class KurumOnerisi(BaseModel):
     son_aktivite_tarihi: dt.datetime
     ihtiyac_karti_id: uuid.UUID
     problem_tanimi: str
-    yetenek_karti_id: uuid.UUID
-    genc_adi: str
-    rol_alani: str
+    # Aday: genç (yetenek kartı) ya da firma (firma kartı); adı `aday_adi`'nda.
+    aday_turu: Literal["genc", "firma"] = "genc"
+    aday_adi: str
+    yetenek_karti_id: uuid.UUID | None = None
+    firma_karti_id: uuid.UUID | None = None
+    # Yalnızca genç adayında (geriye dönük alanlar).
+    genc_adi: str | None = None
+    rol_alani: str | None = None
     iletisim: Iletisim | None = None
 
 

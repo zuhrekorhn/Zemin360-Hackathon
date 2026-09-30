@@ -35,6 +35,7 @@ from app.agents.eslestirme import (
     DURUM_ONERILDI,
     SKOR_ESIGI,
     TOP_N,
+    firma_tamamlanan_isbirligi_sayilari,
     ihtiyac_kartini_getir,
 )
 from app.api import takip
@@ -54,6 +55,7 @@ from app.api.sahiplik import (
 )
 from app.api.sahiplik import kurum_id as hesabin_kurumu
 from app.api.yetenek_kartlari import kart_yaniti
+from app.core.firma_dogrulama import DOGRULANDI
 from app.db.session import get_session
 from app.models.bildirim import (
     TUR_FIRSAT_KAPANDI,
@@ -71,6 +73,7 @@ from app.schemas.eslestirme import (
     BanaGelenIlgi,
     EslesmeDurumYaniti,
     EslestirmeCalistirIstegi,
+    FirmaAdayKarti,
     GencEslesmesi,
     GencIlgiIstegi,
     IlgileniyorumIstegi,
@@ -174,9 +177,12 @@ async def onerilerim(
             son_aktivite_tarihi=eslesme.son_aktivite_tarihi,
             ihtiyac_karti_id=eslesme.ihtiyac_karti_id,
             problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
+            aday_turu="firma" if eslesme.firma_karti_id else "genc",
+            aday_adi=taraf_adi(eslesme, TARAF_ADAY),
             yetenek_karti_id=eslesme.yetenek_karti_id,
-            genc_adi=eslesme.yetenek_karti.kullanici.ad,
-            rol_alani=eslesme.yetenek_karti.rol_alani,
+            firma_karti_id=eslesme.firma_karti_id,
+            genc_adi=eslesme.yetenek_karti.kullanici.ad if eslesme.yetenek_karti else None,
+            rol_alani=eslesme.yetenek_karti.rol_alani if eslesme.yetenek_karti else None,
             iletisim=iletisim(eslesme, hesap),
         )
         for eslesme in eslesmeler.all()
@@ -563,14 +569,30 @@ async def _yanit_kur(
     hesap: Hesap | None,
 ) -> OnerilerYaniti:
     """`hesap` yalnızca iletişim bilgisini kime açacağımızı bilmek için;
-    arka plan işi hesapsız çağırır ve yanıtı zaten kimseye dönmez."""
+    arka plan işi hesapsız çağırır ve yanıtı zaten kimseye dönmez.
+
+    Aday genç ise yetenek kartı, firma ise firma kartı döner (tam biri).
+    """
+    isbirlikleri = await firma_tamamlanan_isbirligi_sayilari(
+        oturum, [e.firma_karti_id for e in eslesmeler if e.firma_karti_id]
+    )
     oneriler = [
         OneriYaniti(
             eslesme_id=eslesme.id,
             skor=round(eslesme.skor, 4),
             durum=eslesme.durum,
             gerekce_metni=eslesme.gerekce_metni,
-            yetenek_karti=await kart_yaniti(oturum, eslesme.yetenek_karti_id),
+            aday_turu="firma" if eslesme.firma_karti_id else "genc",
+            yetenek_karti=(
+                await kart_yaniti(oturum, eslesme.yetenek_karti_id)
+                if eslesme.yetenek_karti_id
+                else None
+            ),
+            firma_karti=(
+                _firma_aday_karti(eslesme, isbirlikleri.get(eslesme.firma_karti_id, 0))
+                if eslesme.firma_karti_id
+                else None
+            ),
             iletisim=iletisim(eslesme, hesap),
             genc_ilgi_gosterdi=eslesme.durum == DURUM_GENC_ILGILENDI,
         )
@@ -582,4 +604,24 @@ async def _yanit_kur(
         # Cold start: havuz küçükken bunu arayüzde gizleme (matching-algorithm.md § 5)
         az_sonuc_uyarisi=len(oneriler) < TOP_N,
         skor_esigi=SKOR_ESIGI,
+    )
+
+
+def _firma_aday_karti(eslesme: Eslesme, tamamlanan_isbirligi: int) -> FirmaAdayKarti:
+    """`eslesme` ilişkileriyle yüklenmiş olmalı (`iliskileriyle`)."""
+    kart = eslesme.firma_karti
+    kurum = kart.kurum
+    return FirmaAdayKarti(
+        firma_karti_id=kart.id,
+        kurum_id=kurum.id,
+        firma_adi=kurum.ad,
+        tur=kurum.tur,
+        sektor=kurum.sektor,
+        sehir=kurum.sehir,
+        dogrulandi=kurum.dogrulama_durumu == DOGRULANDI,
+        ne_yapiyoruz=kart.ne_yapiyoruz,
+        yetkinlikler=list(kart.yetkinlikler),
+        onceki_isler=kart.onceki_isler,
+        isbirligi_turleri=list(kart.isbirligi_turleri),
+        tamamlanan_isbirligi=tamamlanan_isbirligi,
     )

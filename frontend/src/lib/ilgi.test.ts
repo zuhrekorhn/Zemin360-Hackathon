@@ -6,6 +6,7 @@ import {
   gencDurumEtiketi,
   gencEylemleri,
   ilgiGosterenleriAyir,
+  onerininAdayAdi,
   uyumMetni,
 } from "@/lib/ilgi";
 
@@ -39,13 +40,25 @@ describe("uyumMetni", () => {
 
 describe("eylemler", () => {
   it("genç: yalnızca önerilene ilgi, yalnızca bekleyeni geri çeker", () => {
-    expect(gencEylemleri("onerildi")).toEqual({ ilgiGoster: true, geriCek: false });
-    expect(gencEylemleri("genc_ilgilendi")).toEqual({ ilgiGoster: false, geriCek: true });
-    expect(gencEylemleri("kabul_edildi")).toEqual({ ilgiGoster: false, geriCek: false });
+    expect(gencEylemleri("onerildi")).toEqual({
+      ilgiGoster: true,
+      geriCek: false,
+    });
+    expect(gencEylemleri("genc_ilgilendi")).toEqual({
+      ilgiGoster: false,
+      geriCek: true,
+    });
+    expect(gencEylemleri("kabul_edildi")).toEqual({
+      ilgiGoster: false,
+      geriCek: false,
+    });
   });
 
   it("firma: ilgi gösterene de ilgilenir, yalnızca ona 'Şimdilik değil' der", () => {
-    expect(firmaEylemleri("onerildi")).toEqual({ ilgileniyorum: true, simdilikDegil: false });
+    expect(firmaEylemleri("onerildi")).toEqual({
+      ilgileniyorum: true,
+      simdilikDegil: false,
+    });
     expect(firmaEylemleri("genc_ilgilendi")).toEqual({
       ilgileniyorum: true,
       simdilikDegil: true,
@@ -66,5 +79,22 @@ describe("eylemler", () => {
     const { ilgiGosterenler, digerleri } = ilgiGosterenleriAyir(liste);
     expect(ilgiGosterenler.map((o) => o.id)).toEqual([2, 4]);
     expect(digerleri.map((o) => o.id)).toEqual([1, 3]);
+  });
+});
+
+describe("onerininAdayAdi", () => {
+  it("genç adayında gencin, firma adayında firmanın adı", () => {
+    expect(
+      onerininAdayAdi({
+        yetenek_karti: { genc_adi: "Elif" },
+        firma_karti: null,
+      }),
+    ).toBe("Elif");
+    expect(
+      onerininAdayAdi({
+        yetenek_karti: null,
+        firma_karti: { firma_adi: "Market X" },
+      }),
+    ).toBe("Market X");
   });
 });

@@ -123,3 +123,15 @@ Denetime not: Tanımlama sayfasının başlığı ve sohbet adı hâlâ "Tanıml
 |---|---|---|---|
 | `backend/app/api/eslestirme.py` | 409 (geçici, 8. adımda kalkar) | Firmalarla ilgi ve iletişim yakında açılacak; şimdilik öneriyi görebilirsiniz. | firma |
 | `backend/app/agents/eslestirme.py` | Gerekçe istemi | Firma adayı için "Neden uygun?" metni; ilanı açan firmaya hitaben, aday firmadan üçüncü şahısla (genç gerekçesindeki bilinen sınırın aynısı: aday firma da aynı metni görecek) | firma |
+
+## 7b. adım — Öneriler sayfasında firma adayları
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `app/kurum/oneriler/page.tsx` | Ortak ilanı girişi | İlanınıza uyan firmalar, uyumuyla ve neden önerildikleriyle birlikte. Karar sizin. | firma |
+| 〃 | Ortak ilanı boş durum | Şu an ilanınıza yeterince uyan bir firma yok. Firmalar kartlarını oluşturdukça yeni öneriler çıkabilir. · İlanınızdaki problemi ve başarı kriterini netleştirmek de yardımcı olur. | firma |
+| 〃 | Firma adayı kartı | Ne yapıyor? · Yetkinlikler · Önceki işler · İş birliği türleri · {n} tamamlanan iş birliği · "Bu öneri için açıklama henüz hazır değil. Uyum ve sıralama bundan etkilenmiyor; “Yeniden hesapla” ile tekrar denenir." | firma |
+| 〃 | Geçici not (8. adımda kalkar) | Firmalarla ilgi ve iletişim yakında açılacak; şimdilik öneriyi görebilirsiniz. | firma |
+| `app/kurum/page.tsx` | Önerilerim satırı (firma adayı) | Firma | firma |
+
+Denetime not: genç adayı kartındaki mevcut metinler ("Karar senin.", "tamamlanmış pilot" rozeti, eşik cümlesi) değiştirilmedi; firma adayı kartında rehbere uygun karşılıkları kullanıldı ("Karar sizin.", "tamamlanan iş birliği", eşik yok).

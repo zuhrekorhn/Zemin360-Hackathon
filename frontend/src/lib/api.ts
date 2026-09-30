@@ -844,7 +844,10 @@ export type Oneri = {
   /** Gerekçe yoksa null: dil modeli o an yanıt vermedi ya da kanıtı
    *  olduğundan güçlü anlattığı için gerekçe bırakıldı. Skor yine de geçerli. */
   gerekce_metni: string | null;
-  yetenek_karti: YetenekKartiYaniti;
+  /** Genç ilanında yetenek kartı, ortak ilanında firma kartı (tam biri dolu). */
+  aday_turu: "genc" | "firma";
+  yetenek_karti: YetenekKartiYaniti | null;
+  firma_karti: FirmaAdayKarti | null;
   /** Yalnızca `kabul_edildi` durumunda ve yalnızca iki tarafa dolu. */
   iletisim: Iletisim | null;
   /** Genç ilgi gösterdi, firmanın yanıtı bekleniyor. Skoru değiştirmez. */
@@ -855,8 +858,26 @@ export type Oneri = {
 
 /** Gencin kabulüyle açılan e-postalar (docs/faz-b-kimlik-ve-dongu.md § 5). */
 export type Iletisim = {
-  genc_email: string;
+  /** Genç ilanında gencin, ortak ilanında aday firmanın e-postası. */
+  genc_email: string | null;
+  aday_firma_email?: string | null;
   kurum_email: string | null;
+};
+
+/** Ortak ilanında önerilen firma (docs/plans/firma-akisi.md § 0 kararlar 16-17). */
+export type FirmaAdayKarti = {
+  firma_karti_id: string;
+  kurum_id: string;
+  firma_adi: string;
+  tur: FirmaTuru | null;
+  sektor: string | null;
+  sehir: string | null;
+  dogrulandi: boolean;
+  ne_yapiyoruz: string;
+  yetkinlikler: string[];
+  onceki_isler: string | null;
+  isbirligi_turleri: string[];
+  tamamlanan_isbirligi: number;
 };
 
 export type Oneriler = {
@@ -1029,9 +1050,13 @@ export type KurumOnerisi = {
   son_aktivite_tarihi: string;
   ihtiyac_karti_id: string;
   problem_tanimi: string;
-  yetenek_karti_id: string;
-  genc_adi: string;
-  rol_alani: string;
+  aday_turu: "genc" | "firma";
+  aday_adi: string;
+  yetenek_karti_id: string | null;
+  firma_karti_id: string | null;
+  /** Yalnızca genç adayında. */
+  genc_adi: string | null;
+  rol_alani: string | null;
   iletisim: Iletisim | null;
 };
 

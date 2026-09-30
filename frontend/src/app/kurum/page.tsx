@@ -226,14 +226,21 @@ function KurumPaneliIcerigi() {
                   className="flex flex-col gap-2 px-4 py-3"
                 >
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <Link
-                      href={`/kart/${oneri.yetenek_karti_id}`}
-                      className="font-medium text-ana underline-offset-4 hover:underline"
-                    >
-                      {oneri.genc_adi}
-                    </Link>
+                    {oneri.yetenek_karti_id ? (
+                      <Link
+                        href={`/kart/${oneri.yetenek_karti_id}`}
+                        className="font-medium text-ana underline-offset-4 hover:underline"
+                      >
+                        {oneri.aday_adi}
+                      </Link>
+                    ) : (
+                      // Firma adayı: kartı öneriler sayfasında (firma-akisi § 8).
+                      <span className="font-medium text-ana">
+                        {oneri.aday_adi}
+                      </span>
+                    )}
                     <span className="text-sm text-muted-foreground">
-                      {oneri.rol_alani}
+                      {oneri.rol_alani ?? "Firma"}
                     </span>
                     <span className="ml-auto flex items-center gap-2">
                       <DurumEtiketi
