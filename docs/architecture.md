@@ -17,7 +17,7 @@ flowchart TD
 
 | Katman | Seçim | Gerekçe |
 |---|---|---|
-| Ajan orkestrasyonu | **LangGraph** | Durum kalıcılığı (checkpointing) ve insan-onay noktalarını (interrupt) native destekliyor — Keşif, Doğrulama ve Eşleştirme ajanlarının hepsinde bir onay/itiraz durağı var. CrewAI/AutoGen'e göre bu ihtiyaca en uygun olanı. |
+| Ajan orkestrasyonu | **LangGraph** | Durum kalıcılığını (checkpointing) native destekliyor; CrewAI/AutoGen'e göre bu ihtiyaca en uygun olanı. **Kodda nasıl kullanılıyor (30 Eyl):** yalnızca çok turlu sohbet ajanları (Keşif, Tanımlama, firma kartı) bir `StateGraph` olarak derlenir ve aynı motoru paylaşır (`app/agents/sohbet_motoru.py`); sohbet Postgres checkpointer'da durur, LLM hatasında kaldığı yerden sürer. Eşleştirme, Doğrulama, Takip ve Canlılık tek seferlik hesaplardır, grafik kullanmaz; aralarındaki akışı `app/servisler/` yürütür. Supervisor ajanı ve LangGraph `interrupt` kullanılmıyor: insan onayı uç noktalarla sağlanır (taslak onaylanmadan kaydedilmez, güven göstergesine itiraz edilir, eşleşmede karar insanındır). |
 | Backend | **FastAPI (Python)** | Orkestrasyon katmanıyla aynı dilde, async destekli; bu sınıf ürünlerde sektörün en yaygın kombinasyonu. |
 | Veritabanı | **PostgreSQL + pgvector** | Ayrı bir vektör veritabanı (Qdrant/Pinecone) bu veri hacminde (yüzlerce–birkaç bin kayıt) gereksiz altyapı yükü. Tek veritabanında hem ilişkisel veri hem embedding tutuluyor. |
 | Frontend | **Next.js + Tailwind + shadcn/ui** | Güncel, hızlı ve profesyonel görünümlü bir arayüz için sektör standardı — UI/UX değerlendirme kriterini doğrudan destekliyor. |

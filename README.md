@@ -43,7 +43,7 @@ Eşleştirme algoritmasının detayı için bkz. [`docs/matching-algorithm.md`](
 ## Teknoloji Yığını
 
 - **Backend:** Python, FastAPI
-- **Ajan orkestrasyonu:** LangGraph (supervisor pattern, insan-onaylı durak noktaları)
+- **Ajan orkestrasyonu:** Sohbet ajanları (Keşif, Tanımlama, firma kartı) tek bir LangGraph motorunu paylaşır; sohbet durumu Postgres checkpointer'da durur. Eşleştirme, Doğrulama, Takip ve Canlılık tek seferlik hesaplardır; aralarındaki akışı `app/servisler/` yürütür. Hiçbir taslak kullanıcı onaylamadan kaydedilmez.
 - **Veritabanı:** PostgreSQL + pgvector
 - **Frontend:** Next.js, Tailwind, shadcn/ui
 - **Embedding:** Voyage AI (voyage-4, 1024 boyut) — Anthropic'in Claude ile kullanım için resmi önerdiği sağlayıcı

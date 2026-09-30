@@ -57,7 +57,7 @@ Kullanıcıya görünen her metin (başlık, buton, etiket, hata, boş durum, bi
 
 ## Teknoloji Yığını (hızlı referans)
 
-Backend: Python, FastAPI · Orkestrasyon: LangGraph (supervisor pattern) · Veritabanı: PostgreSQL + pgvector · Frontend: Next.js, Tailwind, shadcn/ui
+Backend: Python, FastAPI · Orkestrasyon: LangGraph (sohbet ajanlarının ortak motoru, checkpointer; supervisor yok, akış `app/servisler/`'de) · Veritabanı: PostgreSQL + pgvector · Frontend: Next.js, Tailwind, shadcn/ui
 
 ## Kod Standartları
 

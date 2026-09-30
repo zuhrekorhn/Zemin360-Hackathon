@@ -537,8 +537,8 @@ Eşleştirme pipeline'ı (`_pipeline_calistir`) `app/api/eslestirme.py` içinde 
 | Faz E'nin kendi maddeleri | **D** | Canlı CORS, `TARAMA_ANAHTARI` ile cron, migration'ların sıfırdan çalışması |
 | Toplu metin denetimi | **T** | "… Ajanı" adları, firmaya "sen", uzun tire, "skor/eşik" geçen firma metinleri, Canlılık istemi ve şablonlarının hitabı, onay pencereleri. Liste: `genc-akisi-metinler.md` |
 | Ana sayfadaki "Faz 2" yazısı | **T** | `frontend/src/app/page.tsx`; tek satır, metin denetimine girebilir |
-| Belgelerdeki "LangGraph supervisor pattern" ifadesi | **T** | Kodda supervisor yok; README, CLAUDE.md ve architecture'da düzeltilmeli, jüri sorabilir |
-| README eksikleri | **T** | Proje adı yer tutucu, canlı adres, ekran görüntüleri; README MIT diyor ama `LICENSE` dosyası yok (Faz F) |
+| ~~Belgelerdeki "LangGraph supervisor pattern" ifadesi~~ | **T** | **Kapandı (30 Eyl):** README, CLAUDE.md ve architecture gerçek yapıya göre düzeltildi |
+| README eksikleri | **T** | Canlı adres ve ekran görüntüleri (Faz F). `LICENSE` (MIT) eklendi (30 Eyl) |
 | ~~`yeni_firsat` bildirim metni hâlâ anonim~~ | **T** | **Kapandı (30 Eyl):** metin denetiminde firma adı eklendi (`faz-d-canlilik.md` karar 3) |
 | Firma tarafı | **T** | Sıradaki görev: firma profili ve düzenlemesi, ihtiyaç kapatma düğmesi, girişim/startup kapsam kararı |
 | "Yeni iş ekle" sohbeti | **S** | Karar 16 |
