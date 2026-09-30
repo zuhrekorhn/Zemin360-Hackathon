@@ -16,6 +16,7 @@ from app.agents.kesif import (
     MAKS_EK_TURU,
     MAKS_TAKIP_TURU,
     POTANSIYEL,
+    SISTEM_TALIMATI,
     YEDEK_SORULAR,
     SomutCiktiTaslak,
     TaslakCikarimi,
@@ -631,8 +632,6 @@ def test_teknik_rol_adlari_turkcelestirilmiyor():
     """Sahada görüldü: model "arka yüz geliştirici, tam yığın geliştirici" diye sordu.
     Kurum ve genç bu rolleri "backend", "full-stack" diye arıyor; eşleştirme
     metni de aynı adla daha iyi çalışır."""
-    from app.agents.kesif import SISTEM_TALIMATI
-
     talimat = " ".join(SISTEM_TALIMATI.split())  # satır kırılmasından bağımsız
     assert "TÜRKÇELEŞTİRME" in talimat
     assert '"backend geliştirici"' in talimat
@@ -797,3 +796,15 @@ def test_calismasi_olan_gencin_deneyimine_dokunulmaz():
         )
     )
     assert sonuc["taslak"]["deneyim_seviyesi"] == "orta"
+
+
+def test_pay_yalnizca_acikca_soylenince_ve_gencin_agzindan_yazilir():
+    """Sahada görüldü: model "betiği yazmıştım"dan "Tek başına geliştirdi" çıkardı,
+    pay sorusu atlandı ve Doğrulama bu tahmine rol puanı olarak 3/3 verdi."""
+    talimat = " ".join(SISTEM_TALIMATI.split())
+    assert "AÇIKÇA söylediyse" in talimat
+    assert "pay değildir" in talimat
+    assert "birinci tekil şahısla" in talimat
+
+    alan = SomutCiktiTaslak.model_fields["kendi_rolu"].description
+    assert "açıkça" in alan and "birinci" in alan

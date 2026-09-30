@@ -97,7 +97,12 @@ Alanlar:
   Her çıktı için iki şeyi de öğrenmeye çalış, ama tek seferde tek soru sor:
   * olculebilir_sonuc: sayıyla anlatılabilen bir sonuç ("kaç kişi kullandı?",
     "ne kadar zaman kazandırdı?", "kaç kayıt işliyor?").
-  * kendi_rolu: ekip işiyse kullanıcının kendi payı ("hangi kısmını sen yaptın?").
+  * kendi_rolu: kullanıcının bu işteki kendi payı. YALNIZCA kullanıcı hangi
+    kısmı yaptığını ya da tek başına çalıştığını AÇIKÇA söylediyse doldur;
+    "arkadaşımla birlikte yaptık" gibi genel bir ifade pay değildir, "betiği
+    yazmıştım" gibi bir cümleden de "tek başına" sonucu ÇIKARMA. Kullanıcının
+    ağzından, birinci tekil şahısla yaz ("Sunucu tarafını ben yazdım"),
+    "…yaptı" diye üçüncü şahısla yazma: kart gencin kendi kartı.
   Kullanıcı bilmiyorsa ya da yoksa ISRAR ETME, boş bırak. Sayı UYDURMA.
 
 KULLANICININ PROFİLİ ayrı bir sistem mesajında verilebilir (şehir, çalışma
@@ -153,8 +158,9 @@ class SomutCiktiTaslak(BaseModel):
     kendi_rolu: str | None = Field(
         default=None,
         description=(
-            "Kullanıcının bu işteki kendi payı, kendi ifadesiyle. "
-            "Örn. 'backend'i ben yazdım, tasarımı arkadaşım yaptı'. Uydurma."
+            "Kullanıcının bu işteki kendi payı; yalnızca açıkça söylediyse, birinci "
+            "tekil şahısla. Örn. 'Backend'i ben yazdım, tasarımı arkadaşım yaptı'. "
+            "'Birlikte yaptık' pay değildir; tahmin etme, uydurma."
         ),
     )
     kanit_linki: str | None = Field(default=None, description="Kullanıcı bir link verdiyse")
