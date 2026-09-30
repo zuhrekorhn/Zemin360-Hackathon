@@ -95,8 +95,10 @@ KULLANICININ PROFİLİ ayrı bir sistem mesajında verilebilir (şehir, çalış
 modeli, müsaitlik, durum, okul). Bunları ASLA sorma; aradığı fırsat türünü
 (staj, yarı zamanlı…) da sorma, müsaitlik zaten profilde.
 
-Aynı işten ikinci kez bahsedilirse YENİ bir çıktı açma; aynı başlıkla yeniden
-döndür, eksik alanları doldur.
+ŞU ANA KADARKİ TASLAK da ayrı bir sistem mesajında verilir; her çalışmanın bir
+kimliği var ("c1" gibi). Taslakta zaten olan bir çalışmadan bahsediliyorsa YENİ
+bir çıktı açma: o çalışmanın kimliğini `kimlik` alanına yaz, eksik alanlarını
+doldur. Yalnızca yeni bir çalışmada `kimlik`i boş bırak.
 
 takip_sorusu ve takip_konusu:
 - rol_alani, deneyim_seviyesi, sektor_ilgi_alani ya da araclar_teknolojiler
@@ -123,6 +125,10 @@ class SomutCiktiTaslak(BaseModel):
     bu yüzden 0/3 ve 1/3 almıştı.
     """
 
+    kimlik: str | None = Field(
+        default=None,
+        description="Taslakta zaten olan bir çalışmaysa onun kimliği (örn. 'c1'); yeniyse boş",
+    )
     baslik: str = Field(description="Kısa başlık, örn. 'Mahalle kütüphanesi ödünç takip sistemi'")
     aciklama: str | None = Field(
         default=None,
@@ -231,10 +237,13 @@ def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
     eksikler: list[tuple[str, str]] = []
     for cikti in taslak.get("somut_ciktilar") or []:
         baslik = cikti.get("baslik") or "bu çalışma"
+        # "Soruldu" işareti kimliğe bağlı: başlık değişince soru tekrar gelmesin.
+        # Kimliksiz kayıt yalnızca bu özellikten önceki taslaklarda var.
+        anahtar = cikti.get(motor.KIMLIK) or baslik
         if not cikti.get("olculebilir_sonuc"):
             eksikler.append(
                 (
-                    f"olcut:{baslik}",
+                    f"olcut:{anahtar}",
                     f"“{baslik}” için sonucu sayıyla anlatabilir misin? Örneğin kaç "
                     "kişi kullandı ya da ne kadar zaman kazandırdı. Bilmiyorsan geçebiliriz.",
                 )
@@ -242,7 +251,7 @@ def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
         if not cikti.get("kendi_rolu"):
             eksikler.append(
                 (
-                    f"rol:{baslik}",
+                    f"rol:{anahtar}",
                     f"“{baslik}” üzerinde tek başına mı çalıştın, ekipçe mi? "
                     "Ekipçeyse hangi kısmı sen yaptın?",
                 )
@@ -250,7 +259,7 @@ def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
         if not cikti.get("kanit_linki") and not cikti.get("referans_email"):
             eksikler.append(
                 (
-                    f"kanit:{baslik}",
+                    f"kanit:{anahtar}",
                     f"“{baslik}” çalışmanı gösteren bir link var mı (kod deposu, demo, "
                     "yayın)? Ya da bu çalışmayı doğrulayabilecek birinin e-postası? İkisi de "
                     "isteğe bağlı.",
@@ -300,7 +309,9 @@ KESIF = motor.AjanTanimi(
     cikarim_semasi=TaslakCikarimi,
     skaler_alanlar=("rol_alani", "deneyim_seviyesi"),
     liste_alanlari=("sektor_ilgi_alani", "araclar_teknolojiler", "sertifikalar", "diller"),
-    nesne_listeleri=(("somut_ciktilar", "baslik"),),
+    nesne_listeleri=(
+        motor.NesneListesi(alan="somut_ciktilar", anahtar="baslik", kimlik_oneki="c"),
+    ),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
     yedek_sorular=YEDEK_SORULAR,
     ek_eksikler=_cikti_eksikleri,

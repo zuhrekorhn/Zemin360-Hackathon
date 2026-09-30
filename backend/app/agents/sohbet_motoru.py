@@ -6,7 +6,9 @@ docs/agent-specs.md § 2: "Keşif Ajanı ile aynı sohbet motorunu paylaşır
 Motorun bildiği üç şey var:
   1. Grafik iskeleti — açılış → yapılandırılmış çıkarım → karar düğümü.
   2. Taslak birleştirme — skaler alan üzerine yazar, liste alanı tekrarsız
-     ekler, boş gelen çıkarım eski değeri SİLMEZ.
+     ekler, boş gelen çıkarım eski değeri SİLMEZ. Nesne listelerinde her
+     kaydın kalıcı bir kimliği var; model güncel taslağı görür ve aynı kaydı
+     o kimlikle döndürür.
   3. Hızlı katmanda, arızada yedek modele düşen LLM zinciri (app/core/llm.py).
 
 Ajana özel olan her şey (`AjanTanimi`) dışarıdan verilir: açılış sorusu,
@@ -17,6 +19,7 @@ eklenir — motorun içinde ajana özel dal yok.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Annotated, Any, Literal, TypedDict
@@ -42,6 +45,15 @@ MAKS_TAKIP_TURU = 2
 # doğrudan skora yansıyor). Yine de sonsuz döngü olmasın diye bir sınır var;
 # tavana gelinirse alanlar yer tutucuyla doldurulup kart kapanıyor.
 MAKS_ZORUNLU_TURU = 6
+
+# Nesne listelerindeki her kaydın kalıcı kimliği (ör. "c1"). Model bir kaydın
+# başlığını her turda farklı yazabiliyor; kayıt başlıkla değil bununla bulunur.
+KIMLIK = "kimlik"
+
+TASLAK_BASLIGI = (
+    "ŞU ANA KADARKİ TASLAK (sohbetten çıkardıkların; bu turda yeni bilgiyle "
+    "tamamla, zaten olan bir kaydı güncellerken onun kimliğini kullan):\n"
+)
 
 
 class SohbetDurumu(TypedDict, total=False):
@@ -80,6 +92,17 @@ class SohbetDurumu(TypedDict, total=False):
 
 
 @dataclass(frozen=True)
+class NesneListesi:
+    """Taslakta nesnelerden oluşan bir liste alanı (örn. Keşif'in çalışmaları)."""
+
+    alan: str
+    # Kimliksiz gelen kaydın yedek eşleştirme anahtarı (örn. "baslik")
+    anahtar: str
+    # Kalıcı kimliklerin öneki: "c" → c1, c2…
+    kimlik_oneki: str
+
+
+@dataclass(frozen=True)
 class AjanTanimi:
     """Bir sohbet ajanının motora verdiği her şey."""
 
@@ -90,8 +113,7 @@ class AjanTanimi:
     # Üzerine yazılan alanlar (tek değer) ve tekrarsız eklenen liste alanları
     skaler_alanlar: tuple[str, ...] = ()
     liste_alanlari: tuple[str, ...] = ()
-    # (alan adı, tekilleştirme anahtarı) — örn. ("somut_ciktilar", "baslik")
-    nesne_listeleri: tuple[tuple[str, str], ...] = ()
+    nesne_listeleri: tuple[NesneListesi, ...] = ()
     zorunlu_alanlar: tuple[str, ...] = ()
     # Zorunlu alan eksikken kaç tur soru sorulabilir (ajana göre değişir).
     maks_zorunlu_turu: int = MAKS_ZORUNLU_TURU
@@ -130,8 +152,8 @@ def bos_taslak(tanim: AjanTanimi) -> dict[str, Any]:
     taslak: dict[str, Any] = {alan: None for alan in tanim.skaler_alanlar}
     for alan in tanim.liste_alanlari:
         taslak[alan] = []
-    for alan, _ in tanim.nesne_listeleri:
-        taslak[alan] = []
+    for liste in tanim.nesne_listeleri:
+        taslak[liste.alan] = []
     return taslak
 
 
@@ -139,33 +161,59 @@ def eksik_alanlar(tanim: AjanTanimi, taslak: dict[str, Any]) -> list[str]:
     return [alan for alan in tanim.zorunlu_alanlar if not taslak.get(alan)]
 
 
+def _yeni_kimlik(nesneler: Sequence[dict[str, Any]], onek: str) -> str:
+    """Kullanılmamış ilk kimlik: c1, c2…"""
+    kullanilan = {nesne.get(KIMLIK) for nesne in nesneler}
+    sira = 1
+    while f"{onek}{sira}" in kullanilan:
+        sira += 1
+    return f"{onek}{sira}"
+
+
+def _kimlikli_kopya(nesneler: Sequence[dict[str, Any]], onek: str) -> list[dict[str, Any]]:
+    """Kayıtların kopyası; kimliği olmayana (bu özellikten önceki taslak) kimlik verir."""
+    kopyalar = [dict(nesne) for nesne in nesneler]
+    for kopya in kopyalar:
+        if not kopya.get(KIMLIK):
+            kopya[KIMLIK] = _yeni_kimlik(kopyalar, onek)
+    return kopyalar
+
+
 def _nesneleri_birlestir(
-    nesneler: list[dict[str, Any]], gelenler: Sequence[Any], anahtar: str
+    nesneler: Sequence[dict[str, Any]], gelenler: Sequence[Any], liste: NesneListesi
 ) -> list[dict[str, Any]]:
     """Aynı işi anlatan kayıtları tek kayıtta toplar.
 
-    Kullanıcı projeden ikinci kez bahsettiğinde ("Team To Do" / "Team ToDo")
-    ajan yeni bir çıktı açıyordu; biri linksiz, diğeri linkli iki satır
-    çıkıyordu. Başlık noktalama ve büyük/küçük harf farkından arındırılıp
-    karşılaştırılıyor, eşleşen kayıtların BOŞ alanları yeni bilgiyle
-    dolduruluyor — dolu bir alan ezilmiyor, ilk anlatılan korunuyor.
+    Kayıt önce kimliğiyle bulunur: model taslağı görüyor ve bildiği bir kaydı
+    kimliğiyle döndürüyor. Başlığa güvenmek yetmiyordu, model aynı işi her
+    turda başka adla yazabiliyor ("Kütüphane sistemi" / "Mahalle kütüphanesi
+    takip uygulaması") ve kart aynı işi iki kez taşıyordu.
+
+    Kimliksiz gelen kayıt yedek olarak başlıkla eşleştirilir; noktalama ve
+    büyük/küçük harf farkı yok sayılır ("Team To Do" / "Team ToDo"). Eşleşen
+    kaydın yalnızca BOŞ alanları dolar, ilk anlatılan korunur. Hiçbir kayıt
+    silinmez: model bir turda bir kaydı unutursa veri kaybolmaz.
     """
-    dizin = {sade_anahtar(nesne[anahtar]): sira for sira, nesne in enumerate(nesneler)}
+    sonuc = _kimlikli_kopya(nesneler, liste.kimlik_oneki)
+    kimlikle = {nesne[KIMLIK]: nesne for nesne in sonuc}
+    anahtarla = {sade_anahtar(nesne[liste.anahtar]): nesne for nesne in sonuc}
 
     for gelen in gelenler:
         veri = gelen.model_dump()
-        gelen_anahtar = sade_anahtar(veri[anahtar])
-        sira = dizin.get(gelen_anahtar)
-        if sira is None:
-            dizin[gelen_anahtar] = len(nesneler)
-            nesneler.append(veri)
+        kimlik = veri.pop(KIMLIK, None)
+        anahtar = sade_anahtar(veri[liste.anahtar])
+        mevcut = kimlikle.get(kimlik) or anahtarla.get(anahtar)
+        if mevcut is None:
+            yeni = {KIMLIK: _yeni_kimlik(sonuc, liste.kimlik_oneki), **veri}
+            sonuc.append(yeni)
+            kimlikle[yeni[KIMLIK]] = yeni
+            anahtarla[anahtar] = yeni
             continue
-        mevcut = nesneler[sira]
         for alan_adi, deger in veri.items():
             if deger and not mevcut.get(alan_adi):
                 mevcut[alan_adi] = deger
 
-    return nesneler
+    return sonuc
 
 
 def birlestir(tanim: AjanTanimi, taslak: dict[str, Any], cikarim: BaseModel) -> dict[str, Any]:
@@ -184,12 +232,36 @@ def birlestir(tanim: AjanTanimi, taslak: dict[str, Any], cikarim: BaseModel) -> 
                 mevcut.append(deger)
         yeni[alan] = mevcut
 
-    for alan, anahtar in tanim.nesne_listeleri:
-        yeni[alan] = _nesneleri_birlestir(
-            list(yeni.get(alan) or []), getattr(cikarim, alan, []) or [], anahtar
+    for liste in tanim.nesne_listeleri:
+        yeni[liste.alan] = _nesneleri_birlestir(
+            yeni.get(liste.alan) or [], getattr(cikarim, liste.alan, []) or [], liste
         )
 
     return yeni
+
+
+def taslak_baglami(taslak: Mapping[str, Any] | None) -> str | None:
+    """Şu ana kadarki taslak, modele ayrı bir sistem mesajı olarak (saf).
+
+    Model önceki turlarda ne çıkardığını görmezse aynı kaydı her turda yeniden
+    adlandırıyor ve kimliğini bilemiyor. Boş taslakta None: mesaj gitmez.
+    """
+    if not taslak or not any(taslak.values()):
+        return None
+    return TASLAK_BASLIGI + json.dumps(taslak, ensure_ascii=False)
+
+
+def istem_mesajlari(tanim: AjanTanimi, durum: Mapping[str, Any]) -> list[AnyMessage]:
+    """Çıkarım çağrısının mesajları: talimat, varsa profil ve taslak, sonra sohbet."""
+    baglamlar = (
+        tanim.sistem_talimati,
+        durum.get("profil_baglami"),
+        taslak_baglami(durum.get("taslak")),
+    )
+    return [
+        *(SystemMessage(content=baglam) for baglam in baglamlar if baglam),
+        *durum["mesajlar"],
+    ]
 
 
 # --- Grafik düğümleri ------------------------------------------------------
@@ -216,14 +288,7 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
     async def cikar(durum: dict[str, Any]) -> dict[str, Any]:
         """Konuşmanın tamamını yapılandırılmış alanlara döker (function calling)."""
         try:
-            baglam = durum.get("profil_baglami")
-            cikarim = await zincir_uret().ainvoke(
-                [
-                    SystemMessage(content=tanim.sistem_talimati),
-                    *([SystemMessage(content=baglam)] if baglam else []),
-                    *durum["mesajlar"],
-                ]
-            )
+            cikarim = await zincir_uret().ainvoke(istem_mesajlari(tanim, durum))
         except Exception as hata:
             # Sağlayıcı anlık hız sınırı (429) ya da 5xx/zaman aşımı
             # verebiliyor. İkisini de 500 olarak değil, ne olduğunu söyleyen

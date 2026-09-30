@@ -7,9 +7,12 @@ verdiğinden bağımsız olarak tutmaları gerekiyor.
 import asyncio
 from types import SimpleNamespace
 
+from langchain_core.messages import HumanMessage, SystemMessage
+
 from app.agents import sohbet_motoru as motor
 from app.agents.kesif import (
     FALLBACK_SORULARI,
+    KESIF,
     MAKS_EK_TURU,
     MAKS_TAKIP_TURU,
     SomutCiktiTaslak,
@@ -33,7 +36,9 @@ def dolu_taslak(**degisiklikler) -> dict:
         "araclar_teknolojiler": ["Python"],
         "sertifikalar": [],
         "diller": [],
-        "somut_ciktilar": [{"baslik": "Kütüphane sistemi", "aciklama": None, "kanit_linki": None}],
+        "somut_ciktilar": [
+            {"kimlik": "c1", "baslik": "Kütüphane sistemi", "aciklama": None, "kanit_linki": None}
+        ],
     }
     taslak.update(degisiklikler)
     return taslak
@@ -353,6 +358,113 @@ def test_gercekten_farkli_isler_ayri_kalir():
         taslak, TaslakCikarimi(somut_ciktilar=[SomutCiktiTaslak(baslik="Kütüphane takip sistemi")])
     )
     assert len(sonuc["somut_ciktilar"]) == 2
+
+
+# --- Kalıcı kimlik: başlık değişse de aynı çalışma --------------------------
+# Sahada görüldü: model her turda konuşmanın tamamını baştan okuyup çalışmaya
+# başka bir ad veriyordu; başlıkla eşleştirme kartta aynı işi iki satır yapıyordu.
+
+
+def test_yeni_calisma_kimlik_alir():
+    sonuc = _birlestir(
+        bos_taslak(),
+        TaslakCikarimi(
+            somut_ciktilar=[
+                SomutCiktiTaslak(baslik="Kütüphane sistemi"),
+                SomutCiktiTaslak(baslik="Kulüp sitesi"),
+            ]
+        ),
+    )
+    assert [c["kimlik"] for c in sonuc["somut_ciktilar"]] == ["c1", "c2"]
+
+
+def test_kimlikle_gelen_farkli_baslik_ayni_calismayi_gunceller():
+    taslak = dolu_taslak(
+        somut_ciktilar=[{"kimlik": "c1", "baslik": "Kütüphane sistemi", "kanit_linki": None}]
+    )
+    sonuc = _birlestir(
+        taslak,
+        TaslakCikarimi(
+            somut_ciktilar=[
+                SomutCiktiTaslak(
+                    kimlik="c1",
+                    baslik="Mahalle kütüphanesi ödünç takip uygulaması",
+                    kanit_linki="https://github.com/elif/kutuphane",
+                )
+            ]
+        ),
+    )
+    assert len(sonuc["somut_ciktilar"]) == 1
+    cikti = sonuc["somut_ciktilar"][0]
+    assert cikti["baslik"] == "Kütüphane sistemi"  # ilk anlatılan korunur
+    assert cikti["kanit_linki"] == "https://github.com/elif/kutuphane"
+
+
+def test_bilinmeyen_kimlik_yeni_calisma_acar_cakisma_olmaz():
+    taslak = dolu_taslak(somut_ciktilar=[{"kimlik": "c1", "baslik": "Kütüphane sistemi"}])
+    sonuc = _birlestir(
+        taslak,
+        TaslakCikarimi(somut_ciktilar=[SomutCiktiTaslak(kimlik="c9", baslik="Kulüp sitesi")]),
+    )
+    assert [c["kimlik"] for c in sonuc["somut_ciktilar"]] == ["c1", "c2"]
+
+
+def test_kimliksiz_eski_taslak_kimlik_alir():
+    """Bu özellikten önce açılmış sohbetin taslağı checkpoint'te kimliksiz duruyor."""
+    taslak = dolu_taslak(
+        somut_ciktilar=[{"baslik": "Kütüphane sistemi"}, {"baslik": "Kulüp sitesi"}]
+    )
+    sonuc = _birlestir(taslak, TaslakCikarimi())
+    assert [c["kimlik"] for c in sonuc["somut_ciktilar"]] == ["c1", "c2"]
+
+
+def test_birlestirme_onceki_taslagi_degistirmez():
+    """Checkpoint'teki eski durum yerinde değiştirilmemeli."""
+    onceki_cikti = {"kimlik": "c1", "baslik": "Kütüphane sistemi", "kanit_linki": None}
+    taslak = dolu_taslak(somut_ciktilar=[onceki_cikti])
+    _birlestir(
+        taslak,
+        TaslakCikarimi(
+            somut_ciktilar=[SomutCiktiTaslak(kimlik="c1", baslik="x", kanit_linki="github.com/x")]
+        ),
+    )
+    assert onceki_cikti["kanit_linki"] is None
+
+
+def test_baslik_degisince_ek_soru_tekrar_sorulmaz():
+    """Sorulan ek soru kimliğe bağlı; başlığa bağlıyken yeni ad yeni soru demekti."""
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(
+                somut_ciktilar=[{"kimlik": "c1", "baslik": "Mahalle kütüphanesi uygulaması"}]
+            ),
+            "takip_turu": 0,
+            "ek_takip_turu": 1,
+            "sorulan_ekler": ["olcut:c1"],
+            "fallback_indeksi": 0,
+        }
+    )
+    assert "sayıyla" not in sonuc["sonraki_soru"]
+    assert sonuc["sorulan_ekler"] == ["olcut:c1", "rol:c1"]
+
+
+def test_dolu_taslak_modele_ayri_sistem_mesaji_olarak_gider():
+    durum = {
+        "mesajlar": [HumanMessage(content="Kütüphane sistemi yaptım.")],
+        "taslak": dolu_taslak(somut_ciktilar=[{"kimlik": "c1", "baslik": "Kütüphane sistemi"}]),
+        "profil_baglami": "KULLANICININ PROFİLİ: Şehir: İzmir",
+    }
+    mesajlar = motor.istem_mesajlari(KESIF, durum)
+    sistem = [m.content for m in mesajlar if isinstance(m, SystemMessage)]
+    assert sistem[0] == KESIF.sistem_talimati
+    assert sistem[1] == durum["profil_baglami"]
+    assert sistem[2].startswith(motor.TASLAK_BASLIGI)
+    assert '"kimlik": "c1"' in sistem[2]
+
+
+def test_bos_taslak_modele_gitmez():
+    durum = {"mesajlar": [HumanMessage(content="Merhaba")], "taslak": bos_taslak()}
+    assert len(motor.istem_mesajlari(KESIF, durum)) == 2  # talimat + kullanıcı mesajı
 
 
 def test_potansiyel_kurali_ciktisiz_karti_etiketler():
