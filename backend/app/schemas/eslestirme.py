@@ -208,6 +208,8 @@ class IsbirligiOzeti(BaseModel):
     genc_adi: str | None = None
     kurum_adi: str
     rol_alani: str | None = None
+    # İsteyenin tarafı (genc = aday, kurum = ilan); karşı tarafı seçmek için.
+    tarafim: Literal["genc", "kurum"] | None = None
     problem_tanimi: str
     iletisim: Iletisim
     # Takip (Faz C): plan_bekliyor | aktif | tamamlandi ve adım ilerlemesi.

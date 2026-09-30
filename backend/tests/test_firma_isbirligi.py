@@ -68,12 +68,19 @@ def test_detay_ve_liste_iki_firmaya_acik():
         assert detay["aday_adi"] == "Aday Firma"
         assert detay["genc_adi"] is None and detay["yetenek_karti_id"] is None
         assert detay["iletisim"]["kurum_email"] == d.kurum1.profil.iletisim_email
+        # Taraf rolden değil eşleşmeden: ortak firmanın rolü de "kurum".
+        assert detay["tarafim"] == "genc"
+        ilan_tarafi = (await istemci.get(f"/isbirligi/{isb}", headers=d.kurum1.baslik)).json()
+        assert ilan_tarafi["tarafim"] == "kurum"
+        girvak = (await istemci.get(f"/isbirligi/{isb}", headers=d.girvak.baslik)).json()
+        assert girvak["tarafim"] is None
 
         for kisi in (aday, d.kurum1):
             liste = (await istemci.get("/isbirliklerim", headers=kisi.baslik)).json()
             satir = next(s for s in liste if s["isbirligi_id"] == isb)
             assert satir["aday_adi"] == "Aday Firma"
             assert satir["aday_turu"] == "firma"
+            assert satir["tarafim"] == ("genc" if kisi is aday else "kurum")
         baskasi = (await istemci.get("/isbirliklerim", headers=d.kurum2.baslik)).json()
         assert all(s["isbirligi_id"] != isb for s in baskasi)
 

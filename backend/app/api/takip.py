@@ -250,6 +250,7 @@ def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> I
         ihtiyac_karti_id=eslesme.ihtiyac_karti_id,
         aday_turu="firma" if eslesme.firma_karti_id else "genc",
         aday_adi=sahiplik.taraf_adi(eslesme, sahiplik.TARAF_ADAY),
+        tarafim=eslesmedeki_taraf(hesap, eslesme),
         genc_adi=eslesme.yetenek_karti.kullanici.ad if eslesme.yetenek_karti else None,
         kurum_adi=eslesme.ihtiyac_karti.kurum.ad,
         rol_alani=eslesme.yetenek_karti.rol_alani if eslesme.yetenek_karti else None,

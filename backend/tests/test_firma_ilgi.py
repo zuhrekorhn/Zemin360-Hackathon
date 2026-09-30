@@ -205,3 +205,25 @@ def test_aday_firma_ilani_gorur_baskasi_gormez():
         )
 
     senaryo(adimlar)
+
+
+def test_firsat_listesi_esik_alti_ve_kapali_ilani_gostermez():
+    async def adimlar(istemci, d):
+        aday, ilan, eid = await _kurulum(d)
+        liste = (await istemci.get("/eslestirme/firma-eslesmelerim", headers=aday.baslik)).json()
+        assert [s["eslesme_id"] for s in liste] == [str(eid)]
+
+        eslesme = await _eslesme(d, eid)
+        eslesme.skor = 0.1
+        await d.oturum.commit()
+        liste = (await istemci.get("/eslestirme/firma-eslesmelerim", headers=aday.baslik)).json()
+        assert liste == []
+
+        # İlgi gösterilmiş kayıt eşik değişse de listede kalır.
+        eslesme = await _eslesme(d, eid)
+        eslesme.skor, eslesme.durum, eslesme.baslatan = 0.1, "genc_ilgilendi", "genc"
+        await d.oturum.commit()
+        liste = (await istemci.get("/eslestirme/firma-eslesmelerim", headers=aday.baslik)).json()
+        assert liste[0]["durum"] == "genc_ilgilendi"
+
+    senaryo(adimlar)

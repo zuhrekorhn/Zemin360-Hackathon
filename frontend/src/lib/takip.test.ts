@@ -10,6 +10,8 @@ import {
 
 const DETAY = {
   genc_adi: "Elif",
+  // Karşı tarafın adı aday tarafından okunur (genç ya da ortak firma).
+  aday_adi: "Elif",
   kurum_adi: "Koop",
   genc_plan_onayi: null,
   kurum_plan_onayi: null,

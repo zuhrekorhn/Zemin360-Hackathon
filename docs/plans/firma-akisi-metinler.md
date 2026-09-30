@@ -152,3 +152,24 @@ Bildirimler (firmaya "siz"):
 7a'daki geçici 409 cümlesi ("Firmalarla ilgi ve iletişim yakında açılacak…") kaldırıldı.
 
 Denetime not: genç tarafındaki kabul bildirimi "{genç} ilgini kabul etti" firmaya "sen" diyor (mevcut metin); firma adayındaki karşılığı "ilginizi".
+
+## 8b-8c. adım — Firmalar arası ilgi ve iş birliği (arayüz)
+
+| Dosya | Yer | Metin | Kime |
+|---|---|---|---|
+| `components/firma-firsatlari.tsx` | Bölüm | Size uygun iş birliği fırsatları · "Firma kartınıza uyan iş birliği ilanları. İlgilendiğiniz ilanı açan firmaya bildirebilirsiniz; o da ilgilenirse iletişim bilgileriniz paylaşılır." | firma |
+| 〃 | Boş durum | Şu an kartınıza uyan bir ilan yok. Yeni ilanlar açıldıkça burada görünür. | firma |
+| 〃 | Bölüm | Size gelen ilgiler · "Bu firmalar iş birliği ilanları için sizinle ilgileniyor. Kabul ederseniz iletişim bilgileriniz paylaşılır ve iş birliği başlar." | firma |
+| 〃 | Bölüm | İlgilerimiz | firma |
+| 〃 | Butonlar | İlgileniyoruz · İlgimizi ilet · İletiliyor… · Vazgeç · Kabul et · Şimdilik değil · İlgimizi geri çek · İş birliğine gidin | firma |
+| `lib/firma-ilgi.ts` | Onay | İlanı açan firma da ilgilenirse e-posta adresiniz, size ayrıca sorulmadan o firmayla paylaşılır. (+ mevcut "Bunu onaylıyorum") | firma |
+| 〃 | Aday firma durum etiketleri | Size uygun · İlginiz iletildi · Firma sizinle ilgileniyor · Karşılıklı ilgi · Kapandı | firma |
+| `app/kurum/oneriler/page.tsx` | Firma adayı eylemleri | İlgileniyorum · Şimdilik değil · "Firmaya bildirilir; kabul ederse iş birliği açılır ve e-postalar paylaşılır." · "Firmanın yanıtı bekleniyor; kabul ederse iletişim bilgileri açılır." | firma |
+| `components/panel.tsx` | İletişim etiketi | Ortak firmanın e-postası | firma |
+| `app/kurum/page.tsx`, `app/isbirligi/[id]/page.tsx` | Rol alanı yoksa | İş birliği ortağı | firma |
+| `backend/app/agents/takip.py` | Firma planı istemi | "İki firma arasında…", "İki firmanın ayrı ekipleri olduğunu hesaba kat…" (LLM istemi; kullanıcıya görünen adım metinlerini üretir) | — |
+
+Denetime notlar:
+- Rehber § 5.9'da "aday firma" sütunu yok; aday firmanın etiketleri gencin sütununun "siz" hâli olarak yazıldı. Rehbere sütun eklenmeli.
+- Firmanın gördüğü "Kurumun e-postası" (mevcut `IletisimSatiri` etiketi) → "Firmanın e-postası".
+- Firma panelindeki mevcut "İş birliklerim" boş durumu gence göre yazılı ("Bir genç ilgini kabul ettiğinde…"); firmaya "sen" ve iki tür ortağı kapsamıyor.

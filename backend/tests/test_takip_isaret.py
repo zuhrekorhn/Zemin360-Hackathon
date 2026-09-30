@@ -103,7 +103,9 @@ def test_ortak_gorunum_gecikme_ve_eposta():
         genc = await istemci.get(_yol(isb), headers=d.genc1.baslik)
         kurum = await istemci.get(_yol(isb), headers=d.kurum1.baslik)
         assert genc.status_code == kurum.status_code == 200
-        assert genc.json() == kurum.json()  # iki tarafa birebir aynı görünüm
+        # İki tarafa aynı görünüm; yalnızca isteyenin tarafı farklı (firma-akisi § 9).
+        assert (genc.json()["tarafim"], kurum.json()["tarafim"]) == ("genc", "kurum")
+        assert {**genc.json(), "tarafim": None} == {**kurum.json(), "tarafim": None}
         govde = genc.json()
         assert [m["gecikmis"] for m in govde["milestonelar"]] == [True, False]
         assert govde["ilerleme"] == {"tamamlanan": 0, "toplam": 2, "geciken": 1}

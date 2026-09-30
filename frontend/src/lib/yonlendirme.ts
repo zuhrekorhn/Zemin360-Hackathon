@@ -82,6 +82,13 @@ export function bildirimHedefi(
   ) {
     return `/isbirligi/${isbirligiId}`;
   }
+  // Firmalar arası ilgi (docs/plans/firma-akisi.md § 8): aday firmaya giden
+  // ilgi bildirimleri gencin değil firmanın panelindeki bölümlere.
+  if (rol === "kurum") {
+    if (tur === "ilgi") return "/kurum#gelen-ilgiler";
+    if (tur === "karsilikli_ilgi" || tur === "firsat_kapandi")
+      return "/kurum#ilgilerimiz";
+  }
   switch (tur) {
     // Canlılık (Faz D). Yanıtsız ilginin son hatırlatması iki tarafa aynı
     // türle gider: genç ilgiler bölümüne, kurum önerilerine.

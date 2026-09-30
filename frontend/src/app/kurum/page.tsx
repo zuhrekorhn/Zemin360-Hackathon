@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { FirmaFirsatlari } from "@/components/firma-firsatlari";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { IlanKapatma } from "@/components/ilan-kapatma";
 import { SkorRozeti } from "@/components/kart";
@@ -274,6 +275,11 @@ function KurumPaneliIcerigi() {
         )}
       </PanelBolumu>
 
+      {hesap.firma_karti_var ? (
+        // Aday olarak (firma kartıyla) gördükleri: fırsatlar ve ilgiler.
+        <FirmaFirsatlari />
+      ) : null}
+
       <PanelBolumu id="isbirlikleri" baslik="İş birliklerim">
         {isbirlikleri === null ? (
           <p className="text-sm text-muted-foreground" role="status">
@@ -289,11 +295,15 @@ function KurumPaneliIcerigi() {
                 className="flex flex-col gap-2 rounded-sm border border-kenar px-4 py-3"
               >
                 <div className="flex flex-wrap items-baseline gap-x-3">
+                  {/* Karşı taraf: ilanı açtıysak aday (genç ya da ortak firma),
+                      ortak firmaysak ilanı açan firma (firma-akisi § 9). */}
                   <span className="font-medium text-ana">
-                    {isbirligi.genc_adi}
+                    {isbirligi.tarafim === "genc"
+                      ? isbirligi.kurum_adi
+                      : isbirligi.aday_adi}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {isbirligi.rol_alani}
+                    {isbirligi.rol_alani ?? "İş birliği ortağı"}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {tarihYaz(isbirligi.baslangic_tarihi)} tarihinde başladı
@@ -304,7 +314,7 @@ function KurumPaneliIcerigi() {
                 </p>
                 <IletisimSatiri
                   iletisim={isbirligi.iletisim}
-                  karsiTaraf="genc"
+                  karsiTaraf={isbirligi.tarafim === "genc" ? "kurum" : "genc"}
                 />
                 <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-2">
                   <DurumEtiketi

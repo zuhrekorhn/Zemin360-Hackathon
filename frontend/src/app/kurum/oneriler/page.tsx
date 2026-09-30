@@ -12,6 +12,7 @@ import {
   PilotRozeti,
   SkorRozeti,
 } from "@/components/kart";
+import { IletisimSatiri } from "@/components/panel";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import {
@@ -345,7 +346,14 @@ function OneriKarti({
   onIlgileniyorum: () => void;
   onSimdilikDegil: () => void;
 }) {
-  if (oneri.firma_karti) return <FirmaAdayiKarti oneri={oneri} />;
+  if (oneri.firma_karti)
+    return (
+      <FirmaAdayiKarti
+        oneri={oneri}
+        onIlgileniyorum={onIlgileniyorum}
+        onSimdilikDegil={onSimdilikDegil}
+      />
+    );
   const kart = oneri.yetenek_karti;
   if (!kart) return null;
   const eylemler = firmaEylemleri(oneri.durum);
@@ -468,10 +476,21 @@ function OneriKarti({
 }
 
 /**
- * Ortak ilanında önerilen firma (docs/plans/firma-akisi.md § 0 kararlar 16-17).
- * Firmalar arası ilgi bir sonraki adımda; şimdilik öneri ve gerekçe görünür.
+ * Ortak ilanında önerilen firma (docs/plans/firma-akisi.md § 0 kararlar 8, 16-17).
+ * Eylemler genç adayındakiyle aynı kurala bağlı (`firmaEylemleri`); metinler
+ * karşı tarafı "firma" diye anar.
  */
-function FirmaAdayiKarti({ oneri }: { oneri: Oneri }) {
+function FirmaAdayiKarti({
+  oneri,
+  onIlgileniyorum,
+  onSimdilikDegil,
+}: {
+  oneri: Oneri;
+  onIlgileniyorum: () => void;
+  onSimdilikDegil: () => void;
+}) {
+  const eylemler = firmaEylemleri(oneri.durum);
+  const ilgiGosterdi = oneri.durum === "genc_ilgilendi";
   const firma = oneri.firma_karti;
   if (!firma) return null;
   const tur = FIRMA_TURLERI.find((t) => t.deger === firma.tur)?.etiket;
@@ -527,10 +546,63 @@ function FirmaAdayiKarti({ oneri }: { oneri: Oneri }) {
         />
       ) : null}
 
-      <p className="border-t border-kenar pt-4 text-xs text-pretty text-muted-foreground">
-        Firmalarla ilgi ve iletişim yakında açılacak; şimdilik öneriyi
-        görebilirsiniz.
-      </p>
+      <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-4">
+        {ilgiGosterdi ? (
+          <>
+            <Button type="button" size="lg" onClick={onIlgileniyorum}>
+              İlgileniyorum
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              onClick={onSimdilikDegil}
+            >
+              Şimdilik değil
+            </Button>
+            <span className="text-xs text-pretty text-muted-foreground">
+              İlgilenirseniz iletişim bilgileriniz paylaşılır ve iş birliği
+              başlar.
+            </span>
+          </>
+        ) : eylemler.ilgileniyorum ? (
+          <>
+            <Button type="button" size="lg" onClick={onIlgileniyorum}>
+              İlgileniyorum
+            </Button>
+            <span className="text-xs text-pretty text-muted-foreground">
+              Firmaya bildirilir; kabul ederse iş birliği açılır ve e-postalar
+              paylaşılır.
+            </span>
+          </>
+        ) : (
+          <p className="text-sm text-pretty">
+            <span className="font-medium">
+              {firmaDurumEtiketi(oneri.durum)}.
+            </span>{" "}
+            {oneri.durum === "ilgileniliyor"
+              ? "Firmanın yanıtı bekleniyor; kabul ederse iletişim bilgileri açılır."
+              : oneri.durum === "kabul_edildi"
+                ? "İletişim bilgileri aşağıda."
+                : ""}
+            {oneri.isbirligi_id ? (
+              <>
+                {" "}
+                <Link
+                  href={`/isbirligi/${oneri.isbirligi_id}`}
+                  className="text-baglanti underline"
+                >
+                  İş birliğine gidin
+                </Link>
+              </>
+            ) : null}
+          </p>
+        )}
+      </div>
+
+      {oneri.iletisim ? (
+        <IletisimSatiri iletisim={oneri.iletisim} karsiTaraf="genc" />
+      ) : null}
     </BelgeKarti>
   );
 }

@@ -13,7 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import TARAF_ADAY, kullanici_id, kurum_id, taraf_adi
+from app.api.sahiplik import (
+    TARAF_ADAY,
+    eslesmedeki_taraf,
+    kullanici_id,
+    kurum_id,
+    taraf_adi,
+)
 from app.api.takip import ilerleme_hesapla
 from app.db.session import get_session
 from app.models.eslesme import Eslesme
@@ -90,6 +96,7 @@ async def isbirliklerim(
                 genc_adi=eslesme.yetenek_karti.kullanici.ad if eslesme.yetenek_karti else None,
                 kurum_adi=eslesme.ihtiyac_karti.kurum.ad,
                 rol_alani=eslesme.yetenek_karti.rol_alani if eslesme.yetenek_karti else None,
+                tarafim=eslesmedeki_taraf(hesap, eslesme),
                 problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
                 iletisim=acik,
                 ilerleme=ilerleme_hesapla(isbirligi.milestonelar),

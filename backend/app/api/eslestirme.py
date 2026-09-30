@@ -756,14 +756,23 @@ async def firma_eslesmelerim(
 ) -> list[FirmaAdayEslesmesi]:
     """Firmanın aday olduğu bütün eşleşmeler, uyum sırasıyla (yalnızca okur).
 
-    Fırsatlar (önerilmiş, eşik üstü, açık ilan), gelen ilgiler ve kendi
-    ilgileri arayüzde ayrılır (`lib/firma-ilgi.ts`). Açık ilan panosu değil:
+    Fırsatlar (önerilmiş; eşik altı ve kapalı ilan burada süzülür), gelen
+    ilgiler ve kendi ilgileri arayüzde ayrılır (`lib/firma-ilgi.ts`). Açık ilan panosu değil:
     firma yalnızca kendi kartına önerilmiş ilanları görür.
     """
     eslesmeler = await oturum.scalars(
         iliskileriyle(select(Eslesme))
         .join(FirmaKarti, Eslesme.firma_karti_id == FirmaKarti.id)
-        .where(FirmaKarti.kurum_id == hesabin_kurumu(hesap))
+        .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
+        .where(
+            FirmaKarti.kurum_id == hesabin_kurumu(hesap),
+            # Fırsat yalnızca eşik üstü ve açık ilanda (gencin fırsatlarındaki kural);
+            # ilgi gösterilmiş ya da karar verilmiş kayıtlar her durumda listede.
+            or_(
+                Eslesme.durum != DURUM_ONERILDI,
+                and_(Eslesme.skor >= SKOR_ESIGI, IhtiyacKarti.durum == IHTIYAC_ACIK),
+            ),
+        )
         .order_by(Eslesme.skor.desc(), Eslesme.son_aktivite_tarihi.desc())
     )
     return [

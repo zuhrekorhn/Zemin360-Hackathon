@@ -14,7 +14,7 @@ export function tarafim(rol: Rol): Taraf | null {
 }
 
 export function karsiTarafAdi(detay: IsbirligiDetayi, taraf: Taraf): string {
-  return taraf === "genc" ? detay.kurum_adi : detay.genc_adi;
+  return taraf === "genc" ? detay.kurum_adi : detay.aday_adi;
 }
 
 export type AdimGorunumu = {

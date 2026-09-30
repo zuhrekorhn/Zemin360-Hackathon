@@ -988,6 +988,44 @@ export function gencIlgi(eslesmeId: string): Promise<EslesmeDurumYaniti> {
   });
 }
 
+/* --- Firmalar arası ilgi: aday firmanın tarafı (docs/plans/firma-akisi.md § 0 karar 8) --- */
+
+/** `GET /eslestirme/firma-eslesmelerim` satırı. `baslatan`: "genc" = aday tarafı. */
+export type FirmaAdayEslesmesi = {
+  eslesme_id: string;
+  durum: string;
+  uyum: number;
+  gerekce_metni: string | null;
+  son_aktivite_tarihi: string;
+  baslatan: string | null;
+  ihtiyac_karti: IhtiyacKartiYaniti;
+  isbirligi_id: string | null;
+  iletisim: Iletisim | null;
+};
+
+export function firmaEslesmelerim(): Promise<FirmaAdayEslesmesi[]> {
+  return apiIstek<FirmaAdayEslesmesi[]>("/eslestirme/firma-eslesmelerim", {
+    cache: "no-store",
+  });
+}
+
+function firmaGecisi(eslesmeId: string, yol: string, govde?: object) {
+  return apiIstek<EslesmeDurumYaniti>(`/eslestirme/${eslesmeId}/${yol}`, {
+    method: "POST",
+    ...(govde ? { body: JSON.stringify(govde) } : {}),
+  });
+}
+
+/** Aday firma ilgi gösterir; açık iletişim onayıyla. */
+export const firmaIlgi = (eslesmeId: string) =>
+  firmaGecisi(eslesmeId, "firma-ilgi", { iletisim_onayi: true });
+export const firmaIlgiyiGeriCek = (eslesmeId: string) =>
+  firmaGecisi(eslesmeId, "firma-ilgiyi-geri-cek");
+export const firmaKabul = (eslesmeId: string) =>
+  firmaGecisi(eslesmeId, "firma-kabul");
+export const firmaRed = (eslesmeId: string) =>
+  firmaGecisi(eslesmeId, "firma-red");
+
 /** POST /eslestirme/{id}/ilgiyi-geri-cek — karşılıklı hâle gelmeden önce. */
 export function ilgiyiGeriCek(eslesmeId: string): Promise<EslesmeDurumYaniti> {
   return apiIstek<EslesmeDurumYaniti>(
@@ -1072,9 +1110,15 @@ export type IsbirligiOzeti = {
   durum: string;
   baslangic_tarihi: string | null;
   eslesme_id: string;
-  genc_adi: string;
+  /** Aday tarafı: genç ya da ortak firma (docs/plans/firma-akisi.md § 9). */
+  aday_turu: "genc" | "firma";
+  aday_adi: string;
+  /** Yalnızca genç adayında. */
+  genc_adi: string | null;
   kurum_adi: string;
-  rol_alani: string;
+  rol_alani: string | null;
+  /** İsteyenin tarafı (genc = aday, kurum = ilan); karşı tarafı seçmek için. */
+  tarafim: "genc" | "kurum" | null;
   problem_tanimi: string;
   iletisim: Iletisim;
   ilerleme: Ilerleme;
@@ -1189,11 +1233,19 @@ export type IsbirligiDetayi = {
   baslangic_tarihi: string | null;
   tamamlanma_tarihi: string | null;
   eslesme_id: string;
-  yetenek_karti_id: string;
   ihtiyac_karti_id: string;
-  genc_adi: string;
+  /** Aday tarafı: genç ya da ortak firma (docs/plans/firma-akisi.md § 9). */
+  aday_turu: "genc" | "firma";
+  aday_adi: string;
+  yetenek_karti_id: string | null;
+  firma_karti_id: string | null;
+  /** Yalnızca genç adayında. */
+  genc_adi: string | null;
   kurum_adi: string;
-  rol_alani: string;
+  rol_alani: string | null;
+  /** İsteyenin eşleşmedeki tarafı; ortak firmanın rolü de "kurum" olduğu için
+   *  arayüz tarafı rolden değil buradan okur. GİRVAK'ta null. */
+  tarafim: "genc" | "kurum" | null;
   problem_tanimi: string;
   basari_kriteri: string | null;
   genc_plan_onayi: string | null;

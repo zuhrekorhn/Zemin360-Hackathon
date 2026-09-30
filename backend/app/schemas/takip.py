@@ -46,6 +46,10 @@ class IsbirligiDetayi(BaseModel):
     genc_adi: str | None = None
     kurum_adi: str
     rol_alani: str | None = None
+    # İsteyenin eşleşmedeki tarafı (genc = aday tarafı, kurum = ilan tarafı);
+    # GİRVAK'ta None. Ortak firmanın rolü de "kurum": arayüz tarafı rolden değil
+    # buradan okur (docs/plans/firma-akisi.md § 3, § 9).
+    tarafim: Literal["genc", "kurum"] | None = None
     problem_tanimi: str
     basari_kriteri: str | None
     genc_plan_onayi: dt.datetime | None

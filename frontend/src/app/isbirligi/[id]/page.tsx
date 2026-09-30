@@ -65,7 +65,9 @@ function IsbirligiIcerigi() {
   const { id } = useParams<{ id: string }>();
   const hesap = useGirisliHesap();
   const { tazele } = useOturum();
-  const taraf = tarafim(hesap.rol);
+  // Taraf rolden değil eşleşmeden: ortak firmanın rolü de "kurum"
+  // (docs/plans/firma-akisi.md § 9). Detay gelene kadar rolden tahmin.
+  const rolTarafi = tarafim(hesap.rol);
 
   const [detay, setDetay] = useState<IsbirligiDetayi | null>(null);
   const [hata, setHata] = useState<Hata | null>(null);
@@ -130,6 +132,8 @@ function IsbirligiIcerigi() {
     );
   }
 
+  const taraf: Taraf | null =
+    detay.tarafim !== undefined ? detay.tarafim : rolTarafi;
   const karsiTaraf: Taraf | null =
     taraf === "genc" ? "kurum" : taraf === "kurum" ? "genc" : null;
 
@@ -138,7 +142,7 @@ function IsbirligiIcerigi() {
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-            {detay.kurum_adi} · {detay.genc_adi}
+            {detay.kurum_adi} · {detay.aday_adi}
           </h1>
           <DurumEtiketi
             metin={ISBIRLIGI_DURUM_ETIKETLERI[detay.durum] ?? detay.durum}
@@ -146,8 +150,8 @@ function IsbirligiIcerigi() {
           />
         </div>
         <p className="text-sm text-muted-foreground">
-          {detay.rol_alani} · {tarihYaz(detay.baslangic_tarihi)} tarihinde
-          başladı
+          {detay.rol_alani ?? "İş birliği ortağı"} ·{" "}
+          {tarihYaz(detay.baslangic_tarihi)} tarihinde başladı
         </p>
         <p className="border-l-2 border-kenar pl-3 text-sm text-pretty">
           {detay.problem_tanimi}

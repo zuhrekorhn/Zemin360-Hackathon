@@ -77,7 +77,15 @@ export function IletisimSatiri({
   const satirlar =
     karsiTaraf === "kurum"
       ? [{ etiket: "Kurumun e-postası", eposta: iletisim.kurum_email }]
-      : [{ etiket: "Gencin e-postası", eposta: iletisim.genc_email }];
+      : iletisim.aday_firma_email
+        ? // Firma–firma: karşı taraf ortak firma (docs/plans/firma-akisi.md § 9).
+          [
+            {
+              etiket: "Ortak firmanın e-postası",
+              eposta: iletisim.aday_firma_email,
+            },
+          ]
+        : [{ etiket: "Gencin e-postası", eposta: iletisim.genc_email }];
 
   return (
     <dl className="grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-4">
