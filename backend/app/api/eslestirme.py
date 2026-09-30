@@ -66,6 +66,7 @@ from app.models.bildirim import (
     TUR_RED,
 )
 from app.models.eslesme import Eslesme
+from app.models.firma_karti import FirmaKarti
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.yetenek_karti import YetenekKarti
@@ -73,6 +74,7 @@ from app.schemas.eslestirme import (
     BanaGelenIlgi,
     EslesmeDurumYaniti,
     EslestirmeCalistirIstegi,
+    FirmaAdayEslesmesi,
     FirmaAdayKarti,
     GencEslesmesi,
     GencIlgiIstegi,
@@ -97,10 +99,6 @@ IHTIYAC_YOK = "Kuruma ait ihtiyaç kartı yok"
 # kurumun ilgisiyle başladı.
 KURUM_ILGISI_DURUMLARI = ("ilgileniliyor", "kabul_edildi", "reddedildi")
 ESLESME_BULUNAMADI = "Eşleşme bulunamadı"
-# Geçici (firma-akisi § 12, adım 8'de kalkar). Firmaya "siz".
-FIRMA_ILGISI_KAPALI = (
-    "Firmalarla ilgi ve iletişim yakında açılacak; şimdilik öneriyi görebilirsiniz."
-)
 
 
 def _hedef_kurum(hesap: Hesap, istenen: uuid.UUID | None) -> uuid.UUID:
@@ -216,8 +214,10 @@ async def ilgileniyorum(
                 taraf_hesabi(eslesme, TARAF_ADAY),
                 TUR_KARSILIKLI_ILGI,
                 # Adın ardında ek yok: "de/da" ünlü uyumu ada göre değişir.
-                f"{taraf_adi(eslesme, TARAF_ILAN)} ilgine karşılık verdi. "
-                "İletişim bilgileriniz paylaşıldı ve iş birliği başladı.",
+                # Aday firmaya "siz", gence "sen" (docs/icerik-rehberi.md).
+                f"{taraf_adi(eslesme, TARAF_ILAN)} "
+                + ("ilginize" if eslesme.firma_karti_id else "ilgine")
+                + " karşılık verdi. İletişim bilgileriniz paylaşıldı ve iş birliği başladı.",
                 eslesme.id,
             )
         else:
@@ -226,8 +226,7 @@ async def ilgileniyorum(
                 oturum,
                 taraf_hesabi(eslesme, TARAF_ADAY),
                 TUR_ILGI,
-                f"{taraf_adi(eslesme, TARAF_ILAN)}, “{eslesme.yetenek_karti.rol_alani}” "
-                "kartınla ilgileniyor. Kabul edersen e-posta adresleriniz paylaşılır.",
+                _ilgi_bildirimi(eslesme),
                 eslesme.id,
             )
     await oturum.commit()
@@ -494,16 +493,10 @@ async def _gencin_eslesmesi(oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid
 async def _ilan_tarafinin_eslesmesi(
     oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid.UUID
 ) -> Eslesme:
-    """İlanın sahibi firmanın eşleşmesi (kilitli); değilse 404.
-
-    Firma adayına ilgi (firmalar arası ilgi) henüz açılmadı: 409, anlaşılır cümleyle
-    (docs/plans/firma-akisi.md § 12, adım 8).
-    """
+    """İlanın sahibi firmanın eşleşmesi (kilitli); değilse 404."""
     eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
     if eslesme is None or eslesmedeki_taraf(hesap, eslesme) != TARAF_ILAN:
         raise bulunamadi(ESLESME_BULUNAMADI)
-    if eslesme.firma_karti_id is not None:
-        raise HTTPException(status_code=409, detail=FIRMA_ILGISI_KAPALI)
     return eslesme
 
 
@@ -625,3 +618,165 @@ def _firma_aday_karti(eslesme: Eslesme, tamamlanan_isbirligi: int) -> FirmaAdayK
         isbirligi_turleri=list(kart.isbirligi_turleri),
         tamamlanan_isbirligi=tamamlanan_isbirligi,
     )
+
+
+# --- Firmalar arası ilgi: aday firmanın tarafı (docs/plans/firma-akisi.md § 0 karar 8, § 3) ---
+#
+# Durum makinesi aynı; aday firma makinenin "aday tarafı"nın geçişlerini yapar
+# (genç uçlarının aynısı). Uçlar ayrı ve ince: rol firma, taraf aday. Metinler
+# firmaya "siz" (docs/icerik-rehberi.md).
+
+
+def _ilgi_bildirimi(eslesme: Eslesme) -> str:
+    """İlan tarafı ilk ilgiyi gösterdiğinde adaya giden bildirim."""
+    ilan_firmasi = taraf_adi(eslesme, TARAF_ILAN)
+    if eslesme.firma_karti_id:
+        return (
+            f"{ilan_firmasi}, iş birliği ilanı için firmanızla ilgileniyor. "
+            "Kabul ederseniz e-posta adresleriniz paylaşılır."
+        )
+    return (
+        f"{ilan_firmasi}, “{eslesme.yetenek_karti.rol_alani}” kartınla ilgileniyor. "
+        "Kabul edersen e-posta adresleriniz paylaşılır."
+    )
+
+
+async def _aday_firmanin_eslesmesi(
+    oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid.UUID
+) -> Eslesme:
+    """Aday firmanın eşleşmesi (kilitli); firma adayı değilse ya da taraf değilse 404."""
+    eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
+    if (
+        eslesme is None
+        or eslesme.firma_karti_id is None
+        or eslesmedeki_taraf(hesap, eslesme) != TARAF_ADAY
+    ):
+        raise bulunamadi(ESLESME_BULUNAMADI)
+    return eslesme
+
+
+@router.post("/{eslesme_id}/firma-ilgi", response_model=EslesmeDurumYaniti)
+async def firma_ilgi(
+    eslesme_id: uuid.UUID,
+    istek: GencIlgiIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Aday firma bir ortak ilanına ilgi gösterir: `onerildi` → `genc_ilgilendi`.
+
+    Gençtekiyle aynı kural: yalnızca eşik üstü ve açık ilan; `iletisim_onayi`
+    zorunlu (ilan sahibi de ilgilenirse e-posta paylaşılır).
+    """
+    eslesme = await _aday_firmanin_eslesmesi(oturum, hesap, eslesme_id)
+    if eslesme.durum == DURUM_ONERILDI:
+        engel = ilgi_engeli(eslesme.skor, eslesme.ihtiyac_karti.durum)
+        if engel:
+            raise HTTPException(status_code=409, detail=engel)
+    if _gecisi_uygula(eslesme, OLAY_GENC_ILGI, TARAF_ADAY):
+        eslesme.baslatan = TARAF_ADAY
+        eslesme.genc_ilgi_tarihi = eslesme.son_aktivite_tarihi
+        eslesme.genc_iletisim_onayi_tarihi = eslesme.son_aktivite_tarihi
+        bildirim_ekle(
+            oturum,
+            taraf_hesabi(eslesme, TARAF_ILAN),
+            TUR_GENC_ILGI,
+            f"{taraf_adi(eslesme, TARAF_ADAY)} iş birliği ilanınızla ilgileniyor. Siz de "
+            "ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır.",
+            eslesme.id,
+        )
+    await oturum.commit()
+    return _durum_yaniti(eslesme, hesap)
+
+
+@router.post("/{eslesme_id}/firma-ilgiyi-geri-cek", response_model=EslesmeDurumYaniti)
+async def firma_ilgiyi_geri_cek(
+    eslesme_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Karşılıklı olmadan geri çekme: `genc_ilgilendi` → `onerildi`; bildirim yok."""
+    eslesme = await _aday_firmanin_eslesmesi(oturum, hesap, eslesme_id)
+    if _gecisi_uygula(eslesme, OLAY_ILGIYI_GERI_CEK, TARAF_ADAY):
+        eslesme.baslatan = None
+        eslesme.genc_ilgi_tarihi = None
+        eslesme.genc_iletisim_onayi_tarihi = None
+    await oturum.commit()
+    return _durum_yaniti(eslesme, hesap)
+
+
+@router.post("/{eslesme_id}/firma-kabul", response_model=EslesmeDurumYaniti)
+async def firma_kabul(
+    eslesme_id: uuid.UUID,
+    arka_plan: BackgroundTasks,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Aday firma ilan sahibinin ilgisini kabul eder: iş birliği açılır, e-postalar görünür."""
+    eslesme = await _aday_firmanin_eslesmesi(oturum, hesap, eslesme_id)
+    degisti = _gecisi_uygula(eslesme, OLAY_KABUL, TARAF_ADAY)
+    if degisti:
+        isbirligini_ac(eslesme)
+        bildirim_ekle(
+            oturum,
+            taraf_hesabi(eslesme, TARAF_ILAN),
+            TUR_KABUL,
+            f"{taraf_adi(eslesme, TARAF_ADAY)} ilginizi kabul etti; iletişim bilgileri açıldı.",
+            eslesme.id,
+        )
+    await oturum.commit()
+    if degisti and eslesme.isbirligi is not None:
+        arka_plan.add_task(takip.plani_arka_planda_oner, eslesme.isbirligi.id)
+    return _durum_yaniti(eslesme, hesap)
+
+
+@router.post("/{eslesme_id}/firma-red", response_model=EslesmeDurumYaniti)
+async def firma_red(
+    eslesme_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> EslesmeDurumYaniti:
+    """Aday firma şu an kabul etmiyor; ilan sahibine nötr bildirim."""
+    eslesme = await _aday_firmanin_eslesmesi(oturum, hesap, eslesme_id)
+    if _gecisi_uygula(eslesme, OLAY_RED, TARAF_ADAY):
+        bildirim_ekle(
+            oturum,
+            taraf_hesabi(eslesme, TARAF_ILAN),
+            TUR_RED,
+            f"{taraf_adi(eslesme, TARAF_ADAY)} bu eşleşmeyi şu an kabul etmedi.",
+            eslesme.id,
+        )
+    await oturum.commit()
+    return _durum_yaniti(eslesme, hesap)
+
+
+@router.get("/firma-eslesmelerim", response_model=list[FirmaAdayEslesmesi])
+async def firma_eslesmelerim(
+    hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> list[FirmaAdayEslesmesi]:
+    """Firmanın aday olduğu bütün eşleşmeler, uyum sırasıyla (yalnızca okur).
+
+    Fırsatlar (önerilmiş, eşik üstü, açık ilan), gelen ilgiler ve kendi
+    ilgileri arayüzde ayrılır (`lib/firma-ilgi.ts`). Açık ilan panosu değil:
+    firma yalnızca kendi kartına önerilmiş ilanları görür.
+    """
+    eslesmeler = await oturum.scalars(
+        iliskileriyle(select(Eslesme))
+        .join(FirmaKarti, Eslesme.firma_karti_id == FirmaKarti.id)
+        .where(FirmaKarti.kurum_id == hesabin_kurumu(hesap))
+        .order_by(Eslesme.skor.desc(), Eslesme.son_aktivite_tarihi.desc())
+    )
+    return [
+        FirmaAdayEslesmesi(
+            eslesme_id=eslesme.id,
+            durum=eslesme.durum,
+            uyum=round(eslesme.skor, 4),
+            gerekce_metni=eslesme.gerekce_metni,
+            son_aktivite_tarihi=eslesme.son_aktivite_tarihi,
+            baslatan=eslesme.baslatan,
+            ihtiyac_karti=await ihtiyac_karti_yaniti(oturum, eslesme.ihtiyac_karti_id),
+            isbirligi_id=eslesme.isbirligi.id if eslesme.isbirligi else None,
+            iletisim=iletisim(eslesme, hesap),
+        )
+        for eslesme in eslesmeler.all()
+    ]

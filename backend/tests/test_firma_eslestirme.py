@@ -213,7 +213,7 @@ async def _hesabi_oku(d, kisi) -> Hesap:
     )
 
 
-def test_taraflar_iletisim_ve_ilgi_henuz_kapali():
+def test_taraflar_ve_iletisim():
     async def adimlar(istemci, d):
         aday = await _firma(d, "Aday Firma")
         ilan = await _ortak_ilan(d)
@@ -238,21 +238,6 @@ def test_taraflar_iletisim_ve_ilgi_henuz_kapali():
         assert acik.genc_email is None
         assert iletisim(eslesme, baska) is None
         await d.oturum.rollback()
-
-        # Firmalar arası ilgi 8. adımda: şimdilik anlaşılır 409; taraf değilse 404.
-        ilgi = await istemci.post(
-            "/eslestirme/ilgileniyorum",
-            headers=d.kurum1.baslik,
-            json={"eslesme_id": str(eslesme_id)},
-        )
-        assert ilgi.status_code == 409
-        assert "yakında" in ilgi.json()["detail"]
-        yabanci = await istemci.post(
-            "/eslestirme/ilgileniyorum",
-            headers=d.kurum2.baslik,
-            json={"eslesme_id": str(eslesme_id)},
-        )
-        assert yabanci.status_code == 404
 
     senaryo(adimlar)
 

@@ -21,6 +21,7 @@ from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.eslesme import Eslesme
+from app.models.firma_karti import FirmaKarti
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.yetenek_karti import YetenekKarti
@@ -159,9 +160,26 @@ def ihtiyac_kartinin_sahibi_mi(hesap: Hesap, kart: IhtiyacKarti) -> bool:
 async def ihtiyac_kartini_gorebilir_mi(
     oturum: AsyncSession, hesap: Hesap, kart: IhtiyacKarti
 ) -> bool:
-    """Kurum kendi kartını, genç yalnızca kendisine ilgi gösterilmiş ihtiyacı, GİRVAK hepsini."""
+    """Kurum kendi kartını, genç yalnızca kendisine önerilmiş ihtiyacı, GİRVAK hepsini.
+
+    Firma, kendi firma kartına önerilmiş ortak ilanını da görür
+    (docs/plans/firma-akisi.md § 0 karar 16).
+    """
     if girvak_mi(hesap) or ihtiyac_kartinin_sahibi_mi(hesap, kart):
         return True
+    kurumu = kurum_id(hesap)
+    if kurumu is not None:
+        return bool(
+            await oturum.scalar(
+                select(
+                    exists().where(
+                        Eslesme.ihtiyac_karti_id == kart.id,
+                        Eslesme.firma_karti_id == FirmaKarti.id,
+                        FirmaKarti.kurum_id == kurumu,
+                    )
+                )
+            )
+        )
     gencin = kullanici_id(hesap)
     if gencin is None:
         return False

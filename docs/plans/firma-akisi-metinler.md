@@ -135,3 +135,20 @@ Denetime not: Tanımlama sayfasının başlığı ve sohbet adı hâlâ "Tanıml
 | `app/kurum/page.tsx` | Önerilerim satırı (firma adayı) | Firma | firma |
 
 Denetime not: genç adayı kartındaki mevcut metinler ("Karar senin.", "tamamlanmış pilot" rozeti, eşik cümlesi) değiştirilmedi; firma adayı kartında rehbere uygun karşılıkları kullanıldı ("Karar sizin.", "tamamlanan iş birliği", eşik yok).
+
+## 8a. adım — Firmalar arası ilgi (backend)
+
+Bildirimler (firmaya "siz"):
+
+| Olay | Kime | Metin |
+|---|---|---|
+| Aday firma ilgi gösterdi | ilan sahibi | {aday firma} iş birliği ilanınızla ilgileniyor. Siz de ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır. |
+| İlan sahibi ilk ilgiyi gösterdi | aday firma | {ilan firması}, iş birliği ilanı için firmanızla ilgileniyor. Kabul ederseniz e-posta adresleriniz paylaşılır. |
+| Karşılıklı ilgi | aday firma | {ilan firması} ilginize karşılık verdi. İletişim bilgileriniz paylaşıldı ve iş birliği başladı. |
+| Aday firma kabul etti | ilan sahibi | {aday firma} ilginizi kabul etti; iletişim bilgileri açıldı. |
+| Aday firma kabul etmedi | ilan sahibi | {aday firma} bu eşleşmeyi şu an kabul etmedi. |
+| Şimdilik değil / ilan kapandı | aday firma | {ilan firması} tarafındaki fırsat kapandı. (mevcut metin) |
+
+7a'daki geçici 409 cümlesi ("Firmalarla ilgi ve iletişim yakında açılacak…") kaldırıldı.
+
+Denetime not: genç tarafındaki kabul bildirimi "{genç} ilgini kabul etti" firmaya "sen" diyor (mevcut metin); firma adayındaki karşılığı "ilginizi".

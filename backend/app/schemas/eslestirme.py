@@ -140,6 +140,26 @@ class GencEslesmesi(BaseModel):
     iletisim: Iletisim | None = None
 
 
+class FirmaAdayEslesmesi(BaseModel):
+    """Aday firmanın gördüğü satır (docs/plans/firma-akisi.md § 0 karar 8).
+
+    Ortak ilanında önerildiği ya da ilgi gördüğü/gösterdiği her eşleşme:
+    arayüz fırsatlar, gelen ilgiler ve ilgilerimiz diye ayırır. `baslatan`
+    ilk ilgiyi kimin gösterdiği (`genc` = aday tarafı, `kurum` = ilan tarafı;
+    kolon adları karar 12 gereği değişmedi). E-posta yalnızca karşılıklı ilgide.
+    """
+
+    eslesme_id: uuid.UUID
+    durum: str
+    uyum: float
+    gerekce_metni: str | None
+    son_aktivite_tarihi: dt.datetime
+    baslatan: str | None
+    ihtiyac_karti: IhtiyacKartiYaniti
+    isbirligi_id: uuid.UUID | None = None
+    iletisim: Iletisim | None = None
+
+
 class GencIlgiIstegi(BaseModel):
     """Genç ilgi gösterirken açık onay verir: firma da ilgilenirse e-postası
     firmayla paylaşılır. Onaysız istek 422."""
