@@ -3,13 +3,21 @@
  * Saf fonksiyonlar; testleri yonlendirme.test.ts'de.
  */
 
-import type { Rol } from "@/lib/api";
+import type { Rol, YetenekKartiOzeti } from "@/lib/api";
 
 /** Her rolün paneli: giriş sonrası ve rolü uymayan sayfadan buraya gidilir. */
 export function panelYolu(rol: Rol): string {
   if (rol === "genc") return "/genc";
   if (rol === "kurum") return "/kurum";
   return "/girvak";
+}
+
+/**
+ * Gencin "Kartım"ı (madde 7: gencin tek kartı var). Kartı varsa kart
+ * sayfası, yoksa kartı oluşturduğu Keşif sohbeti.
+ */
+export function kartYolu(kart: Pick<YetenekKartiOzeti, "id"> | null): string {
+  return kart ? `/kart/${kart.id}` : "/kesif";
 }
 
 const GIRIS_SAYFALARI = ["/giris", "/kayit"];

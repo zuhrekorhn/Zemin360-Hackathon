@@ -4,6 +4,7 @@ import {
   bildirimHedefi,
   giristenSonra,
   guvenliSonra,
+  kartYolu,
   kayittanSonra,
   panelYolu,
 } from "@/lib/yonlendirme";
@@ -13,6 +14,13 @@ describe("panelYolu", () => {
     expect(panelYolu("genc")).toBe("/genc");
     expect(panelYolu("kurum")).toBe("/kurum");
     expect(panelYolu("girvak")).toBe("/girvak");
+  });
+});
+
+describe("kartYolu", () => {
+  it("kartı olan genç kart sayfasına, olmayan Keşif'e gider (tek kart)", () => {
+    expect(kartYolu({ id: "abc" })).toBe("/kart/abc");
+    expect(kartYolu(null)).toBe("/kesif");
   });
 });
 

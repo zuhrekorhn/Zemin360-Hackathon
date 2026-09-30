@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
@@ -30,12 +30,14 @@ import {
   yetenekKartiHazirla,
 } from "@/lib/api";
 import { hatayaCevir } from "@/lib/hata";
+import { useOturum } from "@/lib/oturum";
 import {
   eksikKartAlanlari,
   kartAlanDegerleri,
   kartAlanlariniCevir,
 } from "@/lib/kart-duzenleme";
 import { onaydaProfilSorulmali } from "@/lib/profil";
+import { kartYolu } from "@/lib/yonlendirme";
 import {
   CALISMA_MODELLERI,
   DENEYIM_ETIKETLERI,
@@ -66,15 +68,33 @@ export default function KesifSayfasi() {
   return (
     <Suspense fallback={null}>
       <GirisKapisi roller={["genc"]}>
-        <KesifSohbeti />
+        <KartiOlanaYonlendir>
+          <KesifSohbeti />
+        </KartiOlanaYonlendir>
       </GirisKapisi>
     </Suspense>
   );
 }
 
+/**
+ * Gencin tek kartı var (madde 7): kartı olan genç sohbet yerine kartına
+ * gider. Karar sayfanın açıldığı anki duruma göre verilir: onaydan sonra
+ * oturum tazelenince genç "Kartın kaydedildi" ekranından atılmasın.
+ */
+function KartiOlanaYonlendir({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const { yetenek_karti } = useGirisliHesap();
+  const [acilistakiKart] = useState(yetenek_karti);
+  useEffect(() => {
+    if (acilistakiKart) router.replace(kartYolu(acilistakiKart));
+  }, [acilistakiKart, router]);
+  return acilistakiKart ? null : children;
+}
+
 function KesifSohbeti() {
   // Kayıttan hemen sonra (onboarding): "Şimdilik atla" görünür.
   const ilkKez = useSearchParams().get("ilk") === "1";
+  const { tazele } = useOturum();
   const [asama, setAsama] = useState<Asama>("baslatiliyor");
   const [oturumId, setOturumId] = useState<string | null>(null);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);
@@ -230,6 +250,8 @@ function KesifSohbeti() {
               );
               setKart(kayitli);
               setAsama("kaydedildi");
+              // Menüdeki "Kartım" yeni karta bağlansın (/me).
+              void tazele();
             } catch (sebep) {
               hatayiYaz(sebep);
             } finally {

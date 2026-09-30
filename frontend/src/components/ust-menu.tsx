@@ -3,7 +3,7 @@
 /**
  * Üst menü, role göre (docs/faz-b-kimlik-ve-dongu.md § 7):
  *   Girişsiz: Giriş yap, Kayıt ol (/ sayfasında karşılama menüsü)
- *   Genç:     Panelim, Yeni kart (Keşif), Profilim, Bildirimler (rozet), Çıkış
+ *   Genç:     Panelim, Kartım (yoksa Keşif), Profilim, Bildirimler (rozet), Çıkış
  *   Kurum:    Panelim, Yeni ihtiyaç, Firma kartı, Firma profili, Bildirimler, Çıkış
  *   GİRVAK:   Panel, Çıkış
  *
@@ -22,7 +22,7 @@ import { KarsilamaMenusu } from "@/components/karsilama/menu";
 import { MENU_ODAK, MenuKabugu } from "@/components/menu-kabugu";
 import { cn } from "@/lib/utils";
 import { useOturum } from "@/lib/oturum";
-import { panelYolu } from "@/lib/yonlendirme";
+import { kartYolu, panelYolu } from "@/lib/yonlendirme";
 
 type Baglanti = { yol: string; etiket: string; rozet?: number };
 
@@ -95,7 +95,8 @@ export function UstMenu() {
   if (rol === "genc") {
     baglantilar = [
       panel,
-      { yol: "/kesif", etiket: "Yeni kart" },
+      // Gencin tek kartı var (madde 7): "Yeni kart" değil, kendi kartı.
+      { yol: kartYolu(oturum.hesap.yetenek_karti), etiket: "Kartım" },
       { yol: "/profil", etiket: "Profilim" },
       bildirim,
     ];
