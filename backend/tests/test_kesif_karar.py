@@ -421,6 +421,55 @@ def test_kimlikle_gelen_farkli_baslik_ayni_calismayi_gunceller():
     assert cikti["kanit_linki"] == "https://github.com/elif/kutuphane"
 
 
+def test_kimlikle_gelen_yeni_bilgi_eskisinin_yerine_gecer():
+    """Sahada görüldü: 1. turdaki belirsiz pay 3. turdaki açık payı engelliyordu."""
+    taslak = dolu_taslak(
+        somut_ciktilar=[
+            {"kimlik": "c1", "baslik": "Kulüp sitesi", "kendi_rolu": "Arkadaşımla birlikte yaptık"}
+        ]
+    )
+    sonuc = _birlestir(
+        taslak,
+        TaslakCikarimi(
+            somut_ciktilar=[
+                SomutCiktiTaslak(
+                    kimlik="c1",
+                    baslik="Kulüp sitesi",
+                    kendi_rolu="Sunucu tarafını ve veritabanını ben yazdım",
+                )
+            ]
+        ),
+    )
+    assert sonuc["somut_ciktilar"][0]["kendi_rolu"] == "Sunucu tarafını ve veritabanını ben yazdım"
+
+
+def test_kimlikle_gelen_bos_alan_eskisini_silmez():
+    taslak = dolu_taslak(
+        somut_ciktilar=[
+            {"kimlik": "c1", "baslik": "Kulüp sitesi", "olculebilir_sonuc": "300 kayıt"}
+        ]
+    )
+    sonuc = _birlestir(
+        taslak,
+        TaslakCikarimi(somut_ciktilar=[SomutCiktiTaslak(kimlik="c1", baslik="Kulüp sitesi")]),
+    )
+    assert sonuc["somut_ciktilar"][0]["olculebilir_sonuc"] == "300 kayıt"
+
+
+def test_basliktan_eslesen_kayitta_dolu_alan_ezilmez():
+    """Kimliksiz kayıtta hangi işin kastedildiği kesin değil: yalnızca boş alan dolar."""
+    taslak = dolu_taslak(
+        somut_ciktilar=[{"kimlik": "c1", "baslik": "Team To Do", "kendi_rolu": "Backend benim"}]
+    )
+    sonuc = _birlestir(
+        taslak,
+        TaslakCikarimi(
+            somut_ciktilar=[SomutCiktiTaslak(baslik="team todo", kendi_rolu="Hepsini ben yaptım")]
+        ),
+    )
+    assert sonuc["somut_ciktilar"][0]["kendi_rolu"] == "Backend benim"
+
+
 def test_bilinmeyen_kimlik_yeni_calisma_acar_cakisma_olmaz():
     taslak = dolu_taslak(somut_ciktilar=[{"kimlik": "c1", "baslik": "Kütüphane sistemi"}])
     sonuc = _birlestir(

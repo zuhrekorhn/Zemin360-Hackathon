@@ -56,7 +56,8 @@ KIMLIK = "kimlik"
 
 TASLAK_BASLIGI = (
     "ŞU ANA KADARKİ TASLAK (sohbetten çıkardıkların; bu turda yeni bilgiyle "
-    "tamamla, zaten olan bir kaydı güncellerken onun kimliğini kullan):\n"
+    "tamamla, zaten olan bir kaydı güncellerken onun kimliğini kullan; kullanıcı "
+    "bir alanı daha açık ya da farklı anlattıysa yeni hâlini yaz):\n"
 )
 
 
@@ -238,10 +239,16 @@ def _nesneleri_birlestir(
     turda başka adla yazabiliyor ("Kütüphane sistemi" / "Mahalle kütüphanesi
     takip uygulaması") ve kart aynı işi iki kez taşıyordu.
 
-    Kimliksiz gelen kayıt yedek olarak başlıkla eşleştirilir; noktalama ve
-    büyük/küçük harf farkı yok sayılır ("Team To Do" / "Team ToDo"). Eşleşen
-    kaydın yalnızca BOŞ alanları dolar, ilk anlatılan korunur. Hiçbir kayıt
-    silinmez: model bir turda bir kaydı unutursa veri kaybolmaz.
+    Eşleşmenin türü birleştirme kuralını seçer:
+      - Kimlikle: model taslağı görerek güncel anlayışını döndürüyor; dolu
+        yeni değer eskisinin yerine geçer (`_kaydi_guncelle`). Sahada görüldü:
+        ilk turdaki belirsiz "arkadaşımla yaptık" payı korunuyor, sonraki
+        turdaki "backend'i ben yazdım" yazılamıyordu.
+      - Başlıkla (kimliksiz kayıt): noktalama ve büyük/küçük harf farkı yok
+        sayılır ("Team To Do" / "Team ToDo"); modelin hangi kaydı kastettiği
+        kesin olmadığı için yalnızca BOŞ alanlar dolar (`_bos_alanlari_doldur`).
+
+    Hiçbir kayıt silinmez: model bir turda bir kaydı unutursa veri kaybolmaz.
     """
     sonuc = _kimlikli_kopya(nesneler, liste.kimlik_oneki)
     kimlikle = {nesne[KIMLIK]: nesne for nesne in sonuc}
@@ -251,18 +258,35 @@ def _nesneleri_birlestir(
         veri = gelen.model_dump()
         kimlik = veri.pop(KIMLIK, None)
         anahtar = sade_anahtar(veri[liste.anahtar])
-        mevcut = kimlikle.get(kimlik) or anahtarla.get(anahtar)
-        if mevcut is None:
+        if kimlik in kimlikle:
+            _kaydi_guncelle(kimlikle[kimlik], veri, korunan=liste.anahtar)
+        elif anahtar in anahtarla:
+            _bos_alanlari_doldur(anahtarla[anahtar], veri)
+        else:
             yeni = {KIMLIK: _yeni_kimlik(sonuc, liste.kimlik_oneki), **veri}
             sonuc.append(yeni)
             kimlikle[yeni[KIMLIK]] = yeni
             anahtarla[anahtar] = yeni
-            continue
-        for alan_adi, deger in veri.items():
-            if deger and not mevcut.get(alan_adi):
-                mevcut[alan_adi] = deger
 
     return sonuc
+
+
+def _kaydi_guncelle(mevcut: dict[str, Any], veri: Mapping[str, Any], *, korunan: str) -> None:
+    """Dolu yeni değerler eskisinin yerine geçer; boş gelen alan eskisini silmez.
+
+    `korunan` alan (başlık) değişmez: kullanıcı onu taslak ekranında düzeltir,
+    modelin her turda yeniden adlandırması kartı oynatmasın.
+    """
+    for alan_adi, deger in veri.items():
+        if deger and alan_adi != korunan:
+            mevcut[alan_adi] = deger
+
+
+def _bos_alanlari_doldur(mevcut: dict[str, Any], veri: Mapping[str, Any]) -> None:
+    """Yalnızca boş alanlar dolar; ilk anlatılan korunur."""
+    for alan_adi, deger in veri.items():
+        if deger and not mevcut.get(alan_adi):
+            mevcut[alan_adi] = deger
 
 
 def birlestir(tanim: AjanTanimi, taslak: dict[str, Any], cikarim: BaseModel) -> dict[str, Any]:
