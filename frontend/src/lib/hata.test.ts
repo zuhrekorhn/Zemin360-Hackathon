@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { ApiHatasi } from "@/lib/api";
 import {
+  BAGLANTI_MESAJI,
   HIZ_SINIRI_MESAJI,
   MESGUL_MESAJI,
   hatayaCevir,
@@ -37,14 +38,19 @@ describe("hatayaCevir", () => {
 
   it("diğer durum kodlarında backend cümlesi aynen geçer", () => {
     const hata = hatayaCevir(
-      new ApiHatasi("Taslak henüz hazır değil", 409, "Taslak henüz hazır değil"),
+      new ApiHatasi(
+        "Taslak henüz hazır değil",
+        409,
+        "Taslak henüz hazır değil",
+      ),
     );
     expect(hata).toEqual({ metin: "Taslak henüz hazır değil", kota: false });
   });
 
-  it("ağ hatası mesajı olduğu gibi gösterilir", () => {
+  it("ağ hatası teknik ayrıntısız, sorumluluğu üstlenen cümleyle gösterilir", () => {
     const hata = hatayaCevir(new ApiHatasi("Backend'e ulaşılamadı (x)"));
-    expect(hata.metin).toContain("ulaşılamadı");
+    expect(hata.metin).toContain(BAGLANTI_MESAJI);
+    expect(hata.metin).not.toContain("Backend");
   });
 
   it("ApiHatasi olmayan istisnada iç ayrıntı sızmaz", () => {

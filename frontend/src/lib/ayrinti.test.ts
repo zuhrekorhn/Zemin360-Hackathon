@@ -9,16 +9,25 @@ describe("ayrintiyiOku", () => {
     );
   });
 
-  it("şema hatalarını okunur cümleye çevirir, önekini ve tekrarı atar", () => {
+  // Yalnızca bizim yazdığımız ("Value error, ") cümleler; İngilizce şema
+  // metinleri kullanıcıya gösterilmez (rehber § 5.4).
+  it("şema hatalarını okunur cümleye çevirir, önekini, tekrarı ve İngilizceyi atar", () => {
     expect(
       ayrintiyiOku([
-        { loc: ["body"], msg: "Value error, KVKK aydınlatma metni onaylanmalı" },
-        { loc: ["body", "x"], msg: "Value error, KVKK aydınlatma metni onaylanmalı" },
-        { loc: ["body", "sinif"], msg: "Input should be less than or equal to 8" },
+        {
+          loc: ["body"],
+          msg: "Value error, KVKK aydınlatma metni onaylanmalı",
+        },
+        {
+          loc: ["body", "x"],
+          msg: "Value error, KVKK aydınlatma metni onaylanmalı",
+        },
+        {
+          loc: ["body", "sinif"],
+          msg: "Input should be less than or equal to 8",
+        },
       ]),
-    ).toBe(
-      "KVKK aydınlatma metni onaylanmalı · Input should be less than or equal to 8",
-    );
+    ).toBe("KVKK aydınlatma metni onaylanmalı");
   });
 
   it("tanınmayan gövdede undefined", () => {

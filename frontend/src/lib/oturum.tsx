@@ -23,6 +23,7 @@ import {
 } from "react";
 
 import { ApiHatasi, type MeYaniti, me } from "@/lib/api";
+import { type Hitap, hitapRolden } from "@/lib/hitap";
 import {
   TOKEN_DEGISTI,
   tokenAnahtariMi,
@@ -119,4 +120,10 @@ export function useOturum(): OturumBaglami {
   if (!baglam)
     throw new Error("useOturum, OturumSaglayici içinde kullanılmalı");
   return baglam;
+}
+
+/** Görüntüleyene hitap: gence "sen", firmaya ve GİRVAK'a "siz" (rehber § 3). */
+export function useHitap(): Hitap {
+  const { oturum } = useOturum();
+  return hitapRolden(oturum.durum === "girisli" ? oturum.hesap.rol : null);
 }

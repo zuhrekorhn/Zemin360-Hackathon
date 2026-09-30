@@ -15,7 +15,11 @@ export function ayrintiyiOku(detail: unknown): string | undefined {
         : null,
     )
     .filter((mesaj): mesaj is string => Boolean(mesaj))
-    // Pydantic kendi doğrulayıcılarımızın mesajının başına bunu ekliyor.
+    // Yalnızca kendi doğrulayıcılarımızın Türkçe cümleleri: Pydantic onların
+    // başına "Value error, " ekliyor. Pydantic'in kendi İngilizce mesajları
+    // ("Field required" vb.) gösterilmez (docs/icerik-rehberi.md § 5.4);
+    // hiçbiri kalmazsa arayüz durum koduna göre Türkçe cümle kullanır.
+    .filter((mesaj) => mesaj.startsWith("Value error, "))
     .map((mesaj) => mesaj.replace(/^Value error, /, ""));
   const tekil = [...new Set(mesajlar)];
   return tekil.length > 0 ? tekil.join(" · ") : undefined;
