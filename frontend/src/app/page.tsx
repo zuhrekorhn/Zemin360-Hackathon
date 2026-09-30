@@ -1,146 +1,284 @@
 import Link from "next/link";
 
 import { BackendDurumu } from "@/components/backend-durumu";
-import { BelgeKarti, GuvenGostergesi } from "@/components/kart";
-import { Button } from "@/components/ui/button";
+import { DemoKarti } from "@/components/karsilama/demo-karti";
+import {
+  HeroKapilari,
+  KapanisKapilari,
+} from "@/components/karsilama/kapilar";
+import { NasilCalisir } from "@/components/karsilama/nasil-calisir";
+import { NedenUygunOrnegi } from "@/components/karsilama/neden-uygun";
+import {
+  KAPSAYICI,
+  ODAK,
+  UST_ETIKET,
+} from "@/components/karsilama/ortak";
+import {
+  ALTBILGI,
+  GUVEN,
+  HERO,
+  KAPANIS,
+  SEFFAF,
+  SORUN,
+  SUREC,
+} from "@/content/landing";
+import { cn } from "@/lib/utils";
 
-const ajanlar = [
-  { ad: "Keşif", isi: "Genç yeteneği tanır, yetenek kartına dönüştürür" },
-  { ad: "Tanımlama", isi: "Kurumun dağınık ihtiyacını netleştirir" },
-  { ad: "Doğrulama", isi: "Somut çıktıları kanıt ve referansla sınar" },
-  { ad: "Eşleştirme", isi: "Kart eşleşmesini gerekçesiyle birlikte önerir" },
-  { ad: "Canlılık", isi: "Pasifleşen bağlantıları fark eder, hatırlatır" },
-  { ad: "Takip", isi: "İş birliğini milestone bazında şeffaf tutar" },
-];
+// Karşılama sayfası: docs/design/landing/LANDING_HANDOFF.md (v2).
+// Metinler content/landing.ts'te; renk ve font mevcut paletten
+// (docs/design-language.md). Backend kapalıyken de eksiksiz görünür.
 
-// Vitrindeki örnek: gerçek ekranlarla AYNI bileşenler, ama sabit veriyle.
-// Ana sayfa backend kapalıyken de eksiksiz görünmeli — burası ürünün ne
-// yaptığını anlatan yer, canlı veriye bağlamanın bir faydası yok.
-const ORNEK_GUVEN_SKORU = {
-  kanit_orijinalligi: 3,
-  sonuc_olculebilirligi: 2,
-  rol_netligi: 3,
-  ucuncu_taraf_onayi: 2,
-  gerekce_metni: null,
-};
+/** Geliştirme göstergesi yalnızca açıkça istenirse (brief § 5). */
+const GELISTIRME_DURUMU = process.env.NEXT_PUBLIC_SHOW_DEV_STATUS === "true";
 
-const ORNEK_GEREKCE = [
-  "Aynı problemi çözen, çalışan bir sistem kurmuş.",
-  "Sonucu sayıyla anlatmış: 400 kitap, 120 üye.",
-  "Kanıt linki açıldı, kütüphane sorumlusu referansı yanıtladı.",
-];
+const H2 =
+  "font-heading text-[28px] leading-[1.1] font-semibold text-ana lg:text-[44px]";
+
+const METIN_BAGLANTISI = cn(
+  "rounded-sm font-semibold text-ana underline underline-offset-4 hover:text-baglanti",
+  ODAK,
+);
 
 export default function AnaSayfa() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-16 px-6 py-16 sm:py-24">
-      <header className="flex flex-col items-center gap-5 text-center">
-        <h1 className="font-heading text-3xl leading-[1.15] font-semibold text-balance text-ana sm:text-[2.75rem]">
-          Bir kişinin ne yaptığını, gerçekten yaptığını gösterebilmek.
-        </h1>
-
-        <p className="max-w-xl text-base text-pretty text-muted-foreground">
-          Genç yetenekler ve kurumlar aynı veri katmanında buluşuyor. Sohbetle
-          başlıyor, kanıtla doğrulanıyor, gerekçesi açık bir eşleşmeyle
-          sonuçlanıyor.
-        </p>
-      </header>
-
-      {/* Sohbet paneli — yuvarlak ve sıcak (docs/design-language.md § Yerleşim) */}
-      <section aria-labelledby="ornek-akis" className="flex flex-col gap-6">
-        <h2 id="ornek-akis" className="sr-only">
-          Örnek akış
-        </h2>
-
-        <div className="flex flex-col gap-3 rounded-[1.75rem] bg-muted p-5 sm:p-6">
-          <p className="max-w-[85%] rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-sm text-pretty ring-1 ring-kenar">
-            <span className="mb-1 block font-medium text-baglanti">
-              Keşif Ajanı
-            </span>
-            Son bir yılda bitirdiğin, sonucunu görebildiğin bir iş var mı?
-            Okuldan ya da gönüllü bir işten de olabilir.
-          </p>
-
-          <p className="ml-auto max-w-[85%] rounded-3xl rounded-br-lg bg-ana px-4 py-3 text-sm text-pretty text-zemin">
-            Mahalle kütüphanesine ödünç takip sistemi yazdım. 400 kitabı ve 120
-            üyeyi takip ediyor.
-          </p>
-        </div>
-
-        {/* Gerekçe kartı — öneri ekranındaki bileşenin ta kendisi
-            (docs/design-language.md: hairline çizgi, resmi belge hissi).
-            Sayfadaki tek bilinçli hareket burada. */}
-        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-700">
-          <BelgeKarti
-            baslik="Neden eşleşti"
-            altbaslik="Üye kayıtlarını elle tutmaktan kurtulmak isteyen bir kooperatifin ihtiyacıyla"
-            etek={<GuvenGostergesi skor={ORNEK_GUVEN_SKORU} />}
+    <>
+      <main className="flex w-full flex-1 flex-col">
+        {/* 3.2 Hero */}
+        <section className="pt-9 pb-10 sm:pt-16 sm:pb-20 lg:pt-24 lg:pb-28">
+          <div
+            className={cn(
+              KAPSAYICI,
+              "grid items-center gap-8 lg:grid-cols-2 lg:gap-[72px]",
+            )}
           >
-            <ul className="flex flex-col gap-2.5">
-              {ORNEK_GEREKCE.map((satir) => (
-                <li key={satir}>{satir}</li>
+            <div className="flex flex-col gap-5 lg:gap-[26px]">
+              <p className="self-start rounded-full bg-baglanti/12 px-3 py-1.5 text-[13px] font-semibold text-ana sm:px-3.5 sm:py-2 sm:text-sm">
+                {HERO.etiket}
+              </p>
+              <h1 className="font-heading text-[40px] leading-[1.06] font-semibold tracking-[-0.015em] text-balance text-ana lg:text-[64px] lg:leading-[1.04] lg:tracking-[-0.02em]">
+                {HERO.baslik}
+              </h1>
+              <p className="max-w-[540px] text-[17px] leading-[1.55] text-pretty text-muted-foreground lg:text-xl">
+                {HERO.metin}
+              </p>
+              <div className="mt-1 max-w-[560px] lg:mt-1.5">
+                <HeroKapilari />
+              </div>
+            </div>
+
+            <DemoKarti />
+          </div>
+        </section>
+
+        {/* 3.3 Sorun bandı */}
+        <section
+          aria-labelledby="sorun-baslik"
+          className="bg-metin py-10 text-zemin sm:py-16 lg:py-[88px]"
+        >
+          <div className={cn(KAPSAYICI, "flex flex-col gap-6 lg:gap-12")}>
+            <h2
+              id="sorun-baslik"
+              className="max-w-[820px] font-heading text-[28px] leading-[1.2] font-medium text-balance lg:text-[40px] lg:leading-[1.15]"
+            >
+              {SORUN.baslik}
+            </h2>
+            <ul className="grid gap-6 md:grid-cols-3 lg:gap-10">
+              {SORUN.maddeler.map((madde) => (
+                <li
+                  key={madde.baslik}
+                  className="flex flex-col gap-1.5 border-t border-zemin/20 pt-4 lg:gap-2.5 lg:pt-5"
+                >
+                  <h3 className="text-[17px] font-semibold lg:text-[19px]">
+                    {madde.baslik}
+                  </h3>
+                  <p className="text-[15px] leading-relaxed text-zemin/75 lg:text-base">
+                    {madde.metin}
+                  </p>
+                </li>
               ))}
             </ul>
-          </BelgeKarti>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* İki giriş yolu — kart kalıbı yerine hairline ile ayrılmış iki sütun */}
-      <section className="grid gap-8 border-t border-kenar pt-10 sm:grid-cols-2 sm:gap-10 sm:divide-x sm:divide-kenar">
-        <div className="flex flex-col items-start gap-3 sm:pr-10">
-          <h2 className="font-heading text-xl font-semibold text-ana">
-            Genç yetenek
-          </h2>
-          <p className="text-sm text-pretty text-muted-foreground">
-            Keşif Ajanı’yla kısa bir sohbet. Ne yaptığını ve neyi somut olarak
-            ortaya çıkardığını birlikte bir yetenek kartına dönüştürürsünüz. CV
-            yüklemek yok.
+        {/* 3.4 Nasıl çalışır */}
+        <NasilCalisir />
+
+        {/* 3.5 Şeffaf eşleşme */}
+        <section
+          aria-labelledby="seffaf-baslik"
+          className="pb-16 sm:pb-24 lg:pb-28"
+        >
+          <div
+            className={cn(
+              KAPSAYICI,
+              "grid items-center gap-8 lg:grid-cols-2 lg:gap-[72px]",
+            )}
+          >
+            <div className="flex flex-col gap-4 lg:gap-5">
+              <p className={UST_ETIKET}>{SEFFAF.ustEtiket}</p>
+              <h2 id="seffaf-baslik" className={H2}>
+                {SEFFAF.baslik}
+              </h2>
+              <p className="text-[17px] leading-relaxed text-pretty text-muted-foreground lg:text-lg">
+                {SEFFAF.metin}
+              </p>
+              <a
+                href={SEFFAF.baglanti.hedef}
+                className={cn(
+                  METIN_BAGLANTISI,
+                  "inline-flex min-h-11 items-center self-start",
+                )}
+              >
+                {SEFFAF.baglanti.etiket}
+              </a>
+            </div>
+            <NedenUygunOrnegi />
+          </div>
+        </section>
+
+        {/* 3.6 Süreç */}
+        <section
+          id="surec"
+          aria-labelledby="surec-baslik"
+          className="scroll-mt-4 bg-muted py-16 sm:py-24 lg:py-[104px]"
+        >
+          <div className={cn(KAPSAYICI, "flex flex-col gap-8 lg:gap-12")}>
+            <div className="flex max-w-[780px] flex-col gap-3.5">
+              <p className={UST_ETIKET}>{SUREC.ustEtiket}</p>
+              <h2 id="surec-baslik" className={cn(H2, "text-balance")}>
+                {SUREC.baslik}
+              </h2>
+              <p className="text-[17px] leading-relaxed text-muted-foreground lg:text-lg">
+                {SUREC.metin}
+              </p>
+            </div>
+
+            <ol className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+              {SUREC.kartlar.map((kart) => (
+                <li
+                  key={kart.no}
+                  className="flex flex-col gap-3 rounded-2xl bg-card px-[18px] py-[22px] xl:min-h-[260px]"
+                >
+                  <span className="font-mono text-sm text-muted-foreground">
+                    {kart.no}
+                  </span>
+                  <p className="text-[15px] leading-snug text-muted-foreground italic">
+                    “{kart.soru}”
+                  </p>
+                  <span aria-hidden="true" className="h-px bg-kenar" />
+                  <h3 className="font-heading text-[19px] leading-tight font-semibold text-ana">
+                    {kart.baslik}
+                  </h3>
+                  <p className="text-sm leading-normal text-muted-foreground">
+                    {kart.metin}
+                  </p>
+                </li>
+              ))}
+            </ol>
+
+            <p className="flex items-start gap-3.5 text-base text-metin">
+              <svg
+                aria-hidden="true"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mt-px shrink-0 text-vurgu"
+              >
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <path d="M21 4v5h-5" />
+              </svg>
+              <span>{SUREC.dongu}</span>
+            </p>
+          </div>
+        </section>
+
+        {/* 3.7 Güven */}
+        <section className="py-16 sm:py-24 lg:py-[104px]">
+          <div className={cn(KAPSAYICI, "grid gap-8 md:grid-cols-3 lg:gap-10")}>
+            {GUVEN.maddeler.map((madde) => (
+              <div key={madde.baslik} className="flex flex-col gap-2.5">
+                <h2 className="text-lg font-semibold text-metin lg:text-xl">
+                  {madde.baslik}
+                </h2>
+                <p className="leading-relaxed text-muted-foreground">
+                  {madde.metin}
+                  {madde.baglanti ? (
+                    <>
+                      {" "}
+                      <Link
+                        href={madde.baglanti.hedef}
+                        className={METIN_BAGLANTISI}
+                      >
+                        {madde.baglanti.etiket}
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+              </div>
+            ))}
+
+            <div className="flex flex-col gap-5 border-t border-kenar pt-8 md:col-span-3 md:mt-6 md:flex-row md:items-center md:gap-7">
+              <p className="text-[15px] text-muted-foreground">
+                {GUVEN.program}
+              </p>
+              {/* Logo yeri: gerçek logolar eklenene kadar boş kutu (brief § 3.7). */}
+              <div aria-hidden="true" className="flex shrink-0 gap-4 md:gap-7">
+                <span className="h-11 w-[120px] rounded-lg border border-dashed border-muted-foreground/40" />
+                <span className="h-11 w-[120px] rounded-lg border border-dashed border-muted-foreground/40" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 3.8 Kapanış */}
+        <section aria-labelledby="kapanis-baslik" className={KAPSAYICI}>
+          <div className="grid items-center gap-8 rounded-[28px] bg-ana p-8 sm:p-12 lg:grid-cols-2 lg:gap-12 lg:p-[72px]">
+            <h2
+              id="kapanis-baslik"
+              className="font-heading text-[28px] leading-[1.15] font-medium text-balance text-zemin lg:text-[44px] lg:leading-[1.12]"
+            >
+              {KAPANIS.baslik}
+            </h2>
+            <KapanisKapilari />
+          </div>
+        </section>
+      </main>
+
+      {/* 3.9 Altbilgi */}
+      <footer
+        className={cn(
+          KAPSAYICI,
+          "flex flex-col gap-6 pt-14 pb-12 text-sm text-muted-foreground md:flex-row md:items-end md:justify-between",
+        )}
+      >
+        <div className="flex flex-col gap-2">
+          <p className="font-heading text-xl font-semibold text-ana">
+            {ALTBILGI.logo}
           </p>
-          <Button asChild size="lg" className="mt-2">
-            <Link href="/kayit?rol=genc">Genç olarak başla</Link>
-          </Button>
+          <p>{ALTBILGI.slogan}</p>
+          {GELISTIRME_DURUMU ? <BackendDurumu /> : null}
         </div>
-
-        <div className="flex flex-col items-start gap-3 border-t border-kenar pt-8 sm:border-t-0 sm:pt-0 sm:pl-10">
-          <h2 className="font-heading text-xl font-semibold text-ana">Kurum</h2>
-          <p className="text-sm text-pretty text-muted-foreground">
-            Tanımlama Ajanı’yla kısa bir sohbet. “Dijitalleşmek istiyoruz” gibi
-            bir cümleyi, ölçülebilir başarı kriteri olan net bir ihtiyaç kartına
-            çevirirsiniz.
-          </p>
-          <Button asChild size="lg" variant="outline" className="mt-2">
-            <Link href="/kayit?rol=kurum">Kurum olarak başla</Link>
-          </Button>
-        </div>
-      </section>
-
-      <p className="-mt-8 text-sm text-muted-foreground">
-        Hesabın var mı?{" "}
-        <Link href="/giris" className="text-baglanti underline">
-          Giriş yap
-        </Link>
-      </p>
-
-      <section className="flex flex-col gap-4 border-t border-kenar pt-10">
-        <h2 className="font-heading text-xl font-semibold text-ana">
-          Altı problem, altı ajan
-        </h2>
-        <ul className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
-          {ajanlar.map((ajan) => (
-            <li key={ajan.ad} className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">{ajan.ad} Ajanı</span>
-              <span className="text-sm text-muted-foreground">{ajan.isi}</span>
+        <ul className="flex gap-6 md:gap-7">
+          {ALTBILGI.baglantilar.map((baglanti) => (
+            <li key={baglanti.etiket}>
+              <Link
+                href={baglanti.hedef}
+                className={cn(
+                  "inline-flex min-h-11 items-center rounded-sm text-muted-foreground hover:text-ana",
+                  ODAK,
+                )}
+              >
+                {baglanti.etiket}
+              </Link>
             </li>
           ))}
         </ul>
-      </section>
-
-      <footer className="mt-auto flex flex-col gap-3 border-t border-kenar pt-8">
-        <BackendDurumu />
-        <p className="text-xs text-muted-foreground">
-          Zemin360 Hackathon · GİRVAK — Faz 2. Yukarıdaki örnek sabit; Keşif,
-          Tanımlama, Eşleştirme ve Doğrulama ekranları gerçek veriyle çalışıyor.
-        </p>
       </footer>
-    </main>
+    </>
   );
 }
