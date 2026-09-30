@@ -20,7 +20,7 @@ Karar 15 gereği şimdi değiştirilmiyor; toplu denetimde ele alınacak.
 | `frontend/src/app/kart/[id]/page.tsx` | "Doğrulama Ajanı kanıtı dört ayrı başlıkta puanlar…" | "Ajan" terimi |
 | `frontend/src/app/isbirligi/[id]/page.tsx` | "Takip Ajanı'nın özeti", "Ajandan plan iste", "Ajandan yeniden öner", "Ajan yeni bir plan önerecek…" | "Ajan" terimi |
 | `frontend/src/app/girvak/page.tsx` | "…Canlılık Ajanı'nın son hatırlatmaları…" | "Ajan" terimi (GİRVAK paneli; belki kalabilir) |
-| `frontend/src/app/page.tsx` | "Altı problem, altı ajan", "Keşif Ajanı", "Tanımlama Ajanı'yla…" | "Ajan" terimi (tanıtım sayfası; jüri için bilinçli olabilir) |
+| ~~`frontend/src/app/page.tsx`~~ | ~~"Altı problem, altı ajan", "Keşif Ajanı", "Tanımlama Ajanı'yla…"~~ | **Kapandı (30 Eyl):** karşılama sayfası yeniden yazıldı, ajan metinleri kalktı; aşağıda "Karşılama sayfası" |
 | `frontend/src/app/kurum/page.tsx` | "· eşleştirmeye hazır değil" | Terim yok ama nedeni söylemiyor; denetimde bakılsın |
 
 ## 7. adım — Kart düzenleme
@@ -87,3 +87,14 @@ Karar 15 gereği şimdi değiştirilmiyor; toplu denetimde ele alınacak.
 | `frontend/src/lib/canlilik.ts` | GİRVAK paneli tür etiketi | "Yanıtsız genç ilgisi" | GİRVAK |
 
 > **Denetime not (11. adım):** Canlılık'ın kişiselleştirme istemi (`KISISEL_TALIMAT`) her alıcıya "sen" diye hitap ettiriyor; mevcut firma hatırlatmaları (`oneri_bekliyor`, `ilgi_yanitsiz_2` firma kısmı, `plan_onaysiz`, `isbirligi_hareketsiz`, `adim_gecikti` firmaya gidenleri) ve şablonları da "sen" kullanıyor ("İhtiyaç kartın için…", "…bakabilirsin"). Rehber firmaya "siz" istiyor: denetimde istem alıcıya göre hitap seçecek biçimde düzeltilmeli, şablonlar ayrılmalı. Yeni tür bu yüzden yalnızca şablonla gidiyor.
+
+## Karşılama sayfası (30 Eyl)
+
+Kaynak: `docs/design/landing/LANDING_HANDOFF.md` (v2), metinler rehbere göre orada yazıldı ve birebir kullanıldı. Bütün metinler tek dosyada: `frontend/src/content/landing.ts` (tek tek listelenmedi, dosyanın kendisi liste). Hitap: ortak bölümler hitapsız; "Nasıl çalışır" genç sekmesi "sen", firma sekmesi "siz".
+
+| Dosya | Bileşen / yer | Metin | Kime |
+|---|---|---|---|
+| `frontend/src/content/landing.ts` | Menü, hero, örnek sohbet, sorun bandı, nasıl çalışır, "Neden uygun?" örneği, süreç, güven, kapanış, altbilgi | Brief v2 § 3.1–3.9 | herkes (sekmeler genç / firma) |
+| `frontend/src/components/karsilama/menu.tsx` | Mobil menü düğmesinin açıkken etiketi (brief'te yok, ekran okuyucu için) | "Menüyü kapat" | herkes |
+
+> **Denetime not:** "Değerlendirme nasıl yapılıyor?", "Gizlilik" ve "İletişim" bağlantıları brief gereği şimdilik `#`. KVKK bağlantıları mevcut `/kvkk` sayfasına gidiyor. Logo yerleri boş kutu; gerçek logolar eklenince doldurulacak.
