@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,18 +65,15 @@ function GirisFormu() {
     : "/kayit";
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Giriş yap
-        </h1>
+    <Sayfa genislik="dar">
+      <SayfaBasligi baslik="Giriş yap">
         {sonra ? (
           <p className="text-sm text-pretty text-muted-foreground">
             Bu sayfa için giriş yapman gerekiyor; girişten sonra kaldığın yere
             dönersin.
           </p>
         ) : null}
-      </header>
+      </SayfaBasligi>
 
       <form className="flex flex-col gap-4" onSubmit={gonder}>
         <FormAlani etiket="E-posta" htmlFor="email">
@@ -112,6 +110,6 @@ function GirisFormu() {
           Kayıt ol
         </Link>
       </p>
-    </main>
+    </Sayfa>
   );
 }

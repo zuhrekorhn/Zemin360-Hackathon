@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirsatKarti, IlgiSatiri } from "@/components/firsatlar";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
@@ -170,17 +171,19 @@ function GencPaneliIcerigi() {
     ilgiler?.filter((ilgi) => ilgi.durum === "ilgileniliyor").length ?? 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Merhaba{hesap.ad ? `, ${hesap.ad}` : ""}
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          {bekleyenIlgi > 0
+    <Sayfa>
+      <SayfaBasligi
+        baslik={
+          <>
+            Merhaba{hesap.ad ? `, ${hesap.ad}` : ""}
+          </>
+        }
+        aciklama={
+          bekleyenIlgi > 0
             ? `${bekleyenIlgi} kurum kartınla ilgileniyor ve yanıtını bekliyor.`
-            : "Kartların, kanıtların ve sana gelen ilgiler burada."}
-        </p>
-      </header>
+            : "Kartların, kanıtların ve sana gelen ilgiler burada."
+        }
+      />
 
       {kartCagrisi ? (
         // Onaylı kartı olmayan genç eşleştirmeye girmez (plan § 5.2).
@@ -435,7 +438,7 @@ function GencPaneliIcerigi() {
           </ul>
         )}
       </PanelBolumu>
-    </main>
+    </Sayfa>
   );
 }
 

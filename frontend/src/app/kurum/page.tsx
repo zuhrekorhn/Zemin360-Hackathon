@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirmaFirsatlari } from "@/components/firma-firsatlari";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { IlanKapatma } from "@/components/ilan-kapatma";
@@ -79,15 +80,11 @@ function KurumPaneliIcerigi() {
   const kartCagrisi = firmaKartiCagrisi(hesap);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          {hesap.ad ?? "Kurum paneli"}
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          İhtiyaç kartların, önerilerin ve açılan iş birliklerin burada.
-        </p>
-      </header>
+    <Sayfa>
+      <SayfaBasligi
+        baslik={hesap.ad ?? "Kurum paneli"}
+        aciklama="İhtiyaç kartların, önerilerin ve açılan iş birliklerin burada."
+      />
 
       {/* İki kapı (docs/plans/firma-akisi.md § 0 karar 9). */}
       <nav aria-label="Ne arıyorsunuz?" className="grid gap-3 sm:grid-cols-2">
@@ -345,6 +342,6 @@ function KurumPaneliIcerigi() {
           </ul>
         )}
       </PanelBolumu>
-    </main>
+    </Sayfa>
   );
 }

@@ -15,17 +15,20 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { HataKutusu } from "@/components/sohbet";
+import { type Genislik, SayfaDurumu } from "@/components/sayfa";
 import type { MeYaniti, Rol } from "@/lib/api";
 import { useOturum } from "@/lib/oturum";
 import { panelYolu } from "@/lib/yonlendirme";
 
 export function GirisKapisi({
   roller,
+  genislik,
   children,
 }: {
   /** Verilmezse giriş yapmış her rol girebilir. */
   roller?: Rol[];
+  /** Kapı açılana kadarki durum sayfanın kendi genişliğinde çizilsin. */
+  genislik?: Genislik;
   children: React.ReactNode;
 }) {
   const { oturum, tazele } = useOturum();
@@ -48,25 +51,18 @@ export function GirisKapisi({
 
   if (oturum.durum === "baglanti_yok") {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-10 sm:px-6 sm:py-16">
-        <HataKutusu
-          hata={{
-            metin: "Backend'e ulaşılamadı; oturumun kontrol edilemedi.",
-            kota: false,
-          }}
-          tekrarDene={() => void tazele()}
-        />
-      </main>
+      <SayfaDurumu
+        genislik={genislik}
+        hata={{
+          metin: "Şu an bağlantı kuramadık; oturum kontrol edilemedi.",
+          kota: false,
+        }}
+        tekrarDene={() => void tazele()}
+      />
     );
   }
 
-  return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-10 sm:px-6 sm:py-16">
-      <p className="text-sm text-muted-foreground" role="status">
-        Yükleniyor…
-      </p>
-    </main>
-  );
+  return <SayfaDurumu genislik={genislik} />;
 }
 
 /** Kapının içinde: giriş yapmış hesap. Kapı dışında çağrılırsa hata. */

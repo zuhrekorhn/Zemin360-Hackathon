@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { CokluSecim } from "@/components/coklu-secim";
 
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
@@ -158,17 +159,15 @@ function TanimlamaSohbeti() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Tanımlama Ajanı
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          {ortak
+    <Sayfa>
+      <SayfaBasligi
+        baslik="Tanımlama Ajanı"
+        aciklama={
+          ortak
             ? "Kısa bir sohbet. Bir iş birliği ortağıyla çözmek istediğiniz ihtiyacı ölçülebilir bir karta çevireceğiz; bu karta uyan firmalar önerilecek. Kart siz onaylamadan kaydedilmez."
-            : "Kısa bir sohbet. İhtiyacınızı birlikte ölçülebilir bir ihtiyaç kartına çevireceğiz. Kart siz onaylamadan kaydedilmez."}
-        </p>
-      </header>
+            : "Kısa bir sohbet. İhtiyacınızı birlikte ölçülebilir bir ihtiyaç kartına çevireceğiz. Kart siz onaylamadan kaydedilmez."
+        }
+      />
 
       {asama === "sohbet" ? (
         <Sohbet
@@ -225,7 +224,7 @@ function TanimlamaSohbeti() {
           <Link href="/kurum">Panele dön</Link>
         </Button>
       </footer>
-    </main>
+    </Sayfa>
   );
 }
 

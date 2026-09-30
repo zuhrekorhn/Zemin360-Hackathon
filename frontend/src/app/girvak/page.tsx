@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirmaOnaylari } from "@/components/firma-onaylari";
 import { GirisKapisi } from "@/components/giris-kapisi";
 import {
@@ -97,16 +98,11 @@ function GirvakSayfasi() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          GİRVAK paneli
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Program hedefleri gerçek sayılarla, pasifleşen bağlantılar ve Canlılık
-          Ajanı’nın son hatırlatmaları. Kişisel bilgi olarak yalnızca ad.
-        </p>
-      </header>
+    <Sayfa>
+      <SayfaBasligi
+        baslik="GİRVAK paneli"
+        aciklama="Program hedefleri gerçek sayılarla, pasifleşen bağlantılar ve Canlılık Ajanı’nın son hatırlatmaları. Kişisel bilgi olarak yalnızca ad."
+      />
 
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
@@ -306,7 +302,7 @@ function GirvakSayfasi() {
           </PanelBolumu>
         </>
       ) : null}
-    </main>
+    </Sayfa>
   );
 }
 

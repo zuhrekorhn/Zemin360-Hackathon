@@ -5,10 +5,11 @@
  * @theme); brief'teki referans renkler rol olarak eşlendi, yeni token yok.
  */
 
+import { GENIS_KAPSAYICI } from "@/components/sayfa";
 import type { Sekme } from "@/content/landing";
 
 /** 1200px içerik; masaüstünde yanlarda 120px kalır (brief § 1). */
-export const KAPSAYICI = "mx-auto w-full max-w-[1200px] px-5 sm:px-8 lg:px-10";
+export const KAPSAYICI = GENIS_KAPSAYICI;
 
 /** Açık zeminde görünür odak halkası. */
 export const ODAK =

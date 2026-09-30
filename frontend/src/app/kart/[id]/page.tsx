@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
@@ -141,19 +142,19 @@ function KartIcerigi() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          {sahibi
+    <Sayfa>
+      <SayfaBasligi
+        baslik={
+          sahibi
             ? "Yetenek kartın"
-            : `${kart?.genc_adi ?? "Genç"} · yetenek kartı`}
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          {sahibi
+            : `${kart?.genc_adi ?? "Genç"} · yetenek kartı`
+        }
+        aciklama={
+          sahibi
             ? "Her somut çıktıya kanıt ekleyip referans isteyebilirsin. Doğrulama Ajanı kanıtı dört ayrı başlıkta puanlar — tek bir “güven puanı”na indirmez."
-            : "Doğrulama Ajanı her somut çıktıyı dört ayrı başlıkta puanlar — tek bir “güven puanı”na indirmez."}
-        </p>
-      </header>
+            : "Doğrulama Ajanı her somut çıktıyı dört ayrı başlıkta puanlar — tek bir “güven puanı”na indirmez."
+        }
+      />
 
       {hata ? (
         <HataKutusu
@@ -313,6 +314,6 @@ function KartIcerigi() {
           <Link href={panelYolu(hesap.rol)}>Panele dön</Link>
         </Button>
       </footer>
-    </main>
+    </Sayfa>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirmaProfilAlanlari } from "@/components/firma-profil-alanlari";
 import { GencProfilAlanlari } from "@/components/genc-profil-alanlari";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
@@ -136,17 +137,15 @@ function KayitFormu() {
     : "/giris";
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Kayıt ol
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          {rol === "genc"
+    <Sayfa genislik="form">
+      <SayfaBasligi
+        baslik="Kayıt ol"
+        aciklama={
+          rol === "genc"
             ? "Kayıttan sonra kısa bir sohbetle yetenek kartını oluşturacağız."
-            : "Kayıttan sonra doğrudan paneline geçersin."}
-        </p>
-      </header>
+            : "Kayıttan sonra doğrudan paneline geçersin."
+        }
+      />
 
       <form className="flex flex-col gap-5" onSubmit={gonder}>
         <fieldset className="flex flex-col gap-2">
@@ -279,6 +278,6 @@ function KayitFormu() {
           Giriş yap
         </Link>
       </p>
-    </main>
+    </Sayfa>
   );
 }

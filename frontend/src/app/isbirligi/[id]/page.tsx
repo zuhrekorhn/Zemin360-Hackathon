@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
   DurumEtiketi,
@@ -119,17 +120,7 @@ function IsbirligiIcerigi() {
   }
 
   if (!detay) {
-    return (
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-10 sm:px-6 sm:py-16">
-        {hata ? (
-          <HataKutusu hata={hata} tekrarDene={() => void oku()} />
-        ) : (
-          <p className="text-sm text-muted-foreground" role="status">
-            Yükleniyor…
-          </p>
-        )}
-      </main>
-    );
+    return <SayfaDurumu hata={hata} tekrarDene={() => void oku()} />;
   }
 
   const taraf: Taraf | null =
@@ -138,21 +129,22 @@ function IsbirligiIcerigi() {
     taraf === "genc" ? "kurum" : taraf === "kurum" ? "genc" : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-            {detay.kurum_adi} · {detay.aday_adi}
-          </h1>
+    <Sayfa>
+      <SayfaBasligi
+        baslik={`${detay.kurum_adi} · ${detay.aday_adi}`}
+        etiket={
           <DurumEtiketi
             metin={ISBIRLIGI_DURUM_ETIKETLERI[detay.durum] ?? detay.durum}
             baglanti={detay.durum === "tamamlandi"}
           />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {detay.rol_alani ?? "İş birliği ortağı"} ·{" "}
-          {tarihYaz(detay.baslangic_tarihi)} tarihinde başladı
-        </p>
+        }
+        aciklama={
+          <>
+            {detay.rol_alani ?? "İş birliği ortağı"} ·{" "}
+            {tarihYaz(detay.baslangic_tarihi)} tarihinde başladı
+          </>
+        }
+      >
         <p className="border-l-2 border-kenar pl-3 text-sm text-pretty">
           {detay.problem_tanimi}
           {detay.basari_kriteri ? (
@@ -164,7 +156,7 @@ function IsbirligiIcerigi() {
         {detay.iletisim && karsiTaraf ? (
           <IletisimSatiri iletisim={detay.iletisim} karsiTaraf={karsiTaraf} />
         ) : null}
-      </header>
+      </SayfaBasligi>
 
       {detay.durum === "tamamlandi" ? (
         <TamamlandiBandi detay={detay} taraf={taraf} />
@@ -203,7 +195,7 @@ function IsbirligiIcerigi() {
           <Link href={panelYolu(hesap.rol)}>Panele dön</Link>
         </Button>
       </footer>
-    </main>
+    </Sayfa>
   );
 }
 

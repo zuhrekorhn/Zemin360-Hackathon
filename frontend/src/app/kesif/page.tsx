@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { CokluSecim } from "@/components/coklu-secim";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { IsKalemiFormu } from "@/components/is-kalemi-formu";
@@ -164,18 +165,19 @@ function KesifSohbeti() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Keşif Ajanı
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Kısa bir sohbet. Ne yaptığını birlikte bir yetenek kartına
-          dönüştüreceğiz. Kart sen onaylamadan kaydedilmez.
-          {ilkKez
+    <Sayfa>
+      <SayfaBasligi
+        baslik="Keşif Ajanı"
+        aciklama={
+          <>
+            Kısa bir sohbet. Ne yaptığını birlikte bir yetenek kartına
+            dönüştüreceğiz. Kart sen onaylamadan kaydedilmez.
+            {ilkKez
             ? " Kayıtta verdiğin bilgileri tekrar sormayacağız."
             : null}
-        </p>
+          </>
+        }
+      >
         {ilkKez && asama !== "kaydedildi" ? (
           <p className="text-sm text-pretty text-muted-foreground">
             Şimdi vaktin yoksa sonra da yapabilirsin; ama kartı olmayan genç
@@ -185,7 +187,7 @@ function KesifSohbeti() {
             </Link>
           </p>
         ) : null}
-      </header>
+      </SayfaBasligi>
 
       {asama === "sohbet" || asama === "baslatiliyor" ? (
         <Sohbet
@@ -241,7 +243,7 @@ function KesifSohbeti() {
           <Link href="/genc">Panele dön</Link>
         </Button>
       </footer>
-    </main>
+    </Sayfa>
   );
 }
 

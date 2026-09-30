@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { GencProfilAlanlari } from "@/components/genc-profil-alanlari";
 import { GirisKapisi } from "@/components/giris-kapisi";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
@@ -27,7 +28,7 @@ import {
  */
 export default function ProfilSayfasi() {
   return (
-    <GirisKapisi roller={["genc"]}>
+    <GirisKapisi roller={["genc"]} genislik="form">
       <ProfilIcerigi />
     </GirisKapisi>
   );
@@ -88,31 +89,21 @@ function ProfilIcerigi() {
   }
 
   if (!profil) {
-    return (
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 py-10 sm:px-6">
-        {hata ? (
-          <HataKutusu hata={hata} />
-        ) : (
-          <p className="text-sm text-muted-foreground" role="status">
-            Yükleniyor…
-          </p>
-        )}
-      </main>
-    );
+    return <SayfaDurumu genislik="form" hata={hata} />;
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Profilim
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Yetkinliklerin kartında; burada çalışma tercihlerin ve eğitim
-          bilgilerin var. E-postan ({profil.email}) yalnızca karşılıklı ilgi
-          oluşunca paylaşılır.
-        </p>
-      </header>
+    <Sayfa genislik="form">
+      <SayfaBasligi
+        baslik="Profilim"
+        aciklama={
+          <>
+            Yetkinliklerin kartında; burada çalışma tercihlerin ve eğitim
+            bilgilerin var. E-postan ({profil.email}) yalnızca karşılıklı ilgi
+            oluşunca paylaşılır.
+          </>
+        }
+      />
 
       <form className="flex flex-col gap-6" onSubmit={kaydet}>
         <FormAlani etiket="Adın" htmlFor="ad">
@@ -165,6 +156,6 @@ function ProfilIcerigi() {
           </Link>
         </div>
       </form>
-    </main>
+    </Sayfa>
   );
 }

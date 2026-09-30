@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { FirmaProfilAlanlari } from "@/components/firma-profil-alanlari";
 import { GirisKapisi } from "@/components/giris-kapisi";
@@ -32,7 +33,7 @@ import { useOturum } from "@/lib/oturum";
  */
 export default function FirmaProfilSayfasi() {
   return (
-    <GirisKapisi roller={["kurum"]}>
+    <GirisKapisi roller={["kurum"]} genislik="form">
       <FirmaProfilIcerigi />
     </GirisKapisi>
   );
@@ -93,31 +94,21 @@ function FirmaProfilIcerigi() {
   }
 
   if (!profil) {
-    return (
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 py-10 sm:px-6">
-        {hata ? (
-          <HataKutusu hata={hata} />
-        ) : (
-          <p className="text-sm text-muted-foreground" role="status">
-            Yükleniyor…
-          </p>
-        )}
-      </main>
-    );
+    return <SayfaDurumu genislik="form" hata={hata} />;
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Firma profili
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Firmanızın temel bilgileri. İletişim e-postanız
-          {profil.email ? ` (${profil.email})` : ""} yalnızca karşılıklı ilgi
-          oluşunca paylaşılır.
-        </p>
-      </header>
+    <Sayfa genislik="form">
+      <SayfaBasligi
+        baslik="Firma profili"
+        aciklama={
+          <>
+            Firmanızın temel bilgileri. İletişim e-postanız
+            {profil.email ? ` (${profil.email})` : ""} yalnızca karşılıklı ilgi
+            oluşunca paylaşılır.
+          </>
+        }
+      />
 
       <p className="flex flex-wrap items-center gap-2 text-sm">
         {profil.dogrulandi ? (
@@ -182,6 +173,6 @@ function FirmaProfilIcerigi() {
           </Link>
         </div>
       </form>
-    </main>
+    </Sayfa>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
@@ -162,22 +163,21 @@ function OnerilerIcerigi() {
   const ortak = gosterilenKart?.aranan === "firma";
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Eşleştirme önerileri
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          {ortak
+    <Sayfa>
+      <SayfaBasligi
+        baslik="Eşleştirme önerileri"
+        aciklama={
+          ortak
             ? "İlanınıza uyan firmalar, uyumuyla ve neden önerildikleriyle birlikte. Karar sizin."
-            : "İhtiyaç kartınla eşleşen yetenek kartları, skoruyla ve neden önerildiğinin gerekçesiyle birlikte. Karar senin."}
-        </p>
+            : "İhtiyaç kartınla eşleşen yetenek kartları, skoruyla ve neden önerildiğinin gerekçesiyle birlikte. Karar senin."
+        }
+      >
         {gosterilenKart ? (
           <p className="border-l-2 border-kenar pl-3 text-sm text-pretty">
             {gosterilenKart.problem_tanimi}
           </p>
         ) : null}
-      </header>
+      </SayfaBasligi>
 
       {hata ? (
         <HataKutusu
@@ -228,7 +228,7 @@ function OnerilerIcerigi() {
           </Button>
         ) : null}
       </footer>
-    </main>
+    </Sayfa>
   );
 }
 

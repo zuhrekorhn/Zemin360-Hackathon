@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirmaKartiFormAlanlari } from "@/components/firma-karti-formu";
 import { GirisKapisi } from "@/components/giris-kapisi";
 import {
@@ -72,16 +73,11 @@ function FirmaKartiIcerigi() {
   }, [oku]);
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Firma kartı
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Firmanızın ne yaptığını anlatan kart. İş birliği ortağı arayan
-          firmalar sizi bu kartla bulur.
-        </p>
-      </header>
+    <Sayfa>
+      <SayfaBasligi
+        baslik="Firma kartı"
+        aciklama="Firmanızın ne yaptığını anlatan kart. İş birliği ortağı arayan firmalar sizi bu kartla bulur."
+      />
 
       {hata && kart === undefined ? (
         <HataKutusu hata={hata} tekrarDene={() => void oku()} />
@@ -109,7 +105,7 @@ function FirmaKartiIcerigi() {
           <Link href="/kurum">Panele dön</Link>
         </Button>
       </footer>
-    </main>
+    </Sayfa>
   );
 }
 

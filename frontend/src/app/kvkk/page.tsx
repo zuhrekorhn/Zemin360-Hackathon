@@ -6,6 +6,8 @@
  * onayladığı metinle değiştirilmeli. Kayıt formundaki onay kutusu buraya bağlı.
  */
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
+
 const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
   {
     baslik: "Hangi verileri topluyoruz",
@@ -51,16 +53,11 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
 
 export default function KvkkSayfasi() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          KVKK aydınlatma metni
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Zemin360 platformunda kişisel verilerinin nasıl işlendiğini burada
-          anlatıyoruz.
-        </p>
-      </header>
+    <Sayfa>
+      <SayfaBasligi
+        baslik="KVKK aydınlatma metni"
+        aciklama="Zemin360 platformunda kişisel verilerinin nasıl işlendiğini burada anlatıyoruz."
+      />
       {BOLUMLER.map((bolum) => (
         <section key={bolum.baslik} className="flex flex-col gap-2">
           <h2 className="font-heading text-lg font-semibold text-ana">
@@ -73,6 +70,6 @@ export default function KvkkSayfasi() {
           </ul>
         </section>
       ))}
-    </main>
+    </Sayfa>
   );
 }

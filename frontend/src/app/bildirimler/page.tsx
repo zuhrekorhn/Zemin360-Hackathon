@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { BosDurum, tarihYaz } from "@/components/panel";
 import { HataKutusu } from "@/components/sohbet";
@@ -87,30 +88,28 @@ function BildirimListesi() {
   const okunmamis = liste?.filter((b) => !b.okundu_tarihi).length ?? 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-            Bildirimler
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {okunmamis > 0
-              ? `${okunmamis} okunmamış bildirim.`
-              : "Okunmamış bildirim yok."}
-          </p>
-        </div>
-        {okunmamis > 0 ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            disabled={bekleniyor}
-            onClick={() => void hepsiniOkunduSay()}
-          >
-            Hepsini okundu say
-          </Button>
-        ) : null}
-      </header>
+    <Sayfa>
+      <SayfaBasligi
+        baslik="Bildirimler"
+        aciklama={
+          okunmamis > 0
+            ? `${okunmamis} okunmamış bildirim.`
+            : "Okunmamış bildirim yok."
+        }
+        eylem={
+          okunmamis > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              disabled={bekleniyor}
+              onClick={() => void hepsiniOkunduSay()}
+            >
+              Hepsini okundu say
+            </Button>
+          ) : null
+        }
+      />
 
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
@@ -159,6 +158,6 @@ function BildirimListesi() {
           ))}
         </ul>
       )}
-    </main>
+    </Sayfa>
   );
 }

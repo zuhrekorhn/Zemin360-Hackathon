@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
+import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import {
@@ -102,17 +103,11 @@ function ReferansFormu() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 sm:py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-semibold text-ana sm:text-3xl">
-          Bir referans isteği
-        </h1>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Biri, birlikte çalıştığınız bir işi Zemin360’ta kendi yetenek kartına
-          ekledi ve sizi referans gösterdi. Üye olmanız gerekmiyor; tek bir
-          soruluk bir şey.
-        </p>
-      </header>
+    <Sayfa>
+      <SayfaBasligi
+        baslik="Bir referans isteği"
+        aciklama="Biri, birlikte çalıştığınız bir işi Zemin360’ta kendi yetenek kartına ekledi ve sizi referans gösterdi. Üye olmanız gerekmiyor; tek bir soruluk bir şey."
+      />
 
       {hata ? (
         <HataKutusu
@@ -219,7 +214,7 @@ function ReferansFormu() {
           </div>
         </form>
       ) : null}
-    </main>
+    </Sayfa>
   );
 }
 
