@@ -98,3 +98,11 @@ Kaynak: `docs/design/landing/LANDING_HANDOFF.md` (v2), metinler rehbere göre or
 | `frontend/src/components/karsilama/menu.tsx` | Mobil menü düğmesinin açıkken etiketi (brief'te yok, ekran okuyucu için) | "Menüyü kapat" | herkes |
 
 > **Denetime not:** "Değerlendirme nasıl yapılıyor?", "Gizlilik" ve "İletişim" bağlantıları brief gereği şimdilik `#`. KVKK bağlantıları mevcut `/kvkk` sayfasına gidiyor. Logo yerleri boş kutu; gerçek logolar eklenince doldurulacak.
+
+## Sayfa kabuğu ve menü (30 Eyl)
+
+| Dosya | Bileşen / yer | Metin | Kime |
+|---|---|---|---|
+| `frontend/src/components/ust-menu.tsx` | Girişsiz menü (iç sayfalar) | "Giriş" → "Giriş yap", "Kayıt" → "Kayıt ol" (karşılama menüsüyle aynı; rehber § 2.7 aynı eylem aynı ad) | herkes |
+| `frontend/src/components/ust-menu.tsx` | Mobil bildirim zili (ekran okuyucu) | "Bildirimler" · okunmamış varsa "Bildirimler, {n} okunmamış" | genç / firma |
+| `frontend/src/components/menu-kabugu.tsx` | Katlanır menü düğmesi (ekran okuyucu) | "Menüyü aç" / "Menüyü kapat" | herkes |

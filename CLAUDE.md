@@ -39,7 +39,7 @@ Faz A-D, **genç akışı** (28-29 Eyl, `docs/plans/genc-akisi.md`) ve **firma a
 
 **Bildirimler:** olayı yazan kod bildirimi de aynı işlemde yazar (`app/api/bildirimler.py` › `bildirim_ekle`); tekrar ya da geçersiz geçiş bildirim yazmaz; metinde e-posta olmaz. Canlılık ve Takip de aynı tabloya kendi `tur`'larıyla yazacak.
 
-**Frontend oturumu:** tek kaynak `GET /me` (`src/lib/oturum.tsx`). Giriş gerektiren sayfa `GirisKapisi` ile sarılır; kapı açılmadan sayfanın açılış efektleri çalışmaz. Yerel denemede adres `http://localhost:3000` (ağ adresinden açılırsa Next.js 16 dev dosyalarını, backend CORS'u isteği engeller). Temiz veri: `scripts/yerel_sifirla.py` + `scripts/demo_hesaplari.py`.
+**Frontend oturumu:** tek kaynak `GET /me` (`src/lib/oturum.tsx`). Giriş gerektiren sayfa `GirisKapisi` ile sarılır; kapı açılmadan sayfanın açılış efektleri çalışmaz. Her iç sayfa `<Sayfa genislik=…>` + `<SayfaBasligi>` ile yazılır (`src/components/sayfa.tsx`); `<main>`, genişlik ve `h1` sınıfı elle yazılmaz. Menü iskeleti `menu-kabugu.tsx` (ayrıntı: `docs/design-language.md` § Sayfa Düzeni). Yerel denemede adres `http://localhost:3000` (ağ adresinden açılırsa Next.js 16 dev dosyalarını, backend CORS'u isteği engeller). Temiz veri: `scripts/yerel_sifirla.py` + `scripts/demo_hesaplari.py`.
 
 **Eşleştirmede iki ayrı sınır var, karıştırma:** benzerlik alt sınırı (0.45) "bu aday konuyla ilgili mi" sorusunu skordan ÖNCE yanıtlar; skor eşiği (%40) "ilgili adaylar arasında gösterilmeye değer mi" sorusunu sonra. Doğrulama bonusu sıralamayı etkiler, alakayı yaratmaz (`docs/matching-algorithm.md` § 5).
 
