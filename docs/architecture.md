@@ -65,6 +65,8 @@ onerildi ──firma "ilgileniyorum"──▶ ilgileniliyor ──genç kabul─
 - Karar verilmiş kayıtlar yeniden hesapta korunur: pipeline yalnızca `onerildi` siler, `genc_ilgilendi`'nin skorunu ve gerekçesini de değiştirmez.
 - Ayrıntı: `plans/genc-akisi.md` § 4, `faz-b-kimlik-ve-dongu.md` § 5.
 
+**Firma–firma (firma akışı, `plans/firma-akisi.md` § 3-4):** aynı tablo, aynı makine, aynı pipeline. Eşleşmenin adayı yetenek kartı ya da firma kartıdır (tam biri dolu); aday kaynağını ilanın `aranan`'ı seçer. Makinedeki "genç" rolü **aday tarafı** demektir: ortak firma o taraftadır. Ortak firmanın hesabı da firma rolünde olduğu için taraf hesabın rolünden değil eşleşmeden okunur (`sahiplik.eslesmedeki_taraf`); aday firmanın uçları ayrı ve incedir (`/firma-ilgi`, `/firma-kabul`…). İş birliği ve takip değişmeden iki firmaya açılır.
+
 ## Repo Yapısı
 
 ```

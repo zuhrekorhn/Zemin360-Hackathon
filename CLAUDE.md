@@ -25,7 +25,9 @@ Herhangi bir özellik üzerinde çalışmadan önce, ilgili dosyayı `docs/` alt
 
 ## Şu An Neredeyiz
 
-Faz A-D ve **genç akışı** (28-29 Eyl, `docs/plans/genc-akisi.md`) tamamlandı; altı ajan da çalışıyor. Takvim ve faz planı: `docs/roadmap.md` (her oturumda önce onu oku). Sırada firma tarafı; toplu metin denetimi (`docs/plans/genc-akisi-metinler.md`) ayrı bir adım.
+Faz A-D, **genç akışı** (28-29 Eyl, `docs/plans/genc-akisi.md`) ve **firma akışı** (29-30 Eyl, `docs/plans/firma-akisi.md`) tamamlandı; altı ajan da çalışıyor. Takvim ve faz planı: `docs/roadmap.md` (her oturumda önce onu oku). Sırada SSRF engeli, sonra elle deneme, toplu metin denetimi (`docs/plans/*-metinler.md`) ve deploy hazırlığı.
+
+**Firma akışı (ayrıntı `docs/plans/firma-akisi.md` § 0):** firma kayıtta türünü (girişim/KOBİ/kurumsal), sektörünü, şehrini verir; isteğe bağlı firma kartını sohbetle çıkarır (`firma_karti`, aynı motor). Panelde iki kapı: genç yetenek ya da iş birliği ortağı (`ihtiyac_karti.aranan`). **Aynı eşleşme tablosu ve pipeline**: `eslesme`'de `yetenek_karti_id` ya da `firma_karti_id`, tam biri dolu; aday kaynağı ilana göre. Durum makinesindeki `genc` rolü "aday tarafı" demektir (karar 12): ortak firma o taraftadır, rol kontrolü `sahiplik.eslesmedeki_taraf` ile, hesabın rolünden değil. GİRVAK firmayı alan adı ipucuyla (ağ isteği yok) doğrular. Canlılık firma–firma eşleşmelerini taramaz.
 
 **Genç akışı (ayrıntı `docs/plans/genc-akisi.md` § 0):** kayıt formu profil alanlarını ve KVKK onayını alır, Keşif sohbeti onları sormaz. Kart onaylanınca ve düzenlenince arka planda hazırlanır (`app/servisler/kart_hazirlama.py`): linkli çalışma otomatik puanlanır, kart ilgili açık ihtiyaçlarla eşleşir. Çalışmanın içeriği değişirse yalnızca o çalışmanın güven göstergesi sıfırlanır; eski referans yanıtı geçmişte kalır. Genç eşik üstü önerileri "fırsat" olarak görür ve açık iletişim onayıyla ilgi gösterebilir; firma da ilgilenirse karşılıklı ilgi (`kabul_edildi`). Pipeline `genc_ilgilendi` kaydını silmez, skorunu ve gerekçesini değiştirmez (karar 14). Orkestrasyon `app/servisler/`'de, uçlar ince.
 

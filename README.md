@@ -190,7 +190,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 
 ## Proje Durumu
 
-🟢 **Faz A-D ve genç akışı tamamlandı; altı ajan da çalışıyor.** Üç rol (genç, firma, GİRVAK) kendi paneliyle giriyor. Döngü kapalı:
+🟢 **Faz A-D, genç akışı ve firma akışı tamamlandı; altı ajan da çalışıyor.** Üç rol (genç, firma, GİRVAK) kendi paneliyle giriyor. Firma iki kapıdan girer: genç yetenek ya da iş birliği ortağı (girişim, KOBİ, kurumsal) arar; firmalar arası eşleşme, ilgi ve iş birliği genç tarafıyla aynı döngüden geçer. Döngü kapalı:
 
 1. Genç kısa bir kayıt formundan sonra sohbetle yetenek kartını oluşturur.
 2. Kart onaylanınca linkli çalışmalar değerlendirilir ve kart açık ihtiyaçlarla eşleşir.
@@ -208,7 +208,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 | **Takip** | Çalışıyor. Plan önerisi, iki taraflı onay ve işaretleme, tamamlanma sinyali. Arayüz: `/isbirligi/{id}` |
 | **Canlılık** | Çalışıyor. Hareketsizlik hatırlatmaları (yanıtsız genç ilgisi dahil), yeni fırsat, GİRVAK paneli. Arayüz: `/girvak` |
 
-Genç akışının kararları ve bilinen sınırları: [`docs/plans/genc-akisi.md`](docs/plans/genc-akisi.md). Elle deneme senaryosu: [`docs/plans/genc-akisi-deneme.md`](docs/plans/genc-akisi-deneme.md). Arayüz metinleri [`docs/icerik-rehberi.md`](docs/icerik-rehberi.md)'ye uyar.
+Genç akışının kararları ve bilinen sınırları: [`docs/plans/genc-akisi.md`](docs/plans/genc-akisi.md), firma akışınınki: [`docs/plans/firma-akisi.md`](docs/plans/firma-akisi.md). Elle deneme senaryoları: [`genc-akisi-deneme.md`](docs/plans/genc-akisi-deneme.md), [`firma-akisi-deneme.md`](docs/plans/firma-akisi-deneme.md). Arayüz metinleri [`docs/icerik-rehberi.md`](docs/icerik-rehberi.md)'ye uyar.
 
 **Doğrulama kapsamı:** e-posta göndermiyoruz (SMTP yok) — referans linki API yanıtında ve kart ekranında tam adres olarak gösteriliyor, referans kişiye elle iletilir. **Referans güvenliği (Faz B):** referans yanıt uç noktası yalnızca iddianın başlığını ve durumu dönüyor; kanıt durumu (`GET /dogrulama/kanit/{id}`, referans e-postaları ve yanıt linkleri) artık yalnızca çıktının sahibi gence ve GİRVAK'a açık, kurum ve başkaları göremiyor. Kalan sınırlama: SMTP olmadığı için yanıt linkini genç kendisi iletiyor, yani ilke olarak kendi referansını doldurabilir. Gerçek kullanımda token yalnızca referans kişiye e-postayla gitmeli. Zaman aşımı (7 gün) için zamanlayıcı da yok: `bekliyor` → `yanit_yok` geçişi kanıt durumu okunduğunda hesaplanıyor. İkisi de bilinçli MVP kararı.
 
@@ -218,7 +218,7 @@ Genç akışının kararları ve bilinen sınırları: [`docs/plans/genc-akisi.m
 
 **Takip kapsamı:** ajan plan ve özet önerir, karar vermez; tamamlanma bir kuraldır (son adım iki tarafça tamamlanınca). Onaylanan plan kilitlidir. Tamamlanmış pilot, Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125; pilotsuz kartın skoru değişmez, alakayı yaratmaz). Durum özeti kesilebilir iş: çökerse ya da kesilirse döngü aynen çalışır.
 
-Sırada: firma tarafı ve toplu metin denetimi.
+Sırada: SSRF engeli, elle deneme, toplu metin denetimi ve yayına alma.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım

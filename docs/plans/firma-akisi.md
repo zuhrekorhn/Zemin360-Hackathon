@@ -201,3 +201,46 @@ Sıra, en değerli ve en az riskli parçalar önce bitsin diye böyle. Kayma olu
 - Web sitesine bağlanarak doğrulama, vergi numarası, ticaret sicili.
 - SSRF engeli: sıradaki ayrı görev.
 - Toplu metin denetimi: ayrı adım; yeni metinler ise baştan rehbere uygun yazılır.
+
+## 15. Kapanış (30 Eyl)
+
+**Uygulandı:** adımlar 1-10, kararlar 1-20. Elle tarayıcı denemesi yapılmadı (senaryo: [`firma-akisi-deneme.md`](firma-akisi-deneme.md)).
+
+| Adım | Commit | Özet |
+|---|---|---|
+| — | `7d8e32d`, `81f37ef` | Commit kuralı `CLAUDE.md`'de; plan onaylı |
+| 1 | `d260083` | Taraf kavramı: durum geçişi hesabın rolünden değil eşleşmedeki taraftan (davranış değişmedi) |
+| 2 | `47349ee` | Kayıt formu ve profil (tür, sektör, şehir, KVKK; isteğe bağlı alanlar), `/kurum/profil`, eski hesaplara bant |
+| 3 | `95ab16b` | İlan kapatma: nedenli, sayfa içi onay, GİRVAK sayısı; pipeline kilitten sonra durumu yeniden okur |
+| 4 | `eaa56c8` | Firma doğrulaması: alan adı ipucu (ağ isteği yok), GİRVAK onayı, "Doğrulanmış firma" işareti |
+| 5 | `e944587`, `f590894` | Firma kartı: tablo, okuma/düzenleme, aynı motorla sohbet, `/kurum/kart` |
+| 6 | `0b8a5b5` | Ortak ilanı ve iki kapı (`ihtiyac_karti.aranan`, Tanımlama'nın ikinci soru seti) |
+| 7 | `7578d9f`, `a786033` | Firma–firma eşleştirme: aynı tablo ve pipeline, firma adayları, bonus, ayrı gerekçe; öneriler sayfası |
+| 8 | `e585de6`, `be5be26`, `bd92951` | Firmalar arası ilgi (iki yönlü), iş birliği ve takip, firma panelinde fırsatlar/ilgiler |
+| 9-10 | (bu kapanışla) | GİRVAK kırılımı, demo firmaları; belgeler, deneme senaryosu |
+
+**Plandan sapmalar:**
+- Firma kartı düzenlemesinde "versiyon çakışmasında 409" yerine genç kartındaki gibi satır kilidi (iki düzenleme sırayla işlenir).
+- Canlılık süzgeci 9. adım yerine 7. adımda geldi (ilk firma eşleşmesinde tarama çökmesin diye).
+- İş birliği görünümü (`/isbirligi/{id}`, `/isbirliklerim`) iki tarafa tek bir alan dışında aynı: `tarafim`. Ortak firmanın rolü de "kurum" olduğu için arayüz tarafı rolden okuyamıyordu.
+- İletişim yanıtına `aday_firma_email` eklendi (genç eşleşmesinde boş); mevcut alanlar değişmedi.
+
+**Bilinen sınırlar:**
+- 0.45 benzerlik alt sınırı firma metinleri için ölçülmedi.
+- Firma profili (tür, şehir, doğrulama) değişince mevcut öneriler kendiliğinden yeniden hesaplanmaz; "Yeniden hesapla" ya da bir sonraki pipeline çalışması günceller.
+- Canlılık firma–firma eşleşmelerini taramaz (karar 18).
+- "Neden uygun?" metni ilanı açan firmaya hitaben yazılıyor ve aday firma da aynısını görüyor (genç tarafındaki sınırın aynısı).
+- Kolon adları "genç" diyor ama "aday tarafı" anlamında (karar 12): `genc_ilgi_tarihi`, `genc_plan_onayi`, `baslatan='genc'`.
+- Tamamlanan iş birliği bonusu yalnızca firmanın **aday** olarak tamamladıklarını sayar; ilan sahibi olarak tamamladıkları sayılmaz.
+
+**Açık işler** (D = deploy öncesi, T = teslim/demo öncesi, S = sonra):
+
+| İş | Öncelik |
+|---|---|
+| SSRF engeli (kanıt linki kontrolü) | **D**, sıradaki görev |
+| Elle tarayıcı denemesi (genç + firma senaryoları) | **T** |
+| Toplu metin denetimi (`genc-akisi-metinler.md`, `firma-akisi-metinler.md`; rehbere aday firma sütunu) | **T** |
+| Kolonları "aday/ilan" adıyla yeniden adlandırma | **S** |
+| Firma–firma için Canlılık hatırlatmaları | **S** |
+| Firma profili değişince önerilerin yeniden hesabı | **S** |
+| Firma kartı için "sohbetle yeniden doldur"; web sitesi ya da ticaret sicili ile doğrulama | **S** |
