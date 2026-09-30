@@ -18,6 +18,7 @@ from app.agents.kesif import (
     SomutCiktiTaslak,
     TaslakCikarimi,
     _birlestir,
+    _cikti_eksikleri,
     _karar,
     bos_taslak,
 )
@@ -228,26 +229,40 @@ def test_hepsi_sorulduysa_kart_kapanir_ve_israr_edilmez():
     assert sonuc["taslak_hazir"] is True
 
 
+def calismalar(sayi: int) -> list[dict]:
+    return [{"kimlik": f"c{i}", "baslik": f"Çalışma {i}"} for i in range(1, sayi + 1)]
+
+
+def soru_anahtarlari(calisma_sayisi: int) -> list[str]:
+    """Bilgisi hiç girilmemiş N çalışmanın ek soru anahtarları, soruluş sırasıyla."""
+    taslak = dolu_taslak(somut_ciktilar=calismalar(calisma_sayisi))
+    return [anahtar for anahtar, _ in _cikti_eksikleri(taslak)]
+
+
+def test_ikinci_calismanin_payi_ve_kaniti_da_sorulur():
+    """Eski sabit tavan (4) ikinci çalışmada bitiyordu: payı ve kanıtı hiç sorulmuyordu."""
+    anahtarlar = soru_anahtarlari(2)
+    assert anahtarlar == ["olcut:c1", "rol:c1", "kanit:c1", "olcut:c2", "rol:c2", "kanit:c2"]
+
+
+def test_ucuncu_calismadan_sonra_yalnizca_kanit_sorulur():
+    anahtarlar = soru_anahtarlari(4)
+    assert anahtarlar[6:] == ["kanit:c3", "kanit:c4"]
+
+
 def test_ek_soru_tavani():
-    """İki çıktı → altı eksik; yine de en fazla dört ek soru sorulur."""
-    iki_cikti = [
-        {"baslik": "Kütüphane sistemi", "aciklama": None, "kanit_linki": None},
-        {"baslik": "Kulüp sitesi", "aciklama": None, "kanit_linki": None},
-    ]
+    """Beş çalışma → dokuz eksik; yine de en fazla MAKS_EK_TURU ek soru sorulur."""
+    sorulanlar = soru_anahtarlari(5)
     sonuc = karar(
         {
-            "taslak": dolu_taslak(somut_ciktilar=iki_cikti),
+            "taslak": dolu_taslak(somut_ciktilar=calismalar(5)),
             "takip_turu": 0,
             "ek_takip_turu": MAKS_EK_TURU,
-            "sorulan_ekler": [
-                "olcut:Kütüphane sistemi",
-                "rol:Kütüphane sistemi",
-                "kanit:Kütüphane sistemi",
-                "olcut:Kulüp sitesi",
-            ],
+            "sorulan_ekler": sorulanlar[:MAKS_EK_TURU],
             "fallback_indeksi": 0,
         }
     )
+    assert len(sorulanlar) > MAKS_EK_TURU
     assert sonuc["taslak_hazir"] is True
 
 

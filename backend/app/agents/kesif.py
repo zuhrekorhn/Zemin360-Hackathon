@@ -8,8 +8,9 @@ docs/agent-specs.md § 1. Sınırlar oradan geliyor; üç sayaç birbirinden ayr
     takip sorusu. Tavan yalnızca sonsuz döngüye karşı; gelinirse alan boş
     kalır ve genç onu taslak ekranında doldurur (yer tutucu yazılmaz).
   - Çıktı başına ölçülebilir sonuç, kişinin kendi payı ve kanıt/referans:
-    en fazla 4 soru, her biri BİR kez. Kullanıcı bilmiyorsa ısrar edilmez,
-    sıradakine geçilir.
+    ilk iki çalışmada üçü, sonrakilerde yalnızca kanıt; toplam en fazla 8
+    soru, her biri BİR kez. Kullanıcı bilmiyorsa ısrar edilmez, sıradakine
+    geçilir.
   - Kayıt formunda alınan bilgiler (şehir, çalışma modeli, müsaitlik, durum,
     okul) bağlam olarak verilir ve SORULMAZ (docs/plans/genc-akisi.md § 5.3).
   - "Hiç projem yok" → 2 soruluk fallback zinciri, hâlâ yoksa deneyim_seviyesi
@@ -222,8 +223,13 @@ def _fallback_dali(durum: dict[str, Any]) -> dict[str, Any] | None:
     )
 
 
-# Ajana özel ek sorular (ölçüt, rol, kanıt/referans) en fazla bu kadar tur.
-MAKS_EK_TURU = 4
+# Sonuç, pay ve kanıt sorularının üçü de bu kadar çalışmaya sorulur; sonraki
+# çalışmalara yalnızca kanıt. Eskiden sabit 4 soruluk tavan ikinci çalışmada
+# bitiyor, onun payı ve kanıtı hiç sorulmuyordu. Kanıt öncelikli: Doğrulama
+# yalnızca linki olan çalışmayı değerlendirebiliyor.
+AYRINTILI_SORULAN_CALISMA = 2
+# Ek soruların güvenlik tavanı: beş çalışması olan gence 15 soru sorulmasın.
+MAKS_EK_TURU = 8
 
 
 def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
@@ -232,40 +238,49 @@ def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
     Zorunlu alan değiller: kullanıcı bilmiyorsa kart yine kurulur. Ama
     sorulmazsa Doğrulama Ajanı'nın bileşenleri kesin düşük kalıyor. Kanıt ve
     referans tek soruda soruluyor ki sohbet uzamasın; kanıt iş kalemine bağlı
-    kaydedilir (plan § 5.4).
+    kaydedilir (plan § 5.4). Sıra: çalışma çalışma, her birinde sonuç → pay →
+    kanıt.
     """
-    eksikler: list[tuple[str, str]] = []
-    for cikti in taslak.get("somut_ciktilar") or []:
-        baslik = cikti.get("baslik") or "bu çalışma"
-        # "Soruldu" işareti kimliğe bağlı: başlık değişince soru tekrar gelmesin.
-        # Kimliksiz kayıt yalnızca bu özellikten önceki taslaklarda var.
-        anahtar = cikti.get(motor.KIMLIK) or baslik
-        if not cikti.get("olculebilir_sonuc"):
-            eksikler.append(
-                (
-                    f"olcut:{anahtar}",
-                    f"“{baslik}” için sonucu sayıyla anlatabilir misin? Örneğin kaç "
-                    "kişi kullandı ya da ne kadar zaman kazandırdı. Bilmiyorsan geçebiliriz.",
-                )
+    return [
+        soru
+        for sira, cikti in enumerate(taslak.get("somut_ciktilar") or [])
+        for soru in _calisma_sorulari(cikti, ayrintili=sira < AYRINTILI_SORULAN_CALISMA)
+    ]
+
+
+def _calisma_sorulari(cikti: dict[str, Any], *, ayrintili: bool) -> list[tuple[str, str]]:
+    """Bir çalışmanın eksik bilgileri için (anahtar, soru) çiftleri."""
+    baslik = cikti.get("baslik") or "bu çalışma"
+    # "Soruldu" işareti kimliğe bağlı: başlık değişince soru tekrar gelmesin.
+    # Kimliksiz kayıt yalnızca bu özellikten önceki taslaklarda var.
+    anahtar = cikti.get(motor.KIMLIK) or baslik
+    sorular: list[tuple[str, str]] = []
+    if ayrintili and not cikti.get("olculebilir_sonuc"):
+        sorular.append(
+            (
+                f"olcut:{anahtar}",
+                f"“{baslik}” için sonucu sayıyla anlatabilir misin? Örneğin kaç "
+                "kişi kullandı ya da ne kadar zaman kazandırdı. Bilmiyorsan geçebiliriz.",
             )
-        if not cikti.get("kendi_rolu"):
-            eksikler.append(
-                (
-                    f"rol:{anahtar}",
-                    f"“{baslik}” üzerinde tek başına mı çalıştın, ekipçe mi? "
-                    "Ekipçeyse hangi kısmı sen yaptın?",
-                )
+        )
+    if ayrintili and not cikti.get("kendi_rolu"):
+        sorular.append(
+            (
+                f"rol:{anahtar}",
+                f"“{baslik}” üzerinde tek başına mı çalıştın, ekipçe mi? "
+                "Ekipçeyse hangi kısmı sen yaptın?",
             )
-        if not cikti.get("kanit_linki") and not cikti.get("referans_email"):
-            eksikler.append(
-                (
-                    f"kanit:{anahtar}",
-                    f"“{baslik}” çalışmanı gösteren bir link var mı (kod deposu, demo, "
-                    "yayın)? Ya da bu çalışmayı doğrulayabilecek birinin e-postası? İkisi de "
-                    "isteğe bağlı.",
-                )
+        )
+    if not cikti.get("kanit_linki") and not cikti.get("referans_email"):
+        sorular.append(
+            (
+                f"kanit:{anahtar}",
+                f"“{baslik}” çalışmanı gösteren bir link var mı (kod deposu, demo, "
+                "yayın)? Ya da bu çalışmayı doğrulayabilecek birinin e-postası? İkisi de "
+                "isteğe bağlı.",
             )
-    return eksikler
+        )
+    return sorular
 
 
 POTANSIYEL = "potansiyel"
