@@ -25,9 +25,7 @@ class SomutCikti(UUIDPrimaryKeyMixin, Base):
     )
     baslik: Mapped[str] = mapped_column(String)
     aciklama: Mapped[str | None] = mapped_column(Text)
-    # Kanıt henüz eklenmemiş olabilir (kanit_bekleyen akışı)
-    kanit_linki: Mapped[str | None] = mapped_column(String)
-    kanit_turu: Mapped[str | None] = mapped_column(String)
+    # Kanıt bu tabloda değil: `kanit_parcalari` (link, dosya, görsel; birden çok olabilir).
     tarih: Mapped[date | None] = mapped_column(Date)
     # İş kalemi alanları (docs/plans/genc-akisi.md § 3.4). Eskiden rol ve sonuç
     # `aciklama`'ya birleştiriliyordu; düzenlenebilsinler diye ayrı. Eski
@@ -36,7 +34,7 @@ class SomutCikti(UUIDPrimaryKeyMixin, Base):
     is_turu: Mapped[str | None] = mapped_column(String)
     kendi_rolu: Mapped[str | None] = mapped_column(Text)
     olculebilir_sonuc: Mapped[str | None] = mapped_column(Text)
-    # İçeriğin (başlık, açıklama, rol, sonuç, kanıt linki) son değiştiği an.
+    # İddianın (başlık, açıklama, rol, sonuç) son değiştiği an.
     # NULL = oluşturulduğundan beri değişmedi. Bu andan önce verilmiş referans
     # yanıtları puana girmez (plan § 0, karar 8).
     icerik_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
