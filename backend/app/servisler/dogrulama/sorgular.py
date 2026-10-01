@@ -33,6 +33,7 @@ async def cikti_getir(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> SomutC
         .options(
             selectinload(SomutCikti.guven_skoru),
             selectinload(SomutCikti.referans_istekleri),
+            selectinload(SomutCikti.kanit_parcalari),
         )
         .where(SomutCikti.id == somut_cikti_id)
     )

@@ -63,7 +63,8 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 4. **İtiraz hakkı:** kullanıcı skoru görebilmeli, yanlış değerlendirilen kanıtı yeniden gönderebilmeli.
 5. **Önyargı riski:** rubrik kriterleri objektif/kontrol edilebilir tutulmalı ("ölçülebilir sonuç var mı — evet/hayır"), "ne kadar etkileyici yazılmış" gibi öznel kriterlerden kaçınılmalı.
 6. **Otomatik puanlama** (genç akışı): linki olan çalışma, kart onaylanınca ve düzenlenince arka planda puanlanır; linksiz çalışma puanlanmaz, "doğrulanmamış" nötr durumda kalır.
-7. **Düzenleme sıfırlar:** bir çalışmanın içeriği ya da linki değişirse o çalışmanın göstergesi sıfırlanır ve yeniden değerlendirilir; değişmeyenlerinki korunur. Değişiklikten önceki referans yanıtları silinmez, geçmiş olarak görünür ama puana girmez; genç referansı yeniden isteyebilir (`plans/genc-akisi.md` § 0, karar 8).
+7. **Düzenleme sıfırlar:** bir çalışmanın iddiası (başlık, açıklama, sonuç, pay) değişirse o çalışmanın göstergesi sıfırlanır ve yeniden değerlendirilir; değişmeyenlerinki korunur. Değişiklikten önceki referans yanıtları silinmez, geçmiş olarak görünür ama puana girmez; genç referansı yeniden isteyebilir (`plans/genc-akisi.md` § 0, karar 8).
+8. **Kanıt parçaları, tek kapı** (`plans/dogrulama-iyilestirme.md` § 2, § 3; adım 3): bir çalışmanın birden çok kanıtı olabilir (link; ileride dosya ve görsel). Kanıt yalnızca kart sayfasının kanıt bölümünden eklenir ve kaldırılır (`app/servisler/dogrulama/parcalar.py`); iddia düzenleme formu linke dokunmaz. Kanıt değişince gösterge yeniden değerlendirilir ama **referans yanıtları geçerli kalır**: kanıt iddiayı değiştirmez, kanıt eklemek puanı hiçbir zaman düşürmez. Referans istemek değerlendirmeyi yeniden çalıştırmaz. Gösterge değişince kart sürümü artar ve eşleşmeler arka planda tazelenir.
 
 ## 5. Canlılık Ajanı
 

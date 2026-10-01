@@ -1,5 +1,6 @@
 import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
 import { baslikGosterimi } from "@/lib/guven-gostergesi";
+import { kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
 /**
@@ -140,6 +141,7 @@ export function CiktiOzeti({
    */
   referansVar?: boolean;
 }) {
+  const linkler = kanitLinkleri(cikti.kanitlar);
   return (
     <div className="flex flex-col gap-2 rounded-sm border border-kenar">
       <div className="flex flex-col gap-1 px-4 py-3">
@@ -169,19 +171,21 @@ export function CiktiOzeti({
             {sahibiBakiyor ? "Payın" : "Payı"}: {cikti.kendi_rolu}
           </p>
         ) : null}
-        {cikti.kanit_linki ? (
-          <a
-            href={
-              /^https?:\/\//i.test(cikti.kanit_linki)
-                ? cikti.kanit_linki
-                : `https://${cikti.kanit_linki}`
-            }
-            target="_blank"
-            rel="noreferrer noopener"
-            className="w-fit text-sm break-all text-baglanti underline underline-offset-4"
-          >
-            {cikti.kanit_linki}
-          </a>
+        {linkler.length > 0 ? (
+          <ul className="flex flex-col gap-1">
+            {linkler.map((parca) => (
+              <li key={parca.id}>
+                <a
+                  href={kanitAdresi(parca.url)}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="w-fit text-sm break-all text-baglanti underline underline-offset-4"
+                >
+                  {parca.url}
+                </a>
+              </li>
+            ))}
+          </ul>
         ) : (
           <p className="text-sm text-muted-foreground">
             {referansVar

@@ -107,7 +107,8 @@ function taslakHali(cikti: SomutCiktiYaniti): SomutCiktiTaslagi {
   return {
     baslik: cikti.baslik,
     aciklama: cikti.aciklama,
-    kanit_linki: cikti.kanit_linki,
+    // İddia formu kanıt düzenlemez; kanıt kart sayfasının kanıt bölümünde.
+    kanit_linki: null,
     is_turu: cikti.is_turu ?? null,
     olculebilir_sonuc: cikti.olculebilir_sonuc ?? null,
     kendi_rolu: cikti.kendi_rolu ?? null,
@@ -155,7 +156,9 @@ export function IsKalemiEylemleri({
     const tamam = await calistir(
       () => isKalemiGuncelle(kartId, cikti.id, degisenler),
       { onGuncel, onHata },
-      sifirlanir && taslak.kanit_linki ? YENIDEN_DEGERLENDIRME_NOTU : undefined,
+      sifirlanir && cikti.kanitlar.length > 0
+        ? YENIDEN_DEGERLENDIRME_NOTU
+        : undefined,
     );
     setBekleniyor(false);
     if (tamam) setAcik(false);
@@ -216,6 +219,7 @@ export function IsKalemiEylemleri({
         kimlik={`duzenle-${cikti.id}`}
         cikti={taslak}
         referansGoster={false}
+        kanitGoster={false}
         onDegis={(alan, deger) =>
           setTaslak((onceki) => ({ ...onceki, [alan]: deger }))
         }

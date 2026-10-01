@@ -135,7 +135,9 @@ async def veritabanindan_dogrula(kart_id: str) -> None:
             uuid.UUID(kart_id),
         )
         ciktilar = await baglanti.fetch(
-            "SELECT baslik, kanit_linki FROM somut_cikti WHERE yetenek_karti_id = $1",
+            "SELECT c.baslik, array_remove(array_agg(p.url), NULL) AS kanitlar "
+            "FROM somut_cikti c LEFT JOIN kanit_parcasi p ON p.somut_cikti_id = c.id "
+            "WHERE c.yetenek_karti_id = $1 GROUP BY c.id, c.baslik",
             uuid.UUID(kart_id),
         )
     finally:

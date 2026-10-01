@@ -1,11 +1,16 @@
 """Doğrulama uç noktaları (docs/api-contracts.md § Doğrulama).
 
 Akışlar docs/sequence-diagrams.md § Akış 2'den:
-  kanıt ekle → ön rubrik + referans isteği → (yanıt | zaman aşımı) → itiraz.
+  kanıt ekle → değerlendirme + referans isteği → (yanıt | zaman aşımı) → itiraz.
 
-Uç ince: şema, sahiplik, commit ve servis istisnalarının HTTP'ye çevrilmesi
-(404, 409, 429). Orkestrasyon `app/servisler/dogrulama/`'da, kurallar
-`app/agents/dogrulama/`'da.
+Uç ince: şema, sahiplik, commit, arka plan işi ve servis istisnalarının HTTP'ye
+çevrilmesi (404, 409, 429). Orkestrasyon `app/servisler/dogrulama/`'da, kurallar
+`app/agents/dogrulama/`'da. Kanıt yalnızca `servisler/dogrulama/parcalar.py`
+üzerinden eklenir ve kaldırılır (tek kapı).
+
+Gösterge her değiştiğinde (kanıt, değerlendirme, itiraz, referans yanıtı) kart
+sürümü artar ve commit'ten sonra kart hazırlama arka planda çalışır: uyum skoru
+doğrulama bonusunu içerir, eşleşmeler de tazelenmeli (bulgu 26).
 
 Zaman aşımı için zamanlayıcı yok: `bekliyor` → `yanit_yok` geçişi kanıt
 durumu okunduğu anda hesaplanıyor (Eşleştirme'deki cron'suz yaklaşımın aynısı).
@@ -17,7 +22,7 @@ import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -36,18 +41,25 @@ from app.schemas.dogrulama import (
     GuvenSkoruYaniti,
     ItirazIstegi,
     KanitDurumuYaniti,
-    KanitEkleIstegi,
+    KanitLinkiIstegi,
+    KanitParcasiYaniti,
     ReferansDurumuYaniti,
+    ReferansIstegiGirdisi,
     ReferansIstegiYaniti,
     ReferansYanitiIstegi,
     ReferansYanitiSonucu,
     ReferansYenidenIsteIstegi,
 )
 from app.servisler import dogrulama as dogrulama_servisi
+from app.servisler import kart_duzenleme, kart_hazirlama
 from app.servisler.dogrulama import (
     CiktiBulunamadi,
+    DegerlendirilecekKanitYok,
+    KanitBulunamadi,
+    KanitZatenVar,
     ReferansYenidenIstenemez,
     referans_guncel_mi,
+    yeniden_isteme_engeli,
     zaman_asimini_isle,
     zaman_asimlarini_isle,
 )
@@ -55,38 +67,128 @@ from app.servisler.dogrulama import (
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
 
 CIKTI_BULUNAMADI = "Çalışma bulunamadı."
+KANIT_BULUNAMADI = "Kanıt bulunamadı."
 
 # Referans kişiye gönderilecek girişsiz yanıt adresi. Gerçek e-posta
-# göndermiyoruz (SMTP yok, MVP kararı) — link API yanıtında dönüyor.
+# göndermiyoruz (SMTP yok, MVP kararı; adım 7'de değişir) — link API yanıtında dönüyor.
 YANIT_YOLU = "/dogrulama/referans-yaniti?token={token}"
 
 
-@router.post("/kanit-ekle", response_model=KanitDurumuYaniti, status_code=201)
-async def kanit_ekle(
-    istek: KanitEkleIstegi,
+# --- Kalem (çalışma) uçları -------------------------------------------------------------
+
+
+@router.get("/kalem/{somut_cikti_id}", response_model=KanitDurumuYaniti)
+async def kalem_durumu(
+    somut_cikti_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
+) -> KanitDurumuYaniti:
+    """Çalışmanın kanıtları, güven göstergesi ve referans istekleri.
+
+    Yalnızca çalışmanın sahibi genç ve GİRVAK. Kurum 403: göstergeyi kart
+    görünümünden zaten görüyor; referans e-postaları ve token'lı yanıt
+    linkleri kuruma hiç gitmez (docs/faz-b-kimlik-ve-dongu.md § 3, not ²).
+    Zaman aşımına uğramış referans istekleri bu okuma sırasında `yanit_yok` olur.
+    """
+    await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id, girvak_okuyabilir=True)
+    return await _durum_yaniti(oturum, somut_cikti_id, None)
+
+
+@router.post("/kalem/{somut_cikti_id}/kanit", response_model=KanitDurumuYaniti, status_code=201)
+async def kanit_linki_ekle(
+    somut_cikti_id: uuid.UUID,
+    istek: KanitLinkiIstegi,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
-    """Kanıtı kaydeder, erişilebilirliğini sınar, ön rubrik puanını üretir.
+    """Link parçası ekler ve çalışmayı hemen değerlendirir. Aynı link ikinci kez 409.
 
-    Yalnızca çıktının sahibi genç; başkasının çıktısı 404.
+    Kanıt iddiayı değiştirmez: referans yanıtları geçerli kalır (plan § 2).
     """
-    cikti = await _sahibinin_ciktisi(oturum, hesap, istek.somut_cikti_id)
-    with _hiz_siniri_429():
-        kontrol = await dogrulama_servisi.kanit_ekle(
-            oturum,
-            cikti,
-            kanit_linki=istek.kanit_linki,
-            kanit_turu=istek.kanit_turu,
-            referans_email=str(istek.referans_email) if istek.referans_email else None,
-        )
+    cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
+    try:
+        with _hiz_siniri_429():
+            kontrol = await dogrulama_servisi.kanit_linki_ekle(cikti, istek.url)
+    except KanitZatenVar as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
+    await _gosterge_degisti(oturum, cikti, arka_plan)
+    return await _durum_yaniti(oturum, somut_cikti_id, kontrol.erisilebilir)
+
+
+@router.delete("/kalem/{somut_cikti_id}/kanit/{parca_id}", response_model=KanitDurumuYaniti)
+async def kanit_parcasini_sil(
+    somut_cikti_id: uuid.UUID,
+    parca_id: uuid.UUID,
+    arka_plan: BackgroundTasks,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> KanitDurumuYaniti:
+    """Parçayı kaldırır; başka link kaldıysa onunla yeniden değerlendirir."""
+    cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
+    try:
+        with _hiz_siniri_429():
+            kontrol = await dogrulama_servisi.kanit_parcasini_sil(cikti, parca_id)
+    except KanitBulunamadi as hata:
+        raise bulunamadi(KANIT_BULUNAMADI) from hata
+    await _gosterge_degisti(oturum, cikti, arka_plan)
+    return await _durum_yaniti(oturum, somut_cikti_id, kontrol.erisilebilir if kontrol else None)
+
+
+@router.post("/kalem/{somut_cikti_id}/degerlendir", response_model=KanitDurumuYaniti)
+async def degerlendir(
+    somut_cikti_id: uuid.UUID,
+    arka_plan: BackgroundTasks,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> KanitDurumuYaniti:
+    """Çalışmayı mevcut kanıtıyla değerlendirir (henüz değerlendirilmemiş kalem için)."""
+    cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
+    with _degerlendirme_hatalari():
+        kontrol = await dogrulama_servisi.degerlendir(cikti)
+    await _gosterge_degisti(oturum, cikti, arka_plan)
+    return await _durum_yaniti(oturum, somut_cikti_id, kontrol.erisilebilir)
+
+
+@router.post("/kalem/{somut_cikti_id}/itiraz", response_model=KanitDurumuYaniti)
+async def itiraz(
+    somut_cikti_id: uuid.UUID,
+    istek: ItirazIstegi,
+    arka_plan: BackgroundTasks,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> KanitDurumuYaniti:
+    """Genç değerlendirmeye itiraz eder; rubrik yeniden hesaplanır (servis: itiraz.py)."""
+    cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
+    with _degerlendirme_hatalari():
+        kontrol = await dogrulama_servisi.itiraz_et(cikti, aciklama=istek.aciklama)
+    await _gosterge_degisti(oturum, cikti, arka_plan)
+    return await _durum_yaniti(oturum, somut_cikti_id, kontrol.erisilebilir)
+
+
+@router.post("/kalem/{somut_cikti_id}/referans", response_model=KanitDurumuYaniti, status_code=201)
+async def referans_iste(
+    somut_cikti_id: uuid.UUID,
+    istek: ReferansIstegiGirdisi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> KanitDurumuYaniti:
+    """Referans ister. Göstergeye dokunmaz, model çağrılmaz (bulgu 16)."""
+    cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
+    dogrulama_servisi.referans_iste(cikti, str(istek.referans_email))
+    await dogrulama_servisi.kanit_bekleyeni_guncelle(oturum, cikti.yetenek_karti_id)
     await oturum.commit()
-    return await _durum_yaniti(oturum, cikti.id, kontrol.erisilebilir)
+    return await _durum_yaniti(oturum, somut_cikti_id, None)
+
+
+# --- Referans uçları --------------------------------------------------------------------
 
 
 @router.post("/referans-yaniti", response_model=ReferansYanitiSonucu)
 async def referans_yaniti(
-    istek: ReferansYanitiIstegi, oturum: AsyncSession = Depends(get_session)
+    istek: ReferansYanitiIstegi,
+    arka_plan: BackgroundTasks,
+    oturum: AsyncSession = Depends(get_session),
 ) -> ReferansYanitiSonucu:
     """Token ile bulunur, giriş gerektirmez (api-contracts.md § Mimari Notlar).
 
@@ -113,8 +215,9 @@ async def referans_yaniti(
     except CiktiBulunamadi as hata:
         raise bulunamadi(CIKTI_BULUNAMADI) from hata
 
-    await oturum.commit()
-    return ReferansYanitiSonucu(baslik=cikti.baslik, durum=referans.durum)
+    baslik, durum = cikti.baslik, referans.durum
+    await _gosterge_degisti(oturum, cikti, arka_plan)
+    return ReferansYanitiSonucu(baslik=baslik, durum=durum)
 
 
 @router.get("/referans/{token}", response_model=ReferansIstegiYaniti)
@@ -145,41 +248,6 @@ async def referans_istegi_goruntule(
     return referans_gorunumu(referans)
 
 
-@router.get("/kanit/{somut_cikti_id}", response_model=KanitDurumuYaniti)
-async def kanit_durumu(
-    somut_cikti_id: uuid.UUID,
-    hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_GIRVAK)),
-    oturum: AsyncSession = Depends(get_session),
-) -> KanitDurumuYaniti:
-    """Kanıtın güncel durumu: rubrik ve referans istekleri (e-postalar, yanıt linkleri).
-
-    Yalnızca çıktının sahibi genç ve GİRVAK. Kurum 403: rubriği yetenek kartı
-    görünümünden zaten görüyor; referans e-postaları ve token'lı yanıt
-    linkleri kuruma hiç gitmez (docs/faz-b-kimlik-ve-dongu.md § 3, not ²).
-
-    Zaman aşımına uğramış referans istekleri bu okuma sırasında `yanit_yok`
-    olarak işaretlenir — ayrı bir zamanlayıcı kurmuyoruz (bilinçli).
-    """
-    await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id, girvak_okuyabilir=True)
-    return await _durum_yaniti(oturum, somut_cikti_id, None)
-
-
-@router.post("/itiraz", response_model=KanitDurumuYaniti)
-async def itiraz(
-    istek: ItirazIstegi,
-    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
-    oturum: AsyncSession = Depends(get_session),
-) -> KanitDurumuYaniti:
-    """Genç değerlendirmeye itiraz eder; rubrik yeniden hesaplanır (servis: itiraz.py)."""
-    cikti = await _sahibinin_ciktisi(oturum, hesap, istek.somut_cikti_id)
-    with _hiz_siniri_429():
-        kontrol = await dogrulama_servisi.itiraz_et(
-            oturum, cikti, yeni_kanit_linki=istek.yeni_kanit_linki, aciklama=istek.aciklama
-        )
-    await oturum.commit()
-    return await _durum_yaniti(oturum, cikti.id, kontrol.erisilebilir)
-
-
 @router.post("/referans-yeniden-iste", response_model=KanitDurumuYaniti, status_code=201)
 async def referans_yeniden_iste(
     istek: ReferansYenidenIsteIstegi,
@@ -204,14 +272,14 @@ async def referans_yeniden_iste(
     return await _durum_yaniti(oturum, cikti.id, None)
 
 
-# --- Ortak parçalar --------------------------------------------------------
+# --- Ortak parçalar ---------------------------------------------------------------------
 
 
 @contextmanager
 def _hiz_siniri_429() -> Iterator[None]:
-    """Rubrik yazılırken hız sınırı 429 olur.
+    """Değerlendirme sırasında hız sınırı 429 olur; değişiklik kaydedilmez.
 
-    Burada sessizce puansız devam etmek yanlış olurdu: kullanıcı kanıtının
+    Burada sessizce değerlendirmesiz devam etmek yanlış olurdu: genç kanıtının
     değerlendirilmediğini bilmeli.
     """
     try:
@@ -221,6 +289,26 @@ def _hiz_siniri_429() -> Iterator[None]:
             status_code=429,
             detail=f"Kanıt değerlendirilemedi. {HIZ_SINIRI_MESAJI}",
         ) from hata
+
+
+@contextmanager
+def _degerlendirme_hatalari() -> Iterator[None]:
+    """Değerlendirme ve itirazın ortak çevirisi: kanıt yoksa 409, hız sınırı 429."""
+    try:
+        with _hiz_siniri_429():
+            yield
+    except DegerlendirilecekKanitYok as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
+
+
+async def _gosterge_degisti(
+    oturum: AsyncSession, cikti: SomutCikti, arka_plan: BackgroundTasks
+) -> None:
+    """Kart sürümü artar, commit, sonra kart hazırlama (yeniden eşleştirme) arka planda."""
+    kart_id = cikti.yetenek_karti_id
+    versiyon = await kart_duzenleme.gosterge_degisti(oturum, kart_id)
+    await oturum.commit()
+    arka_plan.add_task(kart_hazirlama.karti_hazirla, kart_id, versiyon)
 
 
 def referans_gorunumu(referans: ReferansIstegi) -> ReferansIstegiYaniti:
@@ -267,23 +355,14 @@ async def _durum_yaniti(
     if zaman_asimlarini_isle(cikti.referans_istekleri):
         await oturum.commit()
 
+    kart = await oturum.get(YetenekKarti, cikti.yetenek_karti_id)
     skor = cikti.guven_skoru
     return KanitDurumuYaniti(
         somut_cikti_id=cikti.id,
         baslik=cikti.baslik,
-        kanit_linki=cikti.kanit_linki,
+        kanitlar=[KanitParcasiYaniti.model_validate(p) for p in cikti.kanit_parcalari],
         link_erisilebilir=link_erisilebilir,
-        guven_skoru=(
-            GuvenSkoruYaniti(
-                kanit_orijinalligi=skor.kanit_orijinalligi,
-                sonuc_olculebilirligi=skor.sonuc_olculebilirligi,
-                rol_netligi=skor.rol_netligi,
-                ucuncu_taraf_onayi=skor.ucuncu_taraf_onayi,
-                gerekce_metni=skor.gerekce_metni,
-            )
-            if skor is not None
-            else None
-        ),
+        guven_skoru=GuvenSkoruYaniti.model_validate(skor) if skor is not None else None,
         referanslar=[
             ReferansDurumuYaniti(
                 id=referans.id,
@@ -294,7 +373,9 @@ async def _durum_yaniti(
                 olusturma_tarihi=referans.olusturma_tarihi,
                 yanit_linki=YANIT_YOLU.format(token=referans.token),
                 guncel=referans_guncel_mi(cikti, referans),
+                yeniden_istenebilir=yeniden_isteme_engeli(cikti, referans) is None,
             )
             for referans in cikti.referans_istekleri
         ],
+        kart_kanit_bekleyen=bool(kart and kart.kanit_bekleyen),
     )

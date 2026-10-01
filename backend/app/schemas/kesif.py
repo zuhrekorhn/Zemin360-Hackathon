@@ -9,7 +9,7 @@ from pydantic import BaseModel, BeforeValidator, Field
 
 from app.core.is_kalemi import IsTuru, is_turu_hosgorulu
 from app.core.musaitlik import KatiMusaitlikler
-from app.schemas.dogrulama import GuvenSkoruYaniti
+from app.schemas.dogrulama import GuvenSkoruYaniti, KanitParcasiYaniti
 from app.schemas.kart_duzenleme import DeneyimSeviyesi, DoluKisaMetin, Etiketler
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
 
@@ -103,13 +103,14 @@ class SomutCiktiYaniti(BaseModel):
     id: uuid.UUID
     baslik: str
     aciklama: str | None
-    kanit_linki: str | None
+    # Kanıt parçaları (link, ileride dosya / görsel); eklenme sırasıyla.
+    kanitlar: list[KanitParcasiYaniti] = Field(validation_alias="kanit_parcalari")
     is_turu: str | None = None
     olculebilir_sonuc: str | None = None
     kendi_rolu: str | None = None
     guven_skoru: GuvenSkoruYaniti | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 
 class YetenekKartiYaniti(BaseModel):

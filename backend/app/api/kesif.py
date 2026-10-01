@@ -44,6 +44,7 @@ from app.schemas.kesif import (
     YetenekKartiYaniti,
 )
 from app.servisler import kart_hazirlama
+from app.servisler.dogrulama.parcalar import link_parcasi_ekle
 from app.servisler.genc_karti import gencin_karti
 
 router = APIRouter(prefix="/kesif", tags=["kesif"])
@@ -223,11 +224,15 @@ def _is_kalemi(taslak: SomutCiktiTaslagi) -> SomutCikti:
     cikti = SomutCikti(
         baslik=taslak.baslik,
         aciklama=taslak.aciklama,
-        kanit_linki=taslak.kanit_linki,
         is_turu=taslak.is_turu,
         olculebilir_sonuc=taslak.olculebilir_sonuc,
         kendi_rolu=taslak.kendi_rolu,
+        kanit_parcalari=[],
+        referans_istekleri=[],
     )
+    if taslak.kanit_linki and taslak.kanit_linki.strip():
+        # Kanıt tek kapıdan girer (app/servisler/dogrulama/parcalar.py).
+        link_parcasi_ekle(cikti, taslak.kanit_linki)
     eposta = gecerli_eposta(taslak.referans_email)
     if eposta:
         cikti.referans_istekleri.append(ReferansIstegi(referans_email=eposta))

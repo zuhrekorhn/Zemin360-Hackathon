@@ -447,7 +447,8 @@ export type SomutCiktiYaniti = {
   id: string;
   baslik: string;
   aciklama: string | null;
-  kanit_linki: string | null;
+  /** Kanıt parçaları (link; ileride dosya ve görsel), eklenme sırasıyla. */
+  kanitlar: KanitParcasi[];
   is_turu?: string | null;
   olculebilir_sonuc?: string | null;
   kendi_rolu?: string | null;
@@ -511,9 +512,14 @@ export type IsKalemiGirdisi = {
   aciklama?: string | null;
   olculebilir_sonuc?: string | null;
   kendi_rolu?: string | null;
+  /** Yeni çalışmada verilirse ilk kanıt parçası olur. */
   kanit_linki?: string | null;
   is_turu?: string | null;
 };
+
+/** İddianın düzenlenebilir alanları. Kanıt burada değil: kanıt bölümünden
+ *  (tek kapı) eklenir ve kaldırılır. */
+export type IsKalemiGuncellemesi = Partial<Omit<IsKalemiGirdisi, "kanit_linki">>;
 
 /** PATCH /yetenek-kartlari/{id} */
 export function kartGuncelle(
@@ -541,7 +547,7 @@ export function isKalemiEkle(
 export function isKalemiGuncelle(
   kartId: string,
   ciktiId: string,
-  girdi: Partial<IsKalemiGirdisi>,
+  girdi: IsKalemiGuncellemesi,
 ): Promise<YetenekKartiYaniti> {
   return apiIstek<YetenekKartiYaniti>(
     `/yetenek-kartlari/${kartId}/ciktilar/${ciktiId}`,
@@ -726,6 +732,16 @@ export type GuvenSkoru = {
   gerekce_metni: string | null;
 };
 
+/** Bir kanıt parçası. `erisim` ve `platform` kanıt okuyucusu gelince dolar. */
+export type KanitParcasi = {
+  id: string;
+  /** "link" | "dosya" | "gorsel" */
+  tur: string;
+  url: string | null;
+  platform?: string | null;
+  erisim?: string | null;
+};
+
 export type ReferansDurumu = {
   id: string;
   referans_email: string;
@@ -738,22 +754,19 @@ export type ReferansDurumu = {
   yanit_linki: string | null;
   /** false: yanıt iş kaleminin önceki hâline verildi; güven göstergesine girmez. */
   guncel: boolean;
+  /** "Yeniden iste" düğmesi; kural backend'de, arayüz tekrar etmez. */
+  yeniden_istenebilir: boolean;
 };
 
 export type KanitDurumu = {
   somut_cikti_id: string;
   baslik: string;
-  kanit_linki: string | null;
+  kanitlar: KanitParcasi[];
   link_erisilebilir: boolean | null;
   guven_skoru: GuvenSkoru | null;
   referanslar: ReferansDurumu[];
-};
-
-export type KanitEkleGirdisi = {
-  somut_cikti_id: string;
-  kanit_linki?: string | null;
-  kanit_turu?: string | null;
-  referans_email?: string | null;
+  /** Kartın "Kanıt bekliyor" rozeti (sayfa yenilenmeden güncellenir). */
+  kart_kanit_bekleyen: boolean;
 };
 
 /** Referans kişinin yanıt vermeden önce gördüğü bilgi — iletişim bilgisi yok. */
@@ -776,11 +789,50 @@ export function referansIstegiGetir(
   );
 }
 
-/** POST /dogrulama/kanit-ekle — kanıtı kaydeder, ön rubriği üretir. */
-export function kanitEkle(girdi: KanitEkleGirdisi): Promise<KanitDurumu> {
-  return apiIstek<KanitDurumu>("/dogrulama/kanit-ekle", {
+const kalemYolu = (id: string) => `/dogrulama/kalem/${id}`;
+
+/** GET /dogrulama/kalem/{id} — zaman aşımı bu okuma anında hesaplanır. */
+export function kalemDurumu(somutCiktiId: string): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>(kalemYolu(somutCiktiId), { cache: "no-store" });
+}
+
+/** POST /dogrulama/kalem/{id}/kanit — link ekler ve çalışmayı değerlendirir. */
+export function kanitLinkiEkle(
+  somutCiktiId: string,
+  url: string,
+): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>(`${kalemYolu(somutCiktiId)}/kanit`, {
     method: "POST",
-    body: JSON.stringify(girdi),
+    body: JSON.stringify({ url }),
+  });
+}
+
+/** DELETE /dogrulama/kalem/{id}/kanit/{parca} — kanıtı kaldırır. */
+export function kanitParcasiSil(
+  somutCiktiId: string,
+  parcaId: string,
+): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>(
+    `${kalemYolu(somutCiktiId)}/kanit/${parcaId}`,
+    { method: "DELETE" },
+  );
+}
+
+/** POST /dogrulama/kalem/{id}/degerlendir — mevcut kanıtla değerlendirir. */
+export function kalemiDegerlendir(somutCiktiId: string): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>(`${kalemYolu(somutCiktiId)}/degerlendir`, {
+    method: "POST",
+  });
+}
+
+/** POST /dogrulama/kalem/{id}/referans — referans ister; değerlendirme çalışmaz. */
+export function referansIste(
+  somutCiktiId: string,
+  referansEmail: string,
+): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>(`${kalemYolu(somutCiktiId)}/referans`, {
+    method: "POST",
+    body: JSON.stringify({ referans_email: referansEmail }),
   });
 }
 
@@ -792,26 +844,14 @@ export function referansYenidenIste(referansId: string): Promise<KanitDurumu> {
   });
 }
 
-/** GET /dogrulama/kanit/{id} — zaman aşımı bu okuma anında hesaplanır. */
-export function kanitDurumu(somutCiktiId: string): Promise<KanitDurumu> {
-  return apiIstek<KanitDurumu>(`/dogrulama/kanit/${somutCiktiId}`, {
-    cache: "no-store",
-  });
-}
-
-/** POST /dogrulama/itiraz — rubriği yeniden hesaplatır. */
+/** POST /dogrulama/kalem/{id}/itiraz — değerlendirmeyi yeniden hesaplatır. */
 export function itirazEt(
   somutCiktiId: string,
-  yeniKanitLinki?: string | null,
   aciklama?: string | null,
 ): Promise<KanitDurumu> {
-  return apiIstek<KanitDurumu>("/dogrulama/itiraz", {
+  return apiIstek<KanitDurumu>(`${kalemYolu(somutCiktiId)}/itiraz`, {
     method: "POST",
-    body: JSON.stringify({
-      somut_cikti_id: somutCiktiId,
-      yeni_kanit_linki: yeniKanitLinki ?? null,
-      aciklama: aciklama ?? null,
-    }),
+    body: JSON.stringify({ aciklama: aciklama ?? null }),
   });
 }
 

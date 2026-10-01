@@ -58,6 +58,7 @@ async def _sahibinin_karti(oturum: AsyncSession, hesap: Hesap, kart_id: uuid.UUI
         .options(
             selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru),
             selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.referans_istekleri),
+            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.kanit_parcalari),
         )
         .where(YetenekKarti.id == kart_id)
         .with_for_update(of=YetenekKarti)
@@ -100,7 +101,10 @@ async def guclendir(
     fırsatta öne çıkabileceği (app/agents/guclendirme.py). Yalnızca okur."""
     kart = await oturum.scalar(
         select(YetenekKarti)
-        .options(selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru))
+        .options(
+            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru),
+            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.kanit_parcalari),
+        )
         .where(YetenekKarti.id == kart_id)
     )
     if kart is None or not yetenek_kartinin_sahibi_mi(hesap, kart):
@@ -123,7 +127,7 @@ async def guclendir(
     }
     sonuc = []
     for cikti in kart.somut_ciktilar:
-        if cikti.kanit_linki:
+        if cikti.kanit_parcalari:
             continue
         sayi = one_cikacagi_firsat_sayisi(siralar, bonus_farki(gostergeler, cikti.id, pilot))
         sonuc.append(
@@ -187,7 +191,7 @@ async def is_kalemi_ekle(
     oturum: AsyncSession = Depends(get_session),
 ) -> YetenekKartiYaniti:
     kart = await _sahibinin_karti(oturum, hesap, kart_id)
-    duzenleme.is_kalemi_ekle(kart, istek.model_dump())
+    duzenleme.is_kalemi_ekle(kart, istek.model_dump(), kanit_linki=istek.kanit_linki)
     return await _sonuclandir(oturum, kart, True, arka_plan)
 
 
@@ -200,7 +204,8 @@ async def is_kalemini_guncelle(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> YetenekKartiYaniti:
-    """İçerik ya da link değişirse o kalemin güven göstergesi sıfırlanır; diğerleri korunur."""
+    """İddia değişirse o kalemin güven göstergesi sıfırlanır; diğerleri korunur.
+    Kanıt (link) burada değişmez: Doğrulama'nın kanıt bölümünden (tek kapı)."""
     kart = await _sahibinin_karti(oturum, hesap, kart_id)
     cikti = _is_kalemi(kart, cikti_id)
     gonderilen = {alan: getattr(istek, alan) for alan in istek.model_fields_set}

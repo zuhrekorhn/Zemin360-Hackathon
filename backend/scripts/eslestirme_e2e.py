@@ -20,6 +20,7 @@ LLM: yalnızca gerekçe üretiminde (güçlü katman), öneri başına bir çağ
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import os
 import sys
 import uuid
@@ -35,6 +36,7 @@ from app.models.guven_skoru import GuvenSkoru
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler.dogrulama.parcalar import link_parcasi_ekle
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -83,16 +85,20 @@ async def demo_karti_ekle() -> uuid.UUID:
         cikti = SomutCikti(
             baslik=DEMO["cikti_baslik"],
             aciklama=DEMO["cikti_aciklama"],
-            kanit_linki="https://ornek.com/demo-bot",
-            # Doğrulama Ajanı Faz 2'de bunu kendisi üretecek; burada skor elle
-            # veriliyor ki doğrulama bonusu gerçek SQL üzerinden denensin.
-            guven_skoru=GuvenSkoru(
-                kanit_orijinalligi=3,
-                sonuc_olculebilirligi=3,
-                rol_netligi=2,
-                ucuncu_taraf_onayi=1,
-                gerekce_metni="Demo veri — elle girildi.",
-            ),
+            kanit_parcalari=[],
+        )
+        # Kanıt tek kapıdan (app/servisler/dogrulama/parcalar.py). Parça eklemek
+        # göstergeyi yeniden değerlendirmeye aldığı için gösterge SONRA atanır.
+        link_parcasi_ekle(cikti, "https://ornek.com/demo-bot")
+        # Gösterge elle veriliyor ki doğrulama bonusu gerçek SQL üzerinden denensin;
+        # değerlendirme tarihi dolu: kart hazırlama bu kalemi yeniden puanlamaz.
+        cikti.guven_skoru = GuvenSkoru(
+            kanit_orijinalligi=3,
+            sonuc_olculebilirligi=3,
+            rol_netligi=2,
+            ucuncu_taraf_onayi=1,
+            gerekce_metni="Demo veri — elle girildi.",
+            degerlendirme_tarihi=dt.datetime.now(dt.UTC),
         )
         kart = YetenekKarti(
             kullanici_id=kullanici.id,

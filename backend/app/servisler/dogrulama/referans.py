@@ -105,14 +105,18 @@ async def referans_yanitla(
     return cikti
 
 
-def referansi_yeniden_iste(cikti: SomutCikti, referans: ReferansIstegi) -> ReferansIstegi:
-    """Aynı kişiye yeni istek (yeni token); eski yanıt geçmiş olarak kalır.
+def referans_iste(cikti: SomutCikti, referans_email: str) -> ReferansIstegi:
+    """Yeni referans isteği açar. Göstergeye dokunmaz, model çağrılmaz (bulgu 16):
+    referans eklemek Kanıt, Sonuç ve Rol'ü yeniden hesaplatmaz."""
+    istek = ReferansIstegi(referans_email=referans_email)
+    cikti.referans_istekleri.append(istek)
+    return istek
 
-    Anlamlı değilse `ReferansYenidenIstenemez` (kural:
-    `referans_yeniden_istenebilir_mi`). Rubrik yeniden çalışmaz.
-    """
-    zaman_asimini_isle(referans)
-    engel = referans_yeniden_istenebilir_mi(
+
+def yeniden_isteme_engeli(cikti: SomutCikti, referans: ReferansIstegi) -> str | None:
+    """Bu istek yeniden istenebilir mi? Değilse nedeni (kural:
+    `referans_yeniden_istenebilir_mi`). Uç ve arayüz düğmesi aynı yanıtı kullanır."""
+    return referans_yeniden_istenebilir_mi(
         durum=referans.durum,
         guncel=referans_guncel_mi(cikti, referans),
         ayni_kisiden_bekleyen_var=any(
@@ -122,6 +126,15 @@ def referansi_yeniden_iste(cikti: SomutCikti, referans: ReferansIstegi) -> Refer
             for r in cikti.referans_istekleri
         ),
     )
+
+
+def referansi_yeniden_iste(cikti: SomutCikti, referans: ReferansIstegi) -> ReferansIstegi:
+    """Aynı kişiye yeni istek (yeni token); eski yanıt geçmiş olarak kalır.
+
+    Anlamlı değilse `ReferansYenidenIstenemez`. Rubrik yeniden çalışmaz.
+    """
+    zaman_asimini_isle(referans)
+    engel = yeniden_isteme_engeli(cikti, referans)
     if engel:
         raise ReferansYenidenIstenemez(engel)
     yeni = ReferansIstegi(referans_email=referans.referans_email)

@@ -15,6 +15,9 @@ from __future__ import annotations
 import re
 from urllib.parse import parse_qsl, urlencode, urlsplit
 
+# Kanıt linkinin en büyük uzunluğu (şema ve servis aynı sınırı kullanır).
+KANIT_LINKI_UZUNLUGU = 500
+
 _IZLEME_PARAMETRELERI = frozenset({"fbclid", "gclid", "mc_cid", "mc_eid", "igshid", "si"})
 _SEMA = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
 

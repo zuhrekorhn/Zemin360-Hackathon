@@ -45,7 +45,8 @@ class KartGuncelleme(BaseModel):
 
 
 class IsKalemiGirdisi(BaseModel):
-    """Formdan yeni iş kalemi. Referans kart sayfasının referans akışıyla eklenir."""
+    """Formdan yeni iş kalemi. Link verilirse ilk kanıt parçası olur; referans kart
+    sayfasının referans akışıyla eklenir."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -60,7 +61,11 @@ class IsKalemiGirdisi(BaseModel):
 
 
 class IsKalemiGuncelleme(BaseModel):
-    """Yalnızca gönderilen alan değişir; opsiyonel alan `null` ya da `""` ile silinir."""
+    """Yalnızca gönderilen alan değişir; opsiyonel alan `null` ya da `""` ile silinir.
+
+    Kanıt linki burada yok: kanıt parçaları kart sayfasının kanıt bölümünden
+    (/dogrulama/kalem/{id}/kanit) eklenir ve kaldırılır (bulgu 25).
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -68,7 +73,4 @@ class IsKalemiGuncelleme(BaseModel):
     aciklama: Metin | None = None
     olculebilir_sonuc: Metin | None = None
     kendi_rolu: Metin | None = None
-    kanit_linki: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None = (
-        None
-    )
     is_turu: IsTuru | None = None

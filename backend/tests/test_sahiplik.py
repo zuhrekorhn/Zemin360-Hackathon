@@ -259,25 +259,37 @@ def test_kanit_durumu_yalnizca_sahibi_ve_girvak():
         await durumlar(
             istemci,
             "GET",
-            f"/dogrulama/kanit/{d.C1.id}",
+            f"/dogrulama/kalem/{d.C1.id}",
             {None: 401, d.genc1: 200, d.genc2: 404, d.kurum1: 403, d.girvak: 200},
         )
 
     senaryo(adimlar)
 
 
-def test_kanit_ekle_ve_itiraz_yalnizca_sahibi():
+def test_kanit_degerlendirme_itiraz_ve_referans_yalnizca_sahibi():
     """Başarı yolu link kontrolü ve LLM çağırdığı için burada değil."""
 
     async def adimlar(istemci, d):
-        for yol in ("/dogrulama/kanit-ekle", "/dogrulama/itiraz"):
+        kalem = f"/dogrulama/kalem/{d.C1.id}"
+        for yol, govde in (
+            (f"{kalem}/kanit", {"url": "https://ornek.com"}),
+            (f"{kalem}/degerlendir", None),
+            (f"{kalem}/itiraz", {"aciklama": "Rolüm açıklamada yazıyor."}),
+            (f"{kalem}/referans", {"referans_email": "hoca@ornek.edu.tr"}),
+        ):
             await durumlar(
                 istemci,
                 "POST",
                 yol,
                 {None: 401, d.kurum1: 403, d.girvak: 403, d.genc2: 404},
-                json={"somut_cikti_id": str(d.C1.id), "kanit_linki": "https://ornek.com"},
+                json=govde,
             )
+        await durumlar(
+            istemci,
+            "DELETE",
+            f"{kalem}/kanit/{uuid.uuid4()}",
+            {None: 401, d.kurum1: 403, d.girvak: 403, d.genc2: 404},
+        )
 
     senaryo(adimlar)
 

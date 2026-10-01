@@ -6,6 +6,7 @@ import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import { KartOnizleme } from "@/components/kesif/kart-onizleme";
 import { Button } from "@/components/ui/button";
 import { type YetenekKartiYaniti, yetenekKartiHazirla } from "@/lib/api";
+import { kayitliCiktiTaslagi } from "@/lib/kanit";
 
 /** Onaydan hemen sonra: kaydedilen kart ve kart sayfasına geçiş. */
 export function KayitliKart({
@@ -41,7 +42,7 @@ export function KayitliKart({
           araclar_teknolojiler: kart.araclar_teknolojiler,
           sertifikalar: kart.sertifikalar,
           diller: kart.diller,
-          somut_ciktilar: kart.somut_ciktilar,
+          somut_ciktilar: kart.somut_ciktilar.map(kayitliCiktiTaslagi),
         }}
       />
 

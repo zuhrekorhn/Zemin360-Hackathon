@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import {
   type KanitDurumu,
   type YetenekKartiYaniti,
-  kanitDurumu,
+  kalemDurumu,
   yetenekKartiGetir,
   yetenekKartiHazirla,
 } from "@/lib/api";
@@ -89,7 +89,7 @@ function KartIcerigi() {
         // Zaman aşımı (bekliyor → yanit_yok) bu okuma anında hesaplanıyor;
         // ayrı bir zamanlayıcı yok (bilinçli, bkz. CLAUDE.md).
         const durumlar = await Promise.all(
-          gelen.somut_ciktilar.map((cikti) => kanitDurumu(cikti.id)),
+          gelen.somut_ciktilar.map((cikti) => kalemDurumu(cikti.id)),
         );
         setKanitlar(
           Object.fromEntries(
@@ -122,16 +122,18 @@ function KartIcerigi() {
       ...oncekiler,
       [durum.somut_cikti_id]: durum,
     }));
-    // Rubrik kart görünümünde de duruyor; iki yerde farklı puan görünmesin.
+    // Gösterge ve kanıtlar kart görünümünde de duruyor; iki yerde farklı
+    // görünmesin. "Kanıt bekliyor" rozeti de yanıttan güncellenir.
     setKart((onceki) =>
       onceki
         ? {
             ...onceki,
+            kanit_bekleyen: durum.kart_kanit_bekleyen,
             somut_ciktilar: onceki.somut_ciktilar.map((cikti) =>
               cikti.id === durum.somut_cikti_id
                 ? {
                     ...cikti,
-                    kanit_linki: durum.kanit_linki,
+                    kanitlar: durum.kanitlar,
                     guven_skoru: durum.guven_skoru,
                   }
                 : cikti,
@@ -293,7 +295,7 @@ function KartIcerigi() {
                   {sahibi ? (
                     <KanitBolumu
                       somutCiktiId={cikti.id}
-                      mevcutLink={cikti.kanit_linki}
+                      kanitlar={cikti.kanitlar}
                       durum={kanitlar[cikti.id]}
                       onDurum={kanidiGuncelle}
                       onHata={setHata}

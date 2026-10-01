@@ -4,18 +4,43 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from typing import Annotated
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
+
+from app.core.kanit_okuma.adres import KANIT_LINKI_UZUNLUGU
+
+KanitLinki = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=KANIT_LINKI_UZUNLUGU)
+]
 
 
-class KanitEkleIstegi(BaseModel):
-    """Mevcut bir somut çıktıya kanıt (ve isteğe bağlı referans) ekler."""
+class KanitLinkiIstegi(BaseModel):
+    """Çalışmaya link parçası ekler (POST /dogrulama/kalem/{id}/kanit)."""
 
-    somut_cikti_id: uuid.UUID
-    kanit_linki: str | None = None
-    kanit_turu: str | None = None
-    # Verilirse tek kullanımlık referans isteği açılır
-    referans_email: EmailStr | None = None
+    model_config = ConfigDict(extra="forbid")
+
+    url: KanitLinki
+
+
+class ReferansIstegiGirdisi(BaseModel):
+    """Çalışma için referans ister (POST /dogrulama/kalem/{id}/referans). Model çağrılmaz."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    referans_email: EmailStr
+
+
+class KanitParcasiYaniti(BaseModel):
+    """Bir kanıt parçası. `erisim` ve `platform` okuyucu zinciri gelince dolar (adım 5)."""
+
+    id: uuid.UUID
+    tur: str
+    url: str | None
+    platform: str | None = None
+    erisim: str | None = None
+
+    model_config = {"from_attributes": True}
 
 
 class GuvenSkoruYaniti(BaseModel):
@@ -47,6 +72,9 @@ class ReferansDurumuYaniti(BaseModel):
     # False: yanıt iş kaleminin önceki hâli için verildi; geçmiş olarak görünür,
     # güven göstergesine girmez (plan § 0, karar 8). Genç yeniden isteyebilir.
     guncel: bool = True
+    # "Referansı yeniden iste" düğmesi; kural backend'de tek yerde
+    # (referans_yeniden_istenebilir_mi), arayüz tekrar etmez (bulgu 30).
+    yeniden_istenebilir: bool = False
 
 
 class ReferansYenidenIsteIstegi(BaseModel):
@@ -56,10 +84,14 @@ class ReferansYenidenIsteIstegi(BaseModel):
 class KanitDurumuYaniti(BaseModel):
     somut_cikti_id: uuid.UUID
     baslik: str
-    kanit_linki: str | None
+    kanitlar: list[KanitParcasiYaniti]
+    # Bu istekte okunan linkin açılıp açılmadığı; okuma yapılmadıysa None.
     link_erisilebilir: bool | None
     guven_skoru: GuvenSkoruYaniti | None
     referanslar: list[ReferansDurumuYaniti]
+    # Kartın "Kanıt bekliyor" rozeti: kanıt ya da referans eklenince arayüz
+    # sayfayı yenilemeden günceller (bulgu 28).
+    kart_kanit_bekleyen: bool
 
 
 class ReferansIstegiYaniti(BaseModel):
@@ -114,7 +146,9 @@ class ReferansYanitiSonucu(BaseModel):
 
 
 class ItirazIstegi(BaseModel):
-    somut_cikti_id: uuid.UUID
-    # Kullanıcı kanıtı düzelttiyse yeni link; boşsa mevcut kanıt yeniden değerlendirilir
-    yeni_kanit_linki: str | None = None
-    aciklama: str | None = None
+    """Değerlendirmeye itiraz. Yeni kanıt burada değil, kanıt bölümünden parça olarak
+    eklenir (tek kapı, bulgu 25)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    aciklama: str | None = Field(default=None, max_length=1000)

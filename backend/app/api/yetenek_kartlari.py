@@ -54,6 +54,7 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiY
         select(YetenekKarti)
         .options(
             selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru),
+            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.kanit_parcalari),
             selectinload(YetenekKarti.kullanici),
         )
         .where(YetenekKarti.id == kart_id)

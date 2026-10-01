@@ -46,7 +46,7 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.servisler import eslestirme as eslestirme_servisi
-from app.servisler.dogrulama import ciktiyi_puanla
+from app.servisler.dogrulama import birincil_link, ciktiyi_puanla, degerlendirildi_mi
 
 logger = logging.getLogger("zemin360.kart_hazirlama")
 
@@ -102,12 +102,16 @@ async def _ciktiyi_puanla_bir_kez(oturum: AsyncSession, cikti_id: uuid.UUID) -> 
     cikti = await oturum.scalar(
         select(SomutCikti)
         # Referanslar: sıfırdan yazılan göstergede güncel yanıtlar sayılıyor.
-        .options(selectinload(SomutCikti.guven_skoru), selectinload(SomutCikti.referans_istekleri))
+        .options(
+            selectinload(SomutCikti.guven_skoru),
+            selectinload(SomutCikti.referans_istekleri),
+            selectinload(SomutCikti.kanit_parcalari),
+        )
         .where(SomutCikti.id == cikti_id)
         .with_for_update(of=SomutCikti)
         .execution_options(populate_existing=True)
     )
-    if cikti is None or not otomatik_puanlanir_mi(cikti.kanit_linki, cikti.guven_skoru is not None):
+    if cikti is None or not otomatik_puanlanir_mi(birincil_link(cikti), degerlendirildi_mi(cikti)):
         await oturum.rollback()  # kilidi bırak
         return
     try:

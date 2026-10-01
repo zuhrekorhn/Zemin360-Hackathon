@@ -22,7 +22,7 @@ def _cikti(**degisiklik) -> SomutCiktiYaniti:
         id=uuid.uuid4(),
         baslik="Kütüphane takip sistemi",
         aciklama=None,
-        kanit_linki=None,
+        kanitlar=[],
         **degisiklik,
     )
 

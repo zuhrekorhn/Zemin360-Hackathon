@@ -67,16 +67,16 @@ def is_kalemi_metni(cikti: IsKalemiMetni) -> str | None:
 
 
 class KanitliKalem(Protocol):
-    kanit_linki: str | None
+    kanit_parcalari: Sized
     referans_istekleri: Sized
 
 
 def kanit_bekliyor(kalemler: Iterable[KanitliKalem]) -> bool:
-    """Kart kanıt bekliyor mu: ne linki ne referans isteği olan bir iş kalemi var mı?
+    """Kart kanıt bekliyor mu: ne kanıt parçası ne referans isteği olan bir iş kalemi var mı?
 
     Sohbet gence "link ya da doğrulayabilecek birinin e-postası, ikisi de olur"
     diyor; referans veren gence yine "kanıt bekliyor" denmemeli. Yanıtı
     beklenen ya da gelmemiş referans da sayılır: genç yapabileceğini yaptı.
     Onay, kart düzenleme ve Doğrulama aynı kuralı buradan kullanır.
     """
-    return any(not kalem.kanit_linki and not kalem.referans_istekleri for kalem in kalemler)
+    return any(not kalem.kanit_parcalari and not kalem.referans_istekleri for kalem in kalemler)

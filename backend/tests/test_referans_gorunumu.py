@@ -12,6 +12,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.agents.dogrulama import DURUM_BEKLIYOR, DURUM_YANIT_YOK, DURUM_YANITLANDI
+from app.api import dogrulama as dogrulama_ucu
 from app.api.dogrulama import referans_gorunumu
 from app.db.session import get_session
 from app.main import app
@@ -71,6 +72,22 @@ def istemci(sonuc) -> TestClient:
 def _temizle():
     yield
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def gosterge_kancasi(monkeypatch):
+    """Sahte oturum kartı okuyamaz; gösterge kancasının çağrıları kaydedilir.
+
+    Kancanın kendisi (sürüm, kanıt bekliyor, gerekçe temizliği) veritabanlı
+    testlerde sınanıyor (tests/test_kanit_parcasi.py)."""
+    cagrilar: list = []
+
+    async def kaydet(_oturum, kart_id):
+        cagrilar.append(kart_id)
+        return 2
+
+    monkeypatch.setattr(dogrulama_ucu.kart_duzenleme, "gosterge_degisti", kaydet)
+    return cagrilar
 
 
 def test_iddia_referans_kisiye_gosteriliyor():
@@ -216,7 +233,7 @@ def test_yanit_sonrasi_baska_referansin_bilgisi_donmez():
     }
 
 
-def test_yanit_sonrasi_skor_yine_de_hesaplanir():
+def test_yanit_sonrasi_skor_yine_de_hesaplanir(gosterge_kancasi, kart_hazirlama_arka_plani_yok):
     """Gövde daraldı, hesap değişmedi: iki referansın ortalaması yazılır."""
     yanitlanan, cikti = _yanitlanan_ve_diger_referans()
     app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti, None)
@@ -225,6 +242,9 @@ def test_yanit_sonrasi_skor_yine_de_hesaplanir():
 
     # 5 -> 3, 2 -> 1 : ortalama 2
     assert cikti.guven_skoru.ucuncu_taraf_onayi == 2
+    # Gösterge değişti: kart sürümü artar, eşleşmeler arka planda tazelenir (bulgu 26).
+    assert gosterge_kancasi == [cikti.yetenek_karti_id]
+    assert kart_hazirlama_arka_plani_yok == [(cikti.yetenek_karti_id, 2, False)]
 
 
 def test_yanitin_zamani_kaydedilir():

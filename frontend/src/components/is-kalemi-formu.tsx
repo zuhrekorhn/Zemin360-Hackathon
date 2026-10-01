@@ -60,6 +60,7 @@ export function IsKalemiFormu({
   cikti,
   onDegis,
   referansGoster = true,
+  kanitGoster = true,
 }: {
   /** Aynı sayfada birden çok form varsa id'ler çakışmasın. */
   kimlik: string;
@@ -67,6 +68,8 @@ export function IsKalemiFormu({
   onDegis: (alan: keyof SomutCiktiTaslagi, deger: string) => void;
   /** Kayıtlı kalemde referans, kart sayfasının referans akışıyla eklenir. */
   referansGoster?: boolean;
+  /** Kayıtlı kalemde kanıt, kart sayfasının kanıt bölümünden eklenir (tek kapı). */
+  kanitGoster?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -89,24 +92,26 @@ export function IsKalemiFormu({
           </option>
         ))}
       </select>
-      {ALANLAR.filter((a) => referansGoster || a.ad !== "referans_email").map(
-        (alan) => (
-          <div key={alan.ad} className="flex flex-col gap-1">
-            <label
-              htmlFor={`${kimlik}-${alan.ad}`}
-              className="text-xs text-muted-foreground"
-            >
-              {alan.etiket}
-            </label>
-            <AlanKutusu
-              kimlik={`${kimlik}-${alan.ad}`}
-              alan={alan}
-              deger={(cikti[alan.ad] as string | null | undefined) ?? ""}
-              onDegis={(deger) => onDegis(alan.ad, deger)}
-            />
-          </div>
-        ),
-      )}
+      {ALANLAR.filter(
+        (a) =>
+          (referansGoster || a.ad !== "referans_email") &&
+          (kanitGoster || a.ad !== "kanit_linki"),
+      ).map((alan) => (
+        <div key={alan.ad} className="flex flex-col gap-1">
+          <label
+            htmlFor={`${kimlik}-${alan.ad}`}
+            className="text-xs text-muted-foreground"
+          >
+            {alan.etiket}
+          </label>
+          <AlanKutusu
+            kimlik={`${kimlik}-${alan.ad}`}
+            alan={alan}
+            deger={(cikti[alan.ad] as string | null | undefined) ?? ""}
+            onDegis={(deger) => onDegis(alan.ad, deger)}
+          />
+        </div>
+      ))}
     </div>
   );
 }

@@ -26,6 +26,7 @@
    - Linksiz iş kalemi puanlanmaz, "doğrulanmamış" nötr durumda kalır.
    - Linki olan iş kalemi, kart **onaylandığında ve düzenlendiğinde** arka planda otomatik puanlanır. Böylece "sohbette verilen link puanlanmıyor" açığı kapanır.
 8. **Referanslar:** İş kaleminin içeriği ya da linki değişince eski referans yanıtları puana girmez ama silinmez. Geçmiş olarak görünür kalır ve gence "referansı yeniden iste" seçeneği sunulur.
+   - **Güncelleme (1 Eki, Doğrulama iyileştirmesi adım 3):** "ya da linki" kalktı. Kanıt artık iddianın alanı değil, ayrı parçalar (`dogrulama-iyilestirme.md` § 2): kanıt eklemek ya da kaldırmak göstergeyi yeniden değerlendirir ama referans yanıtlarını geçmişe atmaz. Referansları geçmişe atan yalnızca iddianın (başlık, açıklama, sonuç, pay) değişmesi.
    - **Uygulama:** `somut_cikti.icerik_tarihi` (NULL = hiç değişmedi) ve `referans_istegi.yanit_tarihi` alanları eklenir.
    - **Kural:** Bir yanıt puana ancak iki durumda girer: `icerik_tarihi` NULL ise, ya da yanıt `icerik_tarihi`'nden sonra verildiyse.
 9. **Gerekçe metni** gence aynen gösterilir; ikinci bir LLM çağrısı yok. Arayüzdeki başlık nötr: "Bu eşleşmenin gerekçesi".
@@ -299,7 +300,7 @@ Sırasıyla:
 | `DELETE /yetenek-kartlari/{id}/ciktilar/{cid}` | kartın sahibi | |
 | `POST /kesif/is-ekle/baslat` · `/cevap` · `/onayla` | kartın sahibi | "Yeni iş ekle" mini sohbeti (§ 6.5) |
 
-Referans ekleme mevcut `POST /dogrulama/kanit-ekle` ile yapılmaya devam ediyor.
+Referans ekleme mevcut `POST /dogrulama/kanit-ekle` ile yapılmaya devam ediyor. (1 Eki güncellemesi: yerini `POST /dogrulama/kalem/{id}/referans` aldı; Doğrulama iyileştirmesi adım 3.)
 
 **Hata sözleşmesi:** Başkasının kartı ya da iş kalemi **404**, yanlış rol **403**, token yok **401**. Her uç için `test_sahiplik.py` deseniyle test yazılacak.
 

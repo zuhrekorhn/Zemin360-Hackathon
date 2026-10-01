@@ -76,17 +76,20 @@ export function eksikKartAlanlari(
   return eksikler;
 }
 
-/** Düzenleme formundaki alanlardan gerçekten değişenler (backend de aynı kuralı işletir). */
+/**
+ * Düzenleme formundaki alanlardan gerçekten değişenler (backend de aynı kuralı
+ * işletir). Yalnızca iddianın alanları: kanıt kanıt bölümünden eklenir ve
+ * kaldırılır (tek kapı).
+ */
 export function degisenIsKalemiAlanlari(
   eski: SomutCiktiTaslagi,
   yeni: SomutCiktiTaslagi,
-): Partial<SomutCiktiTaslagi> {
+): Partial<Omit<SomutCiktiTaslagi, "kanit_linki">> {
   const alanlar = [
     "baslik",
     "aciklama",
     "olculebilir_sonuc",
     "kendi_rolu",
-    "kanit_linki",
     "is_turu",
   ] as const;
   const normal = (deger: string | null | undefined) => deger?.trim() || null;
@@ -107,22 +110,16 @@ export function gostergeSifirlanir(
 }
 
 /**
- * Referans satırında ek not ve "yeniden iste" düğmesi. Backend'in kuralıyla
- * aynı: işin önceki hâline verilmiş yanıt ya da süresi dolmuş istek yeniden
- * istenebilir; güncel yanıt ya da bekleyen istek istenemez.
+ * Referans satırında ek not ve "yeniden iste" düğmesi. Düğmenin kuralı
+ * backend'de tek yerde (`yeniden_istenebilir`); burada tekrar edilmez.
  */
 export function referansSatiri(referans: ReferansDurumu): {
   not: string | null;
   yenidenIstenebilir: boolean;
 } {
-  if (referans.durum === "yanitlandi" && !referans.guncel) {
-    return {
-      not: "Bu yanıt çalışmanın önceki hâline verildi; güven göstergesine girmiyor.",
-      yenidenIstenebilir: true,
-    };
-  }
-  if (referans.durum === "yanit_yok") {
-    return { not: null, yenidenIstenebilir: true };
-  }
-  return { not: null, yenidenIstenebilir: false };
+  const eskiHaline =
+    referans.durum === "yanitlandi" && !referans.guncel
+      ? "Bu yanıt çalışmanın önceki hâline verildi; güven göstergesine girmiyor."
+      : null;
+  return { not: eskiHaline, yenidenIstenebilir: referans.yeniden_istenebilir };
 }

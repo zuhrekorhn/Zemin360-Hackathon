@@ -40,6 +40,7 @@ from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.servisler.dogrulama import ucuncu_taraf_puani
+from tests.kanit_yardimcisi import link_parcasi
 from tests.sahte_hesap import GENC_KAYIT_EKI
 from tests.veritabani import api_istemcisi, geri_alinan_oturum
 
@@ -64,7 +65,9 @@ def test_degisen_alanlar_yalnizca_gercek_degisiklik():
     ("degisenler", "sifirla"),
     [
         ({"aciklama"}, True),
-        ({"kanit_linki"}, True),
+        # Kanıt iddianın alanı değil: değişince gösterge yeniden değerlendirilir ama
+        # iddia sıfırlanmaz, referanslar geçerli kalır (plan § 2; parcalar.py).
+        ({"kanit_linki"}, False),
         ({"olculebilir_sonuc"}, True),
         ({"kendi_rolu"}, True),
         ({"baslik"}, True),
@@ -136,7 +139,7 @@ async def _genc_ve_kart(oturum):
     a = SomutCikti(
         baslik="Kütüphane",
         aciklama="Ödünç takibi",
-        kanit_linki="https://github.com/elif/kutuphane",
+        kanit_parcalari=[link_parcasi("https://github.com/elif/kutuphane")],
         guven_skoru=_skor(),
         referans_istekleri=[
             ReferansIstegi(
@@ -147,7 +150,11 @@ async def _genc_ve_kart(oturum):
             )
         ],
     )
-    b = SomutCikti(baslik="Kulüp sitesi", kanit_linki="https://kulup.org", guven_skoru=_skor())
+    b = SomutCikti(
+        baslik="Kulüp sitesi",
+        kanit_parcalari=[link_parcasi("https://kulup.org")],
+        guven_skoru=_skor(),
+    )
     kart = YetenekKarti(
         kullanici_id=kullanici.id,
         rol_alani="backend geliştirici",
@@ -211,7 +218,7 @@ def test_icerik_degisen_kalem_sifirlanir_digeri_korunur(kart_hazirlama_arka_plan
             assert len(kart_hazirlama_arka_plani_yok) == 2
 
             # Kanıt durumu eski yanıtı "güncel değil" diye gösterir.
-            durum = (await istemci.get(f"/dogrulama/kanit/{a_id}", headers=baslik)).json()
+            durum = (await istemci.get(f"/dogrulama/kalem/{a_id}", headers=baslik)).json()
             assert [r["guncel"] for r in durum["referanslar"]] == [False]
 
     asyncio.run(senaryo())
@@ -221,10 +228,11 @@ def test_referans_yeniden_istenir_ve_yeni_yanit_sayilir(kart_hazirlama_arka_plan
     async def senaryo():
         async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
             hesap, _, kart, a, _ = await _genc_ve_kart(oturum)
+            # İddia değişti: eski referans yanıtı geçmişte kalır (karar 8).
             await istemci.patch(
                 f"/yetenek-kartlari/{kart.id}/ciktilar/{a.id}",
                 headers=_baslik(hesap),
-                json={"kanit_linki": "https://github.com/elif/kutuphane-v2"},
+                json={"aciklama": "Ödünç takibi ve geç iade hatırlatması"},
             )
             eski = (await _ciktiyi_oku(oturum, a.id)).referans_istekleri[0]
 

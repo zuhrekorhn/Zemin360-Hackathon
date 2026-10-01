@@ -159,7 +159,9 @@ def test_referansi_olan_kalem_kanit_beklemez():
     """Sohbet "link ya da e-posta, ikisi de olur" diyor; ikisi de kanıt sayılır."""
 
     def kalem(link=None, referanslar=()):
-        return SimpleNamespace(kanit_linki=link, referans_istekleri=list(referanslar))
+        return SimpleNamespace(
+            kanit_parcalari=[link] if link else [], referans_istekleri=list(referanslar)
+        )
 
     assert kanit_bekliyor([kalem(link="https://github.com/elif/x")]) is False
     assert kanit_bekliyor([kalem(referanslar=["hoca@ornek.edu.tr"])]) is False

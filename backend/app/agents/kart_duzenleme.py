@@ -25,21 +25,22 @@ KART_ALANLARI: tuple[str, ...] = (
     "diller",
 )
 
-# İş kaleminin düzenlenebilir alanları.
+# İş kaleminin (iddianın) düzenlenebilir alanları. Kanıt burada değil:
+# parçalar Doğrulama'nın tek kapısından eklenir ve kaldırılır
+# (app/servisler/dogrulama/parcalar.py; bulgu 25).
 IS_KALEMI_ALANLARI: tuple[str, ...] = (
     "baslik",
     "aciklama",
     "olculebilir_sonuc",
     "kendi_rolu",
-    "kanit_linki",
     "is_turu",
 )
 
-# Değişince güven göstergesini sıfırlayanlar: iddianın kendisi ve kanıtı.
-# İş türü (proje, staj…) bir etiket; iddiayı değiştirmez.
-DOGRULAMAYI_SIFIRLAYANLAR = frozenset(
-    {"baslik", "aciklama", "olculebilir_sonuc", "kendi_rolu", "kanit_linki"}
-)
+# Değişince güven göstergesini sıfırlayan ve referans yanıtlarını geçmişe atanlar:
+# iddianın kendisi. İş türü (proje, staj…) bir etiket; iddiayı değiştirmez. Kanıt
+# değişikliği de iddiayı değiştirmez: gösterge yeniden değerlendirilir ama referans
+# yanıtları geçerli kalır (plan § 2: kanıt eklemek puanı hiçbir zaman düşürmez).
+DOGRULAMAYI_SIFIRLAYANLAR = frozenset({"baslik", "aciklama", "olculebilir_sonuc", "kendi_rolu"})
 
 # Değişince yeniden eşleştirme gerektiren profil alanları: sert filtreler.
 FILTRE_ALANLARI = frozenset({"sehir", "calisma_modelleri", "musaitlikler"})

@@ -7,10 +7,12 @@ plan işi (kart hazırlama) uçların işi: değişiklik ve yan etkileri aynı i
 from __future__ import annotations
 
 import datetime as dt
+import uuid
 from typing import Any
 
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.agents.eslestirme import DURUM_ONERILDI
 from app.agents.kart_duzenleme import (
@@ -24,6 +26,7 @@ from app.core.is_kalemi import kanit_bekliyor
 from app.models.eslesme import Eslesme
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler.dogrulama.parcalar import link_parcasi_ekle
 
 
 def _yaz(nesne: Any, degerler: dict[str, Any], izinli: tuple[str, ...]) -> set[str]:
@@ -45,11 +48,12 @@ def karti_guncelle(kart: YetenekKarti, degerler: dict[str, Any]) -> set[str]:
 
 
 def is_kalemini_guncelle(cikti: SomutCikti, degerler: dict[str, Any]) -> set[str]:
-    """Değişenleri yazar. İçerik ya da link değiştiyse güven göstergesi sıfırlanır.
+    """Değişenleri yazar. İddia değiştiyse güven göstergesi sıfırlanır.
 
     Sıfırlama: gösterge silinir, `icerik_tarihi` şimdi olur. Bu andan önce
     verilmiş referans yanıtları silinmez, geçmiş olarak kalır ama puana girmez.
-    Kanıt linki varsa kart hazırlama kalemi yeniden puanlar.
+    Kanıt linki varsa kart hazırlama kalemi yeniden puanlar. Kanıtın kendisi
+    burada değişmez (Doğrulama'nın kanıt bölümü).
     """
     degisenler = _yaz(cikti, degerler, IS_KALEMI_ALANLARI)
     if dogrulama_sifirlanmali_mi(degisenler):
@@ -58,8 +62,20 @@ def is_kalemini_guncelle(cikti: SomutCikti, degerler: dict[str, Any]) -> set[str
     return degisenler
 
 
-def is_kalemi_ekle(kart: YetenekKarti, degerler: dict[str, Any]) -> SomutCikti:
-    cikti = SomutCikti(**{alan: degerler.get(alan) for alan in IS_KALEMI_ALANLARI})
+def is_kalemi_ekle(
+    kart: YetenekKarti, degerler: dict[str, Any], kanit_linki: str | None = None
+) -> SomutCikti:
+    """Yeni iş kalemi; formda link verildiyse ilk kanıt parçası olur (tek kapıdan).
+
+    Değerlendirme yanıttan sonra kart hazırlamada yapılır.
+    """
+    cikti = SomutCikti(
+        **{alan: degerler.get(alan) for alan in IS_KALEMI_ALANLARI},
+        kanit_parcalari=[],
+        referans_istekleri=[],
+    )
+    if kanit_linki and kanit_linki.strip():
+        link_parcasi_ekle(cikti, kanit_linki)
     kart.somut_ciktilar.append(cikti)
     return cikti
 
@@ -78,6 +94,7 @@ async def kart_degisti(oturum: AsyncSession, kart: YetenekKarti) -> int:
       ilgilendi, kabul, red) dokunulmaz (plan § 0, karar 14).
     """
     kart.versiyon += 1
+    # Bayrağın hesabı için kalemlerin parçaları ve referans istekleri yüklü olmalı.
     kart.kanit_bekleyen = kanit_bekliyor(kart.somut_ciktilar)
     kart.deneyim_seviyesi = potansiyel_kurali(kart.deneyim_seviyesi, len(kart.somut_ciktilar))
     await oturum.execute(
@@ -86,3 +103,26 @@ async def kart_degisti(oturum: AsyncSession, kart: YetenekKarti) -> int:
         .values(gerekce_metni=None)
     )
     return kart.versiyon
+
+
+async def gosterge_degisti(oturum: AsyncSession, kart_id: uuid.UUID) -> int:
+    """Bir kalemin güven göstergesi değişti (kanıt, değerlendirme, itiraz, referans yanıtı).
+
+    Kart değişikliğinin ortak kısmı uygulanır: sürüm artar, `kanit_bekleyen`
+    tazelenir, `onerildi` önerilerin gerekçesi boşalır. Çağıran uç commit'ten
+    sonra kart hazırlamayı (yeniden eşleştirme) arka plana alır: uyum skoru
+    doğrulama bonusunu içerir, gösterge değişince eşleşmeler de tazelenmeli
+    (bulgu 26). Döner: yeni sürüm.
+    """
+    kart = await oturum.scalar(
+        select(YetenekKarti)
+        .options(
+            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.referans_istekleri),
+            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.kanit_parcalari),
+        )
+        .where(YetenekKarti.id == kart_id)
+        .with_for_update(of=YetenekKarti)
+    )
+    if kart is None:
+        raise LookupError(kart_id)
+    return await kart_degisti(oturum, kart)

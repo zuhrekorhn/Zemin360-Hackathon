@@ -28,6 +28,7 @@ from app.models.yetenek_karti import YetenekKarti
 from app.servisler import eslestirme as eslestirme_servisi
 from app.servisler import kart_hazirlama
 from app.servisler.dogrulama import kanit as dogrulama_servisi
+from tests.kanit_yardimcisi import link_parcasi
 from tests.test_profil import HazirTaslakGrafigi, _embedding_sahte
 from tests.veritabani import api_istemcisi, geri_alinan_oturum
 
@@ -107,7 +108,9 @@ async def _gencin_karti(oturum, yon, *, versiyon=1):
         embedding=yon,
         versiyon=versiyon,
         somut_ciktilar=[
-            SomutCikti(baslik="Linkli iş", kanit_linki="https://github.com/elif/proje"),
+            SomutCikti(
+                baslik="Linkli iş", kanit_parcalari=[link_parcasi("https://github.com/elif/proje")]
+            ),
             SomutCikti(baslik="Linksiz iş"),
         ],
     )

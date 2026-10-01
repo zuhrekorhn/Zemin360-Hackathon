@@ -80,8 +80,8 @@ GİRVAK okuma işlerinde her şeyi görür. Yazma işleri genç ve kurumun işid
 | `GET /eslestirme/bana-gelenler` (yeni) | — | kendi kartlarına gelen ilgiler | — | — |
 | `POST /eslestirme/{id}/kabul`, `POST /eslestirme/{id}/red` (yeni) | — | eşleşmenin yetenek kartı kendisininse | — | — |
 | `GET /isbirliklerim` (yeni) | — | kendi | kendi | — |
-| `POST /dogrulama/kanit-ekle`, `POST /dogrulama/itiraz` | — | kendi kartının çıktısı | — | — |
-| `GET /dogrulama/kanit/{somut_cikti_id}` | — | kendi kartının çıktısı | — ² | ✓ |
+| `POST /dogrulama/kalem/{id}/kanit`, `…/degerlendir`, `…/itiraz`, `…/referans`, `DELETE …/kanit/{parca_id}` | — | kendi kartının çıktısı | — | — |
+| `GET /dogrulama/kalem/{somut_cikti_id}` | — | kendi kartının çıktısı | — ² | ✓ |
 | `GET /dogrulama/referans/{token}`, `POST /dogrulama/referans-yaniti` | ✓ (token ile) | ✓ | ✓ | ✓ |
 
 ¹ Sohbet oturumu açılırken checkpoint durumuna `hesap_id` yazılır; sonraki her istekte token'daki hesapla karşılaştırılır, uymazsa 404.

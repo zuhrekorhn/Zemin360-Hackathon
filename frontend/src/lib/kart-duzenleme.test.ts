@@ -44,30 +44,49 @@ describe("degisenIsKalemiAlanlari", () => {
     const tur = degisenIsKalemiAlanlari(eski, { ...eski, is_turu: "staj" });
     expect(tur).toEqual({ is_turu: "staj" });
     expect(gostergeSifirlanir(tur)).toBe(false);
-    const link = degisenIsKalemiAlanlari(eski, { ...eski, kanit_linki: "" });
-    expect(link).toEqual({ kanit_linki: null });
-    expect(gostergeSifirlanir(link)).toBe(true);
+    const icerik = degisenIsKalemiAlanlari(eski, {
+      ...eski,
+      aciklama: "Ödünç",
+    });
+    expect(icerik).toEqual({ aciklama: "Ödünç" });
+    expect(gostergeSifirlanir(icerik)).toBe(true);
+  });
+
+  it("kanıt iddia formunun alanı değil: link değişikliği gönderilmez", () => {
+    expect(degisenIsKalemiAlanlari(eski, { ...eski, kanit_linki: "" })).toEqual(
+      {},
+    );
   });
 });
 
 describe("referansSatiri", () => {
   const referans = (ek: Partial<ReferansDurumu>) =>
-    ({ durum: "yanitlandi", guncel: true, ...ek }) as ReferansDurumu;
+    ({
+      durum: "yanitlandi",
+      guncel: true,
+      yeniden_istenebilir: false,
+      ...ek,
+    }) as ReferansDurumu;
 
-  it("çalışmanın önceki hâline verilmiş yanıt: not ve yeniden iste", () => {
-    expect(referansSatiri(referans({ guncel: false }))).toEqual({
+  it("çalışmanın önceki hâline verilmiş yanıt: not gösterilir", () => {
+    expect(
+      referansSatiri(referans({ guncel: false, yeniden_istenebilir: true })),
+    ).toEqual({
       not: "Bu yanıt çalışmanın önceki hâline verildi; güven göstergesine girmiyor.",
       yenidenIstenebilir: true,
     });
   });
 
-  it("güncel yanıt ve bekleyen istek yeniden istenemez; süresi dolan istenebilir", () => {
-    expect(referansSatiri(referans({})).yenidenIstenebilir).toBe(false);
+  it("düğme backend'in kararını izler, kuralı tekrar etmez", () => {
+    // Süresi dolmuş ama aynı kişiden bekleyen istek var: backend "istenemez" der.
     expect(
-      referansSatiri(referans({ durum: "bekliyor" })).yenidenIstenebilir,
+      referansSatiri(
+        referans({ durum: "yanit_yok", yeniden_istenebilir: false }),
+      ).yenidenIstenebilir,
     ).toBe(false);
     expect(
-      referansSatiri(referans({ durum: "yanit_yok" })).yenidenIstenebilir,
+      referansSatiri(referans({ yeniden_istenebilir: true }))
+        .yenidenIstenebilir,
     ).toBe(true);
   });
 });
