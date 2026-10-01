@@ -69,8 +69,8 @@ PILOT_BONUSU = 0.5
 # kart tek başına +0.19 getirdiği için 0.34 benzerlikli alakasız bir aday
 # toplam eşiği geçebiliyordu. Bu sınır skordan ÖNCE uygulanır.
 BENZERLIK_ALT_SINIRI = 0.45
-# Güven skorunun dört bileşeni de 0-3 → en yüksek toplam 12 (agent-specs.md § 4)
-GUVEN_TAM_PUAN = 12
+# Güven göstergesinin her başlığı 0-3 (agent-specs.md § 4); NULL başlık = "—".
+GUVEN_BASLIK_TAVANI = 3
 
 # ESLESME.durum değer kümesi (docs/data-schema.md § Tasarım Kararları)
 DURUM_ONERILDI = "onerildi"
@@ -185,18 +185,33 @@ class FirmaAdayi:
 # --- Saf hesap (LLM ve DB olmadan test edilebilir) -------------------------
 
 
-def dogrulama_bonusu(guven_skorlari: Sequence[Sequence[int]], tamamlanan_pilot: int = 0) -> float:
-    """Kartın güven skorlarını ve tamamlanmış pilotunu 0-1 aralığına indirger.
+def gosterge_orani(bilesenler: Sequence[int | None]) -> float | None:
+    """Bir çalışmanın göstergesini 0-1'e indirger; yalnızca dolu başlıklar sayılır.
 
-    Skor kaydı olmayan kart 0 alır — **ceza değil, sadece bonus yok**
+    "—" (None) başlık ne cezadır ne bonus: değerlendirilmemiş başlık 0 sayılsaydı
+    referans eklemek bile oranı düşürürdü (bulgu 17). Hiç dolu başlık yoksa None:
+    çalışma ortalamaya girmez. Dört başlık doluysa sonuç eski `toplam / 12`'nin aynısı.
+    """
+    dolu = [b for b in bilesenler if b is not None]
+    if not dolu:
+        return None
+    return sum(dolu) / (GUVEN_BASLIK_TAVANI * len(dolu))
+
+
+def dogrulama_bonusu(
+    guven_skorlari: Sequence[Sequence[int | None]], tamamlanan_pilot: int = 0
+) -> float:
+    """Kartın güven göstergelerini ve tamamlanmış pilotunu 0-1 aralığına indirger.
+
+    Göstergesi olmayan kart 0 alır — **ceza değil, sadece bonus yok**
     (docs/matching-algorithm.md § 4). Kanıtsız kart elenmez.
 
     Tamamlanmış pilot (en az bir) `PILOT_BONUSU` ekler, toplam 1.0'ı geçmez.
     Pilotu olmayan kart için sonuç Faz C öncesiyle birebir aynı.
     """
     guven = 0.0
-    if guven_skorlari:
-        oranlar = [sum(bilesenler) / GUVEN_TAM_PUAN for bilesenler in guven_skorlari]
+    oranlar = [o for g in guven_skorlari if (o := gosterge_orani(g)) is not None]
+    if oranlar:
         guven = sum(oranlar) / len(oranlar)
     pilot = PILOT_BONUSU if tamamlanan_pilot >= 1 else 0.0
     return min(1.0, guven + pilot)
@@ -314,25 +329,30 @@ def aday_ekle_ifadesi(ihtiyac_karti_id: uuid.UUID, aday: Aday | FirmaAdayi) -> I
 # puanları, rubriğin kendi tanımlarıyla cümleye çevrilip gönderiliyor.
 
 ORIJINALLIK_IFADELERI = {
+    None: "kanıt değerlendirilmedi ya da otomatik okunamadı",
     0: "kanıt linki yok ya da açılmıyor",
     1: "kanıt linki açılıyor ama iddiayla ilişkisi zayıf",
     2: "kanıt iddiayla ilgili ama kişinin kendi işi olduğu belirsiz",
     3: "kanıt linki iddia edilen işin kendisine götürüyor",
 }
 OLCULEBILIRLIK_IFADELERI = {
+    None: "sonuç henüz değerlendirilmedi",
     0: "sonuç belirtilmemiş",
     1: "sonuç yalnızca niteliksel anlatılmış",
     2: "sayı var ama neyin ölçüsü olduğu net değil",
     3: "sonuç sayıyla ve net biçimde ölçülmüş",
 }
 ROL_IFADELERI = {
+    None: "rol henüz değerlendirilmedi",
     0: "kişinin bu işteki rolü yazmıyor",
     1: "kişinin rolü belirsiz",
     2: "rol yazılmış ama ekip içindeki payı belirsiz",
     3: "kişinin ne yaptığı açık",
 }
 UCUNCU_TARAF_IFADELERI = {
-    0: "üçüncü taraf onayı yok",
+    None: "referans istenmedi ya da yanıt gelmedi",
+    # 0 artık "olumsuz yanıt" demek; "yanıt yok" None (bulgu 19).
+    0: "referans iddiayı doğrulamadı",
     1: "referansın yanıtı zayıf ya da çekimser",
     2: "bir referans olumlu yanıt verdi",
     3: "referans güçlü biçimde onayladı",
@@ -347,7 +367,7 @@ def guclu_kanitli_mi(skor: GuvenSkoru) -> bool:
     yanıtı da doğrulamadır. Ölçülebilirlik ve rol netliği iddianın ne kadar
     açık yazıldığını ölçer, doğruluğunu değil; burada sayılmaz.
     """
-    return skor.kanit_orijinalligi == 3 or skor.ucuncu_taraf_onayi >= 2
+    return skor.kanit_orijinalligi == 3 or (skor.ucuncu_taraf_onayi or 0) >= 2
 
 
 def kart_guclu_kanitli_mi(kart: YetenekKarti) -> bool:

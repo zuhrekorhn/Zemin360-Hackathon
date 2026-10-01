@@ -1,4 +1,5 @@
 import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
+import { baslikGosterimi } from "@/lib/guven-gostergesi";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
 /**
@@ -25,17 +26,26 @@ const BILESENLER = [
 
 /**
  * Dört bileşen ayrı ayrı gösterilir, tek bir "güven puanı"na indirgenmez —
- * agent-specs.md § 4'ün açık kararı.
+ * agent-specs.md § 4'ün açık kararı. Değerlendirilmemiş başlık "—" (0 değil).
  */
 export function GuvenGostergesi({ skor }: { skor: GuvenSkoru }) {
   return (
     <dl className="grid grid-cols-2 gap-px border-t border-kenar bg-kenar sm:grid-cols-4">
-      {BILESENLER.map((bilesen) => (
-        <div key={bilesen.ad} className="bg-card px-5 py-3 sm:px-4">
-          <dt className="text-xs text-muted-foreground">{bilesen.ad}</dt>
-          <dd className="font-mono text-sm text-ana">{skor[bilesen.alan]}/3</dd>
-        </div>
-      ))}
+      {BILESENLER.map((bilesen) => {
+        const { metin, sozlu } = baslikGosterimi(
+          bilesen.ad,
+          skor[bilesen.alan],
+        );
+        return (
+          <div key={bilesen.ad} className="bg-card px-5 py-3 sm:px-4">
+            <dt className="text-xs text-muted-foreground">{bilesen.ad}</dt>
+            <dd className="font-mono text-sm text-ana">
+              <span aria-hidden="true">{metin}</span>
+              <span className="sr-only">{sozlu}</span>
+            </dd>
+          </div>
+        );
+      })}
     </dl>
   );
 }

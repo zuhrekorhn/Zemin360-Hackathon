@@ -4,11 +4,12 @@ Saf hesap, yapay zekâ yok. Sayılar gerçek skorlardan gelir; metin şablondur 
 Canlılık'taki kuralla denetlenir: metinde girdide olmayan sayı geçemez.
 
 Varsayım (en iyi durum, açıkça söylenir: "öne çıkabilirsin"): kanıtı eksik
-çalışmaya işin kendisine götüren bir kanıt eklenir (kanıt orijinalliği 3/3),
-diğer bileşenler olduğu gibi kalır. Kartın doğrulama bonusu yeniden hesaplanır;
-skor = 0.75·benzerlik + 0.25·bonus olduğundan benzerlik değişmez, fark yalnızca
-0.25·(yeni bonus − eski bonus). Her fırsatta (gencin görebildiği `onerildi`
-öneri) kartın o ihtiyacın adayları arasındaki sırası yükseliyorsa sayılır.
+çalışmaya işin kendisine götüren bir kanıt eklenir (kanıt orijinalliği 3/3);
+değerlendirilmemiş Sonuç ve Rol 0 sayılır, Referans olduğu gibi kalır. Kartın
+doğrulama bonusu yeniden hesaplanır; skor = 0.75·benzerlik + 0.25·bonus
+olduğundan benzerlik değişmez, fark yalnızca 0.25·(yeni bonus − eski bonus).
+Her fırsatta (gencin görebildiği `onerildi` öneri) kartın o ihtiyacın adayları
+arasındaki sırası yükseliyorsa sayılır.
 """
 
 from __future__ import annotations
@@ -20,7 +21,9 @@ from app.agents.canlilik import kisisel_metin_gecerli_mi
 from app.agents.eslestirme import DOGRULAMA_AGIRLIGI, dogrulama_bonusu
 
 # Bir çalışmanın güven göstergesi: (kanıt, sonuç, rol, referans), yoksa None.
-Gosterge = tuple[int, int, int, int] | None
+# Başlık None = "—" (değerlendirilmedi).
+Baslik = int | None
+Gosterge = tuple[Baslik, Baslik, Baslik, Baslik] | None
 
 TAM_KANIT = 3
 
@@ -33,10 +36,12 @@ class FirsatSirasi:
     rakip_skorlari: Sequence[float]
 
 
-def kanitli_gosterge(gosterge: Gosterge) -> tuple[int, int, int, int]:
-    """Varsayım: kanıt 3/3 olur, diğer bileşenler aynı kalır (yoksa 0)."""
-    _, sonuc, rol, referans = gosterge or (0, 0, 0, 0)
-    return (TAM_KANIT, sonuc, rol, referans)
+def kanitli_gosterge(gosterge: Gosterge) -> tuple[Baslik, Baslik, Baslik, Baslik]:
+    """Varsayım: kanıt 3/3 olur. Kanıt değerlendirilince model Sonuç ve Rol'ü de
+    puanlar; bilinmeyen değerleri 0 sayılır ki kanıtın etkisi abartılmasın.
+    Referans kanıttan bağımsızdır, olduğu gibi kalır ("—" ise "—")."""
+    _, sonuc, rol, referans = gosterge or (None, None, None, None)
+    return (TAM_KANIT, sonuc or 0, rol or 0, referans)
 
 
 def bonus_farki(

@@ -28,7 +28,7 @@ from app.agents.eslestirme import (
 )
 
 
-def skor(orijinallik=1, olculebilirlik=3, rol=0, ucuncu=0):
+def skor(orijinallik=1, olculebilirlik=3, rol=0, ucuncu=None):
     return SimpleNamespace(
         kanit_orijinalligi=orijinallik,
         sonuc_olculebilirligi=olculebilirlik,
@@ -107,11 +107,24 @@ def test_guclu_kanitta_ozet_dogrulandi_der():
 
 
 def test_ozet_dort_bileseni_de_tasir():
-    ozet = dogrulama_ozeti(kart(skor(orijinallik=2, olculebilirlik=1, rol=2, ucuncu=0)))
+    ozet = dogrulama_ozeti(kart(skor(orijinallik=2, olculebilirlik=1, rol=2)))
     assert "kişinin kendi işi olduğu belirsiz" in ozet
     assert "yalnızca niteliksel" in ozet
     assert "ekip içindeki payı belirsiz" in ozet
-    assert "üçüncü taraf onayı yok" in ozet
+    assert "referans istenmedi ya da yanıt gelmedi" in ozet
+
+
+def test_ozet_yanit_yok_ile_olumsuz_yaniti_ayirir():
+    """Bulgu 19: "yanıt yok" (None) ile "olumsuz yanıt" (0) aynı cümleye düşmez."""
+    assert "referans iddiayı doğrulamadı" in dogrulama_ozeti(kart(skor(ucuncu=0)))
+
+
+def test_ozet_degerlendirilmemis_basligi_uydurmaz():
+    """Bulgu 17: linksiz kalemde yalnızca Referans doluysa "sonuç belirtilmemiş" denmez."""
+    ozet = dogrulama_ozeti(kart(skor(orijinallik=None, olculebilirlik=None, rol=None, ucuncu=3)))
+    assert "sonuç belirtilmemiş" not in ozet
+    assert "sonuç henüz değerlendirilmedi" in ozet
+    assert "referans güçlü biçimde onayladı" in ozet
 
 
 def test_kanitsiz_ve_ciktisiz_kart():

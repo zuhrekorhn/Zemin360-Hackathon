@@ -8,6 +8,7 @@ erDiagram
   YETENEK_KARTI ||--o{ SOMUT_CIKTI : icerir
   SOMUT_CIKTI ||--o| GUVEN_SKORU : degerlendirilir
   SOMUT_CIKTI ||--o{ REFERANS_ISTEGI : ister
+  SOMUT_CIKTI ||--o{ KANIT_PARCASI : kanitlanir
   KURUM ||--o{ IHTIYAC_KARTI : olusturur
   YETENEK_KARTI ||--o{ ESLESME : aday_olur
   IHTIYAC_KARTI ||--o{ ESLESME : eslesir
@@ -59,11 +60,26 @@ erDiagram
   GUVEN_SKORU {
     uuid id PK
     uuid somut_cikti_id FK
-    int kanit_orijinalligi
-    int sonuc_olculebilirligi
-    int rol_netligi
-    int ucuncu_taraf_onayi
+    int kanit_orijinalligi "NULL = —"
+    int sonuc_olculebilirligi "NULL = —"
+    int rol_netligi "NULL = —"
+    int ucuncu_taraf_onayi "NULL = yanit yok"
     string gerekce_metni
+    string girdi_ozeti
+    string kural_surumu
+    jsonb kanit_ozeti
+    timestamptz degerlendirme_tarihi
+    int itiraz_sayisi
+  }
+  KANIT_PARCASI {
+    uuid id PK
+    uuid somut_cikti_id FK
+    string tur "link | dosya | gorsel"
+    string url
+    string normal_url
+    string erisim
+    string seviye "A-D"
+    jsonb belge
   }
   REFERANS_ISTEGI {
     uuid id PK
@@ -177,6 +193,8 @@ erDiagram
 - **`HESAP` (Faz B) — kimlik profilden ayrı.** `hesap(id, email UNIQUE, sifre_hash, rol, olusturma_tarihi)`; `rol` ∈ `genc | kurum | girvak`. Genç hesabının bir `KULLANICI` profili, kurum hesabının bir `KURUM` profili olur (`hesap_id` UNIQUE FK, 1-1); GİRVAK hesabının profili yok. Şifre argon2id ile hash'lenir, düz şifre saklanmaz. `hesap_id` nullable: Faz B öncesi profiller için hesap uydurulmadı. Gerekçe ve iki seçeneğin karşılaştırması: `faz-b-kimlik-ve-dongu.md` § 1.
 - **`ISBIRLIGI` ve `MILESTONE` (Faz C) — Takip.** `ISBIRLIGI.durum`: `plan_bekliyor` → `aktif` (iki taraf da mevcut planı onaylayınca; düzenleme iki onayı da sıfırlar) → `tamamlandi` (son adım iki tarafça tamamlanınca, kural; ajanın kararı değil). `MILESTONE.durum`: `bekliyor` → `tamamlandi` (genç ve kurum ayrı ayrı işaretler). **Gecikme saklanmaz**, okuma anında hesaplanır (`hedef_tarih < bugün` ve tamamlanmadı). Onaylanan plan kilitli; `aktif`'te yalnızca `kanit_linki` değişir. `durum_ozeti` Takip Ajanı'nın kesilebilir özeti, hiçbir kural ona bakmaz. **Tamamlanmış pilot** sinyali saklanmaz, `durum = tamamlandi` kayıtlarından hesaplanır ve Eşleştirme'nin doğrulama bonusuna girer (`matching-algorithm.md` § 4). Faz B'de `aktif` açılmış planı olmayan kayıtlar migration'la `plan_bekliyor` oldu. Bkz. `faz-c-takip.md`.
 - **`BILDIRIM` (Faz B) — uygulama içi bildirim.** `bildirim(id, hesap_id FK CASCADE, tur, metin, eslesme_id FK nullable SET NULL, olusturma_tarihi, okundu_tarihi nullable)`. `tur` ∈ `yeni_oneri | ilgi | kabul | red | referans_yaniti` (Faz B), `plan_onerildi | plan_duzenlendi | plan_onayi | plan_onaylandi | adim_isaretlendi | adim_tamamlandi | isbirligi_tamamlandi` (Faz C); Canlılık (Faz D) aynı tabloya kendi türleriyle yazar. `olusturma_tarihi` INSERT anında `clock_timestamp()` ile atanır: `now()` işlem başlangıcını döndüğü için aynı işlemde yazılan bildirimler eşit zamanlı kalıp sıra belirsizleşiyordu. Olayla aynı işlemde yazılır; aynı geçişin tekrarı yeni bildirim yazmaz. Metin e-posta taşımaz. Gerçek e-posta gönderilmez. Bkz. `faz-b-kimlik-ve-dongu.md` § 6.
+- **Güven göstergesinde NULL "—" demektir, 0 değil** (Doğrulama iyileştirmesi adım 3; `plans/dogrulama-iyilestirme.md` § 1 İ4). Kanıt, Sonuç, Rol NULL: değerlendirilmedi ya da kanıt okunamadı. `ucuncu_taraf_onayi` NULL: güncel referans yanıtı yok; 0 ise referansın olumsuz yanıtı. Eski kayıtlardaki iki tür sahte sıfır (linksiz kaleme referans gelince açılan sıfırlı gösterge, yanıtsız referansın 0'ı) migration `7c4e2a9d1f63` ile NULL'a çevrildi. Eşleştirme bonusu yalnızca dolu başlıklardan hesaplanır (`matching-algorithm.md` § 4).
+- **`KANIT_PARCASI`**: bir iş kaleminin kanıtları (link, dosya, görsel); bir kalemin birden çok parçası olabilir, her başlıkta en güçlü parça kullanılır (`plans/dogrulama-iyilestirme.md` § 2, § 13). `normal_url` aynı sayfanın farklı yazımlarını tek biçime indirir; kalem içinde tekildir. Ayrıntılı alanlar ve `KANIT_METIN_PARCASI`, `YETENEK_KANITI` tabloları planın § 13'ünde.
 - **`GUVEN_SKORU` ve `REFERANS_ISTEGI`, `SOMUT_CIKTI`'dan ayrı tablolar.** Bir çıktının birden fazla referans isteği olabilir; güven skoru zamanla güncellenebilir olmalı (itiraz sonrası yeniden hesaplama).
 - **`ESLESME.durum` ve ilgi alanları (genç akışı, `plans/genc-akisi.md` § 4).** Değerler: `onerildi`, `genc_ilgilendi`, `ilgileniliyor`, `kabul_edildi`, `reddedildi`, `kapandi`; kural tek yerde (`app/agents/eslesme_durumu.py`). Karar `durum`'da; `baslatan` (`genc | kurum`), `genc_ilgi_tarihi`, `genc_iletisim_onayi_tarihi`, `kurum_ilgi_tarihi` yalnızca "kim, ne zaman" bilgisi. Tek alan seçildi çünkü pipeline, Canlılık, GİRVAK sayıları ve sahiplik `durum`'u okuyor. Karşılıklı ilgi `kabul_edildi`'dir. `IHTIYAC_KARTI.durum` (`acik | kapandi`): kapalı ihtiyaç eşleştirmeye girmez, bekleyen kayıtlar `kapandi` olur. `IHTIYAC_KARTI.aranan` (`genc | firma`, varsayılan `genc`): ilanın hangi kapıdan açıldığı; aynı tablo, aynı pipeline ve ilgi kuralları, fark aday kaynağında. Ortak ilanında `aranan_firma_turleri` (boş = hepsi) ve `isbirligi_turu`; çalışma modeli ve müsaitlik yalnızca genç ilanında (`plans/firma-akisi.md` § 0 kararlar 4-5). Firma kapatırken neden seçer (`kapanma_nedeni`: `platformda_bulundu | baska_yoldan_bulundu | vazgecildi`, `kapanma_tarihi`); neden yalnızca GİRVAK sayılarında görünür, kapanan ilan tekrar açılmaz (`plans/firma-akisi.md` § 7).
 - **`KURUM` kayıt alanları (firma akışı, `plans/firma-akisi.md` § 2).** `tur` (`girisim | kobi | kurumsal`), `web_sitesi`, `calisan_araligi` (`1-10 | 11-50 | 51-250 | 250+`), `kurulus_yili`, `tanitim` (≤300), `yetkili_ad`, `yetkili_gorev`; hepsi nullable. Zorunluluk (tür, sektör, şehir) kayıt şemasında; eski hesaplarda boş olabilir, panel engellemeyen bir bantla ister. Vergi numarası, adres ve telefon bilinçli olarak toplanmaz. KVKK onayı gençteki gibi `hesap.kvkk_onay_tarihi`'nde. Kurallar `app/core/firma_profili.py`. **Doğrulama** (§ 6): `dogrulama_durumu` (`bekliyor | dogrulandi | simdilik_degil`, varsayılan `bekliyor`) ve GİRVAK'ın karar anı `dogrulama_tarihi`. Alan adı ipucu saklanmaz, okuma anında hesaplanır (`app/core/firma_dogrulama.py`, ağ isteği yok). Web sitesinin alan adı değişince `bekliyor`a döner. Dışarıya yalnızca `dogrulandi: bool` açılır; "şimdilik değil" firmaya "bekliyor"dan ayırt edilmez.

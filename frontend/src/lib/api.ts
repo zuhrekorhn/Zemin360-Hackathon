@@ -716,12 +716,13 @@ export function ihtiyacKartiOnayla(
    Tipler backend'deki app/schemas/dogrulama.py ile birebir eşleşir. */
 
 /** Dört bileşenli güven göstergesi. Tek sayıya indirgenmez
- *  (docs/agent-specs.md § 4) — arayüz de dördünü ayrı gösterir. */
+ *  (docs/agent-specs.md § 4) — arayüz de dördünü ayrı gösterir.
+ *  null = "—": başlık değerlendirilmedi ya da yanıt yok (0 ile karıştırılmaz). */
 export type GuvenSkoru = {
-  kanit_orijinalligi: number;
-  sonuc_olculebilirligi: number;
-  rol_netligi: number;
-  ucuncu_taraf_onayi: number;
+  kanit_orijinalligi: number | null;
+  sonuc_olculebilirligi: number | null;
+  rol_netligi: number | null;
+  ucuncu_taraf_onayi: number | null;
   gerekce_metni: string | null;
 };
 

@@ -1,12 +1,13 @@
-"""Bugünkü Doğrulama'nın adaptörü (plan § 15, adım 1): karnenin başlangıç noktası.
+"""Uygulamadaki Doğrulama'nın adaptörü (plan § 15): karne her adımda bununla ölçer.
 
-Bugünkü davranışı olduğu gibi yeniden üretir, düzeltmez:
+Uygulamanın o anki davranışını yeniden üretir, düzeltmez. Adım 4'teki yeni
+puan çekirdeği gelene kadar:
   - Yalnızca ilk link kanıtı okunur (`<head>` başlığı ve açıklaması); dosya,
     görsel, bağlı hesap ve kimlik bilgisi kullanılmaz.
   - Linksiz ve referanssız kalem puanlanmaz (bütün başlıklar "—").
-  - Linksiz ama referansı yanıtlanmış kalemde Kanıt, Sonuç, Rol 0 yazılır
-    (referans yanıtının açtığı sıfırlı gösterge, bulgu 17).
-  - Referans yoksa Referans başlığı 0'dır ("—" değil, bulgu 19).
+  - Linksiz ama referansı yanıtlanmış kalemde yalnızca Referans dolar
+    (adım 3'ten beri; önceden Kanıt, Sonuç, Rol 0 yazılıyordu, bulgu 17).
+  - Yanıt yoksa Referans "—" (adım 3'ten beri; önceden 0'dı, bulgu 19).
 
 **Başlık ayrıştırması ayrı bir süreçte, süre sınırıyla çalışır.** İlk karnede
 bugünkü `link_ozetini_cikar` iki vakada regex geri izlemesine düşüp sunucuyu
@@ -122,7 +123,7 @@ class MevcutSistemDegerlendirici:
         if not linkler:
             if not referans_puanlari:
                 return Degerlendirme(ayrinti={"neden": "linksiz kalem puanlanmaz"})
-            return Degerlendirme(kanit=0, sonuc=0, rol=0, referans=ucuncu)
+            return Degerlendirme(referans=ucuncu)
 
         try:
             kontrol = await linki_kontrol_et(linkler[0], transport=self._ag.transport())

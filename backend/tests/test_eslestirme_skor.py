@@ -51,6 +51,24 @@ def test_birden_fazla_cikti_ortalamasi_alinir():
     assert dogrulama_bonusu([(3, 3, 3, 3), (2, 2, 1, 1)]) == pytest.approx(0.75)
 
 
+def test_bos_baslik_bonusu_dusurmez():
+    """Referans eklemek kartı zayıflatmamalı (bulgu 17): linksiz kalemde yalnızca
+    Referans doluysa (—, —, —, 3) oran 1.0; eskiden (0, 0, 0, 3) = 0.25 sayılıyordu."""
+    tam = (3, 3, 3, None)
+    assert dogrulama_bonusu([tam]) == 1.0
+    assert dogrulama_bonusu([tam, (None, None, None, 3)]) == 1.0
+
+
+def test_bos_baslik_oranin_paydasina_girmez():
+    # (3 + 2 + 1) / (3 × 3) = 2/3
+    assert dogrulama_bonusu([(3, 2, 1, None)]) == pytest.approx(2 / 3)
+
+
+def test_hic_dolu_basligi_olmayan_gosterge_ortalamaya_girmez():
+    assert dogrulama_bonusu([(3, 3, 3, 3), (None, None, None, None)]) == 1.0
+    assert dogrulama_bonusu([(None, None, None, None)]) == 0.0
+
+
 def test_skor_formulu_belgedeki_agirliklari_kullanir():
     # 0.75 * 0.8 + 0.25 * 0.5 = 0.725
     assert skor_hesapla(0.8, 0.5) == pytest.approx(0.725)

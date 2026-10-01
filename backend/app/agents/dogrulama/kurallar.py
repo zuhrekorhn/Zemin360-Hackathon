@@ -24,8 +24,11 @@ def referans_puanina_cevir(skala_1_5: int) -> int:
     return REFERANS_PUAN_ESLEMESI[skala_1_5]
 
 
-def ucuncu_taraf_onayi_hesapla(puanlar: Sequence[int]) -> int:
-    """Yanıtlamış tüm referanslardan tek bir 0-3 puanı üretir.
+def ucuncu_taraf_onayi_hesapla(puanlar: Sequence[int]) -> int | None:
+    """Yanıtlamış tüm referanslardan tek bir 0-3 puanı üretir; yanıt yoksa None ("—").
+
+    "Yanıt yok" ile "olumsuz yanıt" (0) ayrı şeylerdir: ikisi de 0 olsaydı
+    referans istememiş genç, olumsuz yanıt almış gibi görünürdü (bulgu 19).
 
     Ortalama alınıyor, en yüksek değil: en yüksek, "olumlu diyen birini
     bulana kadar referans sor" davranışını ödüllendirirdi. Ortalama, zayıf
@@ -38,7 +41,7 @@ def ucuncu_taraf_onayi_hesapla(puanlar: Sequence[int]) -> int:
     çevirdiği için (bankacı yuvarlaması) elle +0.5 uygulanıyor.
     """
     if not puanlar:
-        return 0
+        return None
     cevrilmis = [referans_puanina_cevir(p) for p in puanlar]
     return math.floor(sum(cevrilmis) / len(cevrilmis) + 0.5)
 

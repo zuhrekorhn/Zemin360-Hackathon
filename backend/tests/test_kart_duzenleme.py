@@ -193,7 +193,7 @@ def test_icerik_degisen_kalem_sifirlanir_digeri_korunur(kart_hazirlama_arka_plan
             assert b_sonra.guven_skoru is not None  # değişmedi, korundu
             # Eski referans yanıtı silinmedi ama artık puana girmiyor.
             assert len(a_sonra.referans_istekleri) == 1
-            assert ucuncu_taraf_puani(a_sonra) == 0
+            assert ucuncu_taraf_puani(a_sonra) is None  # eski yanıt geçmişte: "—"
             assert kart_hazirlama_arka_plani_yok == [(kart_id, 2, True)]
 
             # Yalnızca tür: gösterge korunur, versiyon yine artar.

@@ -154,11 +154,12 @@ def test_sonradan_gelen_genc_mevcut_ihtiyacla_eslesir_ve_is_idempotent(sahte_dis
             assert ciktilar["Linkli iş"].guven_skoru.kanit_orijinalligi == 3
             assert ciktilar["Linksiz iş"].guven_skoru is None
 
-            # Puan eşleşme skoruna girdi: benzerlik 1.0, bonus (3+2+2+0)/12 tek kalemden.
+            # Puan eşleşme skoruna girdi: benzerlik 1.0, bonus (3+2+2)/9 tek kalemden;
+            # referans yok ("—"), paydaya girmez.
             eslesme = await oturum.scalar(
                 select(Eslesme).where(Eslesme.yetenek_karti_id == kart.id)
             )
-            assert eslesme.skor == pytest.approx(0.75 + 0.25 * 7 / 12, abs=1e-3)
+            assert eslesme.skor == pytest.approx(0.75 + 0.25 * 7 / 9, abs=1e-3)
 
     asyncio.run(senaryo())
 

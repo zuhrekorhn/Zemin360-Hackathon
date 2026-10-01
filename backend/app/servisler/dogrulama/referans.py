@@ -40,8 +40,9 @@ def referans_guncel_mi(cikti: SomutCikti, referans: ReferansIstegi) -> bool:
     return referans_gecerli_mi(referans.yanit_tarihi, cikti.icerik_tarihi)
 
 
-def ucuncu_taraf_puani(cikti: SomutCikti) -> int:
+def ucuncu_taraf_puani(cikti: SomutCikti) -> int | None:
     """Yalnızca güncel referans yanıtlarından; iş değiştiyse eski yanıtlar girmez.
+    Güncel yanıt yoksa None ("—").
 
     `cikti.referans_istekleri` yüklenmiş olmalı.
     """
@@ -87,15 +88,11 @@ async def referans_yanitla(
 
     cikti = await cikti_getir(oturum, referans.somut_cikti_id)
     if cikti.guven_skoru is None:
-        # Kanıt puanlanmadan referans gelirse skor kaydı yoksa aç; diğer
-        # bileşenler 0 kalır, kanıt eklendiğinde/itirazda hesaplanır.
-        cikti.guven_skoru = GuvenSkoru(
-            kanit_orijinalligi=0,
-            sonuc_olculebilirligi=0,
-            rol_netligi=0,
-            ucuncu_taraf_onayi=0,
-            gerekce_metni=None,
-        )
+        # Kanıt değerlendirilmeden referans gelirse yalnızca Referans başlığı
+        # dolar; Kanıt, Sonuç ve Rol "—" kalır. Eskiden 0 yazılıyordu: hiç
+        # değerlendirilmemiş başlıklar 0/3 görünüyor, Eşleştirme'ye "sonuç
+        # belirtilmemiş" diye gidiyor ve uyum bonusunu düşürüyordu (bulgu 17).
+        cikti.guven_skoru = GuvenSkoru()
     # Birden fazla referans yanıtlamış olabilir; son gelen öncekini ezmesin.
     # İş kalemi sonradan değiştiyse, değişiklikten önceki yanıtlar sayılmaz.
     cikti.guven_skoru.ucuncu_taraf_onayi = ucuncu_taraf_puani(cikti)

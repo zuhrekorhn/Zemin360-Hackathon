@@ -78,8 +78,9 @@ def test_ikinci_guclu_referans_puani_dusurmez():
     assert ucuncu_taraf_onayi_hesapla([5, 4]) >= ucuncu_taraf_onayi_hesapla([5])
 
 
-def test_yanitlamis_referans_yoksa_sifir():
-    assert ucuncu_taraf_onayi_hesapla([]) == 0
+def test_yanitlamis_referans_yoksa_bos():
+    """ "Yanıt yok" "—"dur, 0 değil: 0 olumsuz yanıt demek (bulgu 19)."""
+    assert ucuncu_taraf_onayi_hesapla([]) is None
 
 
 def test_sure_dolmadan_zaman_asimi_yok():

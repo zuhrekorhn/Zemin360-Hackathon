@@ -22,12 +22,13 @@ class GuvenSkoruYaniti(BaseModel):
     """Dört bileşen ayrı ayrı gösterilir — tek sayıya indirilmez.
 
     docs/agent-specs.md § 4: "her biri 0-3 puan, tek sayıya indirilmez".
+    null = "—": başlık değerlendirilmedi ya da yanıt yok; 0 ile karıştırılmaz.
     """
 
-    kanit_orijinalligi: int
-    sonuc_olculebilirligi: int
-    rol_netligi: int
-    ucuncu_taraf_onayi: int
+    kanit_orijinalligi: int | None
+    sonuc_olculebilirligi: int | None
+    rol_netligi: int | None
+    ucuncu_taraf_onayi: int | None
     gerekce_metni: str | None
 
     model_config = {"from_attributes": True}
