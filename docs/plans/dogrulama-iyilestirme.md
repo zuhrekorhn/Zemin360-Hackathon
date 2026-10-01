@@ -684,6 +684,9 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
 
 ### Adım 6: Kimlik, e-posta ve inceleme kuyruğu çekirdeği
 
+> **Durum: tamamlandı** (`88dd3fc` dış servisler, `106afd7` e-posta doğrulaması, `fc784ba` inceleme kuyruğu, `15305de` ad kilidi, `92ded83` itiraz sınırı). Uygulamada netleşen kararlar (Zühre, 2 Eki): (1) doğrulanmamış hesap her şeyi kullanır, panelde engellemeyen bant ve "yeniden gönder" var; demo ve GİRVAK hesapları doğrulanmış açılır; (2) varsayılan `EPOSTA_SAGLAYICI=log` (bağlantı log'da), Resend anahtarı ve doğrulanmış alan adı gelince `.env`'den `resend`; anahtar eksikse açılış log kipine düşer; (3) hak dolduktan sonraki itiraz kendiliğinden kuyruğa gider (202, `inceleme_bekliyor`). Ek kararlar: doğrulama bağlantısı 24 saat, yenisi eskisini geçersiz kılar, ikinci açılış yan etkisiz; kapanmış işarete farklı karar 409 (kararın etkisi geri alınmaz); `inceleme_isareti` CHECK'i § 9'daki on türün hepsini baştan içerir; ad değişikliğinde yalnızca boşluk/harf büyüklüğü farkı değişiklik sayılmaz. Ad değişikliği onayı, adla sahipliği kurulmuş parçaların kalemlerini "değerlendirilmedi"ye çevirir ve kartı arka planda hazırlar (bugün böyle parça yok; seviye A üreten okuyucular adım 9'da `kimlik.ada_dayali_seviye`'yi kullanacak). Karne değişmedi (puan kuralına dokunulmadı).
+> **Ertelenen / borç:** "Doğrulanamadı" kararı bugün yalnızca bildirimle görünüyor; kalemin üzerinde etiket olarak gösterilmesi adım 11'de (kalem işaretleriyle birlikte). `/saglik/servisler` sonuçları süreç içi bellekte; kalıcı gözlem adım 12. `girvak/page.tsx` 400 satır: yeni bölümler ayrı bileşen olarak eklendi, sayfanın kendisinin bölünmesi ayrı bir refactor. Referans yanıt linkinin gence dönmesi adım 7'de kalkıyor.
+
 - **Bulgular:** 37, 48 (ad kilidi).
 - **İş birimleri:**
   1. `core/dis_servisler/`: `EpostaGonderici` (Resend + log + kapalı), `kurulum.py`, `zaman_asimli` / `gozlemli` decorator'ları, servis sağlığı.
