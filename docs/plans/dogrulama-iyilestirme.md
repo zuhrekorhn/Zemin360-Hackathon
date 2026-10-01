@@ -605,6 +605,8 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
 
 ### Adım 1: Ölçüm altyapısı ve bugünkü sistemin karnesi
 
+> **Durum: tamamlandı** (`0ed787f`…`9dbfaa9`). 45 taslak vaka; etiketler Zühre'de. İlk karne: `backend/tests/degerlendirme_seti/karneler/2026-10-01-mevcut_sistem-taslak.md`. Projede CI olmadığı için çevrimdışı karne pytest'in parçası (`test_degerlendirme_seti`).
+
 - **Neden önce:** her sonraki adımın gerilemediğini ve iyileştiğini kanıtlamak için (İ8).
 - **İş birimleri:**
   1. `degerlendirme_seti/ETIKETLEME_REHBERI.md`: başlıklar, seviyeler, bireysel kurallar, örnekler.
@@ -620,6 +622,8 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
 - **Belge:** `degerlendirme_seti/README.md`.
 
 ### Adım 2: Katmanlama (davranış değişmez)
+
+> **Durum: tamamlandı** (`058241b`, `41c7b6d`, `b13bbca`). İlk commit, Adım 1'de bulunan ReDoS'un (bulgu 50) acil düzeltmesi; katmanlama commit'lerinde karne birebir aynı. Uç dosyasında şema eşlemesi (`_durum_yaniti`) sunum işi olarak kaldı. Testlerde yalnızca içe aktarma yolları ve iki sahte nesnenin eksik alanları değişti.
 
 - **Bulgular:** 32, 33, 34.
 - **İş birimleri:**
