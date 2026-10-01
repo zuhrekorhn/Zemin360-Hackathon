@@ -2,6 +2,7 @@
 
 > **Durum:** Onaylandı (1 Eki 2026). Karar 1–13 kapandı (§ 17). Uygulama § 15'teki sırayla yürür. Her adımın sonunda testler çalışır, değerlendirme seti karnesi çıkarılır ve onay beklenir.
 > **Sürüm 3'te değişenler:** kaynak katmanları "Seviye A–D" adını aldı. Seviye D daraltıldı ve bireysel proje kuralları eklendi (§ 2). Uzun içerik seçimi eklendi (§ 5.4), ekran görüntüsü yolu eklendi (§ 5.5), Google Drive ve Docs okuyucusu eklendi (§ 5.6). İlgisiz kanıt artık 0. Yetenek bazlı kanıt eklendi (§ 11). Ad ve kimlik bütünlüğü eklendi (§ 6.3). Hesap bağlama gerçekçi hâline getirildi (§ 6). Link çürümesi sayacı düzeltildi (§ 10.4). Etiketleme süreci eklendi (§ 10.1). Dış servisler bayrak ve zarif düşüşle tanımlandı (§ 14.4). Yeni bulgular 45–49. Adım adım uygulama planı eklendi (§ 15).
+> **Uygulama notu (Adım 1):** değerlendirme seti çalışırken bulgu 50 (ReDoS) bulundu; üretimdeki etkisi yüzünden Adım 2'nin ilk commit'i olarak düzeltildi. Bulgu 7 (karakter kodları) ve 52 de aynı değişiklikle kapandı.
 > **Değiştirdiği belgelenmiş kararlar** (her biri ilgili adımın commit'inde güncellenir): `agent-specs.md` § 4 (karar 13: yalnızca başlık okunur; referans formu), karar 7 (linksiz kalem), "SMTP yok" MVP kararı, `matching-algorithm.md` § 4 (boş başlık bonusa girmez), `sequence-diagrams.md` Akış 2, `api-contracts.md` § Doğrulama, `data-schema.md`.
 
 ---
@@ -446,7 +447,7 @@ Hiç kanıt parçası olmayan kalem de beyan tavanıyla değerlendirilir: Sonuç
 | 4 | Büyük sayfada başlık kaçıyor | oEmbed, akışlı 2 MB okuma | § 5.3 | 5 |
 | 5 | Giriş sayfası "açılıyor" | `GIRIS_GEREKLI` | § 5.2 | 5 |
 | 6 | DNS hatası "güvensiz" | `AdresBulunamadi` | § 5.2 | 5 |
-| 7 | HTML karakter kodları | `unescape` | § 5.3 | 5 |
+| 7 | HTML karakter kodları | HTML ayrıştırıcısı çözer (bulgu 50 ile) | § 5.3 | 2 |
 | 8 | JavaScript siteleri boş | Yedek okuyucu + ekran görüntüsü | § 5.5 | 10 |
 | 9 | İstem enjeksiyonu | Veri etiketi + kural puanı + alıntı denetimi | § 11 | 4 |
 | 10 | Beyan tam puan | Seviye tavanları | § 2 | 4 |
@@ -489,6 +490,10 @@ Hiç kanıt parçası olmayan kalem de beyan tavanıyla değerlendirilir: Sonuç
 | 47 | Drive / Docs linkleri okunmuyor | Dışa aktarma adresleri, paylaşım cümlesi | § 5.6 | 5 |
 | 48 | Ad değiştirilerek sahiplik taklidi | Ad kilidi, üç koşul, e-posta eşleşmesi öncelikli, belge tekilliği | § 6.3, § 4.2 | 6, 9 |
 | 49 | Dış servis hatası değerlendirmeyi düşürebilir | Arayüz + bayrak + zarif düşüş + sağlık | § 14.4 | Her servisin adımı |
+| 50 | **Başlık ayrıştırmasında ReDoS (kritik):** `_meta_icerigi` regex'i (`(.*?)` + `re.S`) `>` içermeyen tırnaklı bölgede felaket geri izlemeye düşüyor (24 KB 6 sn, 60 KB ~40 sn, YouTube'un 300 KB'ı saatler); Python regex'i GIL'i bırakmadığı için bütün sunucu donuyor | Standart kütüphanenin HTML ayrıştırıcısı, `</head>`'de durur, doğrusal | § 5.3 | 2 (acil, ilk commit) |
+| 51 | Wikipedia ve benzerleri tarayıcı kimliği olmayan isteği 403 ile reddediyor | Gerçekçi başlıklar | § 5.3 | 5 |
+| 52 | Bozuk öznitelikten özete ham HTML sızıyor (Instagram) | HTML ayrıştırıcısı (bulgu 50 ile aynı commit'te çözüldü) | § 5.3 | 2 |
+| 53 | Dribbble 202 ve boş gövde döndürüyor (bot sorgulaması); bugün "açılıyor" sayılıyor | `ICERIK_YOK` → yedek okuyucu | § 5.2, § 5.5 | 5, 10 |
 
 ---
 

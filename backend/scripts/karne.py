@@ -1,12 +1,14 @@
 """Doğrulama değerlendirme setinin karnesi (docs/plans/dogrulama-iyilestirme.md § 10.1).
 
-    python -m scripts.karne                    # çevrimdışı: kayıtlı yanıtlarla
-    python -m scripts.karne --kip kaydet       # gerçek ağ ve model; kaseti yazar
-    python -m scripts.karne --taslak           # etiket yoksa önerilen etiketle
-    python -m scripts.karne --json cikti.json  # vaka başına sonuçlar (gerileme)
+    python -m scripts.karne                      # çevrimdışı: kayıtlı yanıtlarla
+    python -m scripts.karne --model kaydet       # kayıtlı ağ, eksik model çağrıları gerçek
+    python -m scripts.karne --ag kaydet --model kaydet   # gerçek ağ ve model (yeni vaka)
+    python -m scripts.karne --taslak             # etiket yoksa önerilen etiketle
+    python -m scripts.karne --json cikti.json    # vaka başına sonuçlar (gerileme)
 
-Kayıt kipi gerçek model çağırır (güçlü katman, vaka başına en çok bir çağrı;
-daha önce kaydedilmiş girdi yeniden çağrılmaz). Karne
+Kod değiştiğinde `--model kaydet` kullanılır: sayfalar kasetten gelir, böylece
+karnedeki fark yalnızca kodun farkıdır (sayfaların bugünkü hâli karışmaz). Model
+kaydı daha önce görülmüş girdiyi yeniden çağırmaz. Karne
 `tests/degerlendirme_seti/karneler/` altına tarihli olarak yazılır.
 """
 
@@ -35,12 +37,15 @@ def _argumanlar(argv: list[str] | None) -> argparse.Namespace:
     ayr = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
-    ayr.add_argument("--kip", choices=[k.value for k in KasetKipi], default=KasetKipi.OYNAT.value)
+    kipler = [k.value for k in KasetKipi]
+    ayr.add_argument("--ag", choices=kipler, default=KasetKipi.OYNAT.value, help="ağ kaseti")
+    ayr.add_argument("--model", choices=kipler, default=KasetKipi.OYNAT.value, help="model kaseti")
     ayr.add_argument(
         "--taslak", action="store_true", help="etiketsiz vakada önerilen etiketi kullan"
     )
     ayr.add_argument("--json", type=Path, help="vaka başına sonuçları bu dosyaya yaz")
     ayr.add_argument("--rapor-yazma", action="store_true", help="Markdown karneyi dosyaya yazma")
+    ayr.add_argument("--rapor-eki", default="", help="rapor dosya adına ek (ör. adim2)")
     ayr.add_argument(
         "--ayristirma-suresi", type=float, default=20.0, help="başlık ayrıştırması süre sınırı (sn)"
     )
@@ -49,12 +54,10 @@ def _argumanlar(argv: list[str] | None) -> argparse.Namespace:
 
 async def calistir(argv: list[str] | None = None) -> int:
     arg = _argumanlar(argv)
-    kip = KasetKipi(arg.kip)
-    if kip is KasetKipi.KAYDET:
+    ag = AgKaseti(KasetKipi(arg.ag))
+    model = ModelKaseti(KasetKipi(arg.model))
+    if KasetKipi.KAYDET in (ag.kip, model.kip):
         load_dotenv()
-
-    ag = AgKaseti(kip)
-    model = ModelKaseti(kip)
     degerlendirici = MevcutSistemDegerlendirici(ag, model, ayristirma_suresi=arg.ayristirma_suresi)
     vakalar = vakalari_yukle()
 
@@ -68,7 +71,7 @@ async def calistir(argv: list[str] | None = None) -> int:
     metin = rapor.markdown(karne, tarih)
     if not arg.rapor_yazma:
         KARNE_KLASORU.mkdir(parents=True, exist_ok=True)
-        ek = "-taslak" if arg.taslak else ""
+        ek = ("-taslak" if arg.taslak else "") + (f"-{arg.rapor_eki}" if arg.rapor_eki else "")
         (KARNE_KLASORU / f"{tarih}-{degerlendirici.ad}{ek}.md").write_text(metin, encoding="utf-8")
     if arg.json:
         arg.json.write_text(

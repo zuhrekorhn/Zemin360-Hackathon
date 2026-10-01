@@ -1,6 +1,6 @@
 {
- "dogrulama_rubrik:121dc6822aa6f846cb780c49b444eda1": {
-  "gerekce_metni": "Çalışmada editörün bin satırın altında kalması ve tüm içeriğin kişi tarafından üretildiğinin belirtilmesi ölçülebilirlik ile rol netliğini açıkça ortaya koyuyor. Buna karşın paylaşılan antirez.com bağlantısının doğrudan başvurana ait olduğunu gösteren açık bir bağ bulunmadığı için kanıt güven göstergesi kısmi düzeyde kalıyor.",
+ "dogrulama_rubrik:07d58bf13cf2cbff5780921b9bc87cfb": {
+  "gerekce_metni": "Açıklamada 15 kişilik ekibin yönetildiği ve 500 fidan dikildiği açıkça belirtildiği için rol ve sonuçlar oldukça nettir. Paylaşılan bağlantı genel bir ana sayfaya yönlendirdiği için yapılan çalışmanın kişiye ait olduğu doğrudan doğrulanamamaktadır.",
   "kanit_orijinalligi": 2,
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 3
@@ -11,9 +11,21 @@
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 0
  },
+ "dogrulama_rubrik:165a34ad46a78d8a9176d64d030a441b": {
+  "gerekce_metni": "Paylaşılan bağlantı genel bir sosyal medya profiline yönlendirdiği için çalışmanın size ait olduğu doğrulanamamakta, içerik ekibindeki kişisel payınız da genel kalmaktadır. Ayrıca çalışmanın etkisine dair herhangi bir sayısal veya niteliksel sonuca açıklamada yer verilmemiştir.",
+  "kanit_orijinalligi": 2,
+  "rol_netligi": 2,
+  "sonuc_olculebilirligi": 0
+ },
  "dogrulama_rubrik:232a89353fba4326dcab1868ed96e2ed": {
   "gerekce_metni": "Paylaşılan GitHub bağlantısı doğrudan ilgili çalışmaya yönlendirse de hesabın size ait olduğu kanıt üzerinden netleştirilememektedir. Buna karşılık çalışmanın tek başına geliştirildiği ve on binden fazla yıldız aldığı açık, ölçülebilir ifadelerle belirtilmiştir.",
   "kanit_orijinalligi": 2,
+  "rol_netligi": 3,
+  "sonuc_olculebilirligi": 3
+ },
+ "dogrulama_rubrik:3b20f500a5e34f9eaa7ad003f7c39811": {
+  "gerekce_metni": "Paylaşılan bağlantı bütçe uygulaması yerine TEMA sayfasına yönlendirdiği için kanıt içeriği çalışma ile uyuşmuyor. Buna karşın uygulamanın tek başına geliştirildiği açıkça ifade edilmiş ve 1.200 indirme gibi net bir sonuca yer verilmiştir.",
+  "kanit_orijinalligi": 1,
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 3
  },
@@ -59,6 +71,12 @@
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 3
  },
+ "dogrulama_rubrik:88e31e2ee36db50ae692c54bdef4700d": {
+  "gerekce_metni": "Verilen bağlantı doğrudan iddia edilen blog yazısına yönlendirse de bu yazının ve alan adının sana ait olduğu açıkça anlaşılamıyor. Editörün bin satır altında kalması ölçülebilir bir sonuç sunarken, tasarımı ve kodlamayı tamamen tek başına üstlendiğini belirtmen rolünü netleştiriyor.",
+  "kanit_orijinalligi": 2,
+  "rol_netligi": 3,
+  "sonuc_olculebilirligi": 3
+ },
  "dogrulama_rubrik:948083e0535dcbcede310c56149c338d": {
   "gerekce_metni": "Sağlanan profil bağlantısı vakıf unvanıyla örtüşse de yapılan çalışmaya dair ölçülebilir bir sonuç bilgisi yer almıyor. Eş başkanlık rolü belirtilmiş ancak yürütülen faaliyetlerin kapsamı ve kişisel katkının sınırları detaylandırılmamış.",
   "kanit_orijinalligi": 2,
@@ -89,8 +107,14 @@
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 0
  },
- "dogrulama_rubrik:b1573334300ed4982b5dd3349190fdea": {
-  "gerekce_metni": "Çalışmada yönetilen kişi sayısı ve dikilen fidan adedi net ölçütlerle belirtildiği gibi üstlenilen ekip liderliği sorumluluğu da açıkça ifade edilmiştir. Ancak paylaşılan bağlantı genel bir vakıf ana sayfası olduğundan, çalışmanın doğrudan size ait olduğunu gösteren somut bir kanıt sunulamamıştır.",
+ "dogrulama_rubrik:b11bed375c54d098be29e181f8f7f605": {
+  "gerekce_metni": "Paylaşılan bağlantı iddiayla ilgili bir müzik kanalına gitse de çalışmanın doğrudan size ait olduğu bu aşamada kesinleştirilememektedir. Kanal sahibi ve yorumcu rolü net şekilde ifade edilmiş, 4 milyondan fazla abone sayısı ile ölçülebilir bir sonuç sunulmuştur.",
+  "kanit_orijinalligi": 2,
+  "rol_netligi": 3,
+  "sonuc_olculebilirligi": 3
+ },
+ "dogrulama_rubrik:b1f6339283341bf7e9aba56b81d4eeda": {
+  "gerekce_metni": "Paylaşılan video bağlantısı açılmakta, 1,5 milyarlık izlenme sayısı ve videodaki seslendirme rolü açık şekilde belirtilmektedir. Bununla birlikte, bağlantıdaki çalışmanın doğrudan size ait olduğunu doğrulayan açık bir profil veya kanal bağı kanıttan teyit edilememektedir.",
   "kanit_orijinalligi": 2,
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 3
@@ -107,12 +131,6 @@
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 3
  },
- "dogrulama_rubrik:d32f20a8dc9e776d7e6416ef8c243044": {
-  "gerekce_metni": "Verilen bağlantı doğrudan yayımlanan bilimsel makaleye yönlendirdiği için kanıt doğrulanabilir olsa da, çalışmaya dair sayısal veya ölçülebilir bir sonuca yer verilmemiştir. İkinci yazarlık rolü belirtilmesine karşın, yöntem seçimi ve değerlendirme aşamasındaki kişisel katkının kapsamı açıkça netleştirilmemiştir.",
-  "kanit_orijinalligi": 3,
-  "rol_netligi": 2,
-  "sonuc_olculebilirligi": 0
- },
  "dogrulama_rubrik:ddf3ff11f6f02820ad7bd5ab6528ac92": {
   "gerekce_metni": "Paylaşılan bağlantı açılmadığı için çalışma doğrudan incelenememiştir. Buna karşılık takip edilen 400 kitap sayısı ölçülebilir net bir sonuç sunmakta, arayüzün üstlenildiği belirtilerek rol açıkça tarif edilmektedir.",
   "kanit_orijinalligi": 0,
@@ -125,22 +143,16 @@
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 0
  },
+ "dogrulama_rubrik:ecb0148326f538b5d17543e93be7c692": {
+  "gerekce_metni": "Paylaşılan DergiPark bağlantısı doğrudan yayımlanan akademik çalışmaya ulaştığı için kanıt doğrulaması tamdır. İkinci yazarlık ve yöntem seçimine katkı belirtilmiş olsa da ekip içindeki net pay ile çalışmanın sayısal sonuçları aktarılmamıştır.",
+  "kanit_orijinalligi": 3,
+  "rol_netligi": 2,
+  "sonuc_olculebilirligi": 0
+ },
  "dogrulama_rubrik:f2537c8f7afd64a5c34c7243fe972622": {
   "gerekce_metni": "Bağlantıdaki portfolyo sitesi açılmakla birlikte Brittany Chiang adına kayıtlı göründüğünden çalışmanın size ait olup olmadığı netleşmemiştir, ayrıca herhangi bir ölçülebilir sonuç paylaşılmamıştır. Tasarım ve kodlamayı tek başınıza yürüttüğünüzü belirterek rolünüzü son derece açık ifade etmişsiniz.",
   "kanit_orijinalligi": 2,
   "rol_netligi": 3,
   "sonuc_olculebilirligi": 0
- },
- "dogrulama_rubrik:f35ba51fd591aa8b593afd453e5aff7f": {
-  "gerekce_metni": "Paylaşılan bağlantı genel bir ana sayfayı gösterdiği için çalışmanın size ait olup olmadığı netleşmiyor ve elde edilen herhangi bir sayısal sonuca yer verilmemiş. İçerik ekibinde yer aldığınız belirtilmekle birlikte tam olarak hangi çalışmaları üstlendiğiniz açıklanmamış.",
-  "kanit_orijinalligi": 2,
-  "rol_netligi": 1,
-  "sonuc_olculebilirligi": 0
- },
- "dogrulama_rubrik:f76113d179b220a5123a0291e995020d": {
-  "gerekce_metni": "Uygulamanın tek başına geliştirildiği ve 1.200 indirmeye ulaşıldığı açıkça ifade edilmiş. Ancak paylaşılan bağlantı TEMA Vakfı sayfasına yönlendirdiği için çalışma ile doğrudan örtüşmüyor.",
-  "kanit_orijinalligi": 1,
-  "rol_netligi": 3,
-  "sonuc_olculebilirligi": 3
  }
 }

@@ -44,7 +44,9 @@ def test_en_az_on_bireysel_vaka_var(vakalar):
 def test_her_link_kasette_kayitli(vakalar):
     kaset = AgKaseti(KasetKipi.OYNAT)
     eksik = [(v.id, link) for v in vakalar for link in v.linkler if not kaset.kayitli_mi(link)]
-    assert not eksik, f"kaydedilmemiş linkler (python -m scripts.karne --kip kaydet): {eksik}"
+    assert not eksik, (
+        f"kaydedilmemiş linkler (python -m scripts.karne --ag kaydet --model kaydet): {eksik}"
+    )
 
 
 def test_dosya_kanitlari_mevcut(vakalar):

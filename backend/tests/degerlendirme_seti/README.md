@@ -18,12 +18,15 @@ Kod `backend/degerlendirme/` paketinde.
 ## Kullanım
 
 ```bash
-python -m scripts.karne                 # çevrimdışı, yalnızca etiketli vakalar
-python -m scripts.karne --taslak        # etiketsiz vakada önerilen etiketle
-python -m scripts.karne --kip kaydet    # gerçek ağ + model, kaseti günceller
+python -m scripts.karne                              # çevrimdışı, yalnızca etiketli vakalar
+python -m scripts.karne --taslak                     # etiketsiz vakada önerilen etiketle
+python -m scripts.karne --model kaydet               # kod değişti: kayıtlı sayfalar, eksik model çağrıları
+python -m scripts.karne --ag kaydet --model kaydet   # yeni vaka: gerçek ağ + model
 ```
 
-Kayıt kipi yalnızca yeni ya da değişen vakalar için çalıştırılır. Daha önce kaydedilmiş model girdisi yeniden çağrılmaz; bir sayfayı yeniden kaydetmek için ilgili kaydı `kaset/ag.json`'dan silmek gerekir.
+- **Kod değiştiğinde** `--model kaydet` kullanılır: sayfalar kasetten gelir, karnedeki fark yalnızca kodun farkıdır.
+- **Ağ kaydı** sıfırdan başlar ve bütün sayfaları yeniden çeker. Sayfalar zamanla değiştiği için yalnızca yeni vaka eklenince kullanılır.
+- **Model kaydı** daha önce görülmüş girdiyi yeniden çağırmaz. Dosyaya yalnızca o çalıştırmada kullanılan kayıtları yazar.
 
 ## Etiketleme durumu
 
@@ -35,5 +38,5 @@ Kayıt kipi yalnızca yeni ya da değişen vakalar için çalıştırılır. Dah
 ## Yeni vaka eklemek
 
 1. İlgili `vakalar/<alan>.yaml` dosyasına vakayı ekle (şema: `degerlendirme/vaka.py`).
-2. Link varsa `python -m scripts.karne --kip kaydet` ile kaseti güncelle.
+2. Link varsa `python -m scripts.karne --ag kaydet --model kaydet` ile kaseti güncelle.
 3. `pytest tests/test_degerlendirme_seti.py` setin bütünlüğünü denetler: her link kayıtlı, kimlikler tekil.

@@ -181,6 +181,41 @@ def test_bos_sayfa_ozeti_bos_dizge_dondurmez():
     assert "okunamadı" in link_ozetini_cikar("<html><body>x</body></html>")
 
 
+def test_buyuk_headde_ayristirma_dogrusal_surer():
+    """Eski regex bu girdide felaket geri izlemeye düşüyordu: `>` içermeyen, tırnaklı
+    uzun bölge ve açıklama etiketi yok. 24 KB'ta 6 sn, boyut ikiye katlanınca dört katı;
+    buradaki 60 KB yaklaşık 40 sn, YouTube sayfasının 300 KB'ı saatler. Python'ın regex
+    motoru GIL'i bırakmadığı için bütün sunucu donuyordu."""
+    import time
+
+    html = '<html><head><title>Kanal</title><meta content="' + '"a ' * 20_000
+    baslangic = time.perf_counter()
+    assert link_ozetini_cikar(html) == "Kanal"
+    assert time.perf_counter() - baslangic < 2
+
+
+def test_karakter_kodlari_cozulur():
+    html = (
+        "<html><head><title>Kaggle: The World&#x2019;s AI</title>"
+        '<meta name="description" content="T&#252;rkiye &amp; d&#252;nya"></head>'
+    )
+    assert link_ozetini_cikar(html) == "Kaggle: The World’s AI — Türkiye & dünya"
+
+
+def test_yalnizca_head_okunur():
+    html = '<html><head></head><body><meta name="description" content="gövdede"></body></html>'
+    assert "okunamadı" in link_ozetini_cikar(html)
+
+
+def test_bozuk_oznitelikten_ham_html_sizmaz():
+    """Instagram sayfasında özete `noarchive" /><meta name="robots"…` sızıyordu."""
+    html = (
+        '<html><head><meta name="robots" content="noarchive, noimageindex" />'
+        '<meta property="og:title" content="NASA (&#064;nasa)" /></head>'
+    )
+    assert link_ozetini_cikar(html) == "NASA (@nasa)"
+
+
 # --- İtiraz notu ----------------------------------------------------------
 # Not rubriğe giriyor ama "doğrulanmış bilgi" olarak değil; kuralların
 # prompt'ta yazılı olduğunu burada sabitliyoruz (LLM'e gitmeden).

@@ -59,22 +59,22 @@
   "hata": null,
   "kanit": 2,
   "referans": 0,
-  "rol": 1,
+  "rol": 2,
   "sonuc": 0
  },
  "medya-youtube-bagli": {
-  "hata": "zaman_asimi",
-  "kanit": null,
-  "referans": null,
-  "rol": null,
-  "sonuc": null
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
  },
  "medya-youtube-kanal-sayfasi": {
-  "hata": "zaman_asimi",
-  "kanit": null,
-  "referans": null,
-  "rol": null,
-  "sonuc": null
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
  },
  "muhendislik-grabcad-bot-engeli": {
   "hata": null,

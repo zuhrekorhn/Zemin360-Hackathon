@@ -22,6 +22,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
+from html.parser import HTMLParser
 
 import httpx
 from langchain_core.prompts import ChatPromptTemplate
@@ -227,21 +228,50 @@ def linki_normalize_et(kanit_linki: str) -> str:
     return f"https://{link.lstrip('/')}"
 
 
-def _meta_icerigi(html: str, anahtar: str) -> str | None:
-    """`name=` veya `property=` ile verilmiş bir meta etiketinin içeriği.
+class _HeadBitti(Exception):
+    """`</head>` görüldü: başlık ve meta etiketleri orada biter, gövde okunmaz."""
 
-    Open Graph etiketleri (og:title, og:description) `property=` kullanıyor;
-    sıra da sabit değil, `content=` önce gelebiliyor.
+
+class _BaslikAyristirici(HTMLParser):
+    """`<head>`'den `<title>` ve meta etiketlerini okur.
+
+    Standart kütüphanenin HTML ayrıştırıcısı: süre sayfa boyuyla doğrusal
+    artar. Eski regex'li okuma (`(.*?)` + `re.S`) büyük `<head>`'de felaket geri
+    izlemeye düşüyor, 300 KB'lık bir sayfada saatler sürüyordu. Python'ın regex
+    motoru eşleşme boyunca GIL'i bırakmadığı için bu, bütün sunucuyu donduruyordu.
+    Öznitelik değerlerindeki karakter kodları (`&#x2019;`) da burada çözülür.
     """
-    kaliplar = (
-        rf'<meta[^>]+(?:name|property)=["\']{anahtar}["\'][^>]*?content=["\'](.*?)["\']',
-        rf'<meta[^>]+content=["\'](.*?)["\'][^>]*?(?:name|property)=["\']{anahtar}["\']',
-    )
-    for kalip in kaliplar:
-        eslesme = re.search(kalip, html, re.S | re.I)
-        if eslesme and eslesme.group(1).strip():
-            return eslesme.group(1)
-    return None
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.baslik: str | None = None
+        self.meta: dict[str, str] = {}
+        self._baslik_parcalari: list[str] | None = None
+
+    def handle_starttag(self, etiket: str, oznitelikler: list[tuple[str, str | None]]) -> None:
+        if etiket == "title" and self.baslik is None:
+            self._baslik_parcalari = []
+        elif etiket == "meta":
+            degerler = {ad: deger or "" for ad, deger in oznitelikler}
+            icerik = degerler.get("content", "")
+            if not icerik.strip():
+                return
+            # Open Graph `property=`, diğerleri `name=` kullanıyor; ilk görülen kazanır.
+            for anahtar_ozniteligi in ("name", "property"):
+                anahtar = degerler.get(anahtar_ozniteligi, "").strip().lower()
+                if anahtar:
+                    self.meta.setdefault(anahtar, icerik)
+
+    def handle_data(self, veri: str) -> None:
+        if self._baslik_parcalari is not None:
+            self._baslik_parcalari.append(veri)
+
+    def handle_endtag(self, etiket: str) -> None:
+        if etiket == "title" and self._baslik_parcalari is not None:
+            self.baslik = "".join(self._baslik_parcalari)
+            self._baslik_parcalari = None
+        elif etiket == "head":
+            raise _HeadBitti
 
 
 def link_ozetini_cikar(html: str) -> str:
@@ -250,9 +280,17 @@ def link_ozetini_cikar(html: str) -> str:
     Başlık için <title>, yoksa og:title; açıklama için meta description,
     yoksa og:description.
     """
-    baslik_etiketi = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
-    baslik = baslik_etiketi.group(1) if baslik_etiketi else _meta_icerigi(html, "og:title")
-    aciklama = _meta_icerigi(html, "description") or _meta_icerigi(html, "og:description")
+    ayristirici = _BaslikAyristirici()
+    try:
+        ayristirici.feed(html)
+        ayristirici.close()
+    except _HeadBitti:
+        pass
+
+    baslik = (
+        ayristirici.baslik if ayristirici.baslik is not None else ayristirici.meta.get("og:title")
+    )
+    aciklama = ayristirici.meta.get("description") or ayristirici.meta.get("og:description")
 
     parcalar = [" ".join(p.split()) for p in (baslik, aciklama) if p and p.strip()]
     ozet = " — ".join(parcalar)
