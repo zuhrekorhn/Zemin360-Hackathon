@@ -70,6 +70,9 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("eposta_dogrulama", "son_gecerlilik"),
     ("inceleme_isareti", "olusturma_tarihi"),
     ("inceleme_isareti", "kapanma_tarihi"),
+    # Hesap bağlama (plan § 6.2): doğrulama kodunun 48 saati de kaysın.
+    ("bagli_hesap", "baglanma_tarihi"),
+    ("profil_kodu", "son_gecerlilik"),
 )
 
 # Bilerek kaydırılmayanlar: sistem zamanı değil, kullanıcının yazdığı tarih.
