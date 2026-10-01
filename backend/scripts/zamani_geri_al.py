@@ -51,6 +51,10 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     # puana girip girmediği ikisinin sırasına bağlı.
     ("referans_istegi", "yanit_tarihi"),
     ("somut_cikti", "icerik_tarihi"),
+    # Doğrulama (plan § 13): parçanın eklenme ve okunma anı, göstergenin hesaplandığı an
+    ("kanit_parcasi", "olusturma_tarihi"),
+    ("kanit_parcasi", "okuma_tarihi"),
+    ("guven_skoru", "degerlendirme_tarihi"),
     ("eslesme", "genc_ilgi_tarihi"),
     ("eslesme", "genc_iletisim_onayi_tarihi"),
     ("eslesme", "kurum_ilgi_tarihi"),

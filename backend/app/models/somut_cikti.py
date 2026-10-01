@@ -12,6 +12,7 @@ from app.db.base import Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.models.guven_skoru import GuvenSkoru
+    from app.models.kanit_parcasi import KanitParcasi
     from app.models.referans_istegi import ReferansIstegi
     from app.models.yetenek_karti import YetenekKarti
 
@@ -50,4 +51,9 @@ class SomutCikti(UUIDPrimaryKeyMixin, Base):
     )
     referans_istekleri: Mapped[list[ReferansIstegi]] = relationship(
         back_populates="somut_cikti", cascade="all, delete-orphan"
+    )
+    kanit_parcalari: Mapped[list[KanitParcasi]] = relationship(
+        back_populates="somut_cikti",
+        cascade="all, delete-orphan",
+        order_by="KanitParcasi.olusturma_tarihi",
     )
