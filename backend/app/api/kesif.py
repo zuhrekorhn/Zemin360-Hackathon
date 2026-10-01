@@ -30,7 +30,6 @@ from app.core.is_kalemi import kanit_bekliyor
 from app.core.metin import gecerli_eposta
 from app.db.session import get_session
 from app.models.hesap import ROL_GENC, Hesap
-from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import (
@@ -44,7 +43,14 @@ from app.schemas.kesif import (
     YetenekKartiYaniti,
 )
 from app.servisler import kart_hazirlama
+from app.servisler.dogrulama import (
+    KendiReferansi,
+    ReferansZatenBekliyor,
+    istek_epostasi_hazirla,
+    yeni_istek_ac,
+)
 from app.servisler.dogrulama.parcalar import link_parcasi_ekle
+from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
 from app.servisler.genc_karti import gencin_karti
 
 router = APIRouter(prefix="/kesif", tags=["kesif"])
@@ -180,7 +186,7 @@ async def kart_onayla(
     if not kullanici.sehir:
         raise HTTPException(status_code=422, detail=SEHIR_GEREKLI)
 
-    is_kalemleri = [_is_kalemi(c) for c in taslak.somut_ciktilar]
+    is_kalemleri = [_is_kalemi(c, hesap.email) for c in taslak.somut_ciktilar]
     kart = YetenekKarti(
         oturum_id=istek.oturum_id,
         kullanici_id=kullanici.id,
@@ -211,15 +217,23 @@ async def kart_onayla(
     # `embedding_var: false` döner ve arayüz yeniden hesaplatmayı önerir.
     await embedding_hesapla(oturum, kart)
     arka_plan.add_task(kart_hazirlama.karti_hazirla, kart.id, kart.versiyon)
+    # Taslaktaki referanslara e-posta yanıttan sonra gider (dogrulama-iyilestirme § 7).
+    epostalar = [
+        istek_epostasi_hazirla(r, c.baslik, kullanici.ad)
+        for c in is_kalemleri
+        for r in c.referans_istekleri
+    ]
+    if epostalar:
+        arka_plan.add_task(epostalari_gonder, epostalar)
 
     return await kart_yaniti(oturum, kart.id)
 
 
-def _is_kalemi(taslak: SomutCiktiTaslagi) -> SomutCikti:
+def _is_kalemi(taslak: SomutCiktiTaslagi, gencin_epostasi: str) -> SomutCikti:
     """Taslaktaki iş kalemi; referans e-postası iş kalemine referans isteği olur.
 
-    Geçersiz e-posta sessizce atılır: sohbetten çıkarılan bir değer onayı
-    düşürmemeli; genç kart sayfasından referans ekleyebilir.
+    Geçersiz e-posta ve gencin kendi adresi sessizce atılır: sohbetten çıkarılan
+    bir değer onayı düşürmemeli; genç kart sayfasından referans ekleyebilir.
     """
     cikti = SomutCikti(
         baslik=taslak.baslik,
@@ -235,7 +249,10 @@ def _is_kalemi(taslak: SomutCiktiTaslagi) -> SomutCikti:
         link_parcasi_ekle(cikti, taslak.kanit_linki)
     eposta = gecerli_eposta(taslak.referans_email)
     if eposta:
-        cikti.referans_istekleri.append(ReferansIstegi(referans_email=eposta))
+        try:
+            yeni_istek_ac(cikti, eposta, gencin_epostasi)
+        except (KendiReferansi, ReferansZatenBekliyor):
+            pass
     return cikti
 
 

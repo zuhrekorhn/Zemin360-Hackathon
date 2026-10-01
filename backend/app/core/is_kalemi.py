@@ -68,7 +68,11 @@ def is_kalemi_metni(cikti: IsKalemiMetni) -> str | None:
 
 class KanitliKalem(Protocol):
     kanit_parcalari: Sized
-    referans_istekleri: Sized
+    referans_istekleri: Iterable[object]
+
+
+# app/agents/dogrulama/referans_durumu.DURUM_GERI_CEKILDI (core alt katman, agents'ı içe aktarmaz)
+_GERI_CEKILDI = "geri_cekildi"
 
 
 def kanit_bekliyor(kalemler: Iterable[KanitliKalem]) -> bool:
@@ -77,6 +81,11 @@ def kanit_bekliyor(kalemler: Iterable[KanitliKalem]) -> bool:
     Sohbet gence "link ya da doğrulayabilecek birinin e-postası, ikisi de olur"
     diyor; referans veren gence yine "kanıt bekliyor" denmemeli. Yanıtı
     beklenen ya da gelmemiş referans da sayılır: genç yapabileceğini yaptı.
+    Geri çekilen istek sayılmaz (ör. yanlış adres; genç yenisini istemeli).
     Onay, kart düzenleme ve Doğrulama aynı kuralı buradan kullanır.
     """
-    return any(not kalem.kanit_parcalari and not kalem.referans_istekleri for kalem in kalemler)
+    return any(
+        not kalem.kanit_parcalari
+        and not any(getattr(r, "durum", None) != _GERI_CEKILDI for r in kalem.referans_istekleri)
+        for kalem in kalemler
+    )

@@ -63,15 +63,26 @@ sequenceDiagram
   G->>D: Kanıt gönderir (link + referans e-postası)
   D->>D: Erişilebilirlik ve tutarlılık kontrolü
   D->>DB: Ön rubrik skorunu kaydeder
-  D->>R: Tek kullanımlık referans linki gönderir
+  D->>R: Tek kullanımlık referans linkini e-postayla gönderir (genç linki görmez)
 
-  alt 5-7 gün içinde yanıt gelirse
-    R->>D: Yapılandırılmış formu doldurur
-    D->>DB: Üçüncü taraf onayını günceller
-    D->>G: Güncel güven skorunu bildirir
-  else Zaman aşımı
+  opt Genç adresi yanlış yazdıysa
+    G->>D: İsteği geri çeker (geri_cekildi; link artık form açmaz)
+  end
+
+  opt 3. gün, yanıt yoksa (Canlılık taraması)
+    D->>R: Tek hatırlatma e-postası
+  end
+
+  alt 7 gün içinde yanıt gelirse
+    R->>D: 4 soruluk formu doldurur (ilişki; çalışma, pay, sonuç doğru mu)
+    D->>DB: Koşullu güncelleme (yalnızca bekliyor ise) ve Referans başlığı
+    D->>G: Güncel güven göstergesini bildirir
+    opt Pay ya da sonuç için "evet" yeni destek getirdiyse
+      D->>DB: Kalemi arka planda yeniden puanlar (Rol / Sonuç)
+    end
+  else Zaman aşımı (okuma anında ya da Canlılık taramasında)
     D->>DB: Durumu yanıt yok olarak işaretler
-    D->>G: Skorun referanssız göründüğünü bildirir
+    D->>G: Nötr bildirim: yeniden isteyebilir ya da başkasından isteyebilir
   end
 
   opt Genç itiraz ederse

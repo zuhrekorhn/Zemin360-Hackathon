@@ -3,7 +3,8 @@
 Kurallar `app/agents/dogrulama/`'da (saf); burada modele uygulanmaları:
   - `parcalar`: kanıt parçası ekleme ve kaldırmanın tek kapısı
   - `kanit`: değerlendirme (rubrik), kanıt ekle / kaldır, `kanit_bekleyen` bayrağı
-  - `referans`: referans isteme, yanıt, zaman aşımı, yeniden isteme
+  - `referans`: referans isteme, yanıt, geri çekme, zaman aşımı, hatırlatma, yeniden isteme
+  - `referans_epostasi`: referans kişiye giden e-postalar
   - `itiraz`: itirazla yeniden değerlendirme
 
 Sözleşme (kart düzenleme servisiyle aynı): servis modeli değiştirir; commit,
@@ -27,12 +28,22 @@ from app.servisler.dogrulama.parcalar import (
     link_parcasi_ekle,
 )
 from app.servisler.dogrulama.referans import (
+    FormYaniti,
+    KendiReferansi,
     ReferansYenidenIstenemez,
+    ReferansZatenBekliyor,
+    istek_epostasi_hazirla,
+    istek_epostasi_kur,
+    isteme_engeli,
+    referans_destegi_hesapla,
     referans_guncel_mi,
     referans_iste,
+    referans_taramasi,
     referans_yanitla,
+    referansi_geri_cek,
     referansi_yeniden_iste,
     ucuncu_taraf_puani,
+    yeni_istek_ac,
     yeniden_isteme_engeli,
     zaman_asimini_isle,
     zaman_asimlarini_isle,
@@ -45,7 +56,10 @@ __all__ = [
     "ItirazIncelemede",
     "KanitBulunamadi",
     "KanitZatenVar",
+    "FormYaniti",
+    "KendiReferansi",
     "ReferansYenidenIstenemez",
+    "ReferansZatenBekliyor",
     "birincil_link",
     "cikti_getir",
     "ciktiyi_puanla",
@@ -56,11 +70,18 @@ __all__ = [
     "kanit_linki_ekle",
     "kanit_parcasini_sil",
     "link_parcasi_ekle",
+    "isteme_engeli",
+    "istek_epostasi_hazirla",
+    "istek_epostasi_kur",
+    "referans_destegi_hesapla",
     "referans_guncel_mi",
     "referans_iste",
+    "referans_taramasi",
     "referans_yanitla",
+    "referansi_geri_cek",
     "referansi_yeniden_iste",
     "ucuncu_taraf_puani",
+    "yeni_istek_ac",
     "yeniden_isteme_engeli",
     "zaman_asimini_isle",
     "zaman_asimlarini_isle",

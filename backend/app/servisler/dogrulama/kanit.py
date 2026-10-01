@@ -34,7 +34,7 @@ from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_kaniti import YetenekKaniti
 from app.models.yetenek_karti import YetenekKarti
 from app.servisler.dogrulama.parcalar import birincil_link, link_parcasi_ekle, parca_sil
-from app.servisler.dogrulama.referans import ucuncu_taraf_puani
+from app.servisler.dogrulama.referans import referans_destegi_hesapla, ucuncu_taraf_puani
 
 
 @dataclass(frozen=True)
@@ -144,6 +144,7 @@ async def _girdi(
         .options(selectinload(YetenekKarti.kullanici))
         .where(YetenekKarti.id == cikti.yetenek_karti_id)
     )
+    destek = referans_destegi_hesapla(cikti)
     return DegerlendirmeGirdisi(
         baslik=cikti.baslik,
         iddia_sahibi=kart.kullanici.ad if kart else None,
@@ -152,8 +153,10 @@ async def _girdi(
         pay=cikti.kendi_rolu,
         yetenekler=tuple(kart.araclar_teknolojiler or ()) if kart else (),
         itiraz_notu=itiraz_notu,
-        # Referansın yapılandırılmış yanıtları adım 7'de; eski 1-5 yanıt soruya
-        # özgü olmadığı için Sonuç ve Rol'e bağımsız destek sayılmaz.
+        # Güncel bir referansın ilgili soruya "evet"i bağımsız destektir (plan § 7).
+        # Eski 1-5 yanıt soruya özgü olmadığı için destek sayılmaz.
+        referans_sonuc_evet=destek.sonuc,
+        referans_pay_evet=destek.pay,
     )
 
 

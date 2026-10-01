@@ -49,3 +49,12 @@ async def gencin_hesap_id(oturum: AsyncSession, yetenek_karti_id: uuid.UUID) -> 
         .join(YetenekKarti, YetenekKarti.kullanici_id == Kullanici.id)
         .where(YetenekKarti.id == yetenek_karti_id)
     )
+
+
+async def gencin_adi(oturum: AsyncSession, yetenek_karti_id: uuid.UUID) -> str | None:
+    """Kartın sahibi gencin kayıttaki adı (referans e-postası için)."""
+    return await oturum.scalar(
+        select(Kullanici.ad)
+        .join(YetenekKarti, YetenekKarti.kullanici_id == Kullanici.id)
+        .where(YetenekKarti.id == yetenek_karti_id)
+    )

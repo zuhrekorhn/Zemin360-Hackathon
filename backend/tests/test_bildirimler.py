@@ -126,7 +126,8 @@ def test_referans_yaniti_gence_bildirim_yazar():
         await d.oturum.commit()
 
         yanit = await istemci.post(
-            "/dogrulama/referans-yaniti", json={"token": referans.token, "puan": 4}
+            "/dogrulama/referans-yaniti",
+            json={"token": referans.token, "iliski": "diger", "iddia_dogru": "evet"},
         )
         assert yanit.status_code == 200
         bildirimler = await _bildirimler(d, d.genc1)

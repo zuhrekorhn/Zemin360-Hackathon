@@ -59,6 +59,7 @@ describe("bildirimHedefi", () => {
   it("bildirimi alan rolün paneline, ilgili bölüme götürür", () => {
     expect(bildirimHedefi("ilgi")).toBe("/genc#ilgiler");
     expect(bildirimHedefi("referans_yaniti")).toBe("/genc#kart");
+    expect(bildirimHedefi("referans_yanit_yok")).toBe("/genc#kart");
     expect(bildirimHedefi("yeni_oneri")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("kabul")).toBe("/kurum#isbirlikleri");
     expect(bildirimHedefi("red")).toBe("/kurum#oneriler");

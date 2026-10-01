@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 
 from app.core.kanit_okuma.adres import KANIT_LINKI_UZUNLUGU
+
+# Referans formu (plan § 7); değer kümeleri app/agents/dogrulama/kurallar.py ile aynı.
+Iliski = Literal["yonetici", "takim_arkadasi", "ogretmen_danisman", "musteri", "diger"]
+FormCevabi = Literal["evet", "kismen", "hayir", "bilmiyorum"]
 
 KanitLinki = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=KANIT_LINKI_UZUNLUGU)
@@ -60,21 +64,31 @@ class GuvenSkoruYaniti(BaseModel):
 
 
 class ReferansDurumuYaniti(BaseModel):
+    """Gencin (ve GİRVAK'ın) gördüğü referans satırı. Token ve yanıt linki yok:
+    e-posta referansa doğrudan gider (bulgu 31)."""
+
     id: uuid.UUID
     referans_email: str
+    # "bekliyor" | "yanitlandi" | "yanit_yok" | "geri_cekildi"
     durum: str
+    # Eski formun 1-5 puanı; yeni yanıtlarda null.
     puan: int | None
+    iliski: str | None = None
+    iddia_dogru: str | None = None
+    pay_dogru: str | None = None
+    sonuc_dogru: str | None = None
     yanit_metni: str | None
     olusturma_tarihi: dt.datetime
-    # SMTP kurmuyoruz (MVP kararı): link yanıtta gösteriliyor ki referans
-    # kişiye elle iletilebilsin.
-    yanit_linki: str | None = None
+    # Güç işareti (puan değil): "kurumsal_eposta" | "egitim_eposta" | null
+    guc: str | None = None
     # False: yanıt iş kaleminin önceki hâli için verildi; geçmiş olarak görünür,
     # güven göstergesine girmez (plan § 0, karar 8). Genç yeniden isteyebilir.
     guncel: bool = True
     # "Referansı yeniden iste" düğmesi; kural backend'de tek yerde
     # (referans_yeniden_istenebilir_mi), arayüz tekrar etmez (bulgu 30).
     yeniden_istenebilir: bool = False
+    # "Geri çek" düğmesi (yalnızca bekleyen istek).
+    geri_cekilebilir: bool = False
 
 
 class ReferansYenidenIsteIstegi(BaseModel):
@@ -114,7 +128,10 @@ class ReferansIstegiYaniti(BaseModel):
     baslik: str
     aciklama: str | None
     iddia_sahibi_adi: str
-    # "bekliyor" | "yanitlandi" | "yanit_yok"
+    # Formun (3) ve (4). sorusu bunları ayrı satırda gösterir; boşsa soru sorulmaz.
+    pay: str | None = None
+    sonuc: str | None = None
+    # "bekliyor" | "yanitlandi" | "yanit_yok" | "geri_cekildi"
     durum: str
     # Arayüz formu gösterip göstermeyeceğine buna bakarak karar verir.
     yanitlanabilir: bool
@@ -128,9 +145,13 @@ class ReferansYanitiIstegi(BaseModel):
     """
 
     token: str
-    # 1-5 skala; rubriğin 0-3'üne çevrilir (app/agents/dogrulama/kurallar.py)
-    puan: int = Field(ge=1, le=5)
-    yorum: str | None = None
+    # 4 soruluk form (plan § 7): (1) ilişki, (2) çalışma, (3) pay, (4) sonuç.
+    # Kalemde pay ya da sonuç yazılmamışsa o soru sorulmaz (null).
+    iliski: Iliski
+    iddia_dogru: FormCevabi
+    pay_dogru: FormCevabi | None = None
+    sonuc_dogru: FormCevabi | None = None
+    yorum: str | None = Field(default=None, max_length=1000)
 
 
 class ReferansYanitiSonucu(BaseModel):

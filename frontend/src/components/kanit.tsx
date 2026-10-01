@@ -14,12 +14,14 @@ import {
   kalemiDegerlendir,
   kanitLinkiEkle,
   kanitParcasiSil,
+  referansGeriCek,
   referansIste,
   referansYenidenIste,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { degerlendirildiMi, kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { referansSatiri } from "@/lib/kart-duzenleme";
+import { REFERANS_DURUMLARI, referansOzeti } from "@/lib/referans";
 
 /**
  * Bir çalışmanın kanıt bölümü (docs/plans/dogrulama-iyilestirme.md § 3).
@@ -28,18 +30,11 @@ import { referansSatiri } from "@/lib/kart-duzenleme";
  *   - Kanıtlar: link eklenir (çalışma hemen değerlendirilir) ya da kaldırılır.
  *     Kanıt yalnızca buradan değişir; iddia düzenleme formu linke dokunmaz.
  *   - Değerlendirme: linki olup henüz değerlendirilmemiş çalışma için.
- *   - Referans: istemek değerlendirmeyi yeniden çalıştırmaz.
+ *   - Referans: istemek değerlendirmeyi yeniden çalıştırmaz. E-postayı sistem
+ *     gönderir; yanıt linki gence gösterilmez (plan § 7, adım 7). Yanlış
+ *     adrese giden bekleyen istek geri çekilebilir.
  *   - İtiraz: değerlendirmeyi eksik bulan genç yeniden baktırır.
- *
- * Referans yanıt linki ekranda gösteriliyor çünkü henüz e-posta göndermiyoruz
- * (bilinen sınır; plan adım 7'de e-posta doğrudan referansa gidecek).
  */
-
-const REFERANS_DURUMLARI: Record<string, string> = {
-  bekliyor: "Yanıt bekleniyor",
-  yanitlandi: "Yanıtladı",
-  yanit_yok: "Süresinde yanıt gelmedi",
-};
 
 export function KanitBolumu({
   somutCiktiId,
@@ -134,6 +129,9 @@ export function KanitBolumu({
                 referans={referans}
                 onYenidenIste={() =>
                   void calistir(() => referansYenidenIste(referans.id))
+                }
+                onGeriCek={() =>
+                  void calistir(() => referansGeriCek(referans.id))
                 }
               />
             ))
@@ -285,6 +283,10 @@ function ReferansFormu({
           autoComplete="off"
         />
       </FormAlani>
+      <p className="text-xs text-pretty text-muted-foreground">
+        Bu kişiye birkaç kısa soruluk bir e-posta göndeririz; 3. gün bir kez
+        hatırlatırız. Yanıt için 7 günü var.
+      </p>
       <Button
         type="submit"
         size="sm"
@@ -392,78 +394,19 @@ function Degerlendirme({
   );
 }
 
-/**
- * Referans kişiye iletilecek link — tam adres.
- *
- * Göreli bir yol ("/referans?token=…") kopyalanıp e-postayla gönderilince
- * çalışmıyor; referans kişi bu sayfayı bizim sitemizde açacak. Bu yüzden
- * adres origin'le birlikte gösteriliyor ve kopyalanabiliyor.
- */
-function YanitLinki({ adres }: { adres: string }) {
-  const [kopyalandi, setKopyalandi] = useState(false);
-
-  async function kopyala() {
-    try {
-      await navigator.clipboard.writeText(adres);
-      setKopyalandi(true);
-      window.setTimeout(() => setKopyalandi(false), 2000);
-    } catch {
-      // Pano izni yoksa link zaten ekranda; elle seçilip kopyalanabilir.
-      setKopyalandi(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <p className="text-xs text-muted-foreground">
-        Yanıt linki. E-posta göndermiyoruz; bu linki referans kişiye kendin
-        ilet:
-      </p>
-      <div className="flex flex-wrap items-center gap-2">
-        <a
-          className="text-xs break-all text-baglanti underline underline-offset-4"
-          href={adres}
-        >
-          {adres}
-        </a>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => void kopyala()}
-        >
-          {kopyalandi ? "Kopyalandı" : "Kopyala"}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Backend girişsiz yanıt uç noktasının yolunu döndürüyor; referans kişiye
- * gösterilecek olan ise onu saran sayfanın TAM adresi.
- */
-function yanitSayfasiLinki(yanitLinki: string | null): string | null {
-  if (!yanitLinki) return null;
-  const token = new URLSearchParams(yanitLinki.split("?")[1] ?? "").get(
-    "token",
-  );
-  if (!token) return null;
-  // Bileşen yalnızca veri geldikten sonra çiziliyor, yani tarayıcıdayız.
-  const koken = typeof window === "undefined" ? "" : window.location.origin;
-  return `${koken}/referans?token=${encodeURIComponent(token)}`;
-}
-
 function ReferansSatiri({
   referans,
   onYenidenIste,
+  onGeriCek,
 }: {
   referans: ReferansDurumu;
   onYenidenIste: () => void;
+  onGeriCek: () => void;
 }) {
-  const yanitSayfasi = yanitSayfasiLinki(referans.yanit_linki);
   // İş değiştiyse eski yanıt geçmişte kalır (docs/plans/genc-akisi.md § 0, karar 8).
   const { not, yenidenIstenebilir } = referansSatiri(referans);
+  const { yanitlar, isaretler } = referansOzeti(referans);
+  const [onayAcik, setOnayAcik] = useState(false);
 
   return (
     <div className="flex flex-col gap-1 rounded-sm border border-kenar px-3 py-2">
@@ -471,9 +414,24 @@ function ReferansSatiri({
         <span className="text-sm break-all">{referans.referans_email}</span>
         <span className="text-xs text-muted-foreground">
           {REFERANS_DURUMLARI[referans.durum] ?? referans.durum}
-          {referans.puan !== null ? ` · ${referans.puan}/5` : ""}
         </span>
       </div>
+
+      {yanitlar.length > 0 ? (
+        <p className="text-sm">{yanitlar.join(" · ")}</p>
+      ) : null}
+      {isaretler.length > 0 ? (
+        <ul className="flex flex-wrap gap-1.5" aria-label="Referans hakkında">
+          {isaretler.map((isaret) => (
+            <li
+              key={isaret}
+              className="rounded-sm border border-kenar px-2 py-0.5 text-xs text-muted-foreground"
+            >
+              {isaret}
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       {referans.yanit_metni ? (
         <p className="text-sm text-pretty text-muted-foreground">
@@ -481,8 +439,26 @@ function ReferansSatiri({
         </p>
       ) : null}
 
-      {referans.durum === "bekliyor" && yanitSayfasi ? (
-        <YanitLinki adres={yanitSayfasi} />
+      {referans.geri_cekilebilir && onayAcik ? (
+        <OnayAlani
+          soru={`${referans.referans_email} adresine giden istek geri çekilsin mi? Bağlantı artık açılmaz; doğru adresle yeni bir referans isteyebilirsin.`}
+          onayEtiketi="İsteği geri çek"
+          onOnayla={() => {
+            setOnayAcik(false);
+            onGeriCek();
+          }}
+          onVazgec={() => setOnayAcik(false)}
+        />
+      ) : referans.geri_cekilebilir ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="w-fit"
+          onClick={() => setOnayAcik(true)}
+        >
+          Geri çek
+        </Button>
       ) : null}
 
       {not ? (

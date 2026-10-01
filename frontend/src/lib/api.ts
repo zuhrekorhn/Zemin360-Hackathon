@@ -191,7 +191,11 @@ export type GencProfil = {
 export type GencProfilGuncelleme = Partial<
   Omit<
     GencProfil,
-    "email" | "kvkk_onay_tarihi" | "eksik_alanlar" | "ad_kilitli" | "bekleyen_ad"
+    | "email"
+    | "kvkk_onay_tarihi"
+    | "eksik_alanlar"
+    | "ad_kilitli"
+    | "bekleyen_ad"
   >
 > & { kvkk_onay?: boolean };
 
@@ -403,7 +407,12 @@ export function girisYap(email: string, sifre: string): Promise<TokenYaniti> {
 /* --- Bildirimler (docs/faz-b-kimlik-ve-dongu.md § 6) ---------------------- */
 
 export type BildirimTuru =
-  "yeni_oneri" | "ilgi" | "kabul" | "red" | "referans_yaniti";
+  | "yeni_oneri"
+  | "ilgi"
+  | "kabul"
+  | "red"
+  | "referans_yaniti"
+  | "referans_yanit_yok";
 
 export type Bildirim = {
   id: string;
@@ -781,20 +790,34 @@ export type KanitParcasi = {
   erisim?: string | null;
 };
 
+/** Referans formunun (2)-(4). sorularına yanıt (dogrulama-iyilestirme § 7). */
+export type FormCevabi = "evet" | "kismen" | "hayir" | "bilmiyorum";
+/** Formun (1). sorusu: referans kişiyi nereden tanıyor. */
+export type ReferansIliskisi =
+  "yonetici" | "takim_arkadasi" | "ogretmen_danisman" | "musteri" | "diger";
+
+/** Referans satırı. Token ve yanıt linki yok: e-posta referansa doğrudan gider. */
 export type ReferansDurumu = {
   id: string;
   referans_email: string;
-  /** "bekliyor" | "yanitlandi" | "yanit_yok" — yanıt geldi demek, olumlu demek değil. */
+  /** "bekliyor" | "yanitlandi" | "yanit_yok" | "geri_cekildi" — yanıt geldi demek, olumlu demek değil. */
   durum: string;
+  /** Eski formun 1-5 puanı; yeni yanıtlarda null. */
   puan: number | null;
+  iliski: ReferansIliskisi | null;
+  iddia_dogru: FormCevabi | null;
+  pay_dogru: FormCevabi | null;
+  sonuc_dogru: FormCevabi | null;
   yanit_metni: string | null;
   olusturma_tarihi: string;
-  /** SMTP yok (MVP): link burada dönüyor, iddia sahibi elle iletiyor. */
-  yanit_linki: string | null;
+  /** Güç işareti (puan değil). */
+  guc: "kurumsal_eposta" | "egitim_eposta" | null;
   /** false: yanıt iş kaleminin önceki hâline verildi; güven göstergesine girmez. */
   guncel: boolean;
   /** "Yeniden iste" düğmesi; kural backend'de, arayüz tekrar etmez. */
   yeniden_istenebilir: boolean;
+  /** "Geri çek" düğmesi (yalnızca bekleyen istek). */
+  geri_cekilebilir: boolean;
 };
 
 export type KanitDurumu = {
@@ -816,6 +839,9 @@ export type ReferansIstegiBilgisi = {
   baslik: string;
   aciklama: string | null;
   iddia_sahibi_adi: string;
+  /** Formun (3) ve (4). sorusu bunları ayrı satırda gösterir; boşsa soru sorulmaz. */
+  pay: string | null;
+  sonuc: string | null;
   durum: string;
   yanitlanabilir: boolean;
 };
@@ -876,6 +902,14 @@ export function referansIste(
   });
 }
 
+/** POST /dogrulama/referans/{id}/geri-cek — bekleyen isteği geri çeker; tekrarı yan etkisiz. */
+export function referansGeriCek(referansId: string): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>(
+    `/dogrulama/referans/${encodeURIComponent(referansId)}/geri-cek`,
+    { method: "POST" },
+  );
+}
+
 /** POST /dogrulama/referans-yeniden-iste — aynı kişiye yeni istek; eski yanıt geçmişte kalır. */
 export function referansYenidenIste(referansId: string): Promise<KanitDurumu> {
   return apiIstek<KanitDurumu>("/dogrulama/referans-yeniden-iste", {
@@ -902,15 +936,23 @@ export type ReferansYanitiSonucu = {
   durum: string;
 };
 
+/** Referans formunun gövdesi; kalemde yazılmamış pay / sonuç sorulmaz (null). */
+export type ReferansFormu = {
+  iliski: ReferansIliskisi;
+  iddia_dogru: FormCevabi;
+  pay_dogru: FormCevabi | null;
+  sonuc_dogru: FormCevabi | null;
+  yorum: string | null;
+};
+
 /** POST /dogrulama/referans-yaniti — girişsiz, token bazlı. */
 export function referansYanitla(
   token: string,
-  puan: number,
-  yorum?: string | null,
+  form: ReferansFormu,
 ): Promise<ReferansYanitiSonucu> {
   return apiIstek<ReferansYanitiSonucu>("/dogrulama/referans-yaniti", {
     method: "POST",
-    body: JSON.stringify({ token, puan, yorum: yorum ?? null }),
+    body: JSON.stringify({ token, ...form }),
   });
 }
 

@@ -18,7 +18,7 @@ from app.agents.dogrulama import (
     DURUM_YANIT_YOK,
     DURUM_YANITLANDI,
     ReferansYaniti,
-    gecerli_referans_puanlari,
+    gecerli_referans_yanitlari,
     referans_gecerli_mi,
     referans_yeniden_istenebilir_mi,
 )
@@ -87,8 +87,8 @@ def test_referans_gecerliligi():
     assert not referans_gecerli_mi(None, SIMDI)  # tarihi bilinmeyen eski yanıt
     assert referans_gecerli_mi(sonra, SIMDI)
     yanitlar = [ReferansYaniti(5, once), ReferansYaniti(4, sonra), ReferansYaniti(None, None)]
-    assert gecerli_referans_puanlari(yanitlar, SIMDI) == [4]
-    assert gecerli_referans_puanlari(yanitlar, None) == [5, 4]
+    assert [y.puan for y in gecerli_referans_yanitlari(yanitlar, SIMDI)] == [4]
+    assert [y.puan for y in gecerli_referans_yanitlari(yanitlar, None)] == [5, 4]
 
 
 def test_yeniden_eslestirme_yalnizca_filtre_alaninda():
@@ -253,12 +253,13 @@ def test_referans_yeniden_istenir_ve_yeni_yanit_sayilir(kart_hazirlama_arka_plan
                 r for r in (await _ciktiyi_oku(oturum, a.id)).referans_istekleri if r.id != eski.id
             )
             yanit = await istemci.post(
-                "/dogrulama/referans-yaniti", json={"token": yeni.token, "puan": 4}
+                "/dogrulama/referans-yaniti",
+                json={"token": yeni.token, "iliski": "yonetici", "iddia_dogru": "kismen"},
             )
             assert yanit.status_code == 200
-            # Yalnızca değişiklikten sonraki yanıt: 4 → 2 (eski 5 sayılmaz).
+            # Yalnızca değişiklikten sonraki yanıt: kısmen → 1 (eski 5 sayılmaz).
             a_sonra = await _ciktiyi_oku(oturum, a.id)
-            assert ucuncu_taraf_puani(a_sonra) == 2
+            assert ucuncu_taraf_puani(a_sonra) == 1
 
     asyncio.run(senaryo())
 

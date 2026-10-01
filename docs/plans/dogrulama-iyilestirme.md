@@ -698,6 +698,10 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
 
 ### Adım 7: Referans
 
+> **Durum: tamamlandı** (tek commit: API sözleşmesi, form ve satır birlikte değiştiği için bölünmedi). Migration `e4a9c7b2d5f1`: ilişki ve üç soru sütunları (CHECK'li), `gonderim_tarihi`, `hatirlatma_tarihi`, `yanit_isareti`, durum CHECK'i `geri_cekildi` ile. E-posta referansa doğrudan gider (`servisler/dogrulama/referans_epostasi.py`, yanıttan sonra arka planda, `EpostaGonderici` üzerinden); token ve yanıt linki hiçbir API yanıtında yok (GİRVAK dahil). Keşif onayındaki referans da aynı kapıdan açılır (`yeni_istek_ac`) ve e-postası gider; gencin kendi adresi orada sessizce atılır. Yanıt `UPDATE … WHERE durum = 'bekliyor' RETURNING id`. Geri çekme `POST /dogrulama/referans/{id}/geri-cek` (sayfa içi onayla; tekrarı yan etkisiz; geri çekilen istek `kanit_bekliyor`'da sayılmaz). Zaman aşımı geçişini yapan kod gence `referans_yanit_yok` bildirimini aynı işlemde yazar (okuma anı ya da Canlılık taraması, hangisi önce). Canlılık taraması 3. gün tek hatırlatma gönderir (yalnızca `gonderim_tarihi` dolu, yani sistemin e-posta gönderdiği isteklere).
+> Uygulamada netleşen kararlar: (1) Referans başlığı **kişi başına** ortalama: her referansın bilinen yanıtlarının ortalaması, sonra kişiler arası ortalama (0.5 yukarı); çok soruya yanıt veren daha ağır basmaz. Herkes "bilmiyorum" dediyse "—". (2) Rol / Sonuç desteği için güncel referanslardan **birinin** "evet"i yeter (destek kanıt gibidir, oylama değil; "hayır" zaten başlığı düşürür). (3) Destek değişince kalem **arka planda yeniden puanlanır** (`kart_hazirlama.kalemi_yeniden_puanla`): değerlendirme girdisinin özeti desteği içerdiği için model bir kez çağrılır; referans kişi beklemez, hız sınırı yanıtı düşürmez. (4) Kalemde yazılmamış pay / sonuç sorulmaz, gelen yanıt kaydedilmez. (5) `kurumsal_eposta` sütunu **saklanmadı**: güç işareti adresten okuma anında hesaplanır (`eposta_gucu`), eski satırlar da kapsanır, iki kaynak tutarsızlaşmaz. (6) Referans kişiye "siz" (firmaya giden metinlerle aynı).
+> **Ertelenen / borç:** "Kurumsal" bugün "ücretsiz posta sağlayıcısı değil" demek; kuruluşun web sitesiyle alan adı karşılaştırması kalemde kuruluş sitesi tutulmadığı için yok (§ 18). Arka plandaki yeniden puanlama LLM hatasında kalemi eski puanla bırakır; bir sonraki değerlendirme (kanıt, itiraz) desteği içerir. `yanit_isareti` boş; `referans_supheli` sinyalleri adım 11. Karne değişmedi (değerlendirme setinde referans yanıtı yok).
+
 - **Bulgular:** 18, 20, 21 (engeller ve doğrudan e-posta), 22, 23, 24, 31.
 - **İş birimleri:**
   1. Migration (referans sütunları); `referans_gecisi` += `geri_cekildi`.
@@ -808,6 +812,7 @@ Karar 1–13 onaylandı (1 Eki 2026).
 - **Sahte belge:** çapasız sahte belge tespit edilmeyebilir. Etkisi seviye D ile sınırlıdır.
 - **Kapalı platformlar:** LinkedIn ve Instagram okunamaz; alternatif yol sunulur.
 - **Referansın dürüstlüğü:** e-postası doğrulanmış bir arkadaş yine de abartabilir. İşaretler bunu görünür kılar.
+- **Kurumsal e-posta:** ücretsiz posta sağlayıcısı dışındaki her alan adı "kurumsal" görünür; kişisel alan adı da bu sınıfa düşer. Kuruluşun sitesiyle karşılaştırma için kalemde kuruluş adresi gerekir.
 
 ## 19. Kaynaklar
 

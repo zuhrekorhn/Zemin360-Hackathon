@@ -63,6 +63,20 @@ async def karti_hazirla(kart_id: uuid.UUID, versiyon: int, embedding_yenile: boo
             logger.exception("Kart hazırlama başarısız (%s)", kart_id)
 
 
+async def kalemi_yeniden_puanla(kart_id: uuid.UUID, cikti_id: uuid.UUID, versiyon: int) -> None:
+    """Arka plan işi: referansın Sonuç / Rol desteği değişti, kalem yeniden puanlanır
+    (yanıt referansı bekletmesin, hız sınırı yanıtı düşürmesin), sonra kart hazırlanır.
+
+    Değerlendirme girdisi desteği içerdiği için önbellek tutmaz, model bir kez çağrılır.
+    """
+    async with get_sessionmaker()() as oturum:
+        try:
+            await _ciktiyi_puanla_bir_kez(oturum, cikti_id, zorla=True)
+            await karti_hazirla_oturumla(oturum, kart_id, versiyon)
+        except Exception:
+            logger.exception("Kalem yeniden puanlanamadı (%s)", cikti_id)
+
+
 async def karti_hazirla_oturumla(
     oturum: AsyncSession, kart_id: uuid.UUID, versiyon: int, *, embedding_yenile: bool = False
 ) -> None:
@@ -92,8 +106,11 @@ async def _karti_oku(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKarti |
     )
 
 
-async def _ciktiyi_puanla_bir_kez(oturum: AsyncSession, cikti_id: uuid.UUID) -> None:
+async def _ciktiyi_puanla_bir_kez(
+    oturum: AsyncSession, cikti_id: uuid.UUID, *, zorla: bool = False
+) -> None:
     """Kalemi kilitleyerek okur; puanlanacaksa puanlar ve hemen commit eder.
+    `zorla`: değerlendirilmiş kalem de yeniden değerlendirilir (girdi değişti).
 
     LLM hız sınırında ya da arızasında kalem puansız kalır: genç kart
     sayfasından "değerlendir"e basabilir, bir sonraki hazırlama yine dener.
@@ -111,7 +128,7 @@ async def _ciktiyi_puanla_bir_kez(oturum: AsyncSession, cikti_id: uuid.UUID) -> 
         .execution_options(populate_existing=True)
     )
     # Değerlendirilmemiş her kalem (linksiz de, karar 10); değerlendirilmiş olan atlanır.
-    if cikti is None or degerlendirildi_mi(cikti):
+    if cikti is None or (degerlendirildi_mi(cikti) and not zorla):
         await oturum.rollback()  # kilidi bırak
         return
     try:

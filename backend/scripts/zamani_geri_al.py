@@ -50,6 +50,8 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     # Referans yanıtı ile iş kaleminin içerik tarihi birlikte kaysın: yanıtın
     # puana girip girmediği ikisinin sırasına bağlı.
     ("referans_istegi", "yanit_tarihi"),
+    ("referans_istegi", "gonderim_tarihi"),
+    ("referans_istegi", "hatirlatma_tarihi"),
     ("somut_cikti", "icerik_tarihi"),
     # Doğrulama (plan § 13): parçanın eklenme ve okunma anı, göstergenin hesaplandığı an
     ("kanit_parcasi", "olusturma_tarihi"),

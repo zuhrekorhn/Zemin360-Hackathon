@@ -116,7 +116,8 @@ def test_saglik_ve_referans_uclari_girissiz():
         # Bilinmeyen token 404 — 401 değil: uç girişsiz, kimlik token'ın kendisi.
         assert (await istemci.get("/dogrulama/referans/olmayan-token")).status_code == 404
         yanit = await istemci.post(
-            "/dogrulama/referans-yaniti", json={"token": "olmayan-token", "puan": 5}
+            "/dogrulama/referans-yaniti",
+            json={"token": "olmayan-token", "iliski": "diger", "iddia_dogru": "evet"},
         )
         assert yanit.status_code == 404
 

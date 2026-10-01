@@ -7,12 +7,20 @@ import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import {
+  type FormCevabi,
+  type ReferansIliskisi,
   type ReferansIstegiBilgisi,
   type ReferansYanitiSonucu,
   referansIstegiGetir,
   referansYanitla,
 } from "@/lib/api";
 import { type Hata, hatayaCevir, tekrarDenenebilirMi } from "@/lib/hata";
+import {
+  CEVAP_SECENEKLERI,
+  type FormSorusu,
+  ILISKI_SECENEKLERI,
+  formSorulari,
+} from "@/lib/referans";
 
 /**
  * Referans kişinin yanıt sayfası (docs/sequence-diagrams.md § Akış 2).
@@ -20,23 +28,22 @@ import { type Hata, hatayaCevir, tekrarDenenebilirMi } from "@/lib/hata";
  * Giriş yok, kimlik yerine tek kullanımlık token — referans kişiyi üye olmaya
  * zorlamak yanıt oranını düşürür (docs/api-contracts.md § Mimari Notlar).
  *
- * İddia formdan ÖNCE gösteriliyor: neyi onayladığını bilmeden puan vermek
+ * İddia formdan ÖNCE gösteriliyor: neyi onayladığını bilmeden yanıt vermek
  * anlamsız olurdu. Harcanmış ya da geçersiz bir link form açmıyor.
+ *
+ * Dört soru (docs/plans/dogrulama-iyilestirme.md § 7): ilişki; çalışma, pay ve
+ * sonuç doğru mu. Pay ve sonuç ayrı satırlarda gösterilir; kalemde yazılmamışsa
+ * o soru sorulmaz.
  */
 
-const SECENEKLER = [
-  { puan: 1, etiket: "1. Bu çalışma böyle olmadı" },
-  { puan: 2, etiket: "2. Katkısı sınırlıydı" },
-  { puan: 3, etiket: "3. Ne iyi ne kötü" },
-  { puan: 4, etiket: "4. Anlatıldığı gibi yaptı" },
-  { puan: 5, etiket: "5. Anlatılandan da fazlasını yaptı" },
-];
+type Yanitlar = Partial<Record<FormSorusu["alan"], FormCevabi>>;
 
 const KAPALI_MESAJLARI: Record<string, string> = {
   yanitlandi:
     "Bu referans isteği zaten yanıtlanmış. Link tek kullanımlık; yeniden yanıt vermeniz gerekmiyor.",
   yanit_yok:
     "Bu referans isteğinin süresi doldu (7 gün). Yanıt gelmemesi kimse için olumsuz bir işaret değil; çalışma referans yanıtı olmadan değerlendirildi.",
+  geri_cekildi: "Bu referans isteği geri çekildi. Yanıt vermeniz gerekmiyor.",
 };
 
 export default function ReferansSayfasi() {
@@ -52,7 +59,8 @@ function ReferansFormu() {
 
   const [bilgi, setBilgi] = useState<ReferansIstegiBilgisi | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
-  const [puan, setPuan] = useState<number | null>(null);
+  const [iliski, setIliski] = useState<ReferansIliskisi | null>(null);
+  const [yanitlar, setYanitlar] = useState<Yanitlar>({});
   const [yorum, setYorum] = useState("");
   const [bekleniyor, setBekleniyor] = useState(false);
   const [hata, setHata] = useState<Hata | null>(null);
@@ -86,12 +94,23 @@ function ReferansFormu() {
     void baslat();
   }, [token, bilgiyiGetir]);
 
+  const sorular = bilgi ? formSorulari(bilgi) : [];
+  const tamam = iliski !== null && sorular.every((soru) => yanitlar[soru.alan]);
+
   async function gonder() {
-    if (!token || puan === null) return;
+    if (!token || !tamam || iliski === null || !yanitlar.iddia_dogru) return;
     setHata(null);
     setBekleniyor(true);
     try {
-      setSonuc(await referansYanitla(token, puan, yorum.trim() || null));
+      setSonuc(
+        await referansYanitla(token, {
+          iliski,
+          iddia_dogru: yanitlar.iddia_dogru,
+          pay_dogru: yanitlar.pay_dogru ?? null,
+          sonuc_dogru: yanitlar.sonuc_dogru ?? null,
+          yorum: yorum.trim() || null,
+        }),
+      );
     } catch (sebep) {
       setHata(hatayaCevir(sebep));
       setTekrarDenenir(tekrarDenenebilirMi(sebep));
@@ -106,7 +125,7 @@ function ReferansFormu() {
     <Sayfa>
       <SayfaBasligi
         baslik="Bir referans isteği"
-        aciklama="Biri, birlikte yürüttüğünüz bir çalışmayı Zemin360’ta kendi yetenek kartına ekledi ve sizi referans gösterdi. Üye olmanız gerekmiyor; tek bir soruluk bir şey."
+        aciklama="Biri, birlikte yürüttüğünüz bir çalışmayı Zemin360’ta kendi yetenek kartına ekledi ve sizi referans gösterdi. Üye olmanız gerekmiyor; dört kısa soru."
       />
 
       {hata ? (
@@ -153,37 +172,36 @@ function ReferansFormu() {
             void gonder();
           }}
         >
-          <fieldset className="flex flex-col gap-3">
-            <legend className="font-heading text-base font-semibold text-ana">
-              Anlatılan çalışma, sizin gördüğünüz kadarıyla doğru mu?
-            </legend>
-            <p className="text-sm text-muted-foreground">
-              Yanıtınız dört başlıktan yalnızca birine etki eder. Olumsuz yanıt
-              da işimize yarar; amacımız kimseyi cezalandırmak değil, çalışmayı
-              doğru yere oturtmak.
-            </p>
+          <p className="text-sm text-pretty text-muted-foreground">
+            Yanıtlarınız güven göstergesinin yalnızca “Referans” kısmını besler;
+            pay ve sonuç için “evet” demeniz o başlıklara destek sayılır.
+            Olumsuz yanıt da işimize yarar; amacımız kimseyi cezalandırmak
+            değil, çalışmayı doğru yere oturtmak. Emin olmadığınız soruda
+            “Bilmiyorum” deyin.
+          </p>
 
-            {SECENEKLER.map((secenek) => (
-              <label
-                key={secenek.puan}
-                className={
-                  puan === secenek.puan
-                    ? "flex cursor-pointer items-center gap-3 rounded-sm border border-baglanti bg-muted px-4 py-3 text-sm"
-                    : "flex cursor-pointer items-center gap-3 rounded-sm border border-kenar bg-card px-4 py-3 text-sm"
-                }
-              >
-                <input
-                  type="radio"
-                  name="puan"
-                  value={secenek.puan}
-                  checked={puan === secenek.puan}
-                  onChange={() => setPuan(secenek.puan)}
-                  className="accent-baglanti"
-                />
-                {secenek.etiket}
-              </label>
-            ))}
-          </fieldset>
+          <SecenekGrubu
+            ad="iliski"
+            soru="Bu kişiyi nereden tanıyorsunuz?"
+            secenekler={ILISKI_SECENEKLERI}
+            secili={iliski}
+            onSec={setIliski}
+          />
+
+          {sorular.map((soru) => (
+            <SecenekGrubu
+              key={soru.alan}
+              ad={soru.alan}
+              soru={soru.soru}
+              ayrinti={soru.ayrinti}
+              secenekler={CEVAP_SECENEKLERI}
+              secili={yanitlar[soru.alan] ?? null}
+              onSec={(cevap) =>
+                setYanitlar((once) => ({ ...once, [soru.alan]: cevap }))
+              }
+              yatay
+            />
+          ))}
 
           <FormAlani
             etiket="Eklemek istediğiniz bir şey"
@@ -201,11 +219,7 @@ function ReferansFormu() {
           </FormAlani>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              type="submit"
-              size="lg"
-              disabled={bekleniyor || puan === null}
-            >
+            <Button type="submit" size="lg" disabled={bekleniyor || !tamam}>
               {bekleniyor ? "Gönderiliyor…" : "Yanıtı gönder"}
             </Button>
             <span className="text-xs text-muted-foreground">
@@ -215,6 +229,60 @@ function ReferansFormu() {
         </form>
       ) : null}
     </Sayfa>
+  );
+}
+
+/** Tek seçimli soru; seçenekler etiketli radyo düğmeleri. */
+function SecenekGrubu<T extends string>({
+  ad,
+  soru,
+  ayrinti,
+  secenekler,
+  secili,
+  onSec,
+  yatay = false,
+}: {
+  ad: string;
+  soru: string;
+  ayrinti?: string | null;
+  secenekler: { deger: T; etiket: string }[];
+  secili: T | null;
+  onSec: (deger: T) => void;
+  yatay?: boolean;
+}) {
+  return (
+    <fieldset className="flex flex-col gap-3">
+      <legend className="font-heading text-base font-semibold text-ana">
+        {soru}
+      </legend>
+      {ayrinti ? (
+        <p className="rounded-sm border-l-2 border-kenar pl-3 text-sm text-pretty">
+          {ayrinti}
+        </p>
+      ) : null}
+      <div className={yatay ? "flex flex-wrap gap-2" : "flex flex-col gap-2"}>
+        {secenekler.map((secenek) => (
+          <label
+            key={secenek.deger}
+            className={
+              secili === secenek.deger
+                ? "flex cursor-pointer items-center gap-3 rounded-sm border border-baglanti bg-muted px-4 py-3 text-sm"
+                : "flex cursor-pointer items-center gap-3 rounded-sm border border-kenar bg-card px-4 py-3 text-sm"
+            }
+          >
+            <input
+              type="radio"
+              name={ad}
+              value={secenek.deger}
+              checked={secili === secenek.deger}
+              onChange={() => onSec(secenek.deger)}
+              className="accent-baglanti"
+            />
+            {secenek.etiket}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
@@ -257,9 +325,9 @@ function Tesekkur({ sonuc }: { sonuc: ReferansYanitiSonucu }) {
         gerek yok.
       </p>
       <p className="text-sm text-pretty text-muted-foreground">
-        Yanıtınız tek başına bir karar değil: dört başlıklı güven göstergesinin
-        yalnızca “Referans” kısmını besliyor, diğer üçü kanıtın kendisinden
-        geliyor.
+        Yanıtınız tek başına bir karar değil: güven göstergesinin “Referans”
+        kısmını besliyor; pay ve sonuç için “evet” dediyseniz o başlıklara da
+        destek oluyor.
       </p>
     </section>
   );

@@ -118,6 +118,7 @@ export function bildirimHedefi(
     case "ilgi":
       return "/genc#ilgiler";
     case "referans_yaniti":
+    case "referans_yanit_yok":
       return "/genc#kart";
     case "yeni_oneri":
       return "/kurum#ihtiyaclar";

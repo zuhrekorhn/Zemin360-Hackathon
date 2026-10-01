@@ -69,6 +69,21 @@ def kart_hazirlama_arka_plani_yok(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def kalem_yeniden_puanlama_arka_plani_yok(monkeypatch):
+    """Referansın Sonuç / Rol desteği değişince kalem arka planda yeniden puanlanır
+    (gerçek oturum, LLM). Testlerde çalışmasın; çağrılar (kart, kalem, sürüm) kaydedilir."""
+    from app.servisler import kart_hazirlama
+
+    cagrilar: list = []
+
+    async def kaydet(kart_id, cikti_id, versiyon):
+        cagrilar.append((kart_id, cikti_id, versiyon))
+
+    monkeypatch.setattr(kart_hazirlama, "kalemi_yeniden_puanla", kaydet)
+    return cagrilar
+
+
+@pytest.fixture(autouse=True)
 def firma_karti_hazirlama_arka_plani_yok(monkeypatch):
     """Firma kartı onayı ve düzenlemesi yanıttan sonra kartı hazırlıyor (gerçek
     oturum, embedding). Testlerde çalışmasın; çağrılar kaydedilir, o işi sınayan

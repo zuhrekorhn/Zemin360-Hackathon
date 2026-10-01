@@ -65,8 +65,14 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.canlilik import CanlilikOlayiYaniti, PasifBaglanti, TaramaSonucu
+from app.servisler import dogrulama as dogrulama_servisi
+from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
 
 logger = logging.getLogger("zemin360.canlilik")
+
+# Tarama özetindeki referans sayaçları (canlılık olayı değil).
+REFERANS_HATIRLATMA = "referans_hatirlatma"
+REFERANS_YANIT_YOK = "referans_yanit_yok"
 
 router = APIRouter(prefix="/canlilik", tags=["canlilik"])
 
@@ -420,12 +426,23 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
             metin,
             None if firsat else temsilci.eslesme.id,
         )
+
+    # Referans istekleri (dogrulama-iyilestirme § 7): 3. gün tek hatırlatma
+    # e-postası, 7. gün "yanıt yok" ve gence bildirim. Eşleşmeye bağlı değil,
+    # o yüzden canlılık olayı yazmaz; sayılar özette görünür.
+    referans = await dogrulama_servisi.referans_taramasi(oturum, simdi)
+    if referans.hatirlatmalar:
+        olaylar[REFERANS_HATIRLATMA] = len(referans.hatirlatmalar)
+    if referans.zaman_asimi:
+        olaylar[REFERANS_YANIT_YOK] = referans.zaman_asimi
     await oturum.commit()
+    # E-posta commit'ten sonra: gönderim hatası taramayı düşürmez (İ9).
+    await epostalari_gonder(referans.hatirlatmalar)
 
     return TaramaSonucu(
         tarih=simdi,
         olaylar=dict(olaylar),
-        bildirim=len(bildirimlik),
+        bildirim=len(bildirimlik) + referans.zaman_asimi,
         sure_sn=round(time.perf_counter() - baslangic, 2),
     )
 

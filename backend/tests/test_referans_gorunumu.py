@@ -11,12 +11,20 @@ from dataclasses import dataclass, field
 import pytest
 from fastapi.testclient import TestClient
 
-from app.agents.dogrulama import DURUM_BEKLIYOR, DURUM_YANIT_YOK, DURUM_YANITLANDI
+from app.agents.dogrulama import (
+    DURUM_BEKLIYOR,
+    DURUM_GERI_CEKILDI,
+    DURUM_YANIT_YOK,
+    DURUM_YANITLANDI,
+)
 from app.api import dogrulama as dogrulama_ucu
 from app.api.dogrulama import referans_gorunumu
 from app.db.session import get_session
 from app.main import app
 from app.schemas.dogrulama import ReferansIstegiYaniti
+from app.servisler.dogrulama import referans as referans_servisi
+
+FORM = {"iliski": "yonetici", "iddia_dogru": "evet"}
 
 IDDIA_SAHIBI = "Elif Şahin"
 EMAIL = "elif@ornek.com"
@@ -38,12 +46,15 @@ class SahteCikti:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     baslik: str = "Mahalle kütüphanesi ödünç takip sistemi"
     aciklama: str | None = "400 kitabı ve 120 üyeyi takip ediyor."
+    kendi_rolu: str | None = "Veritabanını ve arayüzü ben yazdım."
+    olculebilir_sonuc: str | None = "Ödünç kaybı ayda 12'den 2'ye indi."
     yetenek_karti: SahteKart = field(default_factory=SahteKart)
 
 
 @dataclass
 class SahteReferans:
     durum: str = DURUM_BEKLIYOR
+    somut_cikti_id: uuid.UUID | None = None
     olusturma_tarihi: dt.datetime = field(default_factory=lambda: dt.datetime.now(dt.UTC))
     somut_cikti: SahteCikti = field(default_factory=SahteCikti)
 
@@ -75,6 +86,18 @@ def _temizle():
 
 
 @pytest.fixture(autouse=True)
+def gence_bildirimler(monkeypatch):
+    """Zaman aşımı gence bildirim yazar (sahte oturum yazamaz); türler kaydedilir."""
+    kayit: list = []
+
+    async def kaydet(_oturum, _cikti_id, tur, _metin):
+        kayit.append(tur)
+
+    monkeypatch.setattr(referans_servisi, "_gence_bildir", kaydet)
+    return kayit
+
+
+@pytest.fixture(autouse=True)
 def gosterge_kancasi(monkeypatch):
     """Sahte oturum kartı okuyamaz; gösterge kancasının çağrıları kaydedilir.
 
@@ -96,6 +119,9 @@ def test_iddia_referans_kisiye_gosteriliyor():
     assert gorunum.baslik == "Mahalle kütüphanesi ödünç takip sistemi"
     assert gorunum.aciklama is not None
     assert gorunum.iddia_sahibi_adi == IDDIA_SAHIBI
+    # Pay ve sonuç ayrı satırlarda sorulur (bulgu 18).
+    assert gorunum.pay == "Veritabanını ve arayüzü ben yazdım."
+    assert gorunum.sonuc is not None
 
 
 def test_iletisim_bilgisi_donmuyor():
@@ -124,11 +150,20 @@ def test_yanitlanmis_referans_tekrar_yanitlanamaz():
     assert govde["yanitlanabilir"] is False
 
 
-def test_suresi_gecmis_link_okuma_aninda_kapanir():
-    """Zaman aşımı için zamanlayıcı yok; bu okuma anında hesaplanıyor."""
+def test_suresi_gecmis_link_okuma_aninda_kapanir(gence_bildirimler):
+    """Zaman aşımı için zamanlayıcı yok; bu okuma anında hesaplanıyor ve gence bildirilir."""
     eski = SahteReferans(olusturma_tarihi=dt.datetime.now(dt.UTC) - dt.timedelta(days=30))
     govde = istemci(eski).get("/dogrulama/referans/token-123").json()
     assert govde["durum"] == DURUM_YANIT_YOK
+    assert govde["yanitlanabilir"] is False
+    assert gence_bildirimler == ["referans_yanit_yok"]
+
+
+def test_geri_cekilmis_link_form_acmaz():
+    govde = (
+        istemci(SahteReferans(durum=DURUM_GERI_CEKILDI)).get("/dogrulama/referans/token-123").json()
+    )
+    assert govde["durum"] == DURUM_GERI_CEKILDI
     assert govde["yanitlanabilir"] is False
 
 
@@ -137,7 +172,7 @@ def test_suresi_gecmis_linke_yanit_verilemez():
     eski = SahteReferans(olusturma_tarihi=dt.datetime.now(dt.UTC) - dt.timedelta(days=30))
     yanit = istemci(eski).post(
         "/dogrulama/referans-yaniti",
-        json={"token": "token-123", "puan": 5, "yorum": "harika"},
+        json={"token": "token-123", **FORM, "yorum": "harika"},
     )
     assert yanit.status_code == 409
     assert "süresi doldu" in yanit.json()["detail"]
@@ -147,9 +182,16 @@ def test_suresi_gecmis_linke_yanit_verilemez():
 def test_yanitlanmis_linke_tekrar_yanit_verilemez():
     yanit = istemci(SahteReferans(durum=DURUM_YANITLANDI)).post(
         "/dogrulama/referans-yaniti",
-        json={"token": "token-123", "puan": 5},
+        json={"token": "token-123", **FORM},
     )
     assert yanit.status_code == 409
+
+
+def test_eski_1_5_olcegiyle_yanit_kabul_edilmez():
+    yanit = istemci(SahteReferans()).post(
+        "/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5}
+    )
+    assert yanit.status_code == 422
 
 
 def test_gecersiz_token_404_doner():
@@ -173,8 +215,9 @@ DIGER_TOKEN = "digerinin-gizli-tokeni-1234567890"
 class SiraliOturum:
     """`scalar()` çağrılarına sırayla hazır cevap veren oturum taklidi.
 
-    Referans yanıtında sıra: referans, çıktı, gencin hesap kimliği (bildirim
-    için; None = hesapsız profil, bildirim atlanır).
+    Referans yanıtında sıra: referans, çıktı, koşullu güncellemenin döndürdüğü
+    kimlik (None = arada başkası yanıtladı), gencin hesap kimliği (bildirim için;
+    None = hesapsız profil, bildirim atlanır).
     """
 
     def __init__(self, *sonuclar):
@@ -189,11 +232,16 @@ class SiraliOturum:
 
 def _yanitlanan_ve_diger_referans():
     yanitlanan = SimpleNamespace(
+        id=uuid.uuid4(),
         token="token-123",
         durum=DURUM_BEKLIYOR,
         olusturma_tarihi=dt.datetime.now(dt.UTC),
         yanit_metni=None,
         puan=None,
+        iddia_dogru=None,
+        pay_dogru=None,
+        sonuc_dogru=None,
+        yanit_tarihi=None,
         somut_cikti_id=uuid.uuid4(),
     )
     diger = SimpleNamespace(
@@ -203,6 +251,9 @@ def _yanitlanan_ve_diger_referans():
         puan=2,
         yanit_metni="Katkısı sınırlıydı",
         yanit_tarihi=None,
+        iddia_dogru=None,
+        pay_dogru=None,
+        sonuc_dogru=None,
     )
     cikti = SimpleNamespace(
         id=yanitlanan.somut_cikti_id,
@@ -210,6 +261,8 @@ def _yanitlanan_ve_diger_referans():
         yetenek_karti_id=uuid.uuid4(),
         guven_skoru=None,
         icerik_tarihi=None,
+        kendi_rolu="Arayüzü ben yazdım.",
+        olculebilir_sonuc=None,
         referans_istekleri=[yanitlanan, diger],
     )
     return yanitlanan, cikti
@@ -217,11 +270,11 @@ def _yanitlanan_ve_diger_referans():
 
 def test_yanit_sonrasi_baska_referansin_bilgisi_donmez():
     yanitlanan, cikti = _yanitlanan_ve_diger_referans()
-    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti, None)
-
-    yanit = TestClient(app).post(
-        "/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5}
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(
+        yanitlanan, cikti, yanitlanan.id, None
     )
+
+    yanit = TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", **FORM})
 
     assert yanit.status_code == 200
     assert DIGER_EMAIL not in yanit.text
@@ -236,11 +289,13 @@ def test_yanit_sonrasi_baska_referansin_bilgisi_donmez():
 def test_yanit_sonrasi_skor_yine_de_hesaplanir(gosterge_kancasi, kart_hazirlama_arka_plani_yok):
     """Gövde daraldı, hesap değişmedi: iki referansın ortalaması yazılır."""
     yanitlanan, cikti = _yanitlanan_ve_diger_referans()
-    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti, None)
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(
+        yanitlanan, cikti, yanitlanan.id, None
+    )
 
-    TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5})
+    TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", **FORM})
 
-    # 5 -> 3, 2 -> 1 : ortalama 2
+    # evet -> 3, eski 2 -> 1 : ortalama 2
     assert cikti.guven_skoru.ucuncu_taraf_onayi == 2
     # Gösterge değişti: kart sürümü artar, eşleşmeler arka planda tazelenir (bulgu 26).
     assert gosterge_kancasi == [cikti.yetenek_karti_id]
@@ -250,13 +305,79 @@ def test_yanit_sonrasi_skor_yine_de_hesaplanir(gosterge_kancasi, kart_hazirlama_
 def test_yanitin_zamani_kaydedilir():
     """İş kalemi sonradan değişirse eski yanıtı ayırt etmenin dayanağı."""
     yanitlanan, cikti = _yanitlanan_ve_diger_referans()
-    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti, None)
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(
+        yanitlanan, cikti, yanitlanan.id, None
+    )
     once = dt.datetime.now(dt.UTC)
 
-    TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", "puan": 5})
+    TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", **FORM})
 
     assert yanitlanan.yanit_tarihi >= once
 
 
 def test_yanit_sonucu_semasi_yalnizca_baslik_ve_durum_tasir():
     assert set(ReferansYanitiSonucu.model_fields) == {"baslik", "durum"}
+
+
+# --- 4 soruluk form, koşullu yanıt, destek (plan § 7) ------------------------------------
+
+
+def test_ayni_anda_ikinci_yanit_409():
+    """İki sekme: ilk yanıt kaydedildi, koşullu güncelleme ikincisinde satır bulamaz."""
+    yanitlanan, cikti = _yanitlanan_ve_diger_referans()
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(yanitlanan, cikti, None)
+
+    yanit = TestClient(app).post("/dogrulama/referans-yaniti", json={"token": "token-123", **FORM})
+
+    assert yanit.status_code == 409
+    assert cikti.guven_skoru is None
+
+
+def test_kalemde_yazilmamis_soru_yok_sayilir():
+    """Sonuç kalemde yazılmamış: o soru sorulmadı, gelen değer kaydedilmez."""
+    yanitlanan, cikti = _yanitlanan_ve_diger_referans()
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(
+        yanitlanan, cikti, yanitlanan.id, None
+    )
+
+    TestClient(app).post(
+        "/dogrulama/referans-yaniti",
+        json={"token": "token-123", **FORM, "pay_dogru": "kismen", "sonuc_dogru": "evet"},
+    )
+
+    assert yanitlanan.pay_dogru == "kismen"
+    assert yanitlanan.sonuc_dogru is None
+    assert yanitlanan.iliski == "yonetici"
+
+
+def test_pay_evet_kalemi_arka_planda_yeniden_puanlatir(
+    kalem_yeniden_puanlama_arka_plani_yok, kart_hazirlama_arka_plani_yok
+):
+    """Rol için bağımsız destek geldi: kalem yeniden puanlanır, sonra kart hazırlanır."""
+    yanitlanan, cikti = _yanitlanan_ve_diger_referans()
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(
+        yanitlanan, cikti, yanitlanan.id, None
+    )
+
+    TestClient(app).post(
+        "/dogrulama/referans-yaniti", json={"token": "token-123", **FORM, "pay_dogru": "evet"}
+    )
+
+    assert kalem_yeniden_puanlama_arka_plani_yok == [(cikti.yetenek_karti_id, cikti.id, 2)]
+    assert kart_hazirlama_arka_plani_yok == []
+
+
+def test_destek_degismezse_yalnizca_kart_hazirlanir(
+    kalem_yeniden_puanlama_arka_plani_yok, kart_hazirlama_arka_plani_yok
+):
+    yanitlanan, cikti = _yanitlanan_ve_diger_referans()
+    app.dependency_overrides[get_session] = lambda: SiraliOturum(
+        yanitlanan, cikti, yanitlanan.id, None
+    )
+
+    TestClient(app).post(
+        "/dogrulama/referans-yaniti", json={"token": "token-123", **FORM, "pay_dogru": "kismen"}
+    )
+
+    assert kalem_yeniden_puanlama_arka_plani_yok == []
+    assert kart_hazirlama_arka_plani_yok == [(cikti.yetenek_karti_id, 2, False)]

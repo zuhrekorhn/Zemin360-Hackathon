@@ -21,6 +21,7 @@ TUR_ILGI = "ilgi"
 TUR_KABUL = "kabul"
 TUR_RED = "red"
 TUR_REFERANS_YANITI = "referans_yaniti"
+TUR_REFERANS_YANIT_YOK = "referans_yanit_yok"  # gence: referans süresinde yanıtlamadı (nötr)
 # Takip (docs/faz-c-takip.md § 7)
 TUR_PLAN_ONERILDI = "plan_onerildi"
 TUR_PLAN_DUZENLENDI = "plan_duzenlendi"

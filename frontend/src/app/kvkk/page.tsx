@@ -30,6 +30,7 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
     maddeler: [
       "Yetenek kartını oluşturmak ve firmaların ihtiyaçlarıyla eşleştirmek.",
       "Kanıtlarını ve referans yanıtlarını değerlendirip kartında güven göstergesi olarak göstermek.",
+      "Referans gösterdiğin kişiye adını ve çalışmanın başlığını içeren bir yanıt isteği e-postası (ve yanıt gelmezse bir hatırlatma) göndermek.",
       "Eşleşme, iş birliği ve hatırlatmalarla ilgili uygulama içi bildirim göndermek.",
       "Programın hedeflerini ölçmek (yalnızca toplu sayılar; kişisel veri içermez).",
     ],
