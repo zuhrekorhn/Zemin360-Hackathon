@@ -98,6 +98,7 @@ describe("firmaKartiCagrisi", () => {
     eksik_profil_alanlari: [],
     kvkk_onayli: true,
     firma_karti_var: false,
+    eposta_dogrulandi: true,
     ...ek,
   });
 

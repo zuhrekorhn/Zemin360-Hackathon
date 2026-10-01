@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { EpostaDogrulamaBandi } from "@/components/eposta-dogrulama-bandi";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirsatKarti, IlgiSatiri } from "@/components/firsatlar";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
@@ -183,6 +184,8 @@ function GencPaneliIcerigi() {
           </Button>
         </div>
       ) : null}
+
+      <EpostaDogrulamaBandi hesap={hesap} />
 
       {bant ? (
         // Engellemez: eşleştirme sürer, bant yalnızca eksikleri hatırlatır.

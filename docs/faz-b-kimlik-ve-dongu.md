@@ -185,7 +185,7 @@ Bugünkü kayıtların hiçbiri gerçek kullanıcı değil:
 ## 9. Kapsam dışı ve demo hesapları
 
 **Faz B'de yapılmayacaklar**
-- Şifre sıfırlama ve e-posta doğrulama (SMTP yok)
+- Şifre sıfırlama ve e-posta doğrulama (SMTP yok). **Güncelleme (Eki 2026):** kayıt e-postası doğrulaması Doğrulama iyileştirmesinin adım 6'sında geldi (`plans/dogrulama-iyilestirme.md` § 6.3; Resend, `app/core/dis_servisler/`). Şifre sıfırlama hâlâ yok.
 - Refresh token, httpOnly cookie (ürünleşme dönemi), OAuth
 - Giriş denemesi sınırlaması (rate limit)
 - Hesap silme, profil düzenleme sayfası

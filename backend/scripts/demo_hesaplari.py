@@ -244,6 +244,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
                 ad=GENC_ADI,
                 genc_profili=GENC_PROFILI,
                 kvkk_onay=True,
+                eposta_dogrulandi=True,
             )
             kullanici = await oturum.scalar(select(Kullanici).where(Kullanici.hesap_id == hesap.id))
             genc_karti = gencin_karti(kullanici.id)
@@ -269,6 +270,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
                 ad=KURUM_ADI,
                 firma_profili=KURUM_PROFILI,
                 kvkk_onay=True,
+                eposta_dogrulandi=True,
             )
             kurum = await oturum.scalar(select(Kurum).where(Kurum.hesap_id == hesap.id))
             ihtiyac = kurumun_karti(kurum.id)
@@ -283,7 +285,14 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
         if await _hesap_var_mi(oturum, GIRVAK_EPOSTA):
             sonuclar.append(Sonuc(GIRVAK_EPOSTA, ROL_GIRVAK, yeni=False))
         else:
-            await hesap_olustur(oturum, email=GIRVAK_EPOSTA, sifre=sifre, rol=ROL_GIRVAK, ad=None)
+            await hesap_olustur(
+                oturum,
+                email=GIRVAK_EPOSTA,
+                sifre=sifre,
+                rol=ROL_GIRVAK,
+                ad=None,
+                eposta_dogrulandi=True,
+            )
             sonuclar.append(Sonuc(GIRVAK_EPOSTA, ROL_GIRVAK, yeni=True))
 
         # Firma akışı: girişim (doğrulanmış, kartlı) ve kurumsal (ortak ilanı).
@@ -299,6 +308,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
                 ad=GIRISIM_ADI,
                 firma_profili=GIRISIM_PROFILI,
                 kvkk_onay=True,
+                eposta_dogrulandi=True,
             )
             kurum = await oturum.scalar(select(Kurum).where(Kurum.hesap_id == hesap.id))
             kurum.dogrulama_durumu = DOGRULANDI
@@ -324,6 +334,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
                 ad=KURUMSAL_ADI,
                 firma_profili=KURUMSAL_PROFILI,
                 kvkk_onay=True,
+                eposta_dogrulandi=True,
             )
             kurum = await oturum.scalar(select(Kurum).where(Kurum.hesap_id == hesap.id))
             ortak_ilani = kurumsalin_ilani(kurum.id)

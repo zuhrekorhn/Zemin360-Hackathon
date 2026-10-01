@@ -122,7 +122,26 @@ export type MeYaniti = {
   kvkk_onayli: boolean;
   /** Firma: firma kartı var mı? (panel çağrısı) */
   firma_karti_var: boolean;
+  /** Kayıt e-postası doğrulandı mı? Doğrulanmamış hesap her şeyi kullanır, panelde bant görür. */
+  eposta_dogrulandi: boolean;
 };
+
+/* --- E-posta doğrulama (docs/plans/dogrulama-iyilestirme.md § 6.3) -------- */
+
+/** Bağlantıdaki token'la doğrular; giriş gerekmez. Tekrarı da başarılı döner. */
+export function epostaDogrula(
+  token: string,
+): Promise<{ eposta_dogrulandi: boolean }> {
+  return apiIstek("/auth/eposta-dogrula", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+}
+
+/** Yeni doğrulama bağlantısı gönderir (eskisi geçersiz olur). */
+export async function dogrulamaBaglantisiGonder(): Promise<void> {
+  await apiIstek("/auth/eposta-dogrulama/yeniden", { method: "POST" });
+}
 
 /* --- Genç profili (docs/plans/genc-akisi.md § 5.1, § 6.1) ------------------
    Tipler backend'deki app/schemas/profil.py ile birebir eşleşir. */

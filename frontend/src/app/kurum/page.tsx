@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { EpostaDogrulamaBandi } from "@/components/eposta-dogrulama-bandi";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirmaFirsatlari } from "@/components/firma-firsatlari";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
@@ -116,6 +117,8 @@ function KurumPaneliIcerigi() {
           </Link>
         </div>
       ) : null}
+
+      <EpostaDogrulamaBandi hesap={hesap} />
 
       {bant ? (
         // Engellemez (docs/plans/firma-akisi.md § 0, karar 9): eski hesaplar için.

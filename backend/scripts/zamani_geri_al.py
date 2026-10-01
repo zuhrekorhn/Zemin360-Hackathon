@@ -62,6 +62,10 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("ihtiyac_karti", "kapanma_tarihi"),
     ("kurum", "dogrulama_tarihi"),
     ("firma_karti", "olusturma_tarihi"),
+    # Kimlik (plan § 6.3): bağlantının süresi ve yeniden gönderme aralığı birlikte kaysın.
+    ("hesap", "eposta_dogrulandi_tarihi"),
+    ("eposta_dogrulama", "olusturma_tarihi"),
+    ("eposta_dogrulama", "son_gecerlilik"),
 )
 
 # Bilerek kaydırılmayanlar: sistem zamanı değil, kullanıcının yazdığı tarih.

@@ -31,6 +31,7 @@ function hesap(ek: Partial<MeYaniti> = {}): MeYaniti {
     eksik_profil_alanlari: [],
     kvkk_onayli: true,
     firma_karti_var: false,
+    eposta_dogrulandi: true,
     ...ek,
   };
 }

@@ -3,6 +3,7 @@
 from app.db.base import Base
 from app.models.bildirim import Bildirim
 from app.models.canlilik_olayi import CanlilikOlayi
+from app.models.eposta_dogrulama import EpostaDogrulama
 from app.models.eslesme import Eslesme
 from app.models.firma_karti import FirmaKarti
 from app.models.guven_skoru import GuvenSkoru
@@ -22,6 +23,7 @@ __all__ = [
     "Base",
     "Bildirim",
     "CanlilikOlayi",
+    "EpostaDogrulama",
     "Eslesme",
     "FirmaKarti",
     "GuvenSkoru",

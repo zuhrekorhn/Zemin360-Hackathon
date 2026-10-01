@@ -43,6 +43,9 @@ class Hesap(UUIDPrimaryKeyMixin, Base):
     # Hesapta, profilde değil: onay bir hesabın; firma hesapları da aynı alanı
     # kullanacak. Bu alandan önce açılmış hesaplarda NULL.
     kvkk_onay_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Kayıt e-postasının doğrulandığı an (dogrulama-iyilestirme.md § 6.3). Gencin
+    # ad kilidi ayrıca saklanmaz, bu alandan türetilir (`app/agents/dogrulama/kimlik.py`).
+    eposta_dogrulandi_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     kullanici: Mapped[Kullanici | None] = relationship(back_populates="hesap", uselist=False)
     kurum: Mapped[Kurum | None] = relationship(back_populates="hesap", uselist=False)

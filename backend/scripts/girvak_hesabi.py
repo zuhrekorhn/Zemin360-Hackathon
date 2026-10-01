@@ -34,7 +34,9 @@ def sifre_sor() -> str:
 async def ac(email: str, sifre: str) -> None:
     async with get_sessionmaker()() as oturum:
         try:
-            hesap = await hesap_olustur(oturum, email=email, sifre=sifre, rol=ROL_GIRVAK, ad=None)
+            hesap = await hesap_olustur(
+                oturum, email=email, sifre=sifre, rol=ROL_GIRVAK, ad=None, eposta_dogrulandi=True
+            )
         except EpostaKayitli as hata:
             raise SystemExit(f"{email} ile bir hesap zaten var.") from hata
     print(f"GİRVAK hesabı açıldı: {hesap.email} ({hesap.id})")

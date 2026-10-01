@@ -16,6 +16,7 @@ from app.api import (
     bildirimler,
     canlilik,
     dogrulama,
+    eposta_dogrulama,
     eslestirme,
     firma_karti,
     girvak,
@@ -88,6 +89,7 @@ hata_isleyicilerini_kur(app)
 
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(eposta_dogrulama.router)
 app.include_router(bildirimler.router)
 app.include_router(kesif.router)
 app.include_router(yetenek_kartlari.router)

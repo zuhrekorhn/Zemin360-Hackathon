@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,6 +41,7 @@ from app.schemas.auth import (
     YetenekKartiOzeti,
 )
 from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
+from app.servisler import kimlik_dogrulama
 
 router = APIRouter(tags=["kimlik"])
 
@@ -62,6 +63,7 @@ async def hesap_olustur(
     genc_profili: GencKayitProfili | None = None,
     firma_profili: FirmaKayitProfili | None = None,
     kvkk_onay: bool = False,
+    eposta_dogrulandi: bool = False,
 ) -> Hesap:
     """Hesabı ve (genç/kurum için) profilini açar, commit eder.
 
@@ -71,14 +73,17 @@ async def hesap_olustur(
     e-postasını yazarak almak mümkün olmamalı.
 
     Profil ve `kvkk_onay` uçta zorunlu (şema); burada isteğe bağlı,
-    çünkü betikler ve testler profili ayrıca kuruyor.
+    çünkü betikler ve testler profili ayrıca kuruyor. `eposta_dogrulandi`
+    yalnızca betikler içindir (demo ve GİRVAK hesapları doğrulanmış açılır).
     """
     email = eposta_normalize(email)
+    simdi = dt.datetime.now(dt.UTC)
     hesap = Hesap(
         email=email,
         sifre_hash=sifre_hashle(sifre),
         rol=rol,
-        kvkk_onay_tarihi=dt.datetime.now(dt.UTC) if kvkk_onay else None,
+        kvkk_onay_tarihi=simdi if kvkk_onay else None,
+        eposta_dogrulandi_tarihi=simdi if eposta_dogrulandi else None,
     )
     oturum.add(hesap)
     try:
@@ -101,8 +106,14 @@ async def hesap_olustur(
 
 
 @router.post("/auth/kayit", response_model=TokenYaniti, status_code=201)
-async def kayit(istek: KayitIstegi, oturum: AsyncSession = Depends(get_session)) -> TokenYaniti:
-    """Hesap açar; kayıtla birlikte giriş yapılmış olur (token döner)."""
+async def kayit(
+    istek: KayitIstegi, arka_plan: BackgroundTasks, oturum: AsyncSession = Depends(get_session)
+) -> TokenYaniti:
+    """Hesap açar; kayıtla birlikte giriş yapılmış olur (token döner).
+
+    Doğrulama bağlantısı aynı istekte yazılır, e-posta yanıttan sonra gider:
+    gönderim hatası kaydı düşürmez, kullanıcı menüden yeni bağlantı ister.
+    """
     try:
         hesap = await hesap_olustur(
             oturum,
@@ -116,6 +127,12 @@ async def kayit(istek: KayitIstegi, oturum: AsyncSession = Depends(get_session))
         )
     except EpostaKayitli as hata:
         raise HTTPException(status_code=409, detail=EPOSTA_KAYITLI) from hata
+    dogrulama_tokeni = await kimlik_dogrulama.baglanti_olustur(oturum, hesap)
+    await oturum.commit()
+    arka_plan.add_task(
+        kimlik_dogrulama.epostayi_gonder,
+        kimlik_dogrulama.dogrulama_epostasi(hesap, dogrulama_tokeni),
+    )
     return TokenYaniti(token=token_uret(hesap.id, hesap.rol), hesap_id=hesap.id, rol=hesap.rol)
 
 
@@ -144,6 +161,7 @@ async def me(
         rol=hesap.rol,
         ad=None,
         okunmamis_bildirim=await okunmamis_sayisi(oturum, hesap.id),
+        eposta_dogrulandi=kimlik_dogrulama.dogrulandi_mi(hesap),
     )
 
     if hesap.kullanici is not None:

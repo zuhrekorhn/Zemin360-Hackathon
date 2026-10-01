@@ -99,3 +99,14 @@ class MeYaniti(BaseModel):
     kvkk_onayli: bool = True
     # Firma: firma kartı var mı? Yoksa panel "Firma kartınızı oluşturun" der (karar 9).
     firma_karti_var: bool = False
+    # Kayıt e-postası doğrulandı mı (dogrulama-iyilestirme.md § 6.3). Doğrulanmamış
+    # hesap her şeyi kullanır; menü bir uyarı ve "yeniden gönder" gösterir.
+    eposta_dogrulandi: bool = False
+
+
+class EpostaDogrulamaIstegi(BaseModel):
+    token: str = Field(min_length=1, max_length=200)
+
+
+class EpostaDogrulamaYaniti(BaseModel):
+    eposta_dogrulandi: bool
