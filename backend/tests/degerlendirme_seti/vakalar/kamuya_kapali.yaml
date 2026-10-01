@@ -1,0 +1,47 @@
+# Satış, operasyon, İK, finans, hukuk, sağlık: kamuya açık çıktısı olmayan işler.
+# Bu meslekler için referans ve belge birincil yoldur; ceza değildir.
+# Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: kapali-satis-referans
+  alan: kamuya_kapali
+  amac: Satış stajı; yöneticinin üç "evet"i Sonuç ve Rol'ü 3'e taşır, Kanıt "—".
+  iddia:
+    baslik: Kurumsal satış stajı
+    aciklama: B2B yazılım firmasında satış ekibinde potansiyel müşteri listesini yeniden yapılandırdım.
+    olculebilir_sonuc: Üç ayda 14 yeni toplantı ayarladım, ikisi sözleşmeye dönüştü.
+    kendi_rolu: Müşteri listesini ve ilk temas e-postalarını ben hazırladım.
+    is_turu: staj
+  kart_yetenekleri: [Satış, CRM]
+  referanslar:
+    - {eposta: satis.muduru@yazilim-ornek.com.tr, iliski: yonetici, iddia_dogru: evet, pay_dogru: evet, sonuc_dogru: evet}
+  kimlik: {ad: Yusuf Kara, eposta: yusuf.kara@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: null, sonuc: 3, rol: 3, referans: 3}
+
+- id: kapali-finans-beyan
+  alan: kamuya_kapali
+  amac: Finans stajı, yalnızca beyan; sonuç sayısal (2), rol belirsiz (1).
+  iddia:
+    baslik: Muhasebe stajı
+    aciklama: Bir muhasebe bürosunda aylık beyanname hazırlığına destek verdim.
+    olculebilir_sonuc: Ayda yaklaşık 30 firmanın evrakı hazırlandı.
+    kendi_rolu: Ekibe yardımcı oldum.
+    is_turu: staj
+  kart_yetenekleri: [Muhasebe, Excel]
+  kimlik: {ad: Esra Bulut, eposta: esra.bulut@ornek.com}
+  onerilen: {kanit: null, sonuc: 2, rol: 1, referans: null}
+
+- id: kapali-ik-iki-referans
+  alan: kamuya_kapali
+  amac: İK stajı; biri üç "evet", öteki üç "kısmen" (ortalama 2). Sonuç için bir referansın "evet"i yeter mi? Etiketleyen karar versin.
+  iddia:
+    baslik: İşe alım süreci stajı
+    aciklama: İK departmanında stajyer işe alım sürecinin ön elemesini düzenledim.
+    olculebilir_sonuc: Ön eleme süresi başvuru başına 20 dakikadan 8 dakikaya indi.
+    kendi_rolu: Ön eleme formunu ve puanlama tablosunu ben hazırladım.
+    is_turu: staj
+  kart_yetenekleri: [İşe alım, İK süreçleri]
+  referanslar:
+    - {eposta: ik.muduru@uretim-ornek.com.tr, iliski: yonetici, iddia_dogru: evet, pay_dogru: evet, sonuc_dogru: evet}
+    - {eposta: ik.uzmani@uretim-ornek.com.tr, iliski: takim_arkadasi, iddia_dogru: kismen, pay_dogru: kismen, sonuc_dogru: kismen}
+  kimlik: {ad: Gizem Yurt, eposta: gizem.yurt@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: null, sonuc: [2, 3], rol: [2, 3], referans: 2}

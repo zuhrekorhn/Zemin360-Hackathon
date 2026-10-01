@@ -1,0 +1,52 @@
+# Video, medya, müzik, fotoğraf. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: medya-youtube-bagli
+  alan: medya
+  amac: Bağlı YouTube kanalındaki video (profil kodu); izlenme sayısı platform verisi (Sonuç 3). Video bireysel kural listesinde değil, Rol 2.
+  iddia:
+    baslik: Müzik videosu
+    aciklama: Kendi şarkımın resmi müzik videosu.
+    olculebilir_sonuc: Video 1,5 milyardan fazla izlendi.
+    kendi_rolu: Şarkıyı ben seslendirdim, videoda sahnedeyim.
+    is_turu: is
+  kart_yetenekleri: [Şarkı söyleme, Sahne performansı]
+  kanitlar:
+    - {tur: link, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+  kimlik:
+    ad: Rick Astley
+    eposta: rick@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: youtube, kullanici_adi: RickAstleyYT, yontem: profil_kodu}
+  onerilen: {kanit: 3, sonuc: 3, rol: [2, 3], referans: null}
+  notlar: Bugün YouTube sayfasında başlık okunamıyor (300 KB sınırı); hedef sistem oEmbed ve Data API ile okur.
+
+- id: medya-youtube-kanal-sayfasi
+  alan: medya
+  amac: Kanal sayfası; bugünkü başlık ayrıştırması bu sayfada dakikalarca takılıyor (regex geri izlemesi). Sistem sonuç üretebilmeli.
+  iddia:
+    baslik: Müzik kanalı
+    aciklama: Şarkılarımı ve kliplerimi yayımladığım YouTube kanalı.
+    olculebilir_sonuc: Kanalın 4 milyondan fazla abonesi var.
+    kendi_rolu: Kanalın sahibi ve şarkıların yorumcusuyum.
+    is_turu: is
+  kart_yetenekleri: [Şarkı söyleme]
+  kanitlar:
+    - {tur: link, url: "https://www.youtube.com/@RickAstleyYT"}
+  kimlik: {ad: Rick Astley, eposta: rick@ornek.com}
+  onerilen: {kanit: 2, sonuc: 2, rol: 2, referans: null}
+
+- id: medya-instagram-profil
+  alan: medya
+  amac: Instagram profili; bugün özete ham HTML sızıyor. "Ekipteydim" belirsiz rol.
+  iddia:
+    baslik: Kurumsal sosyal medya içerikleri
+    aciklama: Bir uzay ajansının Instagram hesabı için görsel içerik hazırlayan ekipte çalıştım.
+    kendi_rolu: İçerik ekibindeydim.
+    is_turu: staj
+  kart_yetenekleri: [Sosyal medya, Görsel tasarım]
+  kanitlar:
+    - {tur: link, url: "https://www.instagram.com/nasa/"}
+  kimlik: {ad: Deniz Aydın, eposta: deniz.aydin@ornek.com}
+  onerilen: {kanit: [2, null], sonuc: 0, rol: 1, referans: null}
+  notlar: Instagram çoğu zaman giriş duvarı gösteriyor; okunamazsa Kanıt "—".

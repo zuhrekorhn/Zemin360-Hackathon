@@ -1,0 +1,177 @@
+{
+ "GET https://antirez.com/news/108": {
+  "basliklar": {
+   "content-type": "text/html;charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "d553433b62d1c1af5b67.gz"
+ },
+ "GET https://arxiv.org/abs/1706.03762": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "438e26cb2a9ff7857ae3.gz"
+ },
+ "GET https://brittanychiang.com/": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "52cbd4abe01873b231be.gz"
+ },
+ "GET https://dergipark.org.tr/tr/pub/tbbmd/article/339255": {
+  "basliklar": {
+   "content-type": "text/html; charset=UTF-8"
+  },
+  "durum": 200,
+  "govde": "fdf387dbf0763b1104c2.gz"
+ },
+ "GET https://dergipark.org.tr/tr/pub/tbbmd/issue/33390/339255": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8",
+   "location": "/tr/pub/tbbmd/article/339255"
+  },
+  "durum": 302,
+  "govde": "e67df86d1aa9a4d5f54b.gz"
+ },
+ "GET https://dribbble.com/shots/23166201-Mobile-App-UI-Design": {
+  "basliklar": {
+   "content-type": "text/html; charset=UTF-8"
+  },
+  "durum": 202,
+  "govde": null
+ },
+ "GET https://github.com/antirez/kilo": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "bec5a63a4bb5298b3f7c.gz"
+ },
+ "GET https://github.com/fastapi/fastapi": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "d967c16574850d771160.gz"
+ },
+ "GET https://github.com/karpathy/micrograd": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "0146629034d3793a13a3.gz"
+ },
+ "GET https://github.com/tiangolo/fastapi": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8",
+   "location": "https://github.com/fastapi/fastapi"
+  },
+  "durum": 301,
+  "govde": null
+ },
+ "GET https://github.com/z360-olmayan-kullanici-7f3k/kutuphane": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 404,
+  "govde": "839daac23f892f4dc66f.gz"
+ },
+ "GET https://grabcad.com/library/v4-engine": {
+  "basliklar": {
+   "content-type": "text/html"
+  },
+  "durum": 403,
+  "govde": "486a0877e57cf4048710.gz"
+ },
+ "GET https://jvns.ca/blog/so-you-want-to-be-a-wizard/": {
+  "basliklar": {
+   "content-type": "text/html; charset=UTF-8"
+  },
+  "durum": 200,
+  "govde": "135e3ff581180172dd8c.gz"
+ },
+ "GET https://medium.com/@ev/welcome-to-medium-9e53ca408c48": {
+  "basliklar": {
+   "content-type": "text/html; charset=UTF-8"
+  },
+  "durum": 403,
+  "govde": "d9bc68eeef33b8cbb9c7.gz"
+ },
+ "GET https://tr.wikipedia.org/wiki/Kedi": {
+  "basliklar": {
+   "content-type": "text/plain"
+  },
+  "durum": 403,
+  "govde": "ee5557a1c92dc24bf8c7.gz"
+ },
+ "GET https://www.behance.net/gallery/32158897/Brand-Identity-Design": {
+  "basliklar": {},
+  "durum": 403,
+  "govde": null
+ },
+ "GET https://www.credly.com/org/amazon-web-services/badge/aws-certified-cloud-practitioner": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "ff370c82655fbe708c48.gz"
+ },
+ "GET https://www.instagram.com/nasa/": {
+  "basliklar": {
+   "content-type": "text/html; charset=\"utf-8\""
+  },
+  "durum": 200,
+  "govde": "78cb513706f6c84b04f2.gz"
+ },
+ "GET https://www.kaggle.com/code/alexisbcook/titanic-tutorial": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "148b5c971220d795b766.gz"
+ },
+ "GET https://www.linkedin.com/in/williamhgates": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "a39bcf7f9f7ce7da6da8.gz"
+ },
+ "GET https://www.linkedin.com/in/williamhgates/": {
+  "basliklar": {
+   "location": "https://www.linkedin.com/in/williamhgates"
+  },
+  "durum": 301,
+  "govde": null
+ },
+ "GET https://www.teknofest.org/tr/": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "e3336224d68e908aa0bc.gz"
+ },
+ "GET https://www.tema.org.tr/": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "4ccf8db0b417104a75c9.gz"
+ },
+ "GET https://www.youtube.com/@RickAstleyYT": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "046010952addeb023392.gz"
+ },
+ "GET https://www.youtube.com/watch?v=dQw4w9WgXcQ": {
+  "basliklar": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "19ef20bcea27c09a069b.gz"
+ }
+}

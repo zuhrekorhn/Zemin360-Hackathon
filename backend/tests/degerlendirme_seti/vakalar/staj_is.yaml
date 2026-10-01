@@ -1,0 +1,60 @@
+# Staj, iş. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: staj-linkedin-profil
+  alan: staj_is
+  amac: LinkedIn profili; bazen herkese açık özet, bazen giriş duvarı. Okunursa C, okunamazsa "—".
+  iddia:
+    baslik: Vakıf yöneticiliği
+    aciklama: Küresel sağlık ve eğitim alanında çalışan bir vakfın eş başkanıyım.
+    kendi_rolu: Vakfın eş başkanıyım.
+    is_turu: is
+  kart_yetenekleri: [Yönetim]
+  kanitlar:
+    - {tur: link, url: "https://www.linkedin.com/in/williamhgates/"}
+  kimlik: {ad: Bill Gates, eposta: bill@ornek.com}
+  onerilen: {kanit: [2, null], sonuc: 0, rol: 2, referans: null}
+
+- id: staj-kurumsal-referans
+  alan: staj_is
+  amac: Kanıt linki yok; kurumsal e-postalı yöneticiden üç "evet".
+  iddia:
+    baslik: Müşteri destek süreç iyileştirmesi
+    aciklama: Stajımda müşteri destek taleplerinin önceliklendirilmesini yeniden düzenledim.
+    olculebilir_sonuc: İlk yanıt süresi 48 saatten 12 saate düştü.
+    kendi_rolu: Önceliklendirme kurallarını ve raporlamayı ben hazırladım.
+    is_turu: staj
+  kart_yetenekleri: [Süreç iyileştirme, Excel]
+  referanslar:
+    - {eposta: ekip.lideri@lojistik-ornek.com.tr, iliski: yonetici, iddia_dogru: evet, pay_dogru: evet, sonuc_dogru: evet}
+  kimlik: {ad: Hakan Erdem, eposta: hakan.erdem@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: null, sonuc: 3, rol: 3, referans: 3}
+
+- id: staj-referans-olumsuz
+  alan: staj_is
+  amac: Referans iddiayı kısmen, payı hayır diyor; sonuç "bilmiyorum" ortalamaya girmez (0.5 → 1).
+  iddia:
+    baslik: Stok sayım uygulaması
+    aciklama: Depoda stok sayımını hızlandıran bir tablo düzeni kurdum.
+    olculebilir_sonuc: Sayım süresi yarıya indi.
+    kendi_rolu: Düzeni tek başıma kurdum.
+    is_turu: staj
+  kart_yetenekleri: [Excel]
+  referanslar:
+    - {eposta: depo.sefi@ornek-firma.com, iliski: yonetici, iddia_dogru: kismen, pay_dogru: hayir, sonuc_dogru: bilmiyorum}
+  kimlik: {ad: Gökhan Tuna, eposta: gokhan.tuna@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: null, sonuc: 2, rol: 2, referans: 1}
+
+- id: staj-referans-yanitsiz
+  alan: staj_is
+  amac: Referans istendi ama yanıt gelmedi; Referans "—" (0 değil, bulgu 19).
+  iddia:
+    baslik: Sosyal medya takvimi
+    aciklama: Stajımda firmanın aylık sosyal medya içerik takvimini hazırladım.
+    olculebilir_sonuc: Ayda 24 gönderi planlandı.
+    kendi_rolu: Takvimi ve metinleri ben hazırladım.
+    is_turu: staj
+  kart_yetenekleri: [Sosyal medya]
+  referanslar:
+    - {eposta: pazarlama@ornek-ajans.com, iliski: yonetici, yanitladi: false}
+  kimlik: {ad: Merve Polat, eposta: merve.polat@ornek.com}
+  onerilen: {kanit: null, sonuc: 2, rol: 2, referans: null}

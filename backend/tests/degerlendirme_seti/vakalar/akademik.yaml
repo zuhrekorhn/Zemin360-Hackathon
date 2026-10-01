@@ -1,0 +1,44 @@
+# Akademik, araştırma. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: akademik-arxiv-yazar-eslesiyor
+  alan: akademik
+  amac: Yazar listesinde ad geçiyor ama ORCID bağlı değil; seviye C (Kanıt 2). Çok yazarlı makalede "ortak yazar" özgül değil.
+  iddia:
+    baslik: Dikkat mekanizmasına dayalı dönüştürücü mimarisi
+    aciklama: Yalnızca dikkat mekanizmasına dayanan yeni bir sinir ağı mimarisini öneren makalenin yazarları arasındayım.
+    kendi_rolu: Makalenin ortak yazarıyım.
+    is_turu: proje
+  kart_yetenekleri: [Derin öğrenme, Doğal dil işleme]
+  kanitlar:
+    - {tur: link, url: "https://arxiv.org/abs/1706.03762"}
+  kimlik: {ad: Ashish Vaswani, eposta: ashish@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: 2, sonuc: 0, rol: [1, 2], referans: null}
+
+- id: akademik-arxiv-yazar-eslesmiyor
+  alan: akademik
+  amac: Gencin adı yazar listesinde yok ama "yazdım" diyor; kanıt iddiayla çelişiyor (en çok 1).
+  kotu_niyetli: true
+  iddia:
+    baslik: Dönüştürücü mimarisi makalesi
+    aciklama: Dikkat mekanizmasına dayanan dönüştürücü mimarisini öneren makaleyi yazdım.
+    kendi_rolu: Makaleyi ben yazdım.
+    is_turu: proje
+  kart_yetenekleri: [Derin öğrenme]
+  kanitlar:
+    - {tur: link, url: "https://arxiv.org/abs/1706.03762"}
+  kimlik: {ad: Mehmet Demir, eposta: mehmet.demir@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: [0, 1], sonuc: 0, rol: [0, 1], referans: null}
+
+- id: akademik-dergipark-ikinci-yazar
+  alan: akademik
+  amac: DergiPark makalesi; ad yazar listesinde (Atilla Elçi). Türkçe sayfa, citation_* etiketleri.
+  iddia:
+    baslik: Kablosuz algılayıcı ağlarında yapay zekâ ile eniyileme
+    aciklama: Kablosuz algılayıcı ağlarının yapay zekâ yöntemleriyle eniyilenmesi üzerine makale.
+    kendi_rolu: Makalenin ikinci yazarıyım; yöntemin seçimine ve değerlendirmesine katkı verdim.
+    is_turu: proje
+  kart_yetenekleri: [Yapay zekâ, Algılayıcı ağları]
+  kanitlar:
+    - {tur: link, url: "https://dergipark.org.tr/tr/pub/tbbmd/issue/33390/339255"}
+  kimlik: {ad: Atilla Elçi, eposta: atilla@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: 2, sonuc: 0, rol: 2, referans: null}

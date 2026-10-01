@@ -1,0 +1,28 @@
+# Sertifika, eğitim. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: sertifika-genel-rozet-sayfasi
+  alan: sertifika
+  amac: Kişiye verilmiş rozet değil, rozetin genel tanım sayfası; gencin sertifikası olduğunu göstermiyor.
+  iddia:
+    baslik: Bulut bilişim temel sertifikası
+    aciklama: Bulut hizmetlerinin temellerini kapsayan sertifika sınavını geçtim.
+    is_turu: proje
+  kart_yetenekleri: [AWS, Bulut bilişim]
+  kanitlar:
+    - {tur: link, url: "https://www.credly.com/org/amazon-web-services/badge/aws-certified-cloud-practitioner"}
+  kimlik: {ad: Oğuz Yalçın, eposta: oguz.yalcin@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: [1, 2], sonuc: 0, rol: 0, referans: null}
+  notlar: Kişisel rozet adresi (credly.com/badges/...) verilseydi ve rozet e-postası hesap e-postasıyla eşleşseydi seviye A olurdu.
+
+- id: sertifika-pdf-capasiz
+  alan: sertifika
+  amac: QR'sız, imzasız, yüklenmiş sertifika PDF'i; seviye D (Kanıt 1).
+  iddia:
+    baslik: Veri bilimine giriş eğitimi
+    aciklama: Veri bilimine giriş eğitimini tamamladım.
+    is_turu: proje
+  kart_yetenekleri: [Veri bilimi]
+  kanitlar:
+    - {tur: dosya, dosya: katilim-sertifikasi.pdf}
+  kimlik: {ad: Burak Şahin, eposta: burak.sahin@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: 1, sonuc: 0, rol: 0, referans: null}

@@ -1,0 +1,31 @@
+# Pazarlama, sosyal medya. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: pazarlama-musteri-referansi
+  alan: pazarlama
+  amac: Kanıt linki yok; müşterinin üç "evet"i.
+  iddia:
+    baslik: Yerel kafe sosyal medya yönetimi
+    aciklama: Bir yerel kafenin Instagram hesabını altı ay boyunca yönettim.
+    olculebilir_sonuc: Takipçi sayısı 6 ayda 2 binden 9 bine çıktı.
+    kendi_rolu: İçerik planını, çekimleri ve paylaşımları ben yaptım.
+    is_turu: is
+  kart_yetenekleri: [Sosyal medya yönetimi, Fotoğraf]
+  referanslar:
+    - {eposta: sahibi@kafe-ornek.com, iliski: musteri, iddia_dogru: evet, pay_dogru: evet, sonuc_dogru: evet}
+  kimlik: {ad: Ceren Uçar, eposta: ceren.ucar@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: null, sonuc: 3, rol: 3, referans: 3}
+
+- id: pazarlama-ilgisiz-ansiklopedi
+  alan: pazarlama
+  amac: İçerik yazarlığı iddiasına konuyla ilgili ama gencin işi olmayan ansiklopedi maddesi; bugün 403 (tarayıcı kimliği yok). İlgisiz → 0.
+  iddia:
+    baslik: Evcil hayvan maması marka içerikleri
+    aciklama: Bir kedi maması markası için blog ve sosyal medya içerikleri yazdım.
+    olculebilir_sonuc: Blog trafiği üç ayda yüzde 40 arttı.
+    kendi_rolu: İçeriklerin tamamını ben yazdım.
+    is_turu: is
+  kart_yetenekleri: [İçerik yazarlığı, SEO]
+  kanitlar:
+    - {tur: link, url: "https://tr.wikipedia.org/wiki/Kedi"}
+  kimlik: {ad: Tuğba Er, eposta: tugba.er@ornek.com}
+  onerilen: {kanit: 0, sonuc: 2, rol: 2, referans: null}

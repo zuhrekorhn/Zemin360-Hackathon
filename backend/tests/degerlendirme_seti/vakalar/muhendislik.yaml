@@ -1,0 +1,30 @@
+# Mühendislik, mimarlık. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: muhendislik-grabcad-bot-engeli
+  alan: muhendislik
+  amac: GrabCAD 403 (bot engeli); hedef sistem yedek okuyucuyla seviye C'ye ulaşır.
+  iddia:
+    baslik: V4 motor modeli
+    aciklama: SolidWorks'te dört silindirli V tipi bir motorun montaj modelini çizdim.
+    kendi_rolu: Bütün parçaları ve montajı ben modelledim.
+    is_turu: proje
+  kart_yetenekleri: [SolidWorks, Makine tasarımı]
+  kanitlar:
+    - {tur: link, url: "https://grabcad.com/library/v4-engine"}
+  kimlik: {ad: Can Öztürk, eposta: can.ozturk@ornek.com}
+  onerilen: {kanit: 2, sonuc: 0, rol: 2, referans: null}
+
+- id: muhendislik-pdf-capasiz
+  alan: muhendislik
+  amac: Yüklenmiş, çapası olmayan rapor PDF'i (seviye D, Kanıt 1); sayı raporun içinde (iddia).
+  iddia:
+    baslik: Yaya köprüsü taşıyıcı sistem analizi
+    aciklama: Bir yaya köprüsünün taşıyıcı sistemini yeniden hesaplayıp raporladım.
+    olculebilir_sonuc: Tasarım yükü 12 tondan 15 tona çıkarıldı.
+    kendi_rolu: Statik hesapları ve sonlu elemanlar modelini ben yaptım.
+    is_turu: staj
+  kart_yetenekleri: [Statik analiz, SAP2000]
+  kanitlar:
+    - {tur: dosya, dosya: kopru-analiz-raporu.pdf}
+  kimlik: {ad: Ayşe Demir, eposta: ayse.demir@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: 1, sonuc: 2, rol: 2, referans: null}

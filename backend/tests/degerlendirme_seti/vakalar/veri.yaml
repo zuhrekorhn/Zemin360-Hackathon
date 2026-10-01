@@ -1,0 +1,50 @@
+# Veri, analitik. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: veri-kaggle-bagsiz
+  alan: veri
+  amac: Herkese açık Kaggle notebook'u, hesap bağlı değil; seviye C.
+  iddia:
+    baslik: Titanic başlangıç eğitimi notebook'u
+    aciklama: Makine öğrenmesine yeni başlayanlar için Titanic veri setiyle adım adım bir eğitim notebook'u hazırladım.
+    kendi_rolu: Notebook'u tek başıma hazırladım.
+    is_turu: proje
+  kart_yetenekleri: [Python, Pandas, Makine öğrenmesi]
+  kanitlar:
+    - {tur: link, url: "https://www.kaggle.com/code/alexisbcook/titanic-tutorial"}
+  kimlik: {ad: Alexis Cook, eposta: alexis@ornek.com}
+  onerilen: {kanit: 2, sonuc: 0, rol: 2, referans: null}
+
+- id: veri-kaggle-bagli
+  alan: veri
+  amac: Aynı notebook, bağlı Kaggle hesabı (profil kodu). Tek yazarlı notebook bireysel kurala girer mi? Etiketleyen karar versin.
+  bireysel: true
+  iddia:
+    baslik: Titanic başlangıç eğitimi notebook'u
+    aciklama: Makine öğrenmesine yeni başlayanlar için Titanic veri setiyle adım adım bir eğitim notebook'u hazırladım.
+    kendi_rolu: Notebook'u tek başıma hazırladım.
+    is_turu: proje
+  kart_yetenekleri: [Python, Pandas, Makine öğrenmesi]
+  kanitlar:
+    - {tur: link, url: "https://www.kaggle.com/code/alexisbcook/titanic-tutorial"}
+  kimlik:
+    ad: Alexis Cook
+    eposta: alexis@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: kaggle, kullanici_adi: alexisbcook, yontem: profil_kodu}
+  onerilen: {kanit: 3, sonuc: 0, rol: [2, 3], referans: null}
+
+- id: veri-kanitsiz-referansli
+  alan: veri
+  amac: Kanıt linki yok; yöneticinin üç soruya da "evet" yanıtı Sonuç ve Rol'ü 3'e taşır.
+  iddia:
+    baslik: Satış raporlama panosu
+    aciklama: Staj yaptığım firmada haftalık satış raporlarını otomatikleştiren bir pano kurdum.
+    olculebilir_sonuc: Raporlama süresi haftada 6 saatten 1 saate indi.
+    kendi_rolu: Panoyu ve veri akışını ben kurdum.
+    is_turu: staj
+  kart_yetenekleri: [SQL, Power BI]
+  referanslar:
+    - {eposta: yonetici@perakende-ornek.com.tr, iliski: yonetici, iddia_dogru: evet, pay_dogru: evet, sonuc_dogru: evet}
+  kimlik: {ad: Selin Koç, eposta: selin.koc@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: null, sonuc: 3, rol: 3, referans: 3}

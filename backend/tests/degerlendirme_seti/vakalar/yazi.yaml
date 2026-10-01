@@ -1,0 +1,92 @@
+# Yazı, içerik, gazetecilik. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: yazi-medium-bagli
+  alan: yazi
+  amac: Bağlı Medium hesabında tek yazarlı yazı; bugün Cloudflare 403. Hedef RSS ile okur, 3/3.
+  bireysel: true
+  iddia:
+    baslik: Platform tanıtım yazısı
+    aciklama: Yeni bir yayın platformunun neden kurulduğunu anlatan tanıtım yazısını yazdım.
+    kendi_rolu: Yazının tamamını ben yazdım.
+    is_turu: is
+  kart_yetenekleri: [İçerik yazarlığı]
+  kanitlar:
+    - {tur: link, url: "https://medium.com/@ev/welcome-to-medium-9e53ca408c48"}
+  kimlik:
+    ad: Ev Williams
+    eposta: ev@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: medium, kullanici_adi: ev, yontem: profil_kodu}
+  onerilen: {kanit: 3, sonuc: 0, rol: 3, referans: null}
+
+- id: yazi-medium-bagsiz
+  alan: yazi
+  amac: Aynı yazı, hesap bağlı değil; seviye C.
+  bireysel: true
+  iddia:
+    baslik: Platform tanıtım yazısı
+    aciklama: Yeni bir yayın platformunun neden kurulduğunu anlatan tanıtım yazısını yazdım.
+    kendi_rolu: Yazının tamamını ben yazdım.
+    is_turu: is
+  kart_yetenekleri: [İçerik yazarlığı]
+  kanitlar:
+    - {tur: link, url: "https://medium.com/@ev/welcome-to-medium-9e53ca408c48"}
+  kimlik: {ad: Ev Williams, eposta: ev@ornek.com}
+  onerilen: {kanit: 2, sonuc: 0, rol: 2, referans: null}
+
+- id: yazi-kisisel-blog-bagli
+  alan: yazi
+  amac: Bağlı kişisel blogda tek yazarlı yazı (profil kodu); 3/3.
+  bireysel: true
+  iddia:
+    baslik: Yazılımda ustalaşma üzerine konuşma ve yazı
+    aciklama: Yazılımcıların zor konuları nasıl öğrenebileceğini anlatan bir konuşmayı yazıya döktüm.
+    kendi_rolu: Yazıyı ve çizimleri ben hazırladım.
+    is_turu: proje
+  kart_yetenekleri: [Teknik yazarlık]
+  kanitlar:
+    - {tur: link, url: "https://jvns.ca/blog/so-you-want-to-be-a-wizard/"}
+  kimlik:
+    ad: Julia Evans
+    eposta: julia@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: kisisel_site, kullanici_adi: jvns.ca, yontem: profil_kodu}
+  onerilen: {kanit: 3, sonuc: 0, rol: 3, referans: null}
+
+- id: yazi-kisisel-blog-bagsiz
+  alan: yazi
+  amac: Aynı yazı, hesap bağlı değil; seviye C.
+  bireysel: true
+  iddia:
+    baslik: Yazılımda ustalaşma üzerine konuşma ve yazı
+    aciklama: Yazılımcıların zor konuları nasıl öğrenebileceğini anlatan bir konuşmayı yazıya döktüm.
+    kendi_rolu: Yazıyı ve çizimleri ben hazırladım.
+    is_turu: proje
+  kart_yetenekleri: [Teknik yazarlık]
+  kanitlar:
+    - {tur: link, url: "https://jvns.ca/blog/so-you-want-to-be-a-wizard/"}
+  kimlik: {ad: Julia Evans, eposta: julia@ornek.com}
+  onerilen: {kanit: 2, sonuc: 0, rol: 2, referans: null}
+
+- id: yazi-teknik-blog-bagli
+  alan: yazi
+  amac: Bağlı kişisel sitede proje anlatan yazı; sayı yazının içinde (iddia, en çok 2).
+  bireysel: true
+  iddia:
+    baslik: Bin satırlık editörün yazısı
+    aciklama: Sıfırdan yazdığım metin editörünü ve nasıl tasarladığımı anlatan bir yazı yayımladım.
+    olculebilir_sonuc: Editör 1000 satırın altında kaldı.
+    kendi_rolu: Yazıyı ve editörü ben yazdım.
+    is_turu: proje
+  kart_yetenekleri: [C, Teknik yazarlık]
+  kanitlar:
+    - {tur: link, url: "https://antirez.com/news/108"}
+  kimlik:
+    ad: Salvatore Sanfilippo
+    eposta: salvatore@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: kisisel_site, kullanici_adi: antirez.com, yontem: profil_kodu}
+  onerilen: {kanit: 3, sonuc: 2, rol: 3, referans: null}

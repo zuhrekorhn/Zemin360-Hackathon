@@ -1,0 +1,87 @@
+# Tasarım. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: tasarim-behance-bot-engeli
+  alan: tasarim
+  amac: Behance 403 veriyor (bot engeli). Hedef sistem ekran görüntüsü yoluyla seviye C'ye ulaşır.
+  iddia:
+    baslik: Marka kimliği çalışmaları
+    aciklama: Farklı markalar için logo ve kurumsal kimlik tasarımları.
+    kendi_rolu: Logoların tamamını ben tasarladım.
+    is_turu: is
+  kart_yetenekleri: [Marka kimliği, Adobe Illustrator]
+  kanitlar:
+    - {tur: link, url: "https://www.behance.net/gallery/32158897/Brand-Identity-Design"}
+  kimlik: {ad: Elif Kaya, eposta: elif.kaya@ornek.com}
+  onerilen: {kanit: 2, sonuc: 0, rol: 2, referans: null}
+  notlar: Proje sayfası bir ajansa (Ramotion) ait; ekran görüntüsünde ajans adı görünürse Rol 2'de kalır.
+
+- id: tasarim-dribbble-bagli
+  alan: tasarim
+  amac: Bağlı Dribbble profilindeki iş (profil kodu); bağlı portfolyo kuralı.
+  bireysel: true
+  iddia:
+    baslik: Oyun uygulaması arayüz tasarımı
+    aciklama: Bir mobil oyun uygulamasının ana ekran ve mağaza arayüzlerini tasarladım.
+    kendi_rolu: Bütün ekranları ben tasarladım.
+    is_turu: proje
+  kart_yetenekleri: [UI tasarımı, Figma]
+  kanitlar:
+    - {tur: link, url: "https://dribbble.com/shots/23166201-Mobile-App-UI-Design"}
+  kimlik:
+    ad: Süeda Turgut
+    eposta: sueda.turgut@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: dribbble, kullanici_adi: sueda-turgut, yontem: profil_kodu}
+  onerilen: {kanit: 3, sonuc: 0, rol: 3, referans: null}
+  notlar: Dribbble bugün 202 ve boş gövde dönüyor (bot sorgulaması); hedef sistem yedek okuyucuyla okur.
+
+- id: tasarim-dribbble-bagsiz
+  alan: tasarim
+  amac: Aynı iş, hesap bağlı değil; seviye C.
+  bireysel: true
+  iddia:
+    baslik: Oyun uygulaması arayüz tasarımı
+    aciklama: Bir mobil oyun uygulamasının ana ekran ve mağaza arayüzlerini tasarladım.
+    kendi_rolu: Bütün ekranları ben tasarladım.
+    is_turu: proje
+  kart_yetenekleri: [UI tasarımı, Figma]
+  kanitlar:
+    - {tur: link, url: "https://dribbble.com/shots/23166201-Mobile-App-UI-Design"}
+  kimlik: {ad: Süeda Turgut, eposta: sueda.turgut@ornek.com}
+  onerilen: {kanit: 2, sonuc: 0, rol: 2, referans: null}
+
+- id: tasarim-portfolyo-bagli
+  alan: tasarim
+  amac: Bağlı kişisel portfolyo sitesi (profil kodu); ekip ortaklığı yoksa 3/3.
+  bireysel: true
+  iddia:
+    baslik: Kişisel portfolyo sitesi
+    aciklama: Kendi portfolyo sitemi tasarlayıp kodladım; projelerimi ve deneyimimi anlatıyor.
+    kendi_rolu: Tasarımı ve kodu tek başıma yaptım.
+    is_turu: proje
+  kart_yetenekleri: [Web tasarımı, React]
+  kanitlar:
+    - {tur: link, url: "https://brittanychiang.com"}
+  kimlik:
+    ad: Brittany Chiang
+    eposta: brittany@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: kisisel_site, kullanici_adi: brittanychiang.com, yontem: profil_kodu}
+  onerilen: {kanit: 3, sonuc: 0, rol: 3, referans: null}
+
+- id: tasarim-portfolyo-bagsiz
+  alan: tasarim
+  amac: Aynı site, hesap bağlı değil; seviye C.
+  bireysel: true
+  iddia:
+    baslik: Kişisel portfolyo sitesi
+    aciklama: Kendi portfolyo sitemi tasarlayıp kodladım; projelerimi ve deneyimimi anlatıyor.
+    kendi_rolu: Tasarımı ve kodu tek başıma yaptım.
+    is_turu: proje
+  kart_yetenekleri: [Web tasarımı, React]
+  kanitlar:
+    - {tur: link, url: "https://brittanychiang.com"}
+  kimlik: {ad: Brittany Chiang, eposta: brittany@ornek.com}
+  onerilen: {kanit: 2, sonuc: 0, rol: 2, referans: null}

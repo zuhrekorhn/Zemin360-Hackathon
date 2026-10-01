@@ -1,0 +1,153 @@
+# Yazılım. Önerilen etiketler taslaktır; etiketi Zühre koyar (ETIKETLEME_REHBERI.md).
+
+- id: yazilim-bireysel-repo-bagli
+  alan: yazilim
+  amac: Bağlı GitHub hesabında tek katkıcılı (≥ %90) repo; bireysel kural 3/3, yıldız platform verisi.
+  bireysel: true
+  iddia:
+    baslik: Skaler otomatik türev motoru
+    aciklama: Python ile küçük bir otomatik türev motoru ve üstünde bir sinir ağı kütüphanesi yazdım.
+    olculebilir_sonuc: Repo GitHub'da 10 binden fazla yıldız aldı.
+    kendi_rolu: Motoru ve kütüphaneyi tek başıma yazdım.
+    is_turu: proje
+  kart_yetenekleri: [Python, Makine öğrenmesi]
+  kanitlar:
+    - {tur: link, url: "https://github.com/karpathy/micrograd"}
+  kimlik:
+    ad: Andrej Karpathy
+    eposta: andrej@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: github, kullanici_adi: karpathy, yontem: oauth}
+  onerilen: {kanit: 3, sonuc: 3, rol: 3, referans: null}
+
+- id: yazilim-bireysel-repo-bagsiz
+  alan: yazilim
+  amac: Aynı repo, hesap bağlı değil; seviye C tavanı (Kanıt 2, Rol 2).
+  bireysel: true
+  iddia:
+    baslik: Skaler otomatik türev motoru
+    aciklama: Python ile küçük bir otomatik türev motoru ve üstünde bir sinir ağı kütüphanesi yazdım.
+    olculebilir_sonuc: Repo GitHub'da 10 binden fazla yıldız aldı.
+    kendi_rolu: Motoru ve kütüphaneyi tek başıma yazdım.
+    is_turu: proje
+  kart_yetenekleri: [Python, Makine öğrenmesi]
+  kanitlar:
+    - {tur: link, url: "https://github.com/karpathy/micrograd"}
+  kimlik: {ad: Andrej Karpathy, eposta: andrej@ornek.com}
+  onerilen: {kanit: 2, sonuc: 2, rol: 2, referans: null}
+
+- id: yazilim-katki-yuzde-78-bagli
+  alan: yazilim
+  amac: Bağlı hesabın reposu ama commit'lerin yalnızca %78'i gencin; Rol 3 için %90 gerekir. Sonuç README'de (iddia).
+  iddia:
+    baslik: Bin satırın altında metin editörü
+    aciklama: Terminalde çalışan, sözdizimi renklendirmesi ve arama özelliği olan bir metin editörü.
+    olculebilir_sonuc: Editörün tamamı 1000 satırın altında.
+    kendi_rolu: Editörü tek başıma yazdım.
+    is_turu: proje
+  kart_yetenekleri: [C, Terminal uygulamaları]
+  kanitlar:
+    - {tur: link, url: "https://github.com/antirez/kilo"}
+  kimlik:
+    ad: Salvatore Sanfilippo
+    eposta: salvatore@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: github, kullanici_adi: antirez, yontem: oauth}
+  onerilen: {kanit: 3, sonuc: 2, rol: 2, referans: null}
+
+- id: yazilim-baskasinin-reposu
+  alan: yazilim
+  amac: Başkasının ünlü reposunu kendi işi gibi sunma; hesap bağlı değil. Hiçbir başlık 3 olmamalı.
+  kotu_niyetli: true
+  iddia:
+    baslik: Python web framework'ü
+    aciklama: Python için yüksek performanslı bir web framework'ü geliştirdim.
+    olculebilir_sonuc: 70 binden fazla yıldız aldı.
+    kendi_rolu: Backend'in tamamını tek başıma yazdım.
+    is_turu: proje
+  kart_yetenekleri: [Python, Backend]
+  kanitlar:
+    - {tur: link, url: "github.com/tiangolo/fastapi"}
+  kimlik: {ad: Ahmet Yılmaz, eposta: ahmet.yilmaz@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: 2, sonuc: 2, rol: 2, referans: null}
+
+- id: yazilim-baskasinin-reposu-bagli-hesap
+  alan: yazilim
+  amac: Hesap bağlı ama bağlı hesap repoda sahip ya da katkıcı değil; seviye B'ye çıkmamalı.
+  kotu_niyetli: true
+  iddia:
+    baslik: Python web framework'ü
+    aciklama: Python için yüksek performanslı bir web framework'ü geliştirdim.
+    olculebilir_sonuc: 70 binden fazla yıldız aldı.
+    kendi_rolu: Backend'in tamamını tek başıma yazdım.
+    is_turu: proje
+  kart_yetenekleri: [Python, Backend]
+  kanitlar:
+    - {tur: link, url: "https://github.com/fastapi/fastapi"}
+  kimlik:
+    ad: Ahmet Yılmaz
+    eposta: ahmet.yilmaz@ornek.com
+    eposta_dogrulandi: true
+    bagli_hesaplar:
+      - {saglayici: github, kullanici_adi: ahmetyilmaz-z360, yontem: oauth}
+  onerilen: {kanit: 2, sonuc: 2, rol: 2, referans: null}
+
+- id: yazilim-link-404
+  alan: yazilim
+  amac: Var olmayan repo (404); Kanıt 0, diğer başlıklar iddiaya göre.
+  iddia:
+    baslik: Mahalle kütüphanesi takip sistemi
+    aciklama: Mahalle kütüphanesi için ödünç takip sistemi geliştirdim.
+    olculebilir_sonuc: Sistemde 400 kitap takip ediliyor.
+    kendi_rolu: Arayüzü ben yaptım.
+    is_turu: proje
+  kart_yetenekleri: [React, TypeScript]
+  kanitlar:
+    - {tur: link, url: "https://github.com/z360-olmayan-kullanici-7f3k/kutuphane"}
+  kimlik: {ad: Ayşe Kaya, eposta: ayse.kaya@ornek.com}
+  onerilen: {kanit: 0, sonuc: 2, rol: 2, referans: null}
+
+- id: yazilim-alan-adi-yok
+  alan: yazilim
+  amac: Alan adı hiç yok; Kanıt 0 ve neden "adres bulunamadı" olmalı (bulgu 6).
+  iddia:
+    baslik: Kafe sipariş uygulaması
+    aciklama: Kampüsteki kafe için QR kodla sipariş veren bir web uygulaması yaptım.
+    olculebilir_sonuc: Günde ortalama 80 sipariş alıyor.
+    kendi_rolu: Backend'i ve veritabanını ben kurdum.
+    is_turu: proje
+  kart_yetenekleri: [Node.js, PostgreSQL]
+  kanitlar:
+    - {tur: link, url: "https://ornek-olmayan-alan-adi-zemin360.com"}
+  kimlik: {ad: Mert Çelik, eposta: mert.celik@ornek.com}
+  onerilen: {kanit: 0, sonuc: 2, rol: 2, referans: null}
+
+- id: yazilim-kanitsiz-belirsiz
+  alan: yazilim
+  amac: Kanıt yok, sonuç niteliksel, rol belirsiz; Kanıt "—" (0 değil).
+  iddia:
+    baslik: Okul kulübü web sitesi
+    aciklama: Robotik kulübünün web sitesini yeniledik.
+    olculebilir_sonuc: Üyeler siteyi çok beğendi.
+    kendi_rolu: Ekipteydim, katkıda bulundum.
+    is_turu: gonulluluk
+  kart_yetenekleri: [HTML, CSS]
+  kimlik: {ad: Ece Arslan, eposta: ece.arslan@ornek.com}
+  onerilen: {kanit: null, sonuc: 1, rol: 1, referans: null}
+
+- id: yazilim-ilgisiz-link
+  alan: yazilim
+  amac: Mobil uygulama iddiasına çevre vakfının ana sayfası; ilgisiz kanıt → 0 (alakasiz_kanit).
+  iddia:
+    baslik: Bütçe takip mobil uygulaması
+    aciklama: Öğrenciler için harcama takibi yapan bir Flutter uygulaması geliştirdim.
+    olculebilir_sonuc: Play Store'da 1.200 indirme aldı.
+    kendi_rolu: Uygulamanın tamamını ben geliştirdim.
+    is_turu: proje
+  kart_yetenekleri: [Flutter, Dart]
+  kanitlar:
+    - {tur: link, url: "https://www.tema.org.tr"}
+  kimlik: {ad: Kerem Aksoy, eposta: kerem.aksoy@ornek.com}
+  onerilen: {kanit: 0, sonuc: 2, rol: 2, referans: null}

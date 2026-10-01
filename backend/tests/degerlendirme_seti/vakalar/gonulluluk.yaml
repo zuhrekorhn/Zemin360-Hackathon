@@ -1,0 +1,31 @@
+# Gönüllülük, sosyal sorumluluk. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: gonulluluk-kurulus-ana-sayfasi-referansli
+  alan: gonulluluk
+  amac: Kuruluşun genel ana sayfası (katılımı göstermiyor) + kuruluş referansının üç "evet"i.
+  iddia:
+    baslik: Ağaçlandırma gönüllülüğü
+    aciklama: İki yıl boyunca bir çevre vakfının ağaçlandırma etkinliklerinde gönüllü ekip liderliği yaptım.
+    olculebilir_sonuc: Ekibimizle 500 fidan diktik.
+    kendi_rolu: 15 kişilik gönüllü ekibini ben yönettim.
+    is_turu: gonulluluk
+  kart_yetenekleri: [Ekip yönetimi, Etkinlik organizasyonu]
+  kanitlar:
+    - {tur: link, url: "https://www.tema.org.tr"}
+  referanslar:
+    - {eposta: gonullu.koordinatoru@vakif-ornek.org.tr, iliski: yonetici, iddia_dogru: evet, pay_dogru: evet, sonuc_dogru: evet}
+  kimlik: {ad: Büşra Aktaş, eposta: busra.aktas@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: [0, 1], sonuc: 3, rol: 3, referans: 3}
+
+- id: gonulluluk-kanitsiz
+  alan: gonulluluk
+  amac: Kanıt ve referans yok, sonuç niteliksel, rol belirsiz.
+  iddia:
+    baslik: Hayvan barınağı gönüllülüğü
+    aciklama: Hafta sonları belediye hayvan barınağında gönüllü olarak çalıştım.
+    olculebilir_sonuc: Barınaktaki hayvanların bakımına çok yardımı oldu.
+    kendi_rolu: Gönüllü ekibin bir parçasıydım.
+    is_turu: gonulluluk
+  kart_yetenekleri: [Gönüllülük]
+  kimlik: {ad: Onur Kaplan, eposta: onur.kaplan@ornek.com}
+  onerilen: {kanit: null, sonuc: 1, rol: 1, referans: null}

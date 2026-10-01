@@ -1,0 +1,31 @@
+# Yarışma. Önerilen etiketler taslaktır; etiketi Zühre koyar.
+
+- id: yarisma-genel-ana-sayfa
+  alan: yarisma
+  amac: Festivalin genel ana sayfası; çalışmanın kendisi değil, gencin katılımını göstermiyor. İlgisiz mi, C mi? Etiketleyen karar versin.
+  iddia:
+    baslik: İnsansız hava aracı yarışması
+    aciklama: Üniversite takımımızla insansız hava aracı yarışmasına katıldık.
+    olculebilir_sonuc: Finale kalan 20 takım arasındaydık.
+    kendi_rolu: Otonom uçuş yazılımını ben yazdım.
+    is_turu: yarisma
+  kart_yetenekleri: [Python, Gömülü sistemler]
+  kanitlar:
+    - {tur: link, url: "https://www.teknofest.org/tr/"}
+  kimlik: {ad: Emre Yıldız, eposta: emre.yildiz@ornek.com}
+  onerilen: {kanit: [0, 1], sonuc: 2, rol: 2, referans: null}
+
+- id: yarisma-danisman-referansi
+  alan: yarisma
+  amac: Kanıt linki yok; danışman sonucu doğruluyor ama payı "kısmen" diyor (Rol 2, Referans 2).
+  iddia:
+    baslik: Roket yarışması
+    aciklama: Takımımızla orta irtifa roket yarışmasında yarıştık.
+    olculebilir_sonuc: Kategorimizde 3. olduk.
+    kendi_rolu: Aviyonik kartı ben tasarladım.
+    is_turu: yarisma
+  kart_yetenekleri: [Elektronik, PCB tasarımı]
+  referanslar:
+    - {eposta: danisman@universite-ornek.edu.tr, iliski: ogretmen, iddia_dogru: evet, pay_dogru: kismen, sonuc_dogru: evet}
+  kimlik: {ad: Zeynep Kılıç, eposta: zeynep.kilic@ornek.com, eposta_dogrulandi: true}
+  onerilen: {kanit: null, sonuc: 3, rol: 2, referans: 2}

@@ -1,0 +1,317 @@
+{
+ "akademik-arxiv-yazar-eslesiyor": {
+  "hata": null,
+  "kanit": 3,
+  "referans": 0,
+  "rol": 2,
+  "sonuc": 0
+ },
+ "akademik-arxiv-yazar-eslesmiyor": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 2,
+  "sonuc": 0
+ },
+ "akademik-dergipark-ikinci-yazar": {
+  "hata": null,
+  "kanit": 3,
+  "referans": 0,
+  "rol": 2,
+  "sonuc": 0
+ },
+ "gonulluluk-kanitsiz": {
+  "hata": null,
+  "kanit": null,
+  "referans": null,
+  "rol": null,
+  "sonuc": null
+ },
+ "gonulluluk-kurulus-ana-sayfasi-referansli": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 3,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "kapali-finans-beyan": {
+  "hata": null,
+  "kanit": null,
+  "referans": null,
+  "rol": null,
+  "sonuc": null
+ },
+ "kapali-ik-iki-referans": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 2,
+  "rol": 0,
+  "sonuc": 0
+ },
+ "kapali-satis-referans": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 3,
+  "rol": 0,
+  "sonuc": 0
+ },
+ "medya-instagram-profil": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 1,
+  "sonuc": 0
+ },
+ "medya-youtube-bagli": {
+  "hata": "zaman_asimi",
+  "kanit": null,
+  "referans": null,
+  "rol": null,
+  "sonuc": null
+ },
+ "medya-youtube-kanal-sayfasi": {
+  "hata": "zaman_asimi",
+  "kanit": null,
+  "referans": null,
+  "rol": null,
+  "sonuc": null
+ },
+ "muhendislik-grabcad-bot-engeli": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "muhendislik-pdf-capasiz": {
+  "hata": null,
+  "kanit": null,
+  "referans": null,
+  "rol": null,
+  "sonuc": null
+ },
+ "pazarlama-ilgisiz-ansiklopedi": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "pazarlama-musteri-referansi": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 3,
+  "rol": 0,
+  "sonuc": 0
+ },
+ "sertifika-genel-rozet-sayfasi": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 1
+ },
+ "sertifika-pdf-capasiz": {
+  "hata": null,
+  "kanit": null,
+  "referans": null,
+  "rol": null,
+  "sonuc": null
+ },
+ "staj-kurumsal-referans": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 3,
+  "rol": 0,
+  "sonuc": 0
+ },
+ "staj-linkedin-profil": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 2,
+  "sonuc": 0
+ },
+ "staj-referans-olumsuz": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 1,
+  "rol": 0,
+  "sonuc": 0
+ },
+ "staj-referans-yanitsiz": {
+  "hata": null,
+  "kanit": null,
+  "referans": null,
+  "rol": null,
+  "sonuc": null
+ },
+ "tasarim-behance-bot-engeli": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "tasarim-dribbble-bagli": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "tasarim-dribbble-bagsiz": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "tasarim-portfolyo-bagli": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "tasarim-portfolyo-bagsiz": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "veri-kaggle-bagli": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "veri-kaggle-bagsiz": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "veri-kanitsiz-referansli": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 3,
+  "rol": 0,
+  "sonuc": 0
+ },
+ "yarisma-danisman-referansi": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 2,
+  "rol": 0,
+  "sonuc": 0
+ },
+ "yarisma-genel-ana-sayfa": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazi-kisisel-blog-bagli": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "yazi-kisisel-blog-bagsiz": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "yazi-medium-bagli": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "yazi-medium-bagsiz": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 0
+ },
+ "yazi-teknik-blog-bagli": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazilim-alan-adi-yok": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazilim-baskasinin-reposu": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazilim-baskasinin-reposu-bagli-hesap": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazilim-bireysel-repo-bagli": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazilim-bireysel-repo-bagsiz": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazilim-ilgisiz-link": {
+  "hata": null,
+  "kanit": 1,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazilim-kanitsiz-belirsiz": {
+  "hata": null,
+  "kanit": null,
+  "referans": null,
+  "rol": null,
+  "sonuc": null
+ },
+ "yazilim-katki-yuzde-78-bagli": {
+  "hata": null,
+  "kanit": 2,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ },
+ "yazilim-link-404": {
+  "hata": null,
+  "kanit": 0,
+  "referans": 0,
+  "rol": 3,
+  "sonuc": 3
+ }
+}
