@@ -48,4 +48,24 @@ describe("inceleme metinleri", () => {
     ).toEqual(["İtiraz notu: a"]);
     expect(ayrintiSatirlari(satir("belge_tutarsiz", { x: 1 }))).toEqual([]);
   });
+
+  it("doğrulama kodu: hesap, profil ve aranacak kod; karar düğmeleri", () => {
+    expect(
+      ayrintiSatirlari(
+        satir("profil_kodu_elle", {
+          platform: "behance",
+          kullanici_adi: "elif",
+          profil_adresi: "https://www.behance.net/elif",
+          kod: "z360-abcd1234",
+        }),
+      ),
+    ).toEqual([
+      "Hesap: Behance · elif",
+      "Profil: https://www.behance.net/elif",
+      "Aranacak kod: z360-abcd1234",
+    ]);
+    expect(kararEtiketleri("profil_kodu_elle").kapandi).toBe(
+      "Kod profilde, bağla",
+    );
+  });
 });

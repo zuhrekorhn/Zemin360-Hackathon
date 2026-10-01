@@ -2,6 +2,7 @@
 
 import { FormAlani } from "@/components/sohbet";
 import { Input } from "@/components/ui/input";
+import { SECIM_SINIFI } from "@/components/ui/secim";
 import {
   CALISAN_ARALIKLARI,
   FIRMA_TURLERI,
@@ -10,9 +11,6 @@ import {
 } from "@/lib/firma-profil";
 import { SEHIR_SECENEKLERI } from "@/lib/sabitler";
 import { cn } from "@/lib/utils";
-
-const SECIM_SINIFI =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30";
 
 /**
  * Firmanın profil alanları (docs/plans/firma-akisi.md § 0 karar 2). Kayıt

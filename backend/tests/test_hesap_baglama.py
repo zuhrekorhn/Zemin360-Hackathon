@@ -227,7 +227,8 @@ def test_baglantiyi_kaldirma_sahibi_yapar(github, kalemleri_yeniden_okuma_arka_p
         bagli = (await _tamamla(istemci, d.genc1, await _durum(istemci, d.genc1))).json()
         yol = f"/hesap-baglama/{bagli['id']}"
         await durumlar(istemci, "DELETE", yol, {None: 401, d.kurum1: 403, d.genc2: 404})
-        await durumlar(istemci, "DELETE", yol, {d.genc1: 204})
+        yanit = await istemci.delete(yol, headers=d.genc1.baslik)
+        assert (yanit.status_code, yanit.json()["hesaplar"]) == (200, [])
         await durumlar(istemci, "DELETE", yol, {d.genc1: 404})
         assert kalemleri_yeniden_okuma_arka_plani_yok == [d.K1.id, d.K1.id]
 

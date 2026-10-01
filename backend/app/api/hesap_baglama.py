@@ -62,7 +62,10 @@ async def _yeniden_okumayi_planla(
 async def hesaplarim(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)), oturum: AsyncSession = Depends(get_session)
 ) -> HesaplarimYaniti:
-    kullanici_id = hesap.kullanici.id
+    return await _hesaplarim_yaniti(oturum, hesap.kullanici.id)
+
+
+async def _hesaplarim_yaniti(oturum: AsyncSession, kullanici_id: uuid.UUID) -> HesaplarimYaniti:
     hesaplar = await hesap_baglama.bagli_hesaplar(oturum, kullanici_id)
     kodlar = await hesap_baglama.bekleyen_kodlar(oturum, kullanici_id)
     return HesaplarimYaniti(
@@ -169,18 +172,18 @@ async def profil_kodunu_dogrula(
     return KodDogrulamaYaniti(durum="baglandi", hesap=BagliHesapYaniti.model_validate(bagli))
 
 
-@router.delete("/{bagli_hesap_id}", status_code=204)
+@router.delete("/{bagli_hesap_id}", response_model=HesaplarimYaniti)
 async def baglantiyi_kaldir(
     bagli_hesap_id: uuid.UUID,
     arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
-) -> Response:
-    """Başkasının bağlantısı 404 (varlık sızmasın)."""
+) -> HesaplarimYaniti:
+    """Döner: güncel liste. Başkasının bağlantısı 404 (varlık sızmasın)."""
     try:
         await hesap_baglama.baglantiyi_kaldir(oturum, hesap.kullanici.id, bagli_hesap_id)
     except hesap_baglama.BagliHesapBulunamadi as hata:
         raise HTTPException(status_code=404, detail=BULUNAMADI) from hata
     await oturum.commit()
     await _yeniden_okumayi_planla(oturum, hesap, arka_plan)
-    return Response(status_code=204)
+    return await _hesaplarim_yaniti(oturum, hesap.kullanici.id)

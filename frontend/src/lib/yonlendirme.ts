@@ -133,6 +133,8 @@ export function bildirimHedefi(
       return "/genc#kart";
     case "ad_degisikligi_sonucu":
       return "/profil";
+    case "hesap_baglama_sonucu":
+      return "/profil#hesaplar";
     default:
       return "/bildirimler";
   }

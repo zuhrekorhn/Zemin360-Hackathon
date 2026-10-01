@@ -1554,3 +1554,90 @@ export function canlilikOlaylari(limit = 20): Promise<CanlilikOlayi[]> {
 }
 
 export { API_URL };
+
+/* --- Hesap bağlama (docs/plans/dogrulama-iyilestirme.md § 6) ------------------
+   Tipler backend'deki app/schemas/hesap_baglama.py ile eşleşir. */
+
+export type BagliHesap = {
+  id: string;
+  saglayici: string;
+  kullanici_adi: string;
+  /** oauth | profil_kodu | elle (GİRVAK'ın doğruladığı kod) */
+  yontem: string;
+  baglanma_tarihi: string;
+};
+
+export type ProfilKodu = {
+  platform: string;
+  kod: string;
+  /** Kodun aranacağı profil adresi (sunucu kurar). */
+  profil_adresi: string;
+  son_gecerlilik: string;
+};
+
+export type Hesaplarim = {
+  hesaplar: BagliHesap[];
+  oauth_saglayicilari: string[];
+  profil_kodu_platformlari: string[];
+  bekleyen_kodlar: ProfilKodu[];
+  /** GİRVAK'ın elle doğrulamasını bekleyen platform. */
+  inceleme_bekleyen: string | null;
+};
+
+export type KodDogrulamaYaniti = {
+  durum: "baglandi" | "inceleme_bekliyor";
+  hesap: BagliHesap | null;
+};
+
+/** GET /hesap-baglama — bağlı hesaplar, açık yöntemler, bekleyen kodlar. */
+export function hesaplarim(): Promise<Hesaplarim> {
+  return apiIstek<Hesaplarim>("/hesap-baglama");
+}
+
+/** POST /hesap-baglama/oauth/{saglayici}/baslat — yönlendirilecek yetki adresi. */
+export function oauthBaslat(
+  saglayici: string,
+): Promise<{ yetki_adresi: string }> {
+  return apiIstek<{ yetki_adresi: string }>(
+    `/hesap-baglama/oauth/${saglayici}/baslat`,
+    { method: "POST" },
+  );
+}
+
+/** POST /hesap-baglama/oauth/{saglayici}/tamamla — sağlayıcıdan dönen kodla bağlar. */
+export function oauthTamamla(
+  saglayici: string,
+  kod: string,
+  durum: string,
+): Promise<BagliHesap> {
+  return apiIstek<BagliHesap>(`/hesap-baglama/oauth/${saglayici}/tamamla`, {
+    method: "POST",
+    body: JSON.stringify({ kod, durum }),
+  });
+}
+
+/** POST /hesap-baglama/profil-kodu — 48 saatlik doğrulama kodu. */
+export function profilKoduAl(
+  platform: string,
+  profilAdresi: string,
+): Promise<ProfilKodu> {
+  return apiIstek<ProfilKodu>("/hesap-baglama/profil-kodu", {
+    method: "POST",
+    body: JSON.stringify({ platform, profil_adresi: profilAdresi }),
+  });
+}
+
+/** POST /hesap-baglama/profil-kodu/{platform}/dogrula — profili okur. */
+export function profilKodunuDogrula(
+  platform: string,
+): Promise<KodDogrulamaYaniti> {
+  return apiIstek<KodDogrulamaYaniti>(
+    `/hesap-baglama/profil-kodu/${platform}/dogrula`,
+    { method: "POST" },
+  );
+}
+
+/** DELETE /hesap-baglama/{id} — güncel listeyi döner. */
+export function baglantiyiKaldir(id: string): Promise<Hesaplarim> {
+  return apiIstek<Hesaplarim>(`/hesap-baglama/${id}`, { method: "DELETE" });
+}

@@ -4,6 +4,7 @@
  */
 
 import type { IncelemeSatiri } from "@/lib/api";
+import { platformAdi } from "@/lib/hesap-baglama";
 
 const TUR_ETIKETLERI: Record<string, string> = {
   itiraz_siniri: "İtiraz hakkı doldu",
@@ -14,7 +15,7 @@ const TUR_ETIKETLERI: Record<string, string> = {
   referans_supheli: "Şüpheli referans yanıtı",
   belge_tutarsiz: "Belge tutarsız",
   kanit_celisiyor: "Kanıt iddiayla çelişiyor",
-  profil_kodu_elle: "Profil kodu elle doğrulanacak",
+  profil_kodu_elle: "Doğrulama kodu elle kontrol edilecek",
   eposta_barkodu: "e-Devlet barkodu doğrulanacak",
 };
 
@@ -27,9 +28,11 @@ export function kararEtiketleri(tur: string): {
   kapandi: string;
   dogrulanamadi: string;
 } {
-  return tur === "ad_degisikligi"
-    ? { kapandi: "Onayla", dogrulanamadi: "Reddet" }
-    : { kapandi: "Sorun yok", dogrulanamadi: "Doğrulanamadı" };
+  if (tur === "ad_degisikligi")
+    return { kapandi: "Onayla", dogrulanamadi: "Reddet" };
+  if (tur === "profil_kodu_elle")
+    return { kapandi: "Kod profilde, bağla", dogrulanamadi: "Kod yok" };
+  return { kapandi: "Sorun yok", dogrulanamadi: "Doğrulanamadı" };
 }
 
 function metinListesi(deger: unknown): string[] {
@@ -46,6 +49,15 @@ export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
     if (typeof a.gerekce === "string" && a.gerekce)
       satirlar.push(`Gerekçe: ${a.gerekce}`);
     return satirlar;
+  }
+  if (satir.tur === "profil_kodu_elle") {
+    // Profil otomatik okunamadı (bot engeli, giriş duvarı): GİRVAK profili açıp
+    // açıklamada kodu arar. Ekran görüntüsü kabul edilmez (§ 6.2).
+    return [
+      `Hesap: ${platformAdi(String(a.platform ?? ""))} · ${String(a.kullanici_adi ?? "—")}`,
+      `Profil: ${String(a.profil_adresi ?? "—")}`,
+      `Aranacak kod: ${String(a.kod ?? "—")}`,
+    ];
   }
   if (satir.tur === "itiraz_siniri") {
     return metinListesi(a.itiraz_notlari).map((n) => `İtiraz notu: ${n}`);

@@ -3,6 +3,7 @@
 import { CokluSecim } from "@/components/coklu-secim";
 import { FormAlani } from "@/components/sohbet";
 import { Input } from "@/components/ui/input";
+import { SECIM_SINIFI } from "@/components/ui/secim";
 import {
   MEZUNIYET_EN_ESKI,
   type ProfilFormu,
@@ -15,9 +16,6 @@ import {
   MUSAITLIKLER,
   SEHIR_SECENEKLERI,
 } from "@/lib/sabitler";
-
-const SECIM_SINIFI =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30";
 
 /**
  * Gencin profil alanları (docs/plans/genc-akisi.md § 5.1). Kayıt formu ve

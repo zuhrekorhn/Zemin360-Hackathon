@@ -51,6 +51,8 @@ Her kavramın **tek** adı var. "Kullanma" sütunundaki karşılıklar kullanıc
 | Çalışmanın türü | Proje · Staj · İş deneyimi · Gönüllülük · Yarışma | "İş" (tek başına) | "İş" tek başına genel kavramla karışır |
 | Çalışmayı gösteren link | **kanıt** | delil, belge | Form etiketinde "Kanıt linki" olabilir |
 | Çalışmayı doğrulayan kişi | **referans** | üçüncü taraf, onaylayan | |
+| Gencin GitHub, YouTube vb. hesabı | **bağlı hesap** ("hesabını bağla") | entegrasyon, OAuth, sosyal hesap, hesap bağlama | Bölüm başlığı: "Bağlı hesaplar" |
+| Profil açıklamasına yazılan kod (`z360-…`) | **doğrulama kodu** | profil kodu, token, doğrulama tokenı | "Profil" kayıt bilgileri demek; platformdaki sayfa için "profilin" yalnızca platform adıyla ("Medium profilin") |
 | Dört bileşenli değerlendirme | **güven göstergesi** | rubrik, güven skoru, puan, doğrulama skoru | |
 | Göstergenin dört başlığı | **Kanıt · Sonuç · Rol · Referans** | kanıt orijinalliği, sonuç ölçülebilirliği, rol netliği, üçüncü taraf onayı | Uzun adlar yalnızca açıklama metninde |
 | Firmanın tanımladığı ihtiyaç | **ihtiyaç** (firma tarafında) | talep, ilan | Başlıkta "ihtiyaç kartı" olabilir |

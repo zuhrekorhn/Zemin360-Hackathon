@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { KilitliAd } from "@/components/ad-degisikligi";
+import { BagliHesaplar } from "@/components/bagli-hesaplar";
 import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { GencProfilAlanlari } from "@/components/genc-profil-alanlari";
 import { GirisKapisi } from "@/components/giris-kapisi";
@@ -25,7 +26,8 @@ import {
  *
  * Kayıt formundaki alanlar; yalnızca kendi profili (token'ın profili). Bu
  * alanlardan önce açılmış hesaplar paneldeki banttan buraya gelir ve eksikleri
- * ile KVKK onayını burada tamamlar.
+ * ile KVKK onayını burada tamamlar. Altında bağlı hesaplar bölümü
+ * (dogrulama-iyilestirme.md § 6).
  */
 export default function ProfilSayfasi() {
   return (
@@ -162,6 +164,8 @@ function ProfilIcerigi() {
           </Link>
         </div>
       </form>
+
+      <BagliHesaplar />
     </Sayfa>
   );
 }
