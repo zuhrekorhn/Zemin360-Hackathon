@@ -181,12 +181,30 @@ export type GencProfil = {
   portfolyo_url: string | null;
   kvkk_onay_tarihi: string | null;
   eksik_alanlar: string[];
+  /** E-posta doğrulanınca ad kilitlenir; değişiklik GİRVAK'a talep olarak gider. */
+  ad_kilitli: boolean;
+  /** Bekleyen ad değişikliği talebinin istediği ad. */
+  bekleyen_ad: string | null;
 };
 
 /** PATCH /profil: yalnızca gönderilen alan değişir; opsiyonel alan null ya da "" ile silinir. */
 export type GencProfilGuncelleme = Partial<
-  Omit<GencProfil, "email" | "kvkk_onay_tarihi" | "eksik_alanlar">
+  Omit<
+    GencProfil,
+    "email" | "kvkk_onay_tarihi" | "eksik_alanlar" | "ad_kilitli" | "bekleyen_ad"
+  >
 > & { kvkk_onay?: boolean };
+
+/** Kilitli ad için GİRVAK'a değişiklik talebi (dogrulama-iyilestirme.md § 6.3). */
+export function adDegisikligiIste(
+  yeniAd: string,
+  gerekce: string | null,
+): Promise<GencProfil> {
+  return apiIstek<GencProfil>("/profil/ad-degisikligi", {
+    method: "POST",
+    body: JSON.stringify({ yeni_ad: yeniAd, gerekce }),
+  });
+}
 
 /** GET /profil — gencin kendi profili. */
 export function profilGetir(): Promise<GencProfil> {

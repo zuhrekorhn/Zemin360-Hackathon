@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { KilitliAd } from "@/components/ad-degisikligi";
 import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { GencProfilAlanlari } from "@/components/genc-profil-alanlari";
 import { GirisKapisi } from "@/components/giris-kapisi";
@@ -65,7 +66,7 @@ function ProfilIcerigi() {
     setHata(null);
     setKaydedildi(false);
     const hatalar = profilFormunuDogrula(form);
-    if (!ad.trim()) hatalar.unshift("Adın boş olamaz.");
+    if (!profil.ad_kilitli && !ad.trim()) hatalar.unshift("Adın boş olamaz.");
     if (hatalar.length > 0) {
       setHata({ metin: hatalar.join(" "), kota: false });
       return;
@@ -74,7 +75,8 @@ function ProfilIcerigi() {
     try {
       const yeni = await profilGuncelle({
         ...formuProfileCevir(form),
-        ad: ad.trim(),
+        // Kilitli ad formdan gönderilmez; değişikliği talep yolundan gider.
+        ...(profil.ad_kilitli ? {} : { ad: ad.trim() }),
         ...(kvkkOnay ? { kvkk_onay: true } : {}),
       });
       yukle(yeni);
@@ -106,15 +108,19 @@ function ProfilIcerigi() {
       />
 
       <form className="flex flex-col gap-6" onSubmit={kaydet}>
-        <FormAlani etiket="Adın" htmlFor="ad">
-          <Input
-            id="ad"
-            value={ad}
-            onChange={(olay) => setAd(olay.target.value)}
-            required
-            autoComplete="name"
-          />
-        </FormAlani>
+        {profil.ad_kilitli ? (
+          <KilitliAd profil={profil} onTalep={setProfil} />
+        ) : (
+          <FormAlani etiket="Adın" htmlFor="ad">
+            <Input
+              id="ad"
+              value={ad}
+              onChange={(olay) => setAd(olay.target.value)}
+              required
+              autoComplete="name"
+            />
+          </FormAlani>
+        )}
 
         <GencProfilAlanlari form={form} onDegis={setForm} />
 

@@ -11,7 +11,14 @@ from __future__ import annotations
 import datetime as dt
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Field
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    field_validator,
+)
 
 from app.core import calisma_modeli
 from app.core.firma_profili import (
@@ -126,6 +133,30 @@ class GencProfilYaniti(BaseModel):
     kvkk_onay_tarihi: dt.datetime | None
     # Doldurulması gereken zorunlu alanlar (eski hesaplar için bant)
     eksik_alanlar: list[str]
+    # Ad kilidi (dogrulama-iyilestirme.md § 6.3): e-posta doğrulanınca ad profilden
+    # değişmez, talep GİRVAK'a gider. Bekleyen talebin istediği ad.
+    ad_kilitli: bool = False
+    bekleyen_ad: str | None = None
+
+
+class AdDegisikligiIstegi(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    yeni_ad: str = Field(min_length=1, max_length=100)
+    gerekce: str | None = Field(default=None, max_length=300)
+
+    @field_validator("yeni_ad")
+    @classmethod
+    def _ad_dolu(cls, v: str) -> str:
+        v = " ".join(v.split())
+        if not v:
+            raise ValueError("Yeni ad boş olamaz.")
+        return v
+
+    @field_validator("gerekce")
+    @classmethod
+    def _gerekce_sade(cls, v: str | None) -> str | None:
+        return " ".join(v.split()) or None if v is not None else None
 
 
 # --- Firma (docs/plans/firma-akisi.md § 0 kararlar 1-2) ---------------------------------

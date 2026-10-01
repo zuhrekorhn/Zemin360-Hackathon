@@ -11,9 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.inceleme_durumu import KAPANDI
 from app.models.bildirim import TUR_INCELEME_SONUCU
-from app.models.inceleme_isareti import IncelemeIsareti
+from app.models.inceleme_isareti import TUR_AD_DEGISIKLIGI, IncelemeIsareti
 from app.models.somut_cikti import SomutCikti
 from app.servisler.inceleme import KararEtkisi, KararIsleyici
+from app.servisler.kimlik_dogrulama import AdDegisikligiIsleyici
 
 
 def _not_eki(isaret: IncelemeIsareti) -> str:
@@ -43,7 +44,7 @@ class KalemIsleyici:
         )
 
 
-ISLEYICILER: dict[str, KararIsleyici] = {}
+ISLEYICILER: dict[str, KararIsleyici] = {TUR_AD_DEGISIKLIGI: AdDegisikligiIsleyici()}
 VARSAYILAN = KalemIsleyici()
 
 

@@ -21,6 +21,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.dogrulama.kimlik import ad_kilitli
 from app.agents.kart_duzenleme import degisen_alanlar, yeniden_eslestirme_gerekir_mi
 from app.api.kimlik import rol_gerekli
 from app.core import calisma_modeli, firma_dogrulama, firma_profili
@@ -34,13 +35,14 @@ from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import GencProfili
 from app.schemas.profil import (
+    AdDegisikligiIstegi,
     FirmaProfilGuncelleme,
     FirmaProfilYaniti,
     GencProfilGuncelleme,
     GencProfilYaniti,
 )
 from app.schemas.tanimlama import KurumProfili
-from app.servisler import kart_hazirlama
+from app.servisler import kart_hazirlama, kimlik_dogrulama
 
 router = APIRouter(tags=["profil"])
 
@@ -88,7 +90,9 @@ def bosaltilan_zorunlular(gonderilenler: dict[str, Any]) -> list[str]:
     )
 
 
-def profil_yaniti(hesap: Hesap, kullanici: Kullanici) -> GencProfilYaniti:
+def profil_yaniti(
+    hesap: Hesap, kullanici: Kullanici, bekleyen_ad: str | None = None
+) -> GencProfilYaniti:
     return GencProfilYaniti(
         ad=kullanici.ad,
         email=kullanici.email,
@@ -106,12 +110,17 @@ def profil_yaniti(hesap: Hesap, kullanici: Kullanici) -> GencProfilYaniti:
         portfolyo_url=kullanici.portfolyo_url,
         kvkk_onay_tarihi=hesap.kvkk_onay_tarihi,
         eksik_alanlar=profilin_eksikleri(kullanici),
+        ad_kilitli=ad_kilitli(hesap.eposta_dogrulandi_tarihi),
+        bekleyen_ad=bekleyen_ad,
     )
 
 
 @router.get("/profil", response_model=GencProfilYaniti)
-async def profil_getir(hesap: Hesap = Depends(rol_gerekli(ROL_GENC))) -> GencProfilYaniti:
-    return profil_yaniti(hesap, hesap.kullanici)
+async def profil_getir(
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)), oturum: AsyncSession = Depends(get_session)
+) -> GencProfilYaniti:
+    bekleyen = await kimlik_dogrulama.bekleyen_ad_talebi(oturum, hesap.kullanici.id)
+    return profil_yaniti(hesap, hesap.kullanici, bekleyen)
 
 
 @router.patch("/profil", response_model=GencProfilYaniti)
@@ -134,6 +143,10 @@ async def profil_guncelle(
         raise HTTPException(
             status_code=422, detail=bos_alan_mesaji(bosalanlar, GENC_ALAN_ADLARI, siz=False)
         )
+    if "ad" in gonderilenler and not kimlik_dogrulama.profilden_ad_degisebilir_mi(
+        hesap, gonderilenler["ad"]
+    ):
+        raise HTTPException(status_code=409, detail=kimlik_dogrulama.AD_KILITLI)
     kullanici = hesap.kullanici
     oncesi = {alan: getattr(kullanici, alan) for alan in PROFIL_ALANLARI}
     degisenler = degisen_alanlar(
@@ -151,7 +164,28 @@ async def profil_guncelle(
         )
         for kart_id, versiyon in kartlar.all():
             arka_plan.add_task(kart_hazirlama.karti_hazirla, kart_id, versiyon)
-    return profil_yaniti(hesap, kullanici)
+    bekleyen = await kimlik_dogrulama.bekleyen_ad_talebi(oturum, kullanici.id)
+    return profil_yaniti(hesap, kullanici, bekleyen)
+
+
+@router.post("/profil/ad-degisikligi", response_model=GencProfilYaniti, status_code=202)
+async def ad_degisikligi_iste(
+    istek: AdDegisikligiIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> GencProfilYaniti:
+    """Kilitli ad için GİRVAK'a talep (plan § 6.3). Ad onaya kadar değişmez.
+
+    Ad kilitli değilse ya da bekleyen talep varsa 409, aynı ad 422.
+    """
+    try:
+        await kimlik_dogrulama.ad_degisikligi_iste(oturum, hesap, istek.yeni_ad, istek.gerekce)
+    except (kimlik_dogrulama.AdKilitliDegil, kimlik_dogrulama.BekleyenTalepVar) as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
+    except kimlik_dogrulama.AyniAd as hata:
+        raise HTTPException(status_code=422, detail=str(hata)) from hata
+    await oturum.commit()
+    return profil_yaniti(hesap, hesap.kullanici, istek.yeni_ad)
 
 
 def gencin_profilini_guncelle(kullanici: Kullanici, profil: GencProfili) -> None:
