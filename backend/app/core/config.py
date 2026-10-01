@@ -82,6 +82,9 @@ class Settings(BaseSettings):
     orcid_oauth_istemci: str = ""
     orcid_oauth_gizli: str = ""
     oauth_zaman_asimi_sn: float = 10
+    # Doğrulama kodunu YouTube kanal açıklamasında okumak için (Data API, uygulama
+    # anahtarı). Boşsa kanal sayfası okunur.
+    youtube_api_anahtari: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

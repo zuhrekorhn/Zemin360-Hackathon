@@ -25,6 +25,12 @@ from app.core.dis_servisler.oauth import (
     OAuthSaglayici,
     OrcidOAuth,
 )
+from app.core.profil_kodu import (
+    KisiselSitePlatformu,
+    ProfilKoduPlatformu,
+    YoutubePlatformu,
+    sayfa_platformlari,
+)
 
 logger = logging.getLogger("zemin360.dis_servisler")
 
@@ -69,6 +75,16 @@ def oauth_saglayicilarini_sec(ayar: Settings) -> dict[str, OAuthSaglayici]:
         for sinif, istemci, gizli in tanimlar
         if istemci and gizli
     }
+
+
+@lru_cache
+def profil_kodu_platformlari() -> dict[str, ProfilKoduPlatformu]:
+    platformlar: list[ProfilKoduPlatformu] = [
+        YoutubePlatformu(get_settings().youtube_api_anahtari),
+        *sayfa_platformlari(),
+        KisiselSitePlatformu(),
+    ]
+    return {p.platform: p for p in platformlar}
 
 
 def servis_kipleri() -> dict[str, str]:
