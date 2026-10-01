@@ -635,6 +635,8 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
 
 ### Adım 3: Veri modeli, "—" ve tek kanıt servisi
 
+> **Durum: tamamlandı** (`906fa4c` genişlet, `2745ab7` "—", `2c63259` tek kanıt kapısı, `e180e1a` daralt, kart arayüz düzeltmesi). Uygulamada netleşen kararlar: (1) link iddia düzenleme formundan çıktı, kanıt bölümünün tek kapısından eklenir ve kaldırılır; (2) kanıt değişikliği göstergeyi yeniden değerlendirir ama referans yanıtlarını geçmişe atmaz, karar 8'deki "ya da linki" kalktı (§ 2: kanıt eklemek puanı düşürmez); (3) "değerlendirildi mi" `degerlendirme_tarihi`'ne bakar, yalnızca referansla açılan gösterge sayılmaz; (4) kalem içinde "en güçlü parça" seçimi adım 4-5'te (bugün değerlendirme birincil linki okur). Gerçek sunucuda uçtan uca denendi.
+
 - **Bulgular:** 16, 17, 19, 25, 26, 27 (kısmen), 28, 29, 30.
 - **İş birimleri:**
   1. Alan türleri: `KaynakSeviyesi`, `ErisimDurumu`, `ParcaTuru` (değer nesneleri).
