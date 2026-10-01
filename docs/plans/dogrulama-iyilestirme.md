@@ -650,6 +650,8 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
 
 ### Adım 4: Puan çekirdeği
 
+> **Durum: tamamlandı.** `cekirdek.py` tek giriş noktası (model çağrısı enjekte; uygulama ve karne aynı çekirdeği kullanır). Alıntı denetimi yeni bağımlılık yerine `difflib` ile. Notta Referans cümlesi yok (referans sonradan yanıt verince eskirdi). İtiraz sınırı önbellek kontrolünden sonra (aynı not hak harcamaz). Referansın yapılandırılmış yanıtı çekirdekte destekli, uygulama adım 7'de bağlar. Diğer ajanların istemlerine `kullanici_dili(hitap)` kendi incelemelerinde geçirilecek. Karne: sahte vakada yanlış 3 4 → 0, notta dil ihlali 18 → 0, Sonuç birebir %44 → %82; kalan Kanıt farkları okuyucu (5, 10), hesap bağlama (8) ve dosya (9) adımlarına bağlı.
+
 - **Bulgular:** 9–15, 38, 41; ilgisiz → 0.
 - **İş birimleri:**
   1. `kurallar.py`: seviye tavanları, `parca_puani`, `kalem_puani`, bireysel kurallar, referans çevrimi (eski + yeni). Tablo testleri.
