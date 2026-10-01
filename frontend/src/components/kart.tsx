@@ -1,5 +1,5 @@
 import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
-import { baslikGosterimi } from "@/lib/guven-gostergesi";
+import { baslikGosterimi, gostergeDoluMu } from "@/lib/guven-gostergesi";
 import { kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
@@ -195,7 +195,7 @@ export function CiktiOzeti({
         )}
       </div>
 
-      {cikti.guven_skoru ? (
+      {cikti.guven_skoru && gostergeDoluMu(cikti.guven_skoru) ? (
         <GuvenGostergesi skor={cikti.guven_skoru} />
       ) : (
         <p className="border-t border-kenar px-4 py-3 text-sm text-muted-foreground">

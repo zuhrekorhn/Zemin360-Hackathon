@@ -7,6 +7,8 @@
  * için her değerin bir de sözlü karşılığı var.
  */
 
+import type { GuvenSkoru } from "@/lib/api";
+
 export type BaslikAdi = "Kanıt" | "Sonuç" | "Rol" | "Referans";
 
 export type BaslikGosterimi = {
@@ -27,4 +29,19 @@ export function baslikGosterimi(
     };
   }
   return { metin: `${deger}/3`, sozlu: `3 üzerinden ${deger}` };
+}
+
+/**
+ * Göstergede gösterilecek bir şey var mı? Dört başlık da "—" ise (ör. çalışmanın
+ * tek kanıtı kaldırıldı ve referans yanıtı yok) gösterge yokmuş gibi davranılır:
+ * dört tire yerine "henüz değerlendirilmedi" denir.
+ */
+export function gostergeDoluMu(skor: GuvenSkoru | null | undefined): boolean {
+  if (!skor) return false;
+  return [
+    skor.kanit_orijinalligi,
+    skor.sonuc_olculebilirligi,
+    skor.rol_netligi,
+    skor.ucuncu_taraf_onayi,
+  ].some((deger) => deger !== null);
 }
