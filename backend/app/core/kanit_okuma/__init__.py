@@ -16,12 +16,14 @@ from app.core.kanit_okuma.istek import adresi_hazirla
 from app.core.kanit_okuma.okuyucu import OkumaBaglami, Okuyucu
 from app.core.kanit_okuma.okuyucular.genel import GenelOkuyucu
 from app.core.kanit_okuma.okuyucular.github import GithubOkuyucu
+from app.core.kanit_okuma.okuyucular.gitlab import GitlabOkuyucu
 from app.core.kanit_okuma.okuyucular.google import GoogleOkuyucu
 from app.core.kanit_okuma.okuyucular.medium import MediumOkuyucu
 from app.core.kanit_okuma.okuyucular.oembed import OembedOkuyucu
 
 PLATFORM_OKUYUCULARI: tuple[Okuyucu, ...] = (
     GithubOkuyucu(),
+    GitlabOkuyucu(),
     OembedOkuyucu(),
     MediumOkuyucu(),
     GoogleOkuyucu(),

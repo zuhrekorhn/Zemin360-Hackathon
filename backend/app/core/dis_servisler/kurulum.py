@@ -18,7 +18,7 @@ from app.core.dis_servisler.eposta import (
     LogGonderici,
     ResendGonderici,
 )
-from app.core.dis_servisler.oauth import GithubOAuth, OAuthAyari, OAuthSaglayici
+from app.core.dis_servisler.oauth import GithubOAuth, GitlabOAuth, OAuthAyari, OAuthSaglayici
 
 logger = logging.getLogger("zemin360.dis_servisler")
 
@@ -53,7 +53,10 @@ def oauth_saglayicilari() -> dict[str, OAuthSaglayici]:
 def oauth_saglayicilarini_sec(ayar: Settings) -> dict[str, OAuthSaglayici]:
     """Kimliği ve gizli anahtarı verilmiş sağlayıcılar; diğerleri kapalı (Null Object
     yerine yokluk: kapalı sağlayıcı arayüzde görünmez, uç 404 döner)."""
-    tanimlar = ((GithubOAuth, ayar.github_oauth_istemci, ayar.github_oauth_gizli),)
+    tanimlar = (
+        (GithubOAuth, ayar.github_oauth_istemci, ayar.github_oauth_gizli),
+        (GitlabOAuth, ayar.gitlab_oauth_istemci, ayar.gitlab_oauth_gizli),
+    )
     return {
         sinif.saglayici: sinif(OAuthAyari(istemci, gizli, ayar.oauth_zaman_asimi_sn))
         for sinif, istemci, gizli in tanimlar

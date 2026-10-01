@@ -121,3 +121,16 @@ class GithubOAuth(_OAuthIstemcisi):
             istemci, "https://api.github.com/user", token_yaniti["access_token"]
         )
         return DisHesap(kullanici_adi=kullanici["login"], dis_kimlik=str(kullanici["id"]))
+
+
+class GitlabOAuth(_OAuthIstemcisi):
+    saglayici = "gitlab"
+    YETKI_ADRESI = "https://gitlab.com/oauth/authorize"
+    TOKEN_ADRESI = "https://gitlab.com/oauth/token"
+    KAPSAM = "read_user"
+
+    async def _kimlik(self, istemci: httpx.AsyncClient, token_yaniti: dict[str, Any]) -> DisHesap:
+        kullanici = await _kullanici_getir(
+            istemci, "https://gitlab.com/api/v4/user", token_yaniti["access_token"]
+        )
+        return DisHesap(kullanici_adi=kullanici["username"], dis_kimlik=str(kullanici["id"]))

@@ -186,6 +186,54 @@ def test_github_okuyucusu_api_verisini_okur():
     assert belge.veri["katki_oranlari"]["elif"] == pytest.approx(24 / 25)
 
 
+GITLAB_KOK = "gitlab.com/api/v4/projects/elif%2Fkutuphane"
+
+
+def _gitlab_proje(tur="user"):
+    return {
+        "path_with_namespace": "elif/kutuphane",
+        "description": "Mahalle kütüphanesi",
+        "star_count": 7,
+        "namespace": {"path": "elif", "full_path": "elif", "kind": tur},
+        "readme_url": "https://gitlab.com/elif/kutuphane/-/blob/main/README.md",
+    }
+
+
+def test_gitlab_proje_tek_katkici_sahibin_payi_tam():
+    belge = oku(
+        "https://gitlab.com/elif/kutuphane/-/tree/main",
+        {
+            f"{GITLAB_KOK}/repository/contributors": httpx.Response(
+                200, json=[{"name": "Elif Y", "email": "e@x", "commits": 30}]
+            ),
+            f"{GITLAB_KOK}/repository/files/README.md/raw": httpx.Response(200, text="400 kitap"),
+            GITLAB_KOK: httpx.Response(200, json=_gitlab_proje()),
+        },
+    )
+    assert (belge.platform, belge.erisim) == ("gitlab", E.ACIK)
+    assert [(h.saglayici, h.kullanici_adi, h.katki_orani) for h in belge.hesaplar] == [
+        ("gitlab", "elif", 1.0)
+    ]
+    assert "Yıldız: 7" in belge.platform_metni and "400 kitap" in belge.metin
+
+
+def test_gitlab_cok_katkicida_pay_bilinmez_grupta_sahip_yok():
+    katkicilar = [{"name": "A", "commits": 5}, {"name": "B", "commits": 5}]
+    yanitlar = {
+        f"{GITLAB_KOK}/repository/contributors": httpx.Response(200, json=katkicilar),
+        GITLAB_KOK: httpx.Response(200, json=_gitlab_proje()),
+    }
+    belge = oku("gitlab.com/elif/kutuphane", yanitlar)
+    assert [(h.kullanici_adi, h.katki_orani) for h in belge.hesaplar] == [("elif", None)]
+    yanitlar[GITLAB_KOK] = httpx.Response(200, json=_gitlab_proje(tur="group"))
+    assert oku("gitlab.com/elif/kutuphane", yanitlar).hesaplar == ()
+
+
+def test_gitlab_olmayan_proje_bulunamadi():
+    belge = oku("gitlab.com/yok/yok", {"gitlab.com/api/v4/projects/yok%2Fyok": httpx.Response(404)})
+    assert (belge.platform, belge.erisim) == ("gitlab", E.BULUNAMADI)
+
+
 def test_github_olmayan_repo_bulunamadi():
     belge = oku("github.com/yok/yok", {"api.github.com/repos/yok/yok": httpx.Response(404)})
     assert (belge.platform, belge.erisim) == ("github", E.BULUNAMADI)

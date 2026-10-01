@@ -13,7 +13,13 @@ from sqlalchemy import func, select
 
 from app.core.config import get_settings
 from app.core.dis_servisler.kurulum import oauth_saglayicilarini_sec
-from app.core.dis_servisler.oauth import DisHesap, GithubOAuth, OAuthAyari, OAuthReddedildi
+from app.core.dis_servisler.oauth import (
+    DisHesap,
+    GithubOAuth,
+    GitlabOAuth,
+    OAuthAyari,
+    OAuthReddedildi,
+)
 from app.models.bagli_hesap import BagliHesap
 from tests.test_sahiplik import durumlar, senaryo
 
@@ -69,9 +75,27 @@ def test_github_reddedilen_kod(yanit):
         asyncio.run(saglayici.hesabi_oku("KOD", "http://x"))
 
 
+def test_gitlab_kodu_kimlige_cevirir():
+    def isle(istek: httpx.Request) -> httpx.Response:
+        if istek.url.path == "/oauth/token":
+            assert b"grant_type=authorization_code" in istek.content
+            return httpx.Response(200, json={"access_token": "t"})
+        return httpx.Response(200, json={"username": "elif", "id": 7})
+
+    saglayici = GitlabOAuth(OAuthAyari("k", "g", 5, httpx.MockTransport(isle)))
+    assert "scope=read_user" in saglayici.yetki_adresi("D", "http://x")
+    dis = asyncio.run(saglayici.hesabi_oku("KOD", "http://x"))
+    assert dis == DisHesap(kullanici_adi="elif", dis_kimlik="7")
+
+
 def test_kurulum_yalnizca_ayari_tam_saglayicilari_acar():
     ayar = get_settings().model_copy(
-        update={"github_oauth_istemci": "k", "github_oauth_gizli": "g", "gitlab_oauth_istemci": "k"}
+        update={
+            "github_oauth_istemci": "k",
+            "github_oauth_gizli": "g",
+            "gitlab_oauth_istemci": "k",
+            "gitlab_oauth_gizli": "",
+        }
     )
     assert sorted(oauth_saglayicilarini_sec(ayar)) == ["github"]
     bos = get_settings().model_copy(update={"github_oauth_istemci": ""})
