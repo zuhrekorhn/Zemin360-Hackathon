@@ -84,6 +84,32 @@ def kalem_yeniden_puanlama_arka_plani_yok(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def kalemleri_yeniden_okuma_arka_plani_yok(monkeypatch):
+    """Bağlı hesap değişince linkli kalemler arka planda yeniden okunur (gerçek
+    oturum, ağ, LLM). Testlerde çalışmasın; çağrılan kart kimlikleri kaydedilir."""
+    from app.servisler import kart_hazirlama
+
+    cagrilar: list = []
+
+    async def kaydet(kart_id):
+        cagrilar.append(kart_id)
+
+    monkeypatch.setattr(kart_hazirlama, "kalemleri_yeniden_oku", kaydet)
+    return cagrilar
+
+
+@pytest.fixture(autouse=True)
+def oauth_saglayicilari(monkeypatch):
+    """Testler `.env`'deki OAuth ayarına bağlı kalmaz: varsayılan hiçbir sağlayıcı
+    açık değil. Akışı sınayan test bu sözlüğe sahte sağlayıcı ekler."""
+    from app.core.dis_servisler import kurulum
+
+    saglayicilar: dict = {}
+    monkeypatch.setattr(kurulum, "oauth_saglayicilari", lambda: saglayicilar)
+    return saglayicilar
+
+
+@pytest.fixture(autouse=True)
 def firma_karti_hazirlama_arka_plani_yok(monkeypatch):
     """Firma kartı onayı ve düzenlemesi yanıttan sonra kartı hazırlıyor (gerçek
     oturum, embedding). Testlerde çalışmasın; çağrılar kaydedilir, o işi sınayan

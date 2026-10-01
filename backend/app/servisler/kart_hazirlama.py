@@ -77,6 +77,32 @@ async def kalemi_yeniden_puanla(kart_id: uuid.UUID, cikti_id: uuid.UUID, versiyo
             logger.exception("Kalem yeniden puanlanamadı (%s)", cikti_id)
 
 
+async def kalemleri_yeniden_oku(kart_id: uuid.UUID) -> None:
+    """Arka plan işi: gencin bağlı hesapları değişti (hesap bağlama, plan § 6)."""
+    async with get_sessionmaker()() as oturum:
+        try:
+            await kalemleri_yeniden_oku_oturumla(oturum, kart_id)
+        except Exception:
+            logger.exception("Bağlı hesap değişince kart yeniden okunamadı (%s)", kart_id)
+
+
+async def kalemleri_yeniden_oku_oturumla(oturum: AsyncSession, kart_id: uuid.UUID) -> None:
+    """Linkli kalemler yeniden okunur; seviyesi değişmeyen kalemde değerlendirme
+    girdisi aynı kalır, önbellek tutar ve model çağrılmaz. Sonra kart hazırlanır
+    (değişen gösterge eşleşmelere yansır)."""
+    versiyon = await oturum.scalar(select(YetenekKarti.versiyon).where(YetenekKarti.id == kart_id))
+    if versiyon is None:
+        return
+    linkli = await oturum.scalars(
+        select(SomutCikti.id).where(
+            SomutCikti.yetenek_karti_id == kart_id, SomutCikti.kanit_parcalari.any()
+        )
+    )
+    for cikti_id in list(linkli):
+        await _ciktiyi_puanla_bir_kez(oturum, cikti_id, zorla=True)
+    await karti_hazirla_oturumla(oturum, kart_id, versiyon)
+
+
 async def karti_hazirla_oturumla(
     oturum: AsyncSession, kart_id: uuid.UUID, versiyon: int, *, embedding_yenile: bool = False
 ) -> None:

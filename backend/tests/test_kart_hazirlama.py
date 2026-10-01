@@ -22,6 +22,7 @@ from app.db.base import EMBEDDING_DIM
 from app.main import app
 from app.models.bildirim import TUR_YENI_ONERI, Bildirim
 from app.models.eslesme import Eslesme
+from app.models.guven_skoru import GuvenSkoru
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
@@ -238,5 +239,43 @@ def test_kart_onayi_hazirlamayi_siraya_koyar(monkeypatch, kart_hazirlama_arka_pl
             kart_id = uuid.UUID(ilk.json()["id"])
             # İkisi de aynı kart için sıraya koydu; iş idempotent.
             assert kart_hazirlama_arka_plani_yok == [(kart_id, 1, False), (kart_id, 1, False)]
+
+    asyncio.run(senaryo())
+
+
+def test_bagli_hesap_degisince_yalnizca_seviyesi_degisen_kalem_yeniden_puanlanir(
+    monkeypatch, sahte_dis_servisler
+):
+    """Hesap bağlama sonrası: linkli kalem yeniden okunur; seviye değiştiyse gösterge
+    yeniden yazılır, değişmediyse model çağrılmaz (önbellek). Linksiz kaleme dokunulmaz."""
+    seviye = {"deger": KaynakSeviyesi.KAMUYA_ACIK}
+
+    async def oku(url, _sorgular, **_):
+        return OkunanKanit(
+            erisim=ErisimDurumu.ACIK, seviye=seviye["deger"], metin="Proje sayfası", url=url
+        )
+
+    monkeypatch.setattr(dogrulama_servisi, "kanit_oku", oku)
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum:
+            kart = await _gencin_karti(oturum, _rastgele_yon())
+            kart_id = kart.id
+            await kart_hazirlama.karti_hazirla_oturumla(oturum, kart_id, kart.versiyon)
+            assert sorted(sahte_dis_servisler) == ["Linkli iş", "Linksiz iş"]
+
+            # Seviye aynı: yeniden okunur ama model çağrılmaz.
+            await kart_hazirlama.kalemleri_yeniden_oku_oturumla(oturum, kart_id)
+            assert len(sahte_dis_servisler) == 2
+
+            seviye["deger"] = KaynakSeviyesi.PLATFORM
+            await kart_hazirlama.kalemleri_yeniden_oku_oturumla(oturum, kart_id)
+            assert sahte_dis_servisler[2:] == ["Linkli iş"]
+            kanit = await oturum.scalar(
+                select(GuvenSkoru.kanit_orijinalligi)
+                .join(SomutCikti, SomutCikti.id == GuvenSkoru.somut_cikti_id)
+                .where(SomutCikti.yetenek_karti_id == kart_id, SomutCikti.baslik == "Linkli iş")
+            )
+            assert kanit == 3
 
     asyncio.run(senaryo())

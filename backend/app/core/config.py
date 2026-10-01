@@ -73,6 +73,15 @@ class Settings(BaseSettings):
     eposta_zaman_asimi_sn: float = 10
     # E-postadaki bağlantıların açtığı frontend adresi (sonda / yok).
     uygulama_adresi: str = "http://localhost:3000"
+    # Hesap bağlama (plan § 6.1). Kimliği ya da gizli anahtarı boş sağlayıcı kapalıdır:
+    # arayüzde görünmez. Dönüş adresi: {uygulama_adresi}/hesap-baglama/{saglayici}.
+    github_oauth_istemci: str = ""
+    github_oauth_gizli: str = ""
+    gitlab_oauth_istemci: str = ""
+    gitlab_oauth_gizli: str = ""
+    orcid_oauth_istemci: str = ""
+    orcid_oauth_gizli: str = ""
+    oauth_zaman_asimi_sn: float = 10
 
     @property
     def cors_origin_list(self) -> list[str]:

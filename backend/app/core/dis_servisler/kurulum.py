@@ -18,6 +18,7 @@ from app.core.dis_servisler.eposta import (
     LogGonderici,
     ResendGonderici,
 )
+from app.core.dis_servisler.oauth import GithubOAuth, OAuthAyari, OAuthSaglayici
 
 logger = logging.getLogger("zemin360.dis_servisler")
 
@@ -44,6 +45,25 @@ def eposta_gondericisi_sec(ayar: Settings) -> EpostaGonderici:
     return LogGonderici()
 
 
+@lru_cache
+def oauth_saglayicilari() -> dict[str, OAuthSaglayici]:
+    return oauth_saglayicilarini_sec(get_settings())
+
+
+def oauth_saglayicilarini_sec(ayar: Settings) -> dict[str, OAuthSaglayici]:
+    """Kimliği ve gizli anahtarı verilmiş sağlayıcılar; diğerleri kapalı (Null Object
+    yerine yokluk: kapalı sağlayıcı arayüzde görünmez, uç 404 döner)."""
+    tanimlar = ((GithubOAuth, ayar.github_oauth_istemci, ayar.github_oauth_gizli),)
+    return {
+        sinif.saglayici: sinif(OAuthAyari(istemci, gizli, ayar.oauth_zaman_asimi_sn))
+        for sinif, istemci, gizli in tanimlar
+        if istemci and gizli
+    }
+
+
 def servis_kipleri() -> dict[str, str]:
     """Servis adı → o an kullanılan kip (sağlık ucu için)."""
-    return {"eposta": eposta_gonderici().kip}
+    return {
+        "eposta": eposta_gonderici().kip,
+        "oauth": ", ".join(sorted(oauth_saglayicilari())) or "kapali",
+    }
