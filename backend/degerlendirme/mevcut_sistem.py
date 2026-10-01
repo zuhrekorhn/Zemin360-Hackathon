@@ -8,13 +8,12 @@ Bugünkü davranışı olduğu gibi yeniden üretir, düzeltmez:
     (referans yanıtının açtığı sıfırlı gösterge, bulgu 17).
   - Referans yoksa Referans başlığı 0'dır ("—" değil, bulgu 19).
 
-**Başlık ayrıştırması ayrı bir süreçte çalışır.** Bugünkü `link_ozetini_cikar`
-bazı sayfalarda regex geri izlemesine düşüp dakikalarca sürüyor. Python'ın
-regex motoru eşleşme boyunca GIL'i bırakmadığı için iş parçacığı yalıtımı
-işe yaramıyor: asıl süreç de donuyor. Ayrıştırma bir işçi süreçte, süre
-sınırıyla çalışır. Süre dolarsa işçi öldürülür ve vaka "zaman_asimi"
-hatasıyla kaydedilir. Bu, bugünkü sistemin o vakada sonuç üretemediğinin
-(üretimde: sunucunun donduğunun) dürüst kaydıdır.
+**Başlık ayrıştırması ayrı bir süreçte, süre sınırıyla çalışır.** İlk karnede
+bugünkü `link_ozetini_cikar` iki vakada regex geri izlemesine düşüp sunucuyu
+donduruyordu (bulgu 50, düzeltildi). Python'ın regex motoru eşleşme boyunca
+GIL'i bırakmadığı için iş parçacığı yalıtımı yetmez. Yalıtım, ölçülen sistem
+yeniden takılırsa karnenin de kilitlenmemesi için kalır: süre dolarsa işçi
+öldürülür ve vaka "zaman_asimi" hatasıyla kaydedilir.
 """
 
 from __future__ import annotations
@@ -24,10 +23,10 @@ from multiprocessing.pool import Pool
 from types import TracebackType
 from typing import Any
 
-from app.agents import dogrulama as dogrulama_ajani
 from app.agents.dogrulama import (
     LinkKontrolu,
     RubrikPuani,
+    link_kontrolu,
     linki_kontrol_et,
     rubrik_puanla,
     ucuncu_taraf_onayi_hesapla,
@@ -59,7 +58,7 @@ class AyristirmaZamanAsimi(TimeoutError):
 
 def _ozgun_ayristirma(html: str) -> str:
     """İşçi süreçte çalışır: modülün kendi (yamalanmamış) fonksiyonu."""
-    return dogrulama_ajani.link_ozetini_cikar(html)
+    return link_kontrolu.link_ozetini_cikar(html)
 
 
 class _YalitilmisAyristirici:
@@ -100,10 +99,10 @@ class MevcutSistemDegerlendirici:
         self._ag = ag
         self._model = model
         self._ayristirici = _YalitilmisAyristirici(ayristirma_suresi)
-        self._ozgun = dogrulama_ajani.link_ozetini_cikar
+        self._ozgun = link_kontrolu.link_ozetini_cikar
 
     def __enter__(self) -> MevcutSistemDegerlendirici:
-        dogrulama_ajani.link_ozetini_cikar = self._ayristirici
+        link_kontrolu.link_ozetini_cikar = self._ayristirici
         return self
 
     def __exit__(
@@ -112,7 +111,7 @@ class MevcutSistemDegerlendirici:
         deger: BaseException | None,
         iz: TracebackType | None,
     ) -> None:
-        dogrulama_ajani.link_ozetini_cikar = self._ozgun
+        link_kontrolu.link_ozetini_cikar = self._ozgun
         self._ayristirici.kapat()
 
     async def degerlendir(self, vaka: Vaka) -> Degerlendirme:

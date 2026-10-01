@@ -17,14 +17,14 @@ from app.agents.dogrulama import (
     DURUM_BEKLIYOR,
     DURUM_YANIT_YOK,
     DURUM_YANITLANDI,
+    ReferansYaniti,
+    gecerli_referans_puanlari,
+    referans_gecerli_mi,
     referans_yeniden_istenebilir_mi,
 )
 from app.agents.kart_duzenleme import (
-    ReferansYaniti,
     degisen_alanlar,
     dogrulama_sifirlanmali_mi,
-    gecerli_referans_puanlari,
-    referans_gecerli_mi,
     versiyon_artmali_mi,
     yeniden_eslestirme_gerekir_mi,
 )

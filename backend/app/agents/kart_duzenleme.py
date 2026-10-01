@@ -12,9 +12,7 @@ ama puana girmez.
 
 from __future__ import annotations
 
-import datetime as dt
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
 from typing import Any
 
 # Kartın düzenlenebilir alanları.
@@ -73,34 +71,3 @@ def dogrulama_sifirlanmali_mi(degisenler: Iterable[str]) -> bool:
 def yeniden_eslestirme_gerekir_mi(degisen_profil_alanlari: Iterable[str]) -> bool:
     """Profilde filtre alanı değiştiyse kartlar yeniden eşleşir (doğrulama gerekmez)."""
     return any(alan in FILTRE_ALANLARI for alan in degisen_profil_alanlari)
-
-
-@dataclass(frozen=True)
-class ReferansYaniti:
-    puan: int | None
-    yanit_tarihi: dt.datetime | None
-
-
-def referans_gecerli_mi(
-    yanit_tarihi: dt.datetime | None, icerik_tarihi: dt.datetime | None
-) -> bool:
-    """Bu referans yanıtı iş kaleminin güncel hâli için mi verildi?
-
-    İçerik hiç değişmediyse (NULL) bütün yanıtlar geçerli, eski satırlar dahil.
-    Değiştiyse yalnızca değişiklikten sonra verilen yanıt geçerli; tarihi
-    bilinmeyen eski yanıt geçmişte kalır.
-    """
-    if icerik_tarihi is None:
-        return True
-    return yanit_tarihi is not None and yanit_tarihi >= icerik_tarihi
-
-
-def gecerli_referans_puanlari(
-    yanitlar: Iterable[ReferansYaniti], icerik_tarihi: dt.datetime | None
-) -> list[int]:
-    """Üçüncü taraf onayına girecek puanlar (yanıtlanmış ve güncel)."""
-    return [
-        y.puan
-        for y in yanitlar
-        if y.puan is not None and referans_gecerli_mi(y.yanit_tarihi, icerik_tarihi)
-    ]

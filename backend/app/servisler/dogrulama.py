@@ -9,11 +9,13 @@ from __future__ import annotations
 
 from app.agents.dogrulama import (
     LinkKontrolu,
+    ReferansYaniti,
+    gecerli_referans_puanlari,
     linki_kontrol_et,
+    referans_gecerli_mi,
     rubrik_puanla,
     ucuncu_taraf_onayi_hesapla,
 )
-from app.agents.kart_duzenleme import ReferansYaniti, gecerli_referans_puanlari, referans_gecerli_mi
 from app.core.is_kalemi import is_kalemi_metni
 from app.models.guven_skoru import GuvenSkoru
 from app.models.somut_cikti import SomutCikti

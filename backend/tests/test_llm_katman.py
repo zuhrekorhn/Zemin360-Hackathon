@@ -23,7 +23,8 @@ from langchain_google_genai.chat_models import (
     GoogleRateLimitError,
 )
 
-from app.agents import dogrulama, eslestirme, firma_karti, kesif, tanimlama
+from app.agents import eslestirme, firma_karti, kesif, tanimlama
+from app.agents.dogrulama import rubrik as dogrulama_rubrik
 from app.core.config import get_settings
 from app.core.llm import (
     YEDEGE_DUSUREN_HATALAR,
@@ -40,7 +41,7 @@ ZINCIRLER = (
     firma_karti._cikarim_zinciri,
     eslestirme._gerekce_zinciri,
     eslestirme._firma_gerekce_zinciri,
-    dogrulama._rubrik_zinciri,
+    dogrulama_rubrik._rubrik_zinciri,
 )
 
 ENV = {
@@ -109,7 +110,11 @@ def test_cikarim_isleri_hizli_katmanda(ortam, zincir):
 
 @pytest.mark.parametrize(
     "zincir",
-    [eslestirme._gerekce_zinciri, eslestirme._firma_gerekce_zinciri, dogrulama._rubrik_zinciri],
+    [
+        eslestirme._gerekce_zinciri,
+        eslestirme._firma_gerekce_zinciri,
+        dogrulama_rubrik._rubrik_zinciri,
+    ],
 )
 def test_gerekce_ve_rubrik_guclu_katmanda(ortam, zincir):
     assert _ana_ve_yedek(zincir()) == ("guclu-ana", "guclu-yedek")
@@ -338,7 +343,7 @@ def test_dusunme_seviyesi_yalnizca_hizli_katmana_gider(ortam, monkeypatch):
     assert _model(hizli.fallbacks[0]).thinking_level == "low"
     assert _model(tanimlama._cikarim_zinciri().runnable).thinking_level == "low"
 
-    for guclu in (eslestirme._gerekce_zinciri(), dogrulama._rubrik_zinciri()):
+    for guclu in (eslestirme._gerekce_zinciri(), dogrulama_rubrik._rubrik_zinciri()):
         assert _model(guclu.runnable).thinking_level is None
 
 
