@@ -134,3 +134,22 @@ class GitlabOAuth(_OAuthIstemcisi):
             istemci, "https://gitlab.com/api/v4/user", token_yaniti["access_token"]
         )
         return DisHesap(kullanici_adi=kullanici["username"], dis_kimlik=str(kullanici["id"]))
+
+
+class OrcidOAuth(_OAuthIstemcisi):
+    """ORCID token yanıtı iD'yi zaten taşır; ayrıca kullanıcı isteği gerekmez.
+
+    Bağlı ORCID iD'nin puana etkisi akademik okuyucuyla gelir (yazar listesinde
+    iD; plan § 8); bugün bağlantı saklanır.
+    """
+
+    saglayici = "orcid"
+    YETKI_ADRESI = "https://orcid.org/oauth/authorize"
+    TOKEN_ADRESI = "https://orcid.org/oauth/token"
+    KAPSAM = "/authenticate"
+
+    async def _kimlik(self, istemci: httpx.AsyncClient, token_yaniti: dict[str, Any]) -> DisHesap:
+        orcid = token_yaniti.get("orcid")
+        if not orcid:
+            raise OAuthReddedildi(self.saglayici)
+        return DisHesap(kullanici_adi=orcid, dis_kimlik=orcid)

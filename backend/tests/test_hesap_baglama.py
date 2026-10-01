@@ -19,6 +19,7 @@ from app.core.dis_servisler.oauth import (
     GitlabOAuth,
     OAuthAyari,
     OAuthReddedildi,
+    OrcidOAuth,
 )
 from app.models.bagli_hesap import BagliHesap
 from tests.test_sahiplik import durumlar, senaryo
@@ -88,6 +89,18 @@ def test_gitlab_kodu_kimlige_cevirir():
     assert dis == DisHesap(kullanici_adi="elif", dis_kimlik="7")
 
 
+def test_orcid_token_yanitindaki_idyi_okur():
+    def isle(istek: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, json={"access_token": "t", "orcid": "0000-0002-1825-0097", "name": "Elif"}
+        )
+
+    saglayici = OrcidOAuth(OAuthAyari("k", "g", 5, httpx.MockTransport(isle)))
+    assert "scope=%2Fauthenticate" in saglayici.yetki_adresi("D", "http://x")
+    dis = asyncio.run(saglayici.hesabi_oku("KOD", "http://x"))
+    assert dis == DisHesap(kullanici_adi="0000-0002-1825-0097", dis_kimlik="0000-0002-1825-0097")
+
+
 def test_kurulum_yalnizca_ayari_tam_saglayicilari_acar():
     ayar = get_settings().model_copy(
         update={
@@ -95,9 +108,11 @@ def test_kurulum_yalnizca_ayari_tam_saglayicilari_acar():
             "github_oauth_gizli": "g",
             "gitlab_oauth_istemci": "k",
             "gitlab_oauth_gizli": "",
+            "orcid_oauth_istemci": "k",
+            "orcid_oauth_gizli": "g",
         }
     )
-    assert sorted(oauth_saglayicilarini_sec(ayar)) == ["github"]
+    assert sorted(oauth_saglayicilarini_sec(ayar)) == ["github", "orcid"]
     bos = get_settings().model_copy(update={"github_oauth_istemci": ""})
     assert "github" not in oauth_saglayicilarini_sec(bos)
 

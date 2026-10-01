@@ -18,7 +18,13 @@ from app.core.dis_servisler.eposta import (
     LogGonderici,
     ResendGonderici,
 )
-from app.core.dis_servisler.oauth import GithubOAuth, GitlabOAuth, OAuthAyari, OAuthSaglayici
+from app.core.dis_servisler.oauth import (
+    GithubOAuth,
+    GitlabOAuth,
+    OAuthAyari,
+    OAuthSaglayici,
+    OrcidOAuth,
+)
 
 logger = logging.getLogger("zemin360.dis_servisler")
 
@@ -56,6 +62,7 @@ def oauth_saglayicilarini_sec(ayar: Settings) -> dict[str, OAuthSaglayici]:
     tanimlar = (
         (GithubOAuth, ayar.github_oauth_istemci, ayar.github_oauth_gizli),
         (GitlabOAuth, ayar.gitlab_oauth_istemci, ayar.gitlab_oauth_gizli),
+        (OrcidOAuth, ayar.orcid_oauth_istemci, ayar.orcid_oauth_gizli),
     )
     return {
         sinif.saglayici: sinif(OAuthAyari(istemci, gizli, ayar.oauth_zaman_asimi_sn))
