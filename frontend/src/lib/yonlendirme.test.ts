@@ -108,6 +108,8 @@ describe("bildirimHedefi — Canlılık", () => {
     expect(bildirimHedefi("genc_ilgisi_yanitsiz")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("firsat_kapandi")).toBe("/genc#ilgilerim");
     expect(bildirimHedefi("firma_dogrulandi")).toBe("/kurum/profil");
+    expect(bildirimHedefi("inceleme_sonucu")).toBe("/genc#kart");
+    expect(bildirimHedefi("ad_degisikligi_sonucu")).toBe("/profil");
     // Aday firmaya giden ilgi bildirimleri firma panelindeki bölümlere.
     expect(bildirimHedefi("ilgi", null, "kurum")).toBe("/kurum#gelen-ilgiler");
     expect(bildirimHedefi("firsat_kapandi", null, "kurum")).toBe(

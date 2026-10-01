@@ -9,6 +9,7 @@ from app.models.firma_karti import FirmaKarti
 from app.models.guven_skoru import GuvenSkoru
 from app.models.hesap import Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
+from app.models.inceleme_isareti import IncelemeIsareti
 from app.models.isbirligi import Isbirligi
 from app.models.kanit_parcasi import KanitMetinParcasi, KanitParcasi
 from app.models.kullanici import Kullanici
@@ -29,6 +30,7 @@ __all__ = [
     "GuvenSkoru",
     "Hesap",
     "IhtiyacKarti",
+    "IncelemeIsareti",
     "Isbirligi",
     "KanitMetinParcasi",
     "KanitParcasi",

@@ -127,6 +127,11 @@ export function bildirimHedefi(
       return "/kurum#oneriler";
     case "firma_dogrulandi":
       return "/kurum/profil";
+    // GİRVAK inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9)
+    case "inceleme_sonucu":
+      return "/genc#kart";
+    case "ad_degisikligi_sonucu":
+      return "/profil";
     default:
       return "/bildirimler";
   }

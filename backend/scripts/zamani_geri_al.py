@@ -66,6 +66,8 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("hesap", "eposta_dogrulandi_tarihi"),
     ("eposta_dogrulama", "olusturma_tarihi"),
     ("eposta_dogrulama", "son_gecerlilik"),
+    ("inceleme_isareti", "olusturma_tarihi"),
+    ("inceleme_isareti", "kapanma_tarihi"),
 )
 
 # Bilerek kaydırılmayanlar: sistem zamanı değil, kullanıcının yazdığı tarih.

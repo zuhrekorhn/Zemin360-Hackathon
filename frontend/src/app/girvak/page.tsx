@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirmaOnaylari } from "@/components/firma-onaylari";
+import { IncelemeKuyrugu } from "@/components/inceleme-kuyrugu";
 import { GirisKapisi } from "@/components/giris-kapisi";
 import {
   BosDurum,
@@ -145,6 +146,8 @@ function GirvakSayfasi() {
       </PanelBolumu>
 
       <FirmaOnaylari />
+
+      <IncelemeKuyrugu />
 
       <PanelBolumu
         id="pasifler"

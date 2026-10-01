@@ -35,6 +35,9 @@ TUR_KARSILIKLI_ILGI = "karsilikli_ilgi"  # gence: firma da ilgilendi, iş birli�
 TUR_FIRSAT_KAPANDI = "firsat_kapandi"  # gence: bekleyen fırsat kapandı (nötr)
 # Firma akışı (docs/plans/firma-akisi.md § 6)
 TUR_FIRMA_DOGRULANDI = "firma_dogrulandi"  # firmaya: GİRVAK doğruladı
+# GİRVAK inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9)
+TUR_INCELEME_SONUCU = "inceleme_sonucu"  # gence: çalışmasıyla ilgili işaret kapandı
+TUR_AD_DEGISIKLIGI_SONUCU = "ad_degisikligi_sonucu"  # gence: ad değişikliği talebi sonuçlandı
 
 
 class Bildirim(UUIDPrimaryKeyMixin, Base):

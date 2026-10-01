@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.firma_dogrulama import AlanAdiIpucu, GirvakKarari
 
@@ -111,3 +112,28 @@ class FirmaDogrulamaIstegi(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     karar: GirvakKarari
+
+
+# --- İnceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9) -----------------------------
+
+
+class IncelemeSatiri(BaseModel):
+    id: uuid.UUID
+    tur: str
+    durum: str
+    olusturma_tarihi: dt.datetime
+    kapanma_tarihi: dt.datetime | None
+    girvak_notu: str | None
+    genc_adi: str | None
+    # Gencin kartı (GİRVAK kart sayfasını açar); kartı yoksa None.
+    kart_id: uuid.UUID | None
+    somut_cikti_id: uuid.UUID | None
+    cikti_basligi: str | None
+    # Türe özel bağlam (ör. eski ve istenen ad, itiraz notları).
+    ayrinti: dict
+
+
+class IncelemeKarariIstegi(BaseModel):
+    # kapandi: "sorun yok" (talepte "onayla"); dogrulanamadi: talepte "reddet".
+    karar: Literal["kapandi", "dogrulanamadi"]
+    girvak_notu: str | None = Field(default=None, max_length=500)

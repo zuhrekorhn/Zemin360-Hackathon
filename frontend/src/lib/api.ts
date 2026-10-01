@@ -1236,6 +1236,42 @@ export type ProgramHedefi = {
 };
 
 /** GİRVAK'ın firma doğrulama listesi (docs/plans/firma-akisi.md § 6). */
+/* --- GİRVAK inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9) ---- */
+
+export type IncelemeDurumu = "acik" | "kapandi" | "dogrulanamadi";
+
+export type IncelemeSatiri = {
+  id: string;
+  tur: string;
+  durum: IncelemeDurumu;
+  olusturma_tarihi: string;
+  kapanma_tarihi: string | null;
+  girvak_notu: string | null;
+  genc_adi: string | null;
+  kart_id: string | null;
+  somut_cikti_id: string | null;
+  cikti_basligi: string | null;
+  /** Türe özel bağlam (lib/inceleme.ts okur). */
+  ayrinti: Record<string, unknown>;
+};
+
+export function girvakIncelemeler(
+  durum: IncelemeDurumu = "acik",
+): Promise<IncelemeSatiri[]> {
+  return apiIstek(`/girvak/inceleme?durum=${durum}`);
+}
+
+export function girvakIncelemeKarari(
+  id: string,
+  karar: "kapandi" | "dogrulanamadi",
+  girvakNotu: string | null,
+): Promise<IncelemeSatiri> {
+  return apiIstek(`/girvak/inceleme/${id}/karar`, {
+    method: "POST",
+    body: JSON.stringify({ karar, girvak_notu: girvakNotu }),
+  });
+}
+
 export type OnayBekleyenFirma = {
   kurum_id: string;
   ad: string;

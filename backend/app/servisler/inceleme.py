@@ -1,0 +1,119 @@
+"""GİRVAK inceleme kuyruğu: işaret açma ve karar (docs/plans/dogrulama-iyilestirme.md § 9).
+
+İşaret puanı kendiliğinden değiştirmez (İ1). Akış iki parçalı:
+  - `isaret_ac`: sinyali gören servis çağırır. Aynı konu için açık işaret
+    varsa yenisi açılmaz, ayrıntısı açık olana eklenir (tek açık işaret).
+  - `karar_ver`: GİRVAK karar verir. Geçiş kuralı `agents/inceleme_durumu.py`'de;
+    türe özel etki (ad değişikliğini uygulamak gibi) ve gence giden bildirim
+    `KararIsleyici`'dedir (Strategy). Yeni tür = yeni işleyici + tabloya bir
+    satır (`inceleme_isleyicileri.py`); bu dosya değişmez.
+
+Sözleşme (diğer servislerle aynı): model değişir, commit, arka plan işi ve
+HTTP'ye çeviri çağıranın işidir. Bildirim kararla aynı işlemde yazılır.
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+import uuid
+from collections.abc import Awaitable, Callable, Sequence
+from dataclasses import dataclass, field
+from typing import Any, Protocol
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.agents.inceleme_durumu import ACIK, inceleme_gecisi
+from app.api.bildirimler import bildirim_ekle
+from app.models.inceleme_isareti import IncelemeIsareti
+from app.models.kullanici import Kullanici
+
+
+@dataclass(frozen=True)
+class ArkaPlanIsi:
+    """Karardan sonra yanıttan sonra çalışacak iş (uç `BackgroundTasks`'a ekler)."""
+
+    fonksiyon: Callable[..., Awaitable[None]]
+    argumanlar: tuple[Any, ...] = ()
+
+
+@dataclass(frozen=True)
+class KararEtkisi:
+    bildirim_turu: str
+    # Gence giden metin ("sen"); e-posta içermez.
+    bildirim_metni: str
+    arka_plan: Sequence[ArkaPlanIsi] = field(default_factory=tuple)
+
+
+class KararIsleyici(Protocol):
+    async def uygula(
+        self, oturum: AsyncSession, isaret: IncelemeIsareti, karar: str
+    ) -> KararEtkisi: ...
+
+
+async def acik_isaret(
+    oturum: AsyncSession,
+    tur: str,
+    kullanici_id: uuid.UUID,
+    somut_cikti_id: uuid.UUID | None = None,
+) -> IncelemeIsareti | None:
+    return await oturum.scalar(
+        select(IncelemeIsareti)
+        .where(
+            IncelemeIsareti.tur == tur,
+            IncelemeIsareti.kullanici_id == kullanici_id,
+            IncelemeIsareti.somut_cikti_id.is_(None)
+            if somut_cikti_id is None
+            else IncelemeIsareti.somut_cikti_id == somut_cikti_id,
+            IncelemeIsareti.durum == ACIK,
+        )
+        .with_for_update()
+    )
+
+
+async def isaret_ac(
+    oturum: AsyncSession,
+    tur: str,
+    kullanici_id: uuid.UUID,
+    *,
+    somut_cikti_id: uuid.UUID | None = None,
+    ayrinti: dict[str, Any] | None = None,
+    birlestir: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]] | None = None,
+) -> tuple[IncelemeIsareti, bool]:
+    """Açık işareti döner (yeni mi?). Açık işaret varsa `birlestir` ayrıntıyı
+    günceller (verilmezse ayrıntı olduğu gibi kalır)."""
+    mevcut = await acik_isaret(oturum, tur, kullanici_id, somut_cikti_id)
+    if mevcut is not None:
+        if birlestir is not None and ayrinti is not None:
+            mevcut.ayrinti = birlestir(dict(mevcut.ayrinti), ayrinti)
+        return mevcut, False
+    isaret = IncelemeIsareti(
+        tur=tur, kullanici_id=kullanici_id, somut_cikti_id=somut_cikti_id, ayrinti=ayrinti or {}
+    )
+    oturum.add(isaret)
+    await oturum.flush()
+    return isaret, True
+
+
+async def karar_ver(
+    oturum: AsyncSession,
+    isaret: IncelemeIsareti,
+    karar: str,
+    girvak_notu: str | None,
+    isleyici: KararIsleyici,
+) -> Sequence[ArkaPlanIsi]:
+    """Kararı uygular; aynı kararın tekrarı yan etkisiz (boş liste).
+
+    Kapanmış işarete başka karar `GecersizKarar` (uçta 409). İşaret satırı
+    çağıran tarafından kilitlenmiş okunmalıdır (`with_for_update`).
+    """
+    hedef = inceleme_gecisi(isaret.durum, karar)
+    if hedef is None:
+        return ()
+    isaret.durum = hedef
+    isaret.girvak_notu = girvak_notu
+    isaret.kapanma_tarihi = dt.datetime.now(dt.UTC)
+    etki = await isleyici.uygula(oturum, isaret, karar)
+    kullanici = await oturum.get(Kullanici, isaret.kullanici_id)
+    bildirim_ekle(oturum, kullanici.hesap_id, etki.bildirim_turu, etki.bildirim_metni)
+    return etki.arka_plan
