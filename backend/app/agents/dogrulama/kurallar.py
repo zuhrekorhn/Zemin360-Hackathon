@@ -14,7 +14,7 @@ from app.agents.dogrulama.referans_durumu import (
     DURUM_GERI_CEKILDI,
     DURUM_YANITLANDI,
 )
-from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
+from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi, SahiplikKaynagi
 
 # 1-5 referans skalasını rubriğin 0-3 aralığına indirger.
 # 3 ("ne iyi ne kötü") bir onay değildir, o yüzden 2'den fazlasını vermiyor;
@@ -245,6 +245,10 @@ class OkunanKanit:
     platform: str | None = None
     # Modelin göreceği metin (uzun metinde seçilmiş parçalar); yoksa `metin`.
     model_metni: str | None = None
+    # Metnin platformun ölçtüğü kısmı (`KanitBelgesi.platform_metni`).
+    platform_metni: str = ""
+    # Seviyeyi neyin belirlediği (bağlı hesap yöntemi ya da yok; § 6).
+    sahiplik_kaynagi: SahiplikKaynagi = SahiplikKaynagi.YOK
 
 
 @dataclass(frozen=True)

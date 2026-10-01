@@ -11,6 +11,7 @@ from urllib.parse import quote
 import httpx
 
 from app.core.kanit_okuma.belge import ErisimDurumu, KanitBelgesi
+from app.core.kanit_okuma.hesap_izi import adresteki_hesap
 from app.core.kanit_okuma.istek import getir
 from app.core.kanit_okuma.okuyucu import OkumaBaglami, metni_kur
 
@@ -72,5 +73,7 @@ class OembedOkuyucu:
                 ("Yazar adresi", veri.get("author_url")),
             ),
             yazarlar=(yazar,) if yazar else (),
+            # Yazar adresi kanalın / profilin kendisi: youtube.com/@kanal → (youtube, kanal).
+            hesaplar=tuple(filter(None, [adresteki_hesap(veri.get("author_url"))])),
             veri={"yazar_adresi": veri.get("author_url")},
         )

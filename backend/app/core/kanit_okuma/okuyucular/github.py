@@ -11,7 +11,7 @@ import httpx
 
 from app.core.kanit_okuma.belge import ErisimDurumu, KanitBelgesi
 from app.core.kanit_okuma.istek import getir
-from app.core.kanit_okuma.okuyucu import OkumaBaglami, metni_kur
+from app.core.kanit_okuma.okuyucu import OkumaBaglami, hesap_izleri, metni_kur
 
 API = "https://api.github.com"
 README_EN_COK = 30_000
@@ -72,8 +72,13 @@ class GithubOkuyucu:
             else {}
         )
         toplam = sum(katkicilar.values()) or 1
+        oranlar = {k: s / toplam for k, s in katkicilar.items()}
         sahip_adi = (veri.get("owner") or {}).get("login")
         readme_metni = readme.metin[:README_EN_COK] if readme.durum == 200 else ""
+        olcumler = (
+            ("Yıldız", str(veri.get("stargazers_count"))),
+            ("Katkıcılar (commit)", ", ".join(f"{k} ({s})" for k, s in katkicilar.items())),
+        )
         return KanitBelgesi(
             url=str(url),
             erisim=ErisimDurumu.ACIK,
@@ -83,15 +88,15 @@ class GithubOkuyucu:
                 ("Repo", veri.get("full_name")),
                 ("Sahip", sahip_adi),
                 ("Açıklama", veri.get("description")),
-                ("Yıldız", str(veri.get("stargazers_count"))),
-                ("Katkıcılar (commit)", ", ".join(f"{k} ({s})" for k, s in katkicilar.items())),
+                *olcumler,
                 govde=f"README:\n{readme_metni}" if readme_metni else "",
             ),
             yazarlar=(sahip_adi,) if sahip_adi else (),
-            hesaplar=tuple(katkicilar),
+            hesaplar=hesap_izleri("github", sahip_adi, oranlar),
             veri={
                 "sahip": sahip_adi,
                 "yildiz": veri.get("stargazers_count"),
-                "katki_oranlari": {k: s / toplam for k, s in katkicilar.items()},
+                "katki_oranlari": oranlar,
             },
+            platform_metni=metni_kur(*olcumler),
         )

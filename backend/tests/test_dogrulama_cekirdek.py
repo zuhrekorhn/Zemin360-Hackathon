@@ -172,6 +172,44 @@ def test_kamuya_acik_kanitta_beyan_ve_ici_iddia_en_cok_2():
     assert sonuc.puanlar == BaslikPuanlari(2, 2, 2)
 
 
+SONUC_DESTEGI = {"iddia": "sonuc", "durum": "destekleniyor", "alinti": "400 kitap takip ediliyor"}
+PAY_DESTEGI = {"iddia": "pay", "durum": "destekleniyor", "alinti": "Mahalle kütüphanesi"}
+
+
+def test_bagli_hesapta_metindeki_iddia_yine_iddia():
+    """README'deki sayı ve "ben yazdım" bağlı hesapta da 2'de kalır (§ 2)."""
+    sonuc = degerlendir(cikarim(destekler=[SONUC_DESTEGI, PAY_DESTEGI]), okunan(seviye=S.PLATFORM))
+    assert (sonuc.puanlar.sonuc, sonuc.puanlar.rol) == (2, 2)
+
+
+def test_bagli_hesapta_platform_olcumu_sonucu_3e_tasir():
+    ok = OkunanKanit(
+        erisim=E.ACIK,
+        seviye=S.PLATFORM,
+        metin=METIN + " Yıldız: 12000",
+        url="x",
+        platform_metni="Yıldız: 12000",
+    )
+    destek = {"iddia": "sonuc", "durum": "destekleniyor", "alinti": "Yıldız: 12000"}
+    assert degerlendir(cikarim(destekler=[destek]), ok).puanlar.sonuc == 3
+
+
+def test_platform_olcumu_kamuya_acik_kanitta_destek_degil():
+    ok = OkunanKanit(
+        erisim=E.ACIK, seviye=S.KAMUYA_ACIK, metin="Yıldız: 12000", url="x",
+        platform_metni="Yıldız: 12000",
+    )  # fmt: skip
+    destek = {"iddia": "sonuc", "durum": "destekleniyor", "alinti": "Yıldız: 12000"}
+    assert degerlendir(cikarim(destekler=[destek]), ok).puanlar.sonuc == 2
+
+
+def test_duzenleyen_belgesindeki_destek_3():
+    sonuc = degerlendir(
+        cikarim(destekler=[SONUC_DESTEGI, PAY_DESTEGI]), okunan(seviye=S.DUZENLEYEN)
+    )
+    assert (sonuc.puanlar.sonuc, sonuc.puanlar.rol) == (3, 3)
+
+
 def test_bagli_hesapta_bireysel_proje_3_3():
     sonuc = degerlendir(cikarim(), okunan(seviye=S.PLATFORM, bireysel=True))
     assert (sonuc.puanlar.kanit, sonuc.puanlar.rol) == (3, 3)

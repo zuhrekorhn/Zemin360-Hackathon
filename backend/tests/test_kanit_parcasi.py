@@ -18,8 +18,9 @@ from app.agents.dogrulama import DURUM_YANITLANDI
 from app.agents.dogrulama.cikarim import KanitCikarimi
 from app.agents.dogrulama.kurallar import OkunanKanit
 from app.api.auth import hesap_olustur
-from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
+from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi, SahiplikKaynagi
 from app.core.kimlik import token_uret
+from app.models.bagli_hesap import BagliHesap
 from app.models.inceleme_isareti import IncelemeIsareti
 from app.models.kullanici import Kullanici
 from app.models.referans_istegi import ReferansIstegi
@@ -309,5 +310,58 @@ def test_yeni_calisma_formundaki_link_parca_olur(kart_hazirlama_arka_plani_yok):
                 json={"kanit_linki": "https://baska.org"},
             )
             assert duzenle.status_code == 422
+
+    asyncio.run(senaryo())
+
+
+def test_bagli_hesap_okumaya_gider_ve_parcaya_yazilir(
+    monkeypatch, sahte_degerlendirme, kart_hazirlama_arka_plani_yok
+):
+    """Servis gencin bağlı hesaplarını okumaya verir; seviye ve sahiplik parçaya yazılır."""
+    gelen: list = []
+
+    async def oku(url, _sorgular, *, bagli_hesaplar=(), **_):
+        gelen.extend(bagli_hesaplar)
+        return OkunanKanit(
+            erisim=ErisimDurumu.ACIK,
+            seviye=KaynakSeviyesi.PLATFORM,
+            metin="Proje sayfası",
+            url=url,
+            platform="github",
+            sahiplik_kaynagi=SahiplikKaynagi.OAUTH,
+        )
+
+    monkeypatch.setattr(kanit_servisi, "kanit_oku", oku)
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, _kart_id, kalem_id = await _genc_ve_kalem(oturum)
+            kart = await oturum.get(YetenekKarti, _kart_id)
+            oturum.add(
+                BagliHesap(
+                    kullanici_id=kart.kullanici_id,
+                    saglayici="github",
+                    kullanici_adi="elif",
+                    dis_kimlik="42",
+                    yontem="oauth",
+                )
+            )
+            await oturum.commit()
+            yanit = await istemci.post(
+                f"/dogrulama/kalem/{kalem_id}/kanit",
+                headers=baslik,
+                json={"url": "github.com/elif/kutuphane"},
+            )
+            assert yanit.status_code == 201
+            assert yanit.json()["guven_skoru"]["kanit_orijinalligi"] == 3
+            assert [(h.saglayici, h.kullanici_adi, h.dis_kimlik) for h in gelen] == [
+                ("github", "elif", "42")
+            ]
+            parca = (await _kalemi_oku(oturum, kalem_id)).kanit_parcalari[0]
+            assert (parca.seviye, parca.sahiplik_kaynagi, parca.platform) == (
+                "platform",
+                "oauth",
+                "github",
+            )
 
     asyncio.run(senaryo())

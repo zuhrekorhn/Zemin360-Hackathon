@@ -177,7 +177,11 @@ def test_github_okuyucusu_api_verisini_okur():
             "api.github.com/repos/elif/kutuphane": httpx.Response(200, json=repo),
         },
     )
-    assert (belge.platform, belge.erisim, belge.hesaplar) == ("github", E.ACIK, ("elif", "ali"))
+    assert (belge.platform, belge.erisim) == ("github", E.ACIK)
+    assert [(h.kullanici_adi, h.katki_orani) for h in belge.hesaplar] == [
+        ("elif", pytest.approx(24 / 25)),
+        ("ali", pytest.approx(1 / 25)),
+    ]
     assert "Yıldız: 12" in belge.metin and "400 kitap" in belge.metin
     assert belge.veri["katki_oranlari"]["elif"] == pytest.approx(24 / 25)
 

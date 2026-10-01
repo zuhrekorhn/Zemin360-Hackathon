@@ -1,6 +1,7 @@
 """Tüm modeller burada import edilir — Alembic autogenerate ve relationship çözümü için şart."""
 
 from app.db.base import Base
+from app.models.bagli_hesap import BagliHesap, ProfilKodu
 from app.models.bildirim import Bildirim
 from app.models.canlilik_olayi import CanlilikOlayi
 from app.models.eposta_dogrulama import EpostaDogrulama
@@ -21,6 +22,7 @@ from app.models.yetenek_kaniti import YetenekKaniti
 from app.models.yetenek_karti import YetenekKarti
 
 __all__ = [
+    "BagliHesap",
     "Base",
     "Bildirim",
     "CanlilikOlayi",
@@ -37,6 +39,7 @@ __all__ = [
     "Kullanici",
     "Kurum",
     "Milestone",
+    "ProfilKodu",
     "ReferansIstegi",
     "SomutCikti",
     "YetenekKaniti",

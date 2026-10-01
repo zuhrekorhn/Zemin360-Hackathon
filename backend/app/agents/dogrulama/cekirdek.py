@@ -24,9 +24,10 @@ from app.agents.dogrulama.kurallar import (
     sonuc_puani,
 )
 from app.agents.dogrulama.not_sablonu import not_yaz
+from app.core.kanit_okuma.belge import KaynakSeviyesi
 
 # Kural ya da istem değişince artar: eski göstergeler ayırt edilir, önbellek tazelenir.
-KURAL_SURUMU = "2026-10-adim4"
+KURAL_SURUMU = "2026-10-adim8"
 
 ISARET_ALAKASIZ = "alakasiz_kanit"
 
@@ -122,7 +123,22 @@ async def kalemi_degerlendir(
     def durum(iddia: str, aranan: str) -> bool:
         return any(d.iddia == iddia and d.durum == aranan for d in destekler)
 
-    bagimsiz_kanit = okunan is not None and okunan.seviye in BAGIMSIZ_SEVIYELER
+    # Bağımsız destek (§ 2, § 11.2). Çalışmanın içindeki iddia (README, yazının
+    # kendisi) hangi seviyede olursa olsun iddiadır: B'de Sonuç'u yalnızca
+    # platformun ölçtüğü veri, Rol'ü yalnızca katkı oranı / bireysel kural
+    # destekler; metindeki destek yalnızca düzenleyen belgesinde (A) sayılır.
+    seviye = okunan.seviye if okunan is not None else None
+    duzenleyen = seviye is KaynakSeviyesi.DUZENLEYEN
+    platform_olcumu = (
+        okunan is not None
+        and seviye is KaynakSeviyesi.PLATFORM
+        and any(
+            d.iddia == "sonuc"
+            and d.durum == "destekleniyor"
+            and alinti_gecerli_mi(d.alinti, okunan.platform_metni)
+            for d in destekler
+        )
+    )
     kanit_celisiyor = durum("is", "celisiyor") or durum("pay", "celisiyor")
     ilgili = bool(metin) and cikarim.ilgili_mi
 
@@ -132,7 +148,8 @@ async def kalemi_degerlendir(
         sayisal=cikarim.sonuc_sayisal,
         olcut_acik=cikarim.sonuc_olcut_acik,
         bagimsiz_destek=girdi.referans_sonuc_evet
-        or (bagimsiz_kanit and durum("sonuc", "destekleniyor")),
+        or platform_olcumu
+        or (duzenleyen and durum("sonuc", "destekleniyor")),
         celisiyor=durum("sonuc", "celisiyor"),
     )
     bireysel = (
@@ -146,7 +163,7 @@ async def kalemi_degerlendir(
         ozgul=cikarim.pay_ozgul,
         bagimsiz_destek=girdi.referans_pay_evet
         or bireysel
-        or (bagimsiz_kanit and durum("pay", "destekleniyor")),
+        or (duzenleyen and durum("pay", "destekleniyor")),
         celisiyor=durum("pay", "celisiyor"),
     )
     puanlar = BaslikPuanlari(kanit=kanit, sonuc=sonuc, rol=rol)
@@ -169,6 +186,7 @@ async def kalemi_degerlendir(
         kanit_ozeti={
             "erisim": okunan.erisim.value if okunan else None,
             "seviye": okunan.seviye.value if okunan else None,
+            "sahiplik": okunan.sahiplik_kaynagi.value if okunan else None,
             "url": okunan.url if okunan else None,
             "kural_surumu": KURAL_SURUMU,
         },

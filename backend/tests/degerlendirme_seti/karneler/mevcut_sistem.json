@@ -64,7 +64,7 @@
  },
  "medya-youtube-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 3,
   "referans": null,
   "rol": 2,
   "sonuc": 2
@@ -169,7 +169,7 @@
  },
  "tasarim-portfolyo-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 3,
   "referans": null,
   "rol": 2,
   "sonuc": 0
@@ -218,9 +218,9 @@
  },
  "yazi-kisisel-blog-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 3,
   "referans": null,
-  "rol": 2,
+  "rol": 3,
   "sonuc": 0
  },
  "yazi-kisisel-blog-bagsiz": {
@@ -234,7 +234,7 @@
   "hata": null,
   "kanit": null,
   "referans": null,
-  "rol": 2,
+  "rol": 3,
   "sonuc": 0
  },
  "yazi-medium-bagsiz": {
@@ -246,9 +246,9 @@
  },
  "yazi-teknik-blog-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 3,
   "referans": null,
-  "rol": 2,
+  "rol": 3,
   "sonuc": 2
  },
  "yazilim-alan-adi-yok": {
@@ -274,10 +274,10 @@
  },
  "yazilim-bireysel-repo-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 3,
   "referans": null,
-  "rol": 2,
-  "sonuc": 2
+  "rol": 3,
+  "sonuc": 3
  },
  "yazilim-bireysel-repo-bagsiz": {
   "hata": null,
@@ -302,7 +302,7 @@
  },
  "yazilim-katki-yuzde-78-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 3,
   "referans": null,
   "rol": 2,
   "sonuc": 2

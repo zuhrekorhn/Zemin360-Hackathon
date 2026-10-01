@@ -72,6 +72,21 @@ class SahiplikKaynagi(StrEnum):
 
 
 @dataclass(frozen=True)
+class HesapIzi:
+    """Kanıtta görünen bir platform hesabı (sahiplik sinyali, plan § 6).
+
+    Kanıtın adresinden (`medium.com/@ayse`), platformun yanıtından (oEmbed yazar
+    adresi) ya da platform verisinden (repo sahibi, katkıcılar) gelir. Gencin
+    bağlı hesabıyla eşleşirse kanıt seviye B olur (`agents/dogrulama/hesap_sahipligi.py`).
+    """
+
+    saglayici: str
+    kullanici_adi: str
+    # Repo platformlarında bu hesabın commit payı (0-1); bilinmiyorsa None.
+    katki_orani: float | None = None
+
+
+@dataclass(frozen=True)
 class KanitBelgesi:
     """Bir kanıt adresinin okunuşu (okuyucu zincirinin çıktısı, plan § 5.1).
 
@@ -84,8 +99,14 @@ class KanitBelgesi:
     platform: str = "web"
     baslik: str | None = None
     metin: str = ""
-    # Sayfanın / platformun söylediği yazarlar ve hesaplar (sahiplik sinyali, adım 6-8).
+    # Sayfanın söylediği yazar adları (ad eşleşmesi, § 6.3).
     yazarlar: tuple[str, ...] = ()
-    hesaplar: tuple[str, ...] = ()
-    # Platform verisi (yıldız, katkı sayıları…): ileride bağımsız destek (B seviyesi).
+    # Platformun söylediği hesaplar (sahiplik sinyali, § 6). Adresteki hesap
+    # buraya yazılmaz: sahiplik kuralı onu adresten kendisi çıkarır.
+    hesaplar: tuple[HesapIzi, ...] = ()
+    # Platform verisi (yıldız, katkı sayıları…), yapılandırılmış.
     veri: Mapping[str, Any] = field(default_factory=dict)
+    # `metin`'in platformun ölçtüğü kısmı ("Yıldız: 12"). README ya da yazının
+    # kendisi değil: oradaki sayı gencin iddiasıdır (§ 2). Bağlı hesapta Sonuç'u
+    # yalnızca bu kısımdaki alıntı bağımsız olarak destekler.
+    platform_metni: str = ""

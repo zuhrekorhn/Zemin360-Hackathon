@@ -14,6 +14,7 @@ from typing import Any
 from app.agents.dogrulama import ucuncu_taraf_onayi_hesapla
 from app.agents.dogrulama.cekirdek import DegerlendirmeGirdisi, kalemi_degerlendir
 from app.agents.dogrulama.cikarim import KanitCikarimi, cikar
+from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi
 from app.agents.dogrulama.okuma import kanit_oku
 from app.core.embeddings import embedding_listesi_uret
 from degerlendirme.degerlendirici import Degerlendirme
@@ -59,6 +60,10 @@ class MevcutSistemDegerlendirici:
             await kanit_oku(
                 link,
                 [f"{girdi.baslik} {girdi.aciklama or ''}", girdi.sonuc or "", girdi.pay or ""],
+                bagli_hesaplar=tuple(
+                    BagliHesapBilgisi(h.saglayici, h.kullanici_adi, h.yontem)
+                    for h in vaka.kimlik.bagli_hesaplar
+                ),
                 transport=self._ag.transport(),
                 gom=self._gom,
             )
@@ -75,6 +80,7 @@ class MevcutSistemDegerlendirici:
             ayrinti={
                 "erisim": okunan.erisim.value if okunan else None,
                 "platform": okunan.platform if okunan else None,
+                "seviye": okunan.seviye.value if okunan else None,
             },
         )
 

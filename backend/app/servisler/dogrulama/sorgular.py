@@ -13,6 +13,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi
+from app.models.bagli_hesap import BagliHesap
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -57,4 +59,16 @@ async def gencin_adi(oturum: AsyncSession, yetenek_karti_id: uuid.UUID) -> str |
         select(Kullanici.ad)
         .join(YetenekKarti, YetenekKarti.kullanici_id == Kullanici.id)
         .where(YetenekKarti.id == yetenek_karti_id)
+    )
+
+
+async def bagli_hesap_bilgileri(
+    oturum: AsyncSession, kullanici_id: uuid.UUID
+) -> tuple[BagliHesapBilgisi, ...]:
+    """Gencin bağlı hesapları, sahiplik kuralının girdisi olarak."""
+    satirlar = await oturum.scalars(
+        select(BagliHesap).where(BagliHesap.kullanici_id == kullanici_id)
+    )
+    return tuple(
+        BagliHesapBilgisi(h.saglayici, h.kullanici_adi, h.yontem, h.dis_kimlik) for h in satirlar
     )

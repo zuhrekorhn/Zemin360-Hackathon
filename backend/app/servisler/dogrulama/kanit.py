@@ -35,6 +35,7 @@ from app.models.yetenek_kaniti import YetenekKaniti
 from app.models.yetenek_karti import YetenekKarti
 from app.servisler.dogrulama.parcalar import birincil_link, link_parcasi_ekle, parca_sil
 from app.servisler.dogrulama.referans import referans_destegi_hesapla, ucuncu_taraf_puani
+from app.servisler.dogrulama.sorgular import bagli_hesap_bilgileri
 
 
 @dataclass(frozen=True)
@@ -53,9 +54,17 @@ async def hazirla(
     oturum: AsyncSession, cikti: SomutCikti, itiraz_notu: str | None = None
 ) -> Hazirlik:
     """Birincil linki okur ve iddiayı toplar (ağ ve embedding var, model yok)."""
-    girdi = await _girdi(oturum, cikti, itiraz_notu)
+    kart = await oturum.scalar(
+        select(YetenekKarti)
+        .options(selectinload(YetenekKarti.kullanici))
+        .where(YetenekKarti.id == cikti.yetenek_karti_id)
+    )
+    girdi = _girdi(kart, cikti, itiraz_notu)
     link = birincil_link(cikti)
-    okunan = await kanit_oku(link, _iddia_sorgulari(girdi)) if link else None
+    if not link:
+        return Hazirlik(None, girdi)
+    bagli = await bagli_hesap_bilgileri(oturum, kart.kullanici_id) if kart else ()
+    okunan = await kanit_oku(link, _iddia_sorgulari(girdi), bagli_hesaplar=bagli)
     return Hazirlik(okunan, girdi)
 
 
@@ -136,14 +145,9 @@ async def kanit_bekleyeni_guncelle(oturum: AsyncSession, yetenek_karti_id: uuid.
 # --- Yardımcılar -------------------------------------------------------------------------
 
 
-async def _girdi(
-    oturum: AsyncSession, cikti: SomutCikti, itiraz_notu: str | None
+def _girdi(
+    kart: YetenekKarti | None, cikti: SomutCikti, itiraz_notu: str | None
 ) -> DegerlendirmeGirdisi:
-    kart = await oturum.scalar(
-        select(YetenekKarti)
-        .options(selectinload(YetenekKarti.kullanici))
-        .where(YetenekKarti.id == cikti.yetenek_karti_id)
-    )
     destek = referans_destegi_hesapla(cikti)
     return DegerlendirmeGirdisi(
         baslik=cikti.baslik,
@@ -179,6 +183,8 @@ def _sonucu_yaz(cikti: SomutCikti, sonuc: DegerlendirmeSonucu, okunan: OkunanKan
     if parca is not None and okunan is not None:
         parca.erisim = okunan.erisim.value
         parca.seviye = okunan.seviye.value
+        parca.sahiplik_kaynagi = okunan.sahiplik_kaynagi.value
+        parca.platform = okunan.platform
         parca.okuma_tarihi = simdi
         parca.isaretler = list(sonuc.isaretler)
 
