@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -61,6 +62,17 @@ class Settings(BaseSettings):
     voyage_model: str = "voyage-4"
     # Kanıt okuma: GitHub API uygulama tokenı (yalnızca okuma). Boşsa anonim (saatte 60 istek).
     github_token: str = ""
+
+    # Dış servisler (docs/plans/dogrulama-iyilestirme.md § 14.4). Somut sınıf
+    # app/core/dis_servisler/kurulum.py'de bu bayraklara göre seçilir.
+    # E-posta: resend | log (gönderilmez, log'a yazılır) | kapali.
+    eposta_saglayici: Literal["resend", "log", "kapali"] = "log"
+    resend_api_key: str = ""
+    # Resend'de doğrulanmış alan adından gönderen, ör. "Zemin360 <bildirim@ornek.org>".
+    eposta_gonderen: str = ""
+    eposta_zaman_asimi_sn: float = 10
+    # E-postadaki bağlantıların açtığı frontend adresi (sonda / yok).
+    uygulama_adresi: str = "http://localhost:3000"
 
     @property
     def cors_origin_list(self) -> list[str]:

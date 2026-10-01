@@ -82,3 +82,24 @@ def firma_karti_hazirlama_arka_plani_yok(monkeypatch):
 
     monkeypatch.setattr(firma_karti, "firma_kartini_hazirla", kaydet)
     return cagrilar
+
+
+class SahteEpostaGonderici:
+    kip = "sahte"
+
+    def __init__(self) -> None:
+        self.gonderilenler: list = []
+
+    async def gonder(self, eposta) -> None:
+        self.gonderilenler.append(eposta)
+
+
+@pytest.fixture(autouse=True)
+def eposta_gonderilmez(monkeypatch):
+    """Hiçbir test gerçek e-posta göndermez ya da log kipine bağlı kalmaz.
+    Gönderilenler kaydedilir; e-postayı sınayan test bu fixture'ı ister."""
+    from app.core.dis_servisler import kurulum
+
+    gonderici = SahteEpostaGonderici()
+    monkeypatch.setattr(kurulum, "eposta_gonderici", lambda: gonderici)
+    return gonderici

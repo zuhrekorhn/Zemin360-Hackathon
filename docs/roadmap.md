@@ -223,7 +223,8 @@ yayına alma.
 
 ## Kapsam dışı
 
-Mobil uygulama, taraflar arası mesajlaşma, gerçek e-posta gönderimi, ESCO
+Mobil uygulama, taraflar arası mesajlaşma, e-posta bildirimi (gerçek e-posta yalnızca
+kayıt doğrulaması ve referans isteği için gider), ESCO
 taksonomisi, çoklu dil, refresh token / OAuth, httpOnly cookie'ye geçiş
 (ürünleşme dönemi).
 
