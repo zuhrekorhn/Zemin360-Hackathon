@@ -92,6 +92,8 @@ class KanitDurumuYaniti(BaseModel):
     # Kartın "Kanıt bekliyor" rozeti: kanıt ya da referans eklenince arayüz
     # sayfayı yenilemeden günceller (bulgu 28).
     kart_kanit_bekleyen: bool
+    # Hak dolduktan sonraki itiraz GİRVAK'ta bekliyor (plan § 9); arayüz itirazı kapatır.
+    inceleme_bekliyor: bool = False
 
 
 class ReferansIstegiYaniti(BaseModel):

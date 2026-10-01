@@ -7,11 +7,11 @@ Kurallar `app/agents/dogrulama/`'da (saf); burada modele uygulanmaları:
   - `itiraz`: itirazla yeniden değerlendirme
 
 Sözleşme (kart düzenleme servisiyle aynı): servis modeli değiştirir; commit,
-arka plan işi ve HTTP'ye çeviri (404, 409, 429) çağıran ucun işidir. Bildirim,
+arka plan işi ve HTTP'ye çeviri (404, 409, 429, 202) çağıran ucun işidir. Bildirim,
 olayı yazan servisle aynı işlemde yazılır.
 """
 
-from app.servisler.dogrulama.itiraz import ITIRAZ_SINIRI, ItirazSiniri, itiraz_et
+from app.servisler.dogrulama.itiraz import ITIRAZ_SINIRI, ItirazIncelemede, itiraz_et
 from app.servisler.dogrulama.kanit import (
     ciktiyi_puanla,
     degerlendir,
@@ -42,7 +42,7 @@ from app.servisler.dogrulama.sorgular import CiktiBulunamadi, cikti_getir
 __all__ = [
     "ITIRAZ_SINIRI",
     "CiktiBulunamadi",
-    "ItirazSiniri",
+    "ItirazIncelemede",
     "KanitBulunamadi",
     "KanitZatenVar",
     "ReferansYenidenIstenemez",

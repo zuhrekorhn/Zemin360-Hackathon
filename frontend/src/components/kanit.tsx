@@ -151,6 +151,7 @@ export function KanitBolumu({
         <Degerlendirme
           kimlik={somutCiktiId}
           not={durum?.guven_skoru?.gerekce_metni ?? null}
+          incelemeBekliyor={durum?.inceleme_bekliyor ?? false}
           bekleniyor={bekleniyor}
           onItiraz={(aciklama) =>
             calistir(() => itirazEt(somutCiktiId, aciklama))
@@ -300,11 +301,13 @@ function ReferansFormu({
 function Degerlendirme({
   kimlik,
   not,
+  incelemeBekliyor,
   bekleniyor,
   onItiraz,
 }: {
   kimlik: string;
   not: string | null;
+  incelemeBekliyor: boolean;
   bekleniyor: boolean;
   onItiraz: (aciklama: string) => Promise<boolean>;
 }) {
@@ -320,7 +323,13 @@ function Degerlendirme({
         </p>
       ) : null}
 
-      {acik ? (
+      {incelemeBekliyor ? (
+        // İtiraz hakkı doldu; son itiraz GİRVAK'ta (plan § 9). Karar bildirimle gelir.
+        <p className="text-sm text-muted-foreground text-pretty" role="status">
+          İtirazın GİRVAK’a iletildi; inceleyip sonucu sana bildirecek. Yeni bir
+          kanıt eklersen çalışman yeniden değerlendirilir.
+        </p>
+      ) : acik ? (
         <form
           className="flex flex-col gap-3"
           onSubmit={(olay) => {

@@ -22,13 +22,14 @@ import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.dogrulama import GecersizReferansGecisi, yanitlanabilir_mi
 from app.agents.dogrulama.kurallar import OkunanKanit
+from app.agents.inceleme_durumu import ACIK
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
@@ -36,6 +37,7 @@ from app.core.kanit_okuma.belge import ErisimDurumu
 from app.core.llm import HizSinirHatasi
 from app.db.session import get_session
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, Hesap
+from app.models.inceleme_isareti import TUR_ITIRAZ_SINIRI, IncelemeIsareti
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -56,7 +58,7 @@ from app.servisler import dogrulama as dogrulama_servisi
 from app.servisler import kart_duzenleme, kart_hazirlama
 from app.servisler.dogrulama import (
     CiktiBulunamadi,
-    ItirazSiniri,
+    ItirazIncelemede,
     KanitBulunamadi,
     KanitZatenVar,
     ReferansYenidenIstenemez,
@@ -158,17 +160,21 @@ async def itiraz(
     somut_cikti_id: uuid.UUID,
     istek: ItirazIstegi,
     arka_plan: BackgroundTasks,
+    yanit: Response,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
     """Genç değerlendirmeye itiraz eder (servis: itiraz.py). Not zorunlu; aynı not ve
-    girdi önceki sonucu döndürür; sürüm başına sınır aşılınca 429."""
+    girdi önceki sonucu döndürür. Sürüm başına sınır aşılınca model çağrılmaz, itiraz
+    GİRVAK kuyruğuna gider: 202 ve `inceleme_bekliyor: true`, gösterge değişmez."""
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     try:
         with _hiz_siniri_429():
             kontrol = await dogrulama_servisi.itiraz_et(oturum, cikti, istek.aciklama)
-    except ItirazSiniri as hata:
-        raise HTTPException(status_code=429, detail=str(hata)) from hata
+    except ItirazIncelemede:
+        await oturum.commit()
+        yanit.status_code = 202
+        return await _durum_yaniti(oturum, somut_cikti_id, None)
     await _gosterge_degisti(oturum, cikti, arka_plan)
     return await _durum_yaniti(oturum, somut_cikti_id, _erisilebilir(kontrol))
 
@@ -380,4 +386,15 @@ async def _durum_yaniti(
             for referans in cikti.referans_istekleri
         ],
         kart_kanit_bekleyen=bool(kart and kart.kanit_bekleyen),
+        inceleme_bekliyor=bool(
+            await oturum.scalar(
+                select(
+                    exists().where(
+                        IncelemeIsareti.tur == TUR_ITIRAZ_SINIRI,
+                        IncelemeIsareti.somut_cikti_id == cikti.id,
+                        IncelemeIsareti.durum == ACIK,
+                    )
+                )
+            )
+        ),
     )

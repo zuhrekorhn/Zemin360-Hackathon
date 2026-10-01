@@ -20,6 +20,7 @@ from app.agents.dogrulama.kurallar import OkunanKanit
 from app.api.auth import hesap_olustur
 from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
 from app.core.kimlik import token_uret
+from app.models.inceleme_isareti import IncelemeIsareti
 from app.models.kullanici import Kullanici
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
@@ -267,12 +268,23 @@ def test_itiraz_notu_zorunlu_ve_hakki_sinirli(sahte_degerlendirme, kart_hazirlam
                 assert (
                     await istemci.post(yol, headers=baslik, json={"aciklama": not_})
                 ).status_code == 200
-            # Aynı not önbellekten döner, hak harcamaz; yeni not dördüncü itiraz: 429.
+            # Aynı not önbellekten döner, hak harcamaz.
             tekrar = await istemci.post(yol, headers=baslik, json={"aciklama": notlar[-1]})
             assert tekrar.status_code == 200
-            dorduncu = await istemci.post(yol, headers=baslik, json={"aciklama": "başka not"})
-            assert dorduncu.status_code == 429
+            assert tekrar.json()["inceleme_bekliyor"] is False
+            # Dördüncü ve beşinci itiraz model çağırmaz; GİRVAK kuyruğunda tek işarette birikir.
+            for not_ in ("başka not", "bir not daha"):
+                yanit = await istemci.post(yol, headers=baslik, json={"aciklama": not_})
+                assert yanit.status_code == 202
+                assert yanit.json()["inceleme_bekliyor"] is True
             assert len(sahte_degerlendirme) == 3
+            (isaret,) = (
+                await oturum.scalars(
+                    select(IncelemeIsareti).where(IncelemeIsareti.somut_cikti_id == kalem_id)
+                )
+            ).all()
+            assert isaret.tur == "itiraz_siniri"
+            assert isaret.ayrinti == {"itiraz_notlari": ["başka not", "bir not daha"]}
 
     asyncio.run(senaryo())
 
