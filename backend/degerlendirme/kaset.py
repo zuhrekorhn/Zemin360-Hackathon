@@ -57,7 +57,10 @@ def _parcali_yanit(
 
 class KasetKipi(StrEnum):
     OYNAT = "oynat"
+    # Sıfırdan kaydet (yalnızca yeni vaka eklenince; sayfalar zamanla değişir).
     KAYDET = "kaydet"
+    # Kayıtlı olanı oynat, olmayanı canlı çek ve ekle (yeni okuyucu yeni istek atınca).
+    TAMAMLA = "tamamla"
 
 
 class KasetEksik(LookupError):
@@ -69,19 +72,24 @@ def _ozet(metin: str) -> str:
 
 
 def _json_oku(yol: Path) -> dict[str, Any]:
-    return json.loads(yol.read_text(encoding="utf-8")) if yol.exists() else {}
+    if not yol.exists():
+        return {}
+    ham = gzip.decompress(yol.read_bytes()) if yol.suffix == ".gz" else yol.read_bytes()
+    return json.loads(ham.decode("utf-8"))
 
 
 def _json_yaz(yol: Path, veri: dict[str, Any]) -> None:
     yol.parent.mkdir(parents=True, exist_ok=True)
-    yol.write_text(
-        json.dumps(veri, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    metin = json.dumps(veri, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
+    if yol.suffix == ".gz":
+        yol.write_bytes(gzip.compress(metin.encode("utf-8"), mtime=0))
+    else:
+        yol.write_text(metin, encoding="utf-8")
 
 
 def _hata_sinifi(ad: str) -> type[httpx.TransportError]:
     """Kaydedilen ağ hatasının aynısı (ConnectTimeout, ReadTimeout…): okuyucular
-    hatanın türünü metne yazıyor, oynatma farklı tür üretirse sonuç değişir."""
+    hatanın türüne göre durum veriyor, oynatma farklı tür üretirse sonuç değişir."""
     sinif = getattr(httpx, ad, None)
     if isinstance(sinif, type) and issubclass(sinif, httpx.TransportError):
         return sinif
@@ -110,7 +118,8 @@ class AgKaseti:
     # --- DNS ---------------------------------------------------------------
 
     async def cozumle(self, host: str, port: int) -> list[guvenli_istek.IpAdresi]:
-        if self.kip is KasetKipi.KAYDET:
+        canli = self.kip is KasetKipi.KAYDET
+        if canli or (self.kip is KasetKipi.TAMAMLA and host not in self._dns):
             try:
                 ipler = await guvenli_istek._sistem_cozumleyicisi(host, port)
             except (OSError, UnicodeError):
@@ -142,7 +151,12 @@ class AgKaseti:
         """Kipine göre oynatan ya da gerçek ağa çıkıp kaydeden transport."""
         if self.kip is KasetKipi.KAYDET:
             return _KaydedenTransport(self)
+        if self.kip is KasetKipi.TAMAMLA:
+            return _TamamlayanTransport(self)
         return httpx.MockTransport(self._oynat)
+
+    def kayitta_mi(self, istek: httpx.Request) -> bool:
+        return istek_anahtari(istek) in self._ag
 
     def _oynat(self, istek: httpx.Request) -> httpx.Response:
         anahtar = istek_anahtari(istek)
@@ -177,10 +191,12 @@ class AgKaseti:
         self._ag[anahtar] = {"hata": type(hata).__name__}
 
     def kaydet(self) -> None:
-        if self.kip is not KasetKipi.KAYDET:
+        if self.kip is KasetKipi.OYNAT:
             return
         _json_yaz(self.klasor / "dns.json", self._dns)
         _json_yaz(self.klasor / "ag.json", self._ag)
+        if self.kip is not KasetKipi.KAYDET:
+            return  # tamamla kipi eski gövdeleri silmez
         kullanilan = {k["govde"] for k in self._ag.values() if k.get("govde")}
         for dosya in (self.klasor / "govdeler").glob("*.gz"):
             if dosya.name not in kullanilan:
@@ -221,15 +237,38 @@ class _KaydedenTransport(httpx.AsyncBaseTransport):
         await self._ic.aclose()
 
 
-class ModelKaseti:
-    """Model çağrıları: aynı iş + aynı girdi → kayıtlı çıktı."""
+class _TamamlayanTransport(httpx.AsyncBaseTransport):
+    """Kayıtlı isteği oynatır; kayıtta olmayanı gerçek ağdan çekip kasete ekler."""
 
-    def __init__(self, kip: KasetKipi, klasor: Path = KASET_KLASORU) -> None:
+    def __init__(self, kaset: AgKaseti) -> None:
+        self._kaset = kaset
+        self._kaydeden = _KaydedenTransport(kaset)
+
+    async def handle_async_request(self, istek: httpx.Request) -> httpx.Response:
+        if self._kaset.kayitta_mi(istek):
+            return self._kaset._oynat(istek)
+        return await self._kaydeden.handle_async_request(istek)
+
+    async def aclose(self) -> None:
+        await self._kaydeden.aclose()
+
+
+class ModelKaseti:
+    """Model (ve embedding) çağrıları: aynı iş + aynı girdi → kayıtlı çıktı.
+
+    Kaydet ve tamamla kipleri aynı davranır: kayıtlı girdi yeniden çağrılmaz,
+    yalnızca eksik olan çağrılır; dosyaya o çalıştırmada kullanılanlar yazılır.
+    """
+
+    def __init__(
+        self, kip: KasetKipi, klasor: Path = KASET_KLASORU, dosya: str = "model.json"
+    ) -> None:
         self.kip = kip
         self.klasor = klasor
-        self._kayit: dict[str, Any] = _json_oku(klasor / "model.json")
-        # Kayıt kipinde eski kayıtlar önbellektir (yeniden çağrılmaz), ama
-        # dosyaya yalnızca bu çalıştırmada kullanılanlar yazılır.
+        self.dosya = dosya
+        self._kayit: dict[str, Any] = _json_oku(klasor / dosya)
+        # Eski kayıtlar önbellektir (yeniden çağrılmaz), ama dosyaya yalnızca bu
+        # çalıştırmada kullanılanlar yazılır.
         self._kullanilan: set[str] = set()
 
     @staticmethod
@@ -243,7 +282,7 @@ class ModelKaseti:
         gercek: Callable[[], Awaitable[dict[str, Any]]],
     ) -> dict[str, Any]:
         anahtar = self.anahtar(is_adi, girdi)
-        if self.kip is KasetKipi.KAYDET:
+        if self.kip is not KasetKipi.OYNAT:
             if anahtar not in self._kayit:
                 self._kayit[anahtar] = await gercek()
             self._kullanilan.add(anahtar)
@@ -253,8 +292,8 @@ class ModelKaseti:
         return self._kayit[anahtar]
 
     def kaydet(self) -> None:
-        if self.kip is KasetKipi.KAYDET:
+        if self.kip is not KasetKipi.OYNAT:
             _json_yaz(
-                self.klasor / "model.json",
+                self.klasor / self.dosya,
                 {a: c for a, c in self._kayit.items() if a in self._kullanilan},
             )

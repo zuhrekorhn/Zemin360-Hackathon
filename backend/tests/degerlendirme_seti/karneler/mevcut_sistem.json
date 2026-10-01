@@ -8,16 +8,16 @@
  },
  "akademik-arxiv-yazar-eslesmiyor": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 1,
   "referans": null,
-  "rol": 2,
+  "rol": 1,
   "sonuc": 0
  },
  "akademik-dergipark-ikinci-yazar": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 1,
+  "rol": 2,
   "sonuc": 0
  },
  "gonulluluk-kanitsiz": {
@@ -57,21 +57,21 @@
  },
  "medya-instagram-profil": {
   "hata": null,
-  "kanit": 0,
+  "kanit": null,
   "referans": null,
   "rol": 1,
   "sonuc": 0
  },
  "medya-youtube-bagli": {
   "hata": null,
-  "kanit": null,
+  "kanit": 2,
   "referans": null,
   "rol": 2,
   "sonuc": 2
  },
  "medya-youtube-kanal-sayfasi": {
   "hata": null,
-  "kanit": null,
+  "kanit": 2,
   "referans": null,
   "rol": 2,
   "sonuc": 2
@@ -106,7 +106,7 @@
  },
  "sertifika-genel-rozet-sayfasi": {
   "hata": null,
-  "kanit": 0,
+  "kanit": 2,
   "referans": null,
   "rol": 0,
   "sonuc": 0
@@ -129,7 +129,7 @@
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 1,
+  "rol": 2,
   "sonuc": 0
  },
  "staj-referans-olumsuz": {
@@ -183,14 +183,14 @@
  },
  "veri-kaggle-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": null,
   "referans": null,
   "rol": 2,
   "sonuc": 0
  },
  "veri-kaggle-bagsiz": {
   "hata": null,
-  "kanit": 2,
+  "kanit": null,
   "referans": null,
   "rol": 2,
   "sonuc": 0

@@ -676,6 +676,12 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
   6. Adım 4'teki geçiş adaptörü kalkar.
 - **Belge:** agent-specs § 4.1 (karar 13 değişir).
 
+> **Durum: tamamlandı (kapsam notlarıyla).** `app/core/kanit_okuma/`: `istek.py` (tarayıcı başlıkları, 2 MB sınır, `guvenli_get` üzerinden), `erisim.py` (saf tablo), `html_ozeti.py`, `okuyucu.py` (Strategy arayüzü) ve zincir `kaniti_oku` (Chain of Responsibility: platform okuyucusu `None` dönerse genel okuyucu). Okuyucular: `github` (API: repo, katkıcılar, README; isteğe bağlı `GITHUB_TOKEN`), `oembed` (YouTube, Vimeo, SoundCloud, Spotify, Figma), `medium` (RSS), `google` (Drive/Docs/Sheets/Slides dışa aktarma), `genel`. `parca_secimi.py`: 8000 karakterden uzun metinde ilk parça + iddia yüzü başına 4 parça (bellek içi kosinüs); embedding hatasında metnin başı. Adım 4 adaptörü (`link_kontrolu.py`) kalktı; karne uygulamanın yolunu (`okuma.kanit_oku`) kullanıyor, embedding de kasette.
+> **Plandan sapmalar (bilinçli):** trafilatura yerine standart `HTMLParser` (yeni bağımlılık yok, doğrusal; ReDoS dersi). Sayfa metninin meta ile birlikte sayılması: JS ile çizilen ama açıklaması olan sayfa (Kaggle) "açık". Model istemine iddia sahibinin adı eklendi ve "ad geçmiyor" çelişki sayılmıyor (zengin metinle yanlış çelişki çıkıyordu).
+> **Ertelenenler:** `gitlab`, `akademik` (DOI/Crossref), `sertifika`, `magaza`, `devpost` okuyucuları ve okuma önbelleği; pgvector'lu parça seçimi (bellek içi yeterli, kalıcı parça gerekince). Zincire yeni okuyucu eklemek tek sınıf + `PLATFORM_OKUYUCULARI`'na bir satır.
+> **Dış bağımlılık:** Voyage hesabında ödeme yöntemi yok (3 istek/dk); parça seçimi bu yüzden çoğunlukla metnin başına düşüyor. Ödeme yöntemi eklenince karne `--ag tamamla --model tamamla` ile yeniden alınmalı.
+> **Karne (`karneler/2026-10-01-mevcut_sistem-taslak-adim5.md`):** Kanıt birebir %56 → %62 (±1 %76), Rol %76 (±1 %100), Sonuç %82, Referans %100; sahte vakada yanlış 3: 0, dil ihlali: 0. Kalan Kanıt farkları: bot engelli/JS siteler (Behance, Dribbble, GrabCAD) → adım 10; bağlı hesap → 8; PDF → 9.
+
 ### Adım 6: Kimlik, e-posta ve inceleme kuyruğu çekirdeği
 
 - **Bulgular:** 37, 48 (ad kilidi).

@@ -1,5 +1,38 @@
 {
- "dogrulama_cikarim:0d10e8c7f71c647a36ba8907e60ff290": {
+ "dogrulama_cikarim:0b11c77fedc2b2c2f29feb1140a54ad7": {
+  "destekler": [
+   {
+    "alinti": "So this talk is actually going to be about learning hard things and understanding complicated systems.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "Yazarlar: Julia Evans",
+    "durum": "destekleniyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "Here’s the video, talk abstract, then the slides & a rough transcript.",
+    "yetenek": "Teknik yazarlık"
+   }
+  ],
+  "oneri": "Çalışmanın ulaştığı okuyucu sayısı ya da konuşmanın izlenme oranı gibi ölçülebilir sonuçları ekleyerek iddianı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:0b959b02218c888ef76123eced115460": {
   "destekler": [
    {
     "alinti": null,
@@ -20,14 +53,220 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Barınakta üstlendiğin somut görevleri ve çalışma süreni belirten bir katılım belgesi veya yetkili yazısı ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": false,
+  "oneri": "Hazırladığın tablo düzenini ve sayım süresindeki değişimi gösteren bir belge ya da bağlantı ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:116caee67cf1b1d32a84f6e761a2ef23": {
+  "destekler": [
+   {
+    "alinti": "TLDR is that I wrote, just for fun, a text editor in less than 1000 lines of code that does not depend on ncurses and has support for syntax highlight and search feature.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": "Writing an editor in less than 1000 lines of code, just for fun",
+    "durum": "destekleniyor",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "TLDR is that I wrote, just for fun, a text editor in less than 1000 lines of code that does not depend on ncurses and has support for syntax highlight and search feature.",
+    "durum": "destekleniyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "TLDR is that I wrote, just for fun, a text editor in less than 1000 lines of code that does not depend on ncurses and has support for syntax highlight and search feature.",
+    "yetenek": "Teknik yazarlık"
+   }
+  ],
+  "oneri": "Kaynak kod deposunu da doğrudan kanıt olarak ekleyerek çalışmada C dilini kullandığını açıkça gösterebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:2ec5df43741bbd06815a21b18d67043b": {
+  "destekler": [
+   {
+    "alinti": "Yazarlar: Vaswani, Ashish, Shazeer, Noam, Parmar, Niki, Uszkoreit, Jakob, Jones, Llion, Gomez, Aidan N., Kaiser, Lukasz, Polosukhin, Illia",
+    "durum": "celisiyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "Authors: Ashish Vaswani , Noam Shazeer , Niki Parmar , Jakob Uszkoreit , Llion Jones , Aidan N. Gomez , Lukasz Kaiser , Illia Polosukhin",
+    "durum": "celisiyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": true,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Yazar listesinde adının açıkça yer aldığı veya kendi katkını doğrudan doğrulayabileceğin bir çalışmanı kanıt olarak paylaşabilirsin.",
+  "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:2ee38e6a68394869cef8116352f522d9": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Yaptığın statik hesapları ve ulaştığın sonucu gösteren teknik raporu veya analiz belgelerini kanıt olarak ekleyebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
   "sonuc_var": true
  },
- "dogrulama_cikarim:161ebf3fd57dbe5cbb4f15de4bef5c51": {
+ "dogrulama_cikarim:379ad129f6e662dc7f0497171c9a04ec": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Geliştirdiğin panoya dair ekran görüntüleri, kod bağlantısı veya firmadan aldığın bir referans yazısını kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:38a71891d1b852d21d793529e2fc405a": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Genel ana sayfa yerine ekip liderliğini, yürüttüğün etkinliği veya dikilen fidan sayısını doğrudan gösteren bir katılım belgesi ya da etkinlik kaydı paylaşarak çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:467b939bd2bd2cfd3d32950aba10422f": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Genel bir ansiklopedi sayfası yerine hazırladığın blog yazılarının doğrudan bağlantılarını ve trafik artışını belgeleyen analitik ekran görüntülerini kanıt olarak ekleyebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:4b999488975d6bd4c4dee1a9551af424": {
+  "destekler": [
+   {
+    "alinti": "Chair of the Gates Foundation.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "Experience Co-chair Gates Foundation 2000 - Present 26 years",
+    "durum": "destekleniyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": true,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "Experience Co-chair Gates Foundation 2000 - Present 26 years",
+    "yetenek": "Yönetim"
+   }
+  ],
+  "oneri": "Vakıf bünyesinde yürüttüğün çalışmaların somut ve ölçülebilir sonuçlarını ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:5e7de2f8a0d0ab0c56fdad7ef4c9e604": {
   "destekler": [
    {
     "alinti": "Yapay Zekâ İle Kablosuz Algılayıcı Ağları Eniyileme",
@@ -40,151 +279,39 @@
     "iddia": "sonuc"
    },
    {
-    "alinti": null,
-    "durum": "kanitta_yok",
+    "alinti": "Yazarlar: Mehmet Akif Çifçi, Atilla Elçi",
+    "durum": "destekleniyor",
     "iddia": "pay"
    }
   ],
-  "ekip_ortakligi_belirtilmis": false,
+  "ekip_ortakligi_belirtilmis": true,
   "ilgili_mi": true,
   "kanitlanan_yetenekler": [
    {
-    "alinti": "Yapay Zekâ",
+    "alinti": "Yapay Zekâ İle Kablosuz Algılayıcı Ağları Eniyileme",
     "yetenek": "Yapay zekâ"
    },
    {
-    "alinti": "Algılayıcı Ağları",
+    "alinti": "Bu aygıtlardan yüzlercesi, hatta binlercesi yardımıyla kablosuz algılayıcı ağları oluşturulmaktadır.",
     "yetenek": "Algılayıcı ağları"
    }
   ],
-  "oneri": "Makaledeki yazar listesini ve çalışmadaki kendi payını gösteren tam metin bağlantısını kanıt olarak ekleyip elde edilen sonuçları belirtebilirsin.",
-  "pay_ozgul": false,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
- "dogrulama_cikarim:21e4dd2ec48bc7a0151ed942f973ede5": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Genel ana sayfa bağlantısı yerine ekip liderliğini ve dikilen fidan sayısını doğrulayan bir katılım belgesi ya da resmi etkinlik kaydı paylaşarak çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:31235321e9719b944eacd7484a554d18": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Ekipte bizzat hangi işlemleri üstlendiğini somutlaştırarak ve çalışmanı doğrulayan bir staj kabul veya onay belgesi ekleyerek başvurunu güçlendirebilirsin.",
-  "pay_ozgul": false,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:321c2c4b91508b9724afe4c728383a36": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanın sana ait olduğunu doğrulayan ve çizim detaylarını gösteren açık bir bağlantı ekleyip elde ettiğin sonuçları belirterek çalışmanı güçlendirebilirsin.",
+  "oneri": "Çalışmanın sağladığı iyileştirmeleri ve elde ettiğin akademik sonuçları sayısal veriler ekleyerek belirtebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
   "sonuc_var": false
  },
- "dogrulama_cikarim:3688926ffc073e5ea90ae997decfa71c": {
+ "dogrulama_cikarim:64c5443dfdc471f5029d200c79126585": {
   "destekler": [
    {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Hazırladığın satış panosunun ekran görüntülerini veya veri akışını gösteren bir bağlantıyı kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:3808b18b78d5b4c75bce5837cac0b4c7": {
-  "destekler": [
-   {
-    "alinti": "Writing an editor in less than 1000 lines of code, just for fun",
+    "alinti": "FastAPI is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints.",
     "durum": "destekleniyor",
     "iddia": "is"
    },
    {
-    "alinti": "less than 1000 lines of code",
+    "alinti": "Yıldız: 102748",
     "durum": "destekleniyor",
     "iddia": "sonuc"
    },
@@ -194,17 +321,22 @@
     "iddia": "pay"
    }
   ],
-  "ekip_ortakligi_belirtilmis": false,
+  "ekip_ortakligi_belirtilmis": true,
   "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Yazının tam içeriğini ve sana ait olduğunu doğrulayan yazar bilgilerini içeren bir kanıt sunarak çalışmanı güçlendirebilirsin.",
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "FastAPI is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints.",
+    "yetenek": "Python"
+   }
+  ],
+  "oneri": "Projeye sağladığın katkıyı ve payını doğrulamak için kendi kullanıcı adını ve geliştirdiğin kodları doğrudan gösteren bağlantıları kanıt olarak ekleyebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": true,
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
- "dogrulama_cikarim:38f1c3dd94422c4c5621560bd915589f": {
+ "dogrulama_cikarim:6cd980d389d1228bc984c4a4d5860d44": {
   "destekler": [
    {
     "alinti": null,
@@ -225,23 +357,107 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanın canlı bağlantısını ya da kod deposunu kanıt olarak ekleyip sitede tam olarak hangi kısımları geliştirdiğini somutlaştırarak çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": false,
+  "oneri": "Çalışmanın sana ait olduğunu ve detaylarını gösteren teknik çizim dosyalarını veya profil bağlantını kanıt olarak ekleyebilirsin.",
+  "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
-  "sonuc_var": true
+  "sonuc_var": false
  },
- "dogrulama_cikarim:437a11921a673630e9fb29e677052823": {
+ "dogrulama_cikarim:6cf4fefc2fccbd528a1cfe1001b25033": {
   "destekler": [
    {
-    "alinti": "Titanic Tutorial",
-    "durum": "destekleniyor",
+    "alinti": null,
+    "durum": "kanitta_yok",
     "iddia": "is"
    },
    {
     "alinti": null,
     "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Çalışmanın detaylarını gösteren tasarımları ve elde ettiğin sonuçları içeren doğrulanabilir bir kanıt bağlantısı ekleyerek iddianı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:6fdb3128c3e0f160148ac79f2708351c": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Geliştirdiğin bütçe takip uygulamasına ait Play Store sayfasının veya kaynak kod deposunun bağlantısını kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:79c75e9294a5e40f96e11b3edbb20bbe": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Hazırladığın ön eleme formunu, puanlama tablosunu veya süreçteki zaman kazanımını belgeleyen bir görsel ya da rapor bağlantısını kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:83e54b33d7de92ba44211f9c8e41e8a1": {
+  "destekler": [
+   {
+    "alinti": "A tiny scalar-valued autograd engine and a neural net library on top of it with PyTorch-like API",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": "Yıldız: 17732",
+    "durum": "destekleniyor",
     "iddia": "sonuc"
    },
    {
@@ -254,18 +470,50 @@
   "ilgili_mi": true,
   "kanitlanan_yetenekler": [
    {
-    "alinti": "Machine Learning",
+    "alinti": "pure, dependency-free Python",
+    "yetenek": "Python"
+   },
+   {
+    "alinti": "training an 2-layer neural network (MLP) binary classifier",
     "yetenek": "Makine öğrenmesi"
    }
   ],
-  "oneri": "Kendine ait Kaggle hesabındaki çalışma bağlantısını ekleyerek ve elde ettiğin sonuçları sayısal göstergelerle belirterek çalışmanı güçlendirebilirsin.",
+  "oneri": "Depoya gelen dış katkıları ve kendi payını daha ayrıntılı açıklayarak çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:87602d56490df4720e07f2a59f9ff014": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Yazının içeriğini kanıt olarak ekleyip yazının kaç kişiye ulaştığı gibi ölçülebilir sonuçlar belirterek çalışmanı güçlendirebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
   "sonuc_var": false
  },
- "dogrulama_cikarim:542a57645a38681454143b07e931ec1c": {
+ "dogrulama_cikarim:8897c13fd8162358314a64d4bdd8c4d0": {
   "destekler": [
    {
     "alinti": null,
@@ -286,42 +534,14 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanın oluşturduğu etkiyi ya da çıktıyı belirterek tasarımlarını doğrulayacak açık bir kanıt metni veya bağlantısı ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
- "dogrulama_cikarim:5ac37179a711ff90681f4f89e31a5de2": {
-  "destekler": [
-   {
-    "alinti": "A tiny scalar-valued autograd engine and a neural net library on top of it",
-    "durum": "destekleniyor",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanı güçlendirmek için reponun yıldız sayısını ve projede kendi payını doğrulayan katkı geçmişini içeren bağlantılar ekleyebilirsin.",
+  "oneri": "Staj yaptığın firmadan aldığın bir referans yazısını ya da yürüttüğün çalışmayı doğrulayan bir belgeyi kanıt olarak ekleyebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": true,
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
- "dogrulama_cikarim:61a19f2f20d6d330889199786f26c066": {
+ "dogrulama_cikarim:8cb3fa1b5f55da93f566c102e7f52cbc": {
   "destekler": [
    {
     "alinti": null,
@@ -342,70 +562,14 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Hazırladığın formu veya sürecin kısaldığını gösteren bir belgeyi kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:68bd43b22470999ccf663fabf57c5a6b": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Hazırladığın tablo düzenini veya sayım süresindeki değişimi belgeleyen bir ekran görüntüsünü kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:80c909fad5cc8c3c1c44251eaf98924a": {
-  "destekler": [
-   {
-    "alinti": "Attention Is All You Need",
-    "durum": "destekleniyor",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Yazar adının yer aldığı tam metin bağlantısını ekleyip çalışmadaki somut görevini ve elde edilen sonuçları belirterek çalışmanı güçlendirebilirsin.",
+  "oneri": "Geliştirdiğin web sitesinin bağlantısını veya kodlarını kanıt olarak ekleyip projede tam olarak üstlendiğin görevleri detaylandırarak çalışmanı güçlendirebilirsin.",
   "pay_ozgul": false,
   "pay_var": true,
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
-  "sonuc_var": false
+  "sonuc_var": true
  },
- "dogrulama_cikarim:82da9c70e9cc147ebdcc2707737e0464": {
+ "dogrulama_cikarim:92bf520270b6bf501e08b01bec6677ba": {
   "destekler": [
    {
     "alinti": null,
@@ -426,14 +590,14 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanın ve izlenme sayısının doğrulanabilmesi için içeriğin metin olarak görüntülenebildiği geçerli bir kanıt bağlantısı ekleyebilirsin.",
+  "oneri": "Hazırladığın içerik takvimine veya paylaşılan gönderilere dair bir bağlantı ekleyerek çalışmanı güçlendirebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": true,
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
- "dogrulama_cikarim:870e9a73cc8a5cf05b27012ae8d67335": {
+ "dogrulama_cikarim:9d4c33541279b453591ef7de504e4ef5": {
   "destekler": [
    {
     "alinti": null,
@@ -454,182 +618,14 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanı ve arayüzdeki payını doğrulayabilmemiz için kod deposuna veya canlı projeye erişilebilen geçerli bir bağlantı ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:8eef9de4f7faa08d6d3d032ddd636c5c": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Geliştirdiğin uygulamanın kodlarını içeren açık bir kaynak kod bağlantısı veya çalıştığını doğrulayan bir sayfa ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:a0464b1008b938b8456e429b2575d37f": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Staj yaptığın firmadaki yöneticinden alacağın bir tavsiye yazısını veya hazırladığın örnek e-posta şablonlarını bağlantı olarak ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:a1ea8090d5a791a474ba7fbc9fc4b2f0": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Geliştirdiğin uygulamanın Play Store sayfasını veya kaynak kodlarını içeren bağlantıyı kanıt olarak paylaşarak çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:ad6e8ef7eb4c4499b476f26f8168ff36": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Kanalın sana ait olduğunu ve abone sayısını doğrulayabileceğimiz açık bir kanıt metni sunarak çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:af0758bd2105629ffc5653bbb43e63d1": {
-  "destekler": [
-   {
-    "alinti": "FastAPI framework, high performance",
-    "durum": "destekleniyor",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Projeye yaptığın katkıyı ve aldığın yıldız sayısını doğrulamak için GitHub kullanıcı adının ve katkılarının yer aldığı katkı sağlayıcılar sayfasını kanıt olarak ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:b191cfabfd40f4b7500fd6f2639f3679": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Genel profil sayfası yerine bizzat tasarladığın gönderilerin bağlantılarını ekleyip buradaki somut rolünü ve elde edilen etkileşim sonuçlarını belirterek çalışmanı güçlendirebilirsin.",
+  "oneri": "Stajında bizzat üstlendiğin görevleri detaylandırıp çalışmanı doğrulayan bir staj kabul veya tamamlama belgesi ekleyebilirsin.",
   "pay_ozgul": false,
   "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
  },
- "dogrulama_cikarim:b32235eff5794d0cd8d7a3e1715fb67c": {
+ "dogrulama_cikarim:9e0b4844a0367f372b0ceaad57281371": {
   "destekler": [
    {
     "alinti": null,
@@ -650,98 +646,14 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Kafenin sosyal medya hesabı bağlantısını ve takipçi artışını gösteren istatistik ekran görüntülerini kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:bb8fc141f27fa6bb6dd8e0b4b2ad7f7a": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Projeye yaptığın katkıyı ve aldığın yıldız sayısını gösteren katkı sağlayıcı veya profil sayfasını kanıt olarak ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:bed9ad55fd009e40554b083c7402d173": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Hazırladığın içeriklerin bağlantılarını veya trafik artışını gösteren analiz ekran görüntülerini kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:c0fe805def3da0370dff887103a76785": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Portfolyo sitenin kaynak kodlarını içeren bir bağlantı paylaşarak ve sitede elde ettiğin ziyaretçi sayısı gibi somut bir sonuç belirterek çalışmanı güçlendirebilirsin.",
+  "oneri": "Çalışmanın değerlendirilebilmesi için içeriği görüntülenebilir bir kanıt bağlantısı ekleyebilir, ulaştığın sonucu da sayılarla belirtebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
   "sonuc_var": false
  },
- "dogrulama_cikarim:c15fd5acde6225c300b202450599878f": {
+ "dogrulama_cikarim:a5ec387f06a0dda8265cfda0839361bd": {
   "destekler": [
    {
     "alinti": null,
@@ -762,73 +674,17 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanı ve yanıt süresindeki düşüşü gösteren bir rapor veya belge bağlantısı ekleyerek güven göstergesi sağlayabilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
+  "oneri": "Eğitimi tamamladığını gösteren bir sertifika veya belge bağlantısı ekleyerek bu süreçte geliştirdiğin çalışmaları ve elde ettiğin sonuçları belirtebilirsin.",
+  "pay_ozgul": false,
+  "pay_var": false,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
  },
- "dogrulama_cikarim:c5de0d5e4bf66817270c374fa8de2038": {
+ "dogrulama_cikarim:a80d720fcf078e377f7433b4c161836c": {
   "destekler": [
    {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Hazırladığın içerik takvimine ya da paylaşılan gönderilere dair bir bağlantı ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:c66821b945883f60bff4b4a0403cdc87": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Yarışma dereceni ve tasarladığın aviyonik kartı gösteren bir bağlantı veya belge ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:c88369aed13b1bedc534a403cab41efe": {
-  "destekler": [
-   {
-    "alinti": "Attention Is All You Need",
+    "alinti": "Successfully passed the AWS Certified Cloud Practitioner exam.",
     "durum": "destekleniyor",
     "iddia": "is"
    },
@@ -840,62 +696,6 @@
    {
     "alinti": null,
     "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Makaledeki yazarlığını ve kişisel payını doğrulayabilmemiz için adının geçtiği yazar listesini ve çalışmanın sayısal sonuçlarını ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
- "dogrulama_cikarim:c9af43c94463bab5f4f5b3ca0ab9587e": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Yazının ve çizimlerin sana ait olduğunu gösteren yazar adını içeren bir bağlantı ekleyebilir, yazının ulaştığı kişi sayısı gibi somut sonuçları belirterek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
- "dogrulama_cikarim:d6e2a7bdaeff36212f4d8ddb922fdec3": {
-  "destekler": [
-   {
-    "alinti": "Chair, Gates Foundation",
-    "durum": "destekleniyor",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": "Chair of the Gates Foundation.",
-    "durum": "destekleniyor",
     "iddia": "pay"
    }
   ],
@@ -903,18 +703,18 @@
   "ilgili_mi": true,
   "kanitlanan_yetenekler": [
    {
-    "alinti": "Chair of the Gates Foundation.",
-    "yetenek": "Yönetim"
+    "alinti": "AWS",
+    "yetenek": "AWS"
    }
   ],
-  "oneri": "Vakıf bünyesinde yürüttüğün somut çalışmaları ve ulaştığın sonuçları sayısal göstergelerle açıklayarak çalışmanı güçlendirebilirsin.",
+  "oneri": "Çalışmanı güçlendirmek için sertifika sınavının sonucunu ve süreçteki kişisel payını detaylandırarak ekleyebilirsin.",
   "pay_ozgul": false,
-  "pay_var": true,
+  "pay_var": false,
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
   "sonuc_var": false
  },
- "dogrulama_cikarim:d8f7e47a58050c6abf809b6c825eaffb": {
+ "dogrulama_cikarim:b19ea714789bfa351ef4c5ef1b3204bc": {
   "destekler": [
    {
     "alinti": null,
@@ -935,14 +735,397 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanın incelenebilmesi için erişilebilir bir kanıt bağlantısı ekleyebilir ve elde ettiğin sonuçları sayısal verilerle açıklayabilirsin.",
+  "oneri": "Çalışmanı güçlendirmek için ilk yanıt süresindeki düşüşü ve hazırladığın raporlamayı belgeleyen bir rapor veya ekran görüntüsü ekleyebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:b4b3b904e27d038e566b68098e437bb1": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Barınakta üstlendiğin somut görevleri, ne kadar süre çalıştığını belirten bir katılım belgesini ya da fotoğraf gibi bir kanıtı ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": false,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:b8d6bdad9f257a2a5debdaa6e0d212ef": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Geliştirdiğin arayüzü ve sistemi doğrulayabilmemiz için erişilebilir bir kod deposu ya da çalışan uygulamanın bağlantısını ekleyebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:bc7dc2c193753c2a3c11cc89c0d607f1": {
+  "destekler": [
+   {
+    "alinti": "FastAPI is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": "Yıldız: 102748",
+    "durum": "destekleniyor",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": true,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "FastAPI is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints.",
+    "yetenek": "Python"
+   }
+  ],
+  "oneri": "Projeye yaptığın katkıyı ve rolünü GitHub kullanıcı adını içeren commit veya katkı geçmişi bağlantılarıyla göstererek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:c2badaf3d6d94fd926d8edc497d91f33": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Tasarladığın aviyonik karta ait şematikleri, tasarım dosyalarını veya yarışma belgesini kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:c73bf75b9b73f7df0c6ede62cf503161": {
+  "destekler": [
+   {
+    "alinti": "Brittany Chiang is a software engineer who builds accessible, inclusive products and digital experiences for the web.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": true,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "React",
+    "yetenek": "React"
+   }
+  ],
+  "oneri": "Çalışmanı güçlendirmek için sitenin ziyaretçi sayısı veya aldığı etkileşim gibi ölçülebilir sonuçları ekleyebilir, tasarımı ve kodlamayı tek başına üstlendiğini gösteren kaynak kod bağlantısını paylaşabilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
   "sonuc_var": false
  },
- "dogrulama_cikarim:e464abd793c1d8da07506ba2a4c3eb82": {
+ "dogrulama_cikarim:c9a96af0b715ed9ac5495a9170bcde56": {
+  "destekler": [
+   {
+    "alinti": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Videodaki rolünü ve belirttiğin izlenme sayısını doğrudan doğrulayabilmemiz için video açıklamasını veya analitik verilerini içeren bir kanıt ekleyebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:cd1ecd9ab4baa123373bd4574f5086be": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Çalışmanı güçlendirmek için tasarımlarını ve rolünü açıkça gösteren geçerli bir kanıt bağlantısı ekleyebilir, elde ettiğin sonuçları belirtebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:d0272049286b16a6f15f72371f064f78": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Genel festival takvimi yerine takımının finalistliğini gösteren resmi sonuç listesini veya geliştirdiğin otonom uçuş yazılımının kod deposunu kanıt olarak ekleyebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:de3b6b18df8c7bb5e12e582ac2321bfa": {
+  "destekler": [
+   {
+    "alinti": "Rick Astley - YouTube",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Kanalındaki abone sayısını ve yayımladığın şarkıları açıkça gösteren bir kanal bağlantısı veya ekran görüntüsü ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:efcedf3ad42b6211d8319e187f353aae": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Hazırladığın görselleri veya paylaşımları doğrudan gösteren bir portfolyo bağlantısı ekleyerek ekip içindeki tam görevini ve elde ettiğin sonuçları belirtebilirsin.",
+  "pay_ozgul": false,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:f2338afc6f68ad8ad149c58f48044784": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Yönettiğin hesaba ait bağlantıyı ve takipçi artışını belgeleyen analiz ekran görüntülerini kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:f5d5d63b37a909904ed5b1a5b5f8494d": {
+  "destekler": [
+   {
+    "alinti": "We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "Attention Is All You Need, by Ashish Vaswani and 7 other authors",
+    "durum": "destekleniyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": true,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration.",
+    "yetenek": "Derin öğrenme"
+   },
+   {
+    "alinti": "Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train.",
+    "yetenek": "Doğal dil işleme"
+   }
+  ],
+  "oneri": "Çalışmada elde ettiğin sayısal başarıları belirterek ve araştırmadaki kişisel payını somutlaştırarak anlatımını güçlendirebilirsin.",
+  "pay_ozgul": false,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:f6874a070e6f4f72c972636483583aac": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Çalışmanı, backend ve veritabanı katkılarını doğrulayabilmemiz için erişilebilir bir kod deposu veya çalışan proje bağlantısı ekleyebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
+ },
+ "dogrulama_cikarim:f7be941f42f2bc1c4bf6b7d8e9337863": {
   "destekler": [
    {
     "alinti": "A text editor in less than 1000 LOC with syntax highlight and search.",
@@ -950,160 +1133,25 @@
     "iddia": "is"
    },
    {
-    "alinti": "less than 1000 LOC",
+    "alinti": "Kilo is a small text editor in less than 1K lines of code (counted with cloc).",
     "durum": "destekleniyor",
     "iddia": "sonuc"
    },
    {
-    "alinti": null,
-    "durum": "kanitta_yok",
+    "alinti": "Kilo was written by Salvatore Sanfilippo aka antirez and is released under the BSD 2 clause license.",
+    "durum": "destekleniyor",
     "iddia": "pay"
    }
   ],
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": true,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Projedeki kendi kişisel katkını ve kullandığın yazılım dillerini açıkça gösteren bağlantıları ekleyerek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:ed8bceb6b9d461c6e58ff1c41a883922": {
-  "destekler": [
+  "kanitlanan_yetenekler": [
    {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
+    "alinti": "It uses fairly standard VT100 (and similar terminals) escape sequences.",
+    "yetenek": "Terminal uygulamaları"
    }
   ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Yarışmaya katılımını, finale kaldığınızı ve otonom uçuş yazılımındaki payını gösteren resmi sonuç listesini veya kod deposu bağlantısını kanıt olarak ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
- "dogrulama_cikarim:ee25860b9aa5d244fb3dcaf268b00f74": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Genel rozet tanıtım sayfası yerine kendi adına düzenlenmiş olan kişisel doğrulama bağlantısını ekleyebilirsin.",
-  "pay_ozgul": false,
-  "pay_var": false,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
- "dogrulama_cikarim:f04700d5dfd854a3547753b68ce3c5c2": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Yazdığın tanıtım yazısının içeriğini doğrudan erişilebilir bir bağlantı veya metin olarak kanıtına ekleyip elde ettiğin okuyucu sayısı gibi somut bir sonucu da belirterek çalışmanı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
- "dogrulama_cikarim:f48fe8b03efbe71fdaa5844cfad241c9": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Eğitimi tamamladığını gösteren bir sertifika veya proje bağlantısı ekleyerek bu süreçte neler yaptığını ve sonucunu açıklayabilirsin.",
-  "pay_ozgul": false,
-  "pay_var": false,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
- "dogrulama_cikarim:fe0f1e217ebf90b99dae40e450bcda02": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Hazırladığın statik hesap raporunu veya analiz çıktılarını kanıt olarak ekleyerek çalışmanı güçlendirebilirsin.",
+  "oneri": "Geliştirmede kullandığın programlama dilini tanıtım metninde açıkça belirterek çalışmanı daha da güçlendirebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": true,

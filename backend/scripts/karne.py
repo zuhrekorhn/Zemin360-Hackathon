@@ -2,6 +2,7 @@
 
     python -m scripts.karne                      # çevrimdışı: kayıtlı yanıtlarla
     python -m scripts.karne --model kaydet       # kayıtlı ağ, eksik model çağrıları gerçek
+    python -m scripts.karne --ag tamamla --model kaydet  # yeni okuyucu: eksik istekler canlı
     python -m scripts.karne --ag kaydet --model kaydet   # gerçek ağ ve model (yeni vaka)
     python -m scripts.karne --taslak             # etiket yoksa önerilen etiketle
     python -m scripts.karne --json cikti.json    # vaka başına sonuçlar (gerileme)
@@ -23,6 +24,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from app.core.config import get_settings
 from degerlendirme import rapor
 from degerlendirme.calistir import hepsini_degerlendir
 from degerlendirme.kaset import AgKaseti, KasetKipi, ModelKaseti
@@ -46,9 +48,6 @@ def _argumanlar(argv: list[str] | None) -> argparse.Namespace:
     ayr.add_argument("--json", type=Path, help="vaka başına sonuçları bu dosyaya yaz")
     ayr.add_argument("--rapor-yazma", action="store_true", help="Markdown karneyi dosyaya yazma")
     ayr.add_argument("--rapor-eki", default="", help="rapor dosya adına ek (ör. adim2)")
-    ayr.add_argument(
-        "--ayristirma-suresi", type=float, default=20.0, help="başlık ayrıştırması süre sınırı (sn)"
-    )
     return ayr.parse_args(argv)
 
 
@@ -56,15 +55,18 @@ async def calistir(argv: list[str] | None = None) -> int:
     arg = _argumanlar(argv)
     ag = AgKaseti(KasetKipi(arg.ag))
     model = ModelKaseti(KasetKipi(arg.model))
-    if KasetKipi.KAYDET in (ag.kip, model.kip):
+    if KasetKipi.OYNAT not in (ag.kip,) or model.kip is not KasetKipi.OYNAT:
         load_dotenv()
-    degerlendirici = MevcutSistemDegerlendirici(ag, model, ayristirma_suresi=arg.ayristirma_suresi)
+        get_settings.cache_clear()  # ayarlar .env yüklenmeden önbelleğe alınmış olabilir
+    embedding = ModelKaseti(KasetKipi(arg.model), dosya="embedding.json.gz")
+    degerlendirici = MevcutSistemDegerlendirici(ag, model, embedding)
     vakalar = vakalari_yukle()
 
-    with ag.dns_baglami(), degerlendirici:
+    with ag.dns_baglami():
         sonuclar = await hepsini_degerlendir(degerlendirici, vakalar)
     ag.kaydet()
     model.kaydet()
+    embedding.kaydet()
 
     karne = karne_hesapla(degerlendirici.ad, sonuclar, taslak=arg.taslak)
     tarih = dt.date.today().isoformat()

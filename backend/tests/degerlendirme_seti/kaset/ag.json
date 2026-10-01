@@ -6,6 +6,121 @@
   "durum": 200,
   "govde": "d553433b62d1c1af5b67.gz"
  },
+ "GET https://api.github.com/repos/antirez/kilo": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "29a76da1f42fe1037b0e.gz"
+ },
+ "GET https://api.github.com/repos/antirez/kilo/contributors?per_page=10": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "ed92f0bf453f3f5f0766.gz"
+ },
+ "GET https://api.github.com/repos/antirez/kilo/readme": {
+  "basliklar": {
+   "content-type": "application/vnd.github.raw; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "2ae066e3c9c07c624e4d.gz"
+ },
+ "GET https://api.github.com/repos/fastapi/fastapi": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "3287ae4011d31b885a72.gz"
+ },
+ "GET https://api.github.com/repos/fastapi/fastapi/contributors?per_page=10": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "bfc7b2556d5fe5513d5d.gz"
+ },
+ "GET https://api.github.com/repos/fastapi/fastapi/readme": {
+  "basliklar": {
+   "content-type": "application/vnd.github.raw; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "9eca0e4a54cb69edf5e9.gz"
+ },
+ "GET https://api.github.com/repos/karpathy/micrograd": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "27c91fdcb4b0b550d183.gz"
+ },
+ "GET https://api.github.com/repos/karpathy/micrograd/contributors?per_page=10": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "7c4d7f2cdf3c48dffef7.gz"
+ },
+ "GET https://api.github.com/repos/karpathy/micrograd/readme": {
+  "basliklar": {
+   "content-type": "application/vnd.github.raw; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "f8471f095c2624cf44c4.gz"
+ },
+ "GET https://api.github.com/repos/tiangolo/fastapi": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8",
+   "location": "https://api.github.com/repositories/160919119"
+  },
+  "durum": 301,
+  "govde": "b3fd6b09f6d31343ff04.gz"
+ },
+ "GET https://api.github.com/repos/tiangolo/fastapi/contributors?per_page=10": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8",
+   "location": "https://api.github.com/repositories/160919119/contributors?per_page=10"
+  },
+  "durum": 301,
+  "govde": "67d4f9cab5460bae43af.gz"
+ },
+ "GET https://api.github.com/repos/tiangolo/fastapi/readme": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8",
+   "location": "https://api.github.com/repositories/160919119/readme"
+  },
+  "durum": 301,
+  "govde": "e0412cba91b5f3b9e16d.gz"
+ },
+ "GET https://api.github.com/repos/z360-olmayan-kullanici-7f3k/kutuphane": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 404,
+  "govde": "0445244419640d0475db.gz"
+ },
+ "GET https://api.github.com/repositories/160919119": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "c3fcdf7b4af37ff31318.gz"
+ },
+ "GET https://api.github.com/repositories/160919119/contributors?per_page=10": {
+  "basliklar": {
+   "content-type": "application/json; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "ec56cc7c769aa15a9df0.gz"
+ },
+ "GET https://api.github.com/repositories/160919119/readme": {
+  "basliklar": {
+   "content-type": "application/vnd.github.raw; charset=utf-8"
+  },
+  "durum": 200,
+  "govde": "d63a1f3a6e1b994c0ed9.gz"
+ },
  "GET https://arxiv.org/abs/1706.03762": {
   "basliklar": {
    "content-type": "text/html; charset=utf-8"
@@ -99,6 +214,13 @@
   "durum": 403,
   "govde": "d9bc68eeef33b8cbb9c7.gz"
  },
+ "GET https://medium.com/feed/@ev": {
+  "basliklar": {
+   "content-type": "text/xml; charset=UTF-8"
+  },
+  "durum": 200,
+  "govde": "46e59fcf789e3e92aa78.gz"
+ },
  "GET https://tr.wikipedia.org/wiki/Kedi": {
   "basliklar": {
    "content-type": "text/plain"
@@ -166,6 +288,13 @@
   },
   "durum": 200,
   "govde": "046010952addeb023392.gz"
+ },
+ "GET https://www.youtube.com/oembed?format=json&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ": {
+  "basliklar": {
+   "content-type": "application/json"
+  },
+  "durum": 200,
+  "govde": "a49456973c28fd4253c1.gz"
  },
  "GET https://www.youtube.com/watch?v=dQw4w9WgXcQ": {
   "basliklar": {
