@@ -27,7 +27,7 @@ from app.agents.dogrulama.cekirdek import (
 )
 from app.agents.dogrulama.cikarim import cikar
 from app.agents.dogrulama.kurallar import OkunanKanit
-from app.agents.dogrulama.link_kontrolu import LinkKontrolu, linki_kontrol_et, okunan_kanit
+from app.agents.dogrulama.okuma import kanit_oku
 from app.core.is_kalemi import kanit_bekliyor
 from app.models.guven_skoru import GuvenSkoru
 from app.models.somut_cikti import SomutCikti
@@ -41,7 +41,6 @@ from app.servisler.dogrulama.referans import ucuncu_taraf_puani
 class Hazirlik:
     """Değerlendirmenin girdisi: kanıtın okunuşu ve iddia. Model henüz çağrılmadı."""
 
-    kontrol: LinkKontrolu | None
     okunan: OkunanKanit | None
     girdi: DegerlendirmeGirdisi
 
@@ -53,11 +52,16 @@ class Hazirlik:
 async def hazirla(
     oturum: AsyncSession, cikti: SomutCikti, itiraz_notu: str | None = None
 ) -> Hazirlik:
-    """Birincil linki okur ve iddiayı toplar (ağ var, model yok)."""
+    """Birincil linki okur ve iddiayı toplar (ağ ve embedding var, model yok)."""
+    girdi = await _girdi(oturum, cikti, itiraz_notu)
     link = birincil_link(cikti)
-    kontrol = await linki_kontrol_et(link) if link else None
-    okunan = okunan_kanit(kontrol, link) if kontrol else None
-    return Hazirlik(kontrol, okunan, await _girdi(oturum, cikti, itiraz_notu))
+    okunan = await kanit_oku(link, _iddia_sorgulari(girdi)) if link else None
+    return Hazirlik(okunan, girdi)
+
+
+def _iddia_sorgulari(girdi: DegerlendirmeGirdisi) -> list[str]:
+    """Uzun kanıt metninde parça seçimi için iddianın üç yüzü (iş, sonuç, pay)."""
+    return [f"{girdi.baslik} {girdi.aciklama or ''}", girdi.sonuc or "", girdi.pay or ""]
 
 
 def onbellekte_mi(cikti: SomutCikti, hazirlik: Hazirlik) -> bool:
@@ -79,7 +83,7 @@ async def uygula(oturum: AsyncSession, cikti: SomutCikti, hazirlik: Hazirlik) ->
 
 async def degerlendir(
     oturum: AsyncSession, cikti: SomutCikti, itiraz_notu: str | None = None
-) -> LinkKontrolu | None:
+) -> OkunanKanit | None:
     """Çalışmayı değerlendirir ve göstergeyi yazar. Döner: link okunduysa okunuşu.
 
     Linksiz çalışma da değerlendirilir (karar 10): Sonuç ve Rol beyan tavanıyla,
@@ -90,17 +94,15 @@ async def degerlendir(
     hazirlik = await hazirla(oturum, cikti, itiraz_notu)
     if not onbellekte_mi(cikti, hazirlik):
         await uygula(oturum, cikti, hazirlik)
-    return hazirlik.kontrol
+    return hazirlik.okunan
 
 
-async def ciktiyi_puanla(oturum: AsyncSession, cikti: SomutCikti) -> LinkKontrolu | None:
+async def ciktiyi_puanla(oturum: AsyncSession, cikti: SomutCikti) -> OkunanKanit | None:
     """Kart hazırlamanın kalem başına işi: çalışmayı değerlendirir."""
     return await degerlendir(oturum, cikti)
 
 
-async def kanit_linki_ekle(
-    oturum: AsyncSession, cikti: SomutCikti, url: str
-) -> LinkKontrolu | None:
+async def kanit_linki_ekle(oturum: AsyncSession, cikti: SomutCikti, url: str) -> OkunanKanit | None:
     """Link parçası ekler ve çalışmayı hemen yeniden değerlendirir."""
     link_parcasi_ekle(cikti, url)
     return await degerlendir(oturum, cikti)
@@ -108,7 +110,7 @@ async def kanit_linki_ekle(
 
 async def kanit_parcasini_sil(
     oturum: AsyncSession, cikti: SomutCikti, parca_id: uuid.UUID
-) -> LinkKontrolu | None:
+) -> OkunanKanit | None:
     """Parçayı kaldırır ve kalan kanıtla (yoksa yalnızca iddiayla) yeniden değerlendirir."""
     parca_sil(cikti, parca_id)
     return await degerlendir(oturum, cikti)
@@ -137,9 +139,14 @@ async def kanit_bekleyeni_guncelle(oturum: AsyncSession, yetenek_karti_id: uuid.
 async def _girdi(
     oturum: AsyncSession, cikti: SomutCikti, itiraz_notu: str | None
 ) -> DegerlendirmeGirdisi:
-    kart = await oturum.get(YetenekKarti, cikti.yetenek_karti_id)
+    kart = await oturum.scalar(
+        select(YetenekKarti)
+        .options(selectinload(YetenekKarti.kullanici))
+        .where(YetenekKarti.id == cikti.yetenek_karti_id)
+    )
     return DegerlendirmeGirdisi(
         baslik=cikti.baslik,
+        iddia_sahibi=kart.kullanici.ad if kart else None,
         aciklama=cikti.aciklama,
         sonuc=cikti.olculebilir_sonuc,
         pay=cikti.kendi_rolu,

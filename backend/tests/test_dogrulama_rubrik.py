@@ -12,8 +12,6 @@ from app.agents.dogrulama import (
     DURUM_YANIT_YOK,
     DURUM_YANITLANDI,
     REFERANS_TIMEOUT_GUN,
-    link_ozetini_cikar,
-    linki_normalize_et,
     referans_puanina_cevir,
     ucuncu_taraf_onayi_hesapla,
     zaman_asimina_ugradi_mi,
@@ -114,93 +112,3 @@ def test_token_tek_kullanimlik_olsun_diye_benzersiz():
 
 def test_yeni_referans_istegi_bekliyor_durumunda_baslar():
     assert DURUM_KOLONU.default.arg == DURUM_BEKLIYOR
-
-
-def test_semasiz_linke_https_eklenir():
-    """Kullanıcı sohbette linki çoğu zaman şemasız yazıyor."""
-    assert linki_normalize_et("github.com/ornek/kutuphane") == "https://github.com/ornek/kutuphane"
-
-
-def test_mevcut_sema_korunur():
-    assert linki_normalize_et("http://ornek.com") == "http://ornek.com"
-    assert linki_normalize_et("https://ornek.com") == "https://ornek.com"
-
-
-def test_bosluklar_ve_bastaki_egik_cizgi_temizlenir():
-    assert linki_normalize_et("  //ornek.com/yol  ") == "https://ornek.com/yol"
-
-
-def test_link_ozeti_baslik_ve_metayi_alir():
-    html = (
-        "<html><head><title> Kütüphane  Takip </title>"
-        '<meta name="description" content="400 kitap takibi">'
-        "</head><body>çok uzun içerik</body></html>"
-    )
-    assert link_ozetini_cikar(html) == "Kütüphane Takip — 400 kitap takibi"
-
-
-def test_uzun_head_icindeki_title_okunur():
-    """GitHub gibi siteler <title>'ı sayfanın epey içine koyuyor."""
-    html = "<html><head>" + '<link rel="x">' * 3000 + "<title>pgvector</title></head>"
-    assert link_ozetini_cikar(html) == "pgvector"
-
-
-def test_open_graph_etiketleri_okunur():
-    """og:* etiketleri name= değil property= kullanıyor."""
-    html = (
-        '<html><head><meta property="og:title" content="pgvector/pgvector">'
-        '<meta property="og:description" content="Vector similarity search"></head>'
-    )
-    assert link_ozetini_cikar(html) == "pgvector/pgvector — Vector similarity search"
-
-
-def test_content_once_yazilmis_meta_da_okunur():
-    html = '<html><head><meta content="Ters sıra" property="og:title"></head>'
-    assert link_ozetini_cikar(html) == "Ters sıra"
-
-
-def test_title_varken_og_title_kullanilmaz():
-    html = (
-        "<html><head><title>Gerçek başlık</title>"
-        '<meta property="og:title" content="Sosyal başlık"></head>'
-    )
-    assert link_ozetini_cikar(html).startswith("Gerçek başlık")
-
-
-def test_bos_sayfa_ozeti_bos_dizge_dondurmez():
-    assert "okunamadı" in link_ozetini_cikar("<html><body>x</body></html>")
-
-
-def test_buyuk_headde_ayristirma_dogrusal_surer():
-    """Eski regex bu girdide felaket geri izlemeye düşüyordu: `>` içermeyen, tırnaklı
-    uzun bölge ve açıklama etiketi yok. 24 KB'ta 6 sn, boyut ikiye katlanınca dört katı;
-    buradaki 60 KB yaklaşık 40 sn, YouTube sayfasının 300 KB'ı saatler. Python'ın regex
-    motoru GIL'i bırakmadığı için bütün sunucu donuyordu."""
-    import time
-
-    html = '<html><head><title>Kanal</title><meta content="' + '"a ' * 20_000
-    baslangic = time.perf_counter()
-    assert link_ozetini_cikar(html) == "Kanal"
-    assert time.perf_counter() - baslangic < 2
-
-
-def test_karakter_kodlari_cozulur():
-    html = (
-        "<html><head><title>Kaggle: The World&#x2019;s AI</title>"
-        '<meta name="description" content="T&#252;rkiye &amp; d&#252;nya"></head>'
-    )
-    assert link_ozetini_cikar(html) == "Kaggle: The World’s AI — Türkiye & dünya"
-
-
-def test_yalnizca_head_okunur():
-    html = '<html><head></head><body><meta name="description" content="gövdede"></body></html>'
-    assert "okunamadı" in link_ozetini_cikar(html)
-
-
-def test_bozuk_oznitelikten_ham_html_sizmaz():
-    """Instagram sayfasında özete `noarchive" /><meta name="robots"…` sızıyordu."""
-    html = (
-        '<html><head><meta name="robots" content="noarchive, noimageindex" />'
-        '<meta property="og:title" content="NASA (&#064;nasa)" /></head>'
-    )
-    assert link_ozetini_cikar(html) == "NASA (@nasa)"

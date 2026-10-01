@@ -13,9 +13,10 @@ import uuid
 import pytest
 from sqlalchemy import func, select
 
-from app.agents.dogrulama import LinkKontrolu
 from app.agents.dogrulama.cikarim import KanitCikarimi
+from app.agents.dogrulama.kurallar import OkunanKanit
 from app.api.auth import hesap_olustur
+from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
 from app.core.kimlik import token_uret
 from app.db.base import EMBEDDING_DIM
 from app.main import app
@@ -52,8 +53,13 @@ def sahte_dis_servisler(monkeypatch):
     """Link kontrolü, model çıkarımı ve gerekçe sahte; çıkarım çağrıları sayılır."""
     cagrilar: list[str] = []
 
-    async def link(adres):
-        return LinkKontrolu(True, 200, "Proje sayfası", "açılıyor")
+    async def oku(url, _sorgular, **_):
+        return OkunanKanit(
+            erisim=ErisimDurumu.ACIK,
+            seviye=KaynakSeviyesi.KAMUYA_ACIK,
+            metin="Proje sayfası",
+            url=url,
+        )
 
     async def cikar(alanlar):
         cagrilar.append(alanlar["baslik"])
@@ -69,7 +75,7 @@ def sahte_dis_servisler(monkeypatch):
     async def gerekce(_ihtiyac, _aday):
         return "Kartlardaki somut noktalar örtüşüyor."
 
-    monkeypatch.setattr(dogrulama_servisi, "linki_kontrol_et", link)
+    monkeypatch.setattr(dogrulama_servisi, "kanit_oku", oku)
     monkeypatch.setattr(dogrulama_servisi, "cikar", cikar)
     monkeypatch.setattr(eslestirme_servisi, "gerekce_uret", gerekce)
     return cagrilar

@@ -27,10 +27,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.agents.dogrulama import GecersizReferansGecisi, LinkKontrolu, yanitlanabilir_mi
+from app.agents.dogrulama import GecersizReferansGecisi, yanitlanabilir_mi
+from app.agents.dogrulama.kurallar import OkunanKanit
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
+from app.core.kanit_okuma.belge import ErisimDurumu
 from app.core.llm import HizSinirHatasi
 from app.db.session import get_session
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, Hesap
@@ -296,9 +298,9 @@ def _hiz_siniri_429() -> Iterator[None]:
         ) from hata
 
 
-def _erisilebilir(kontrol: LinkKontrolu | None) -> bool | None:
-    """Bu istekte okunan linkin açılıp açılmadığı; link okunmadıysa None."""
-    return kontrol.erisilebilir if kontrol is not None else None
+def _erisilebilir(okunan: OkunanKanit | None) -> bool | None:
+    """Bu istekte okunan linkin içeriği okunabildi mi; link okunmadıysa None."""
+    return okunan.erisim is ErisimDurumu.ACIK if okunan is not None else None
 
 
 async def _gosterge_degisti(

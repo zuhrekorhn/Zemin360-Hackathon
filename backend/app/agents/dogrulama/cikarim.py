@@ -53,8 +53,11 @@ Kurallar:
 - Yazının ne kadar etkileyici ya da akıcı olduğuna bakma.
 - Bir desteği ancak kanıt metninden BİREBİR alıntıyla bildirebilirsin. Alıntı yoksa
   durum "kanitta_yok"tur. Kanıt metni yoksa bütün destekler "kanitta_yok"tur.
-- "celisiyor" yalnızca kanıt iddiayla açıkça çelişiyorsa (ör. iddiada 400, kanıtta
-  40; yazar listesinde kişinin adı yok ama "yazdım" deniyor). Alıntı zorunlu.
+- "celisiyor" yalnızca kanıt iddiayla AÇIKÇA çelişiyorsa ve alıntıyla gösterebiliyorsan:
+  iddiada 400, kanıtta 40; açık bir yazar listesi var ve iddia sahibinin adı listede
+  yok ama "yazdım" deniyor. Şunlar çelişki DEĞİLDİR: kanıtta kişinin adının ya da
+  kullanıcı adının hiç geçmemesi (sahiplik ayrıca değerlendirilir), kullanıcı adının
+  gerçek addan farklı yazılması, katkıcı listesinde birkaç küçük katkı olması.
 
 Sorular:
 - ilgili_mi: kanıt bu çalışmanın kendisiyle ilgili mi? (Genel bir ana sayfa ya da
@@ -80,6 +83,7 @@ CIKARIM_SABLONU = ChatPromptTemplate.from_messages(
         (
             "human",
             "İDDİA\n"
+            "İddia sahibi: {iddia_sahibi}\n"
             "Başlık: {baslik}\n"
             "Açıklama: {aciklama}\n"
             "Sonuç: {sonuc}\n"

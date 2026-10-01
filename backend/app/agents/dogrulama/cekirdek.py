@@ -34,6 +34,8 @@ ISARET_ALAKASIZ = "alakasiz_kanit"
 @dataclass(frozen=True)
 class DegerlendirmeGirdisi:
     baslik: str
+    # İddianın sahibi (kayıttaki ad): kanıttaki yazar ve hesaplarla karşılaştırma için.
+    iddia_sahibi: str | None = None
     aciklama: str | None = None
     sonuc: str | None = None
     pay: str | None = None
@@ -69,12 +71,13 @@ def cikarim_girdisi(girdi: DegerlendirmeGirdisi, okunan: OkunanKanit | None) -> 
     okunabildi = okunan is not None and not okunan.erisim.okunamadi_mi and okunan.metin
     return {
         "baslik": girdi.baslik,
+        "iddia_sahibi": girdi.iddia_sahibi or "(belirtilmemiş)",
         "aciklama": girdi.aciklama or "(yazılmamış)",
         "sonuc": girdi.sonuc or "(yazılmamış)",
         "pay": girdi.pay or "(yazılmamış)",
         "yetenekler": ", ".join(girdi.yetenekler) or "(yok)",
         "kanit_adresi": (okunan.url if okunan and okunan.url else "(kanıt yok)"),
-        "kanit_metni": okunan.metin if okunabildi else "(kanıt metni yok)",
+        "kanit_metni": (okunan.model_metni or okunan.metin) if okunabildi else "(kanıt metni yok)",
         "itiraz_notu": girdi.itiraz_notu or "(itiraz yok)",
     }
 
@@ -105,7 +108,9 @@ async def kalemi_degerlendir(
 ) -> DegerlendirmeSonucu:
     alanlar = cikarim_girdisi(girdi, okunan)
     cikarim = await cikar(alanlar)
-    metin = alanlar["kanit_metni"] if alanlar["kanit_metni"] != "(kanıt metni yok)" else ""
+    # Alıntı denetimi TAM metne: model seçilmiş parçaları görse de alıntı her yerden olabilir.
+    okunabildi = okunan is not None and not okunan.erisim.okunamadi_mi
+    metin = okunan.metin if (okunan is not None and okunabildi) else ""
 
     # Alıntısı tam metinde bulunmayan destek ve yetenek yok sayılır.
     destekler = [

@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     # Embedding sağlayıcısı (docs/matching-algorithm.md § 2)
     voyage_api_key: str = ""
     voyage_model: str = "voyage-4"
+    # Kanıt okuma: GitHub API uygulama tokenı (yalnızca okuma). Boşsa anonim (saatte 60 istek).
+    github_token: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

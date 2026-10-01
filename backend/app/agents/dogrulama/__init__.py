@@ -15,7 +15,7 @@ docs/agent-specs.md § 4. Sınırlar oradan:
 Paket düzeni (docs/plans/dogrulama-iyilestirme.md § 14.1):
   - `referans_durumu`: referans isteğinin durumları, geçişleri, zaman aşımı
   - `kurallar`: saf kurallar (referans puanı, üçüncü taraf onayı, geçerlilik)
-  - `link_kontrolu`: linkin erişilebilirliği ve özeti (adım 5'te okuyucu zinciri)
+  - `okuma`: kanıt adresinin okunması (okuyucu zinciri: app/core/kanit_okuma/)
   - `cikarim`, `alinti`, `not_sablonu`, `cekirdek`: model gerçek çıkarır, kural
     puanlar, şablon anlatır (adım 4)
 
@@ -31,12 +31,6 @@ from app.agents.dogrulama.kurallar import (
     referans_puanina_cevir,
     referans_yeniden_istenebilir_mi,
     ucuncu_taraf_onayi_hesapla,
-)
-from app.agents.dogrulama.link_kontrolu import (
-    LinkKontrolu,
-    link_ozetini_cikar,
-    linki_kontrol_et,
-    linki_normalize_et,
 )
 from app.agents.dogrulama.referans_durumu import (
     DURUM_BEKLIYOR,
@@ -61,12 +55,8 @@ __all__ = [
     "REFERANS_TIMEOUT_GUN",
     "ZATEN_BEKLENIYOR",
     "GecersizReferansGecisi",
-    "LinkKontrolu",
     "ReferansYaniti",
     "gecerli_referans_puanlari",
-    "link_ozetini_cikar",
-    "linki_kontrol_et",
-    "linki_normalize_et",
     "referans_gecerli_mi",
     "referans_gecisi",
     "referans_puanina_cevir",

@@ -11,7 +11,6 @@ import ipaddress
 import httpx
 import pytest
 
-from app.agents.dogrulama import linki_kontrol_et
 from app.core import guvenli_istek
 from app.core.guvenli_istek import (
     GuvensizAdres,
@@ -19,6 +18,8 @@ from app.core.guvenli_istek import (
     hedefi_dogrula,
     ip_guvenli_mi,
 )
+from app.core.kanit_okuma import kaniti_oku
+from app.core.kanit_okuma.belge import ErisimDurumu
 
 GENEL = "93.184.216.34"
 
@@ -180,20 +181,20 @@ def test_kanit_kontrolu_ic_ag_linkini_acilmiyor_sayar():
     def isleyici(istek: httpx.Request):
         raise AssertionError("iç ağa istek atıldı")
 
-    kontrol = asyncio.run(
-        linki_kontrol_et("http://localhost:8000/admin", transport=httpx.MockTransport(isleyici))
+    belge = asyncio.run(
+        kaniti_oku("http://localhost:8000/admin", transport=httpx.MockTransport(isleyici))
     )
-    assert kontrol.erisilebilir is False
-    assert kontrol.durum_kodu is None
-    assert "herkese açık" in kontrol.aciklama
+    assert belge.erisim is ErisimDurumu.GUVENSIZ
 
 
 def test_kanit_kontrolu_genel_linki_okur():
     def isleyici(istek: httpx.Request):
-        return httpx.Response(200, text="<head><title>Kütüphane sistemi</title></head>")
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/html"},
+            text="<head><title>Kütüphane sistemi</title></head><body>" + "Ödünç takibi. " * 30,
+        )
 
-    kontrol = asyncio.run(
-        linki_kontrol_et("ornek.com/proje", transport=httpx.MockTransport(isleyici))
-    )
-    assert kontrol.erisilebilir is True
-    assert "Kütüphane sistemi" in kontrol.ozet
+    belge = asyncio.run(kaniti_oku("ornek.com/proje", transport=httpx.MockTransport(isleyici)))
+    assert belge.erisim is ErisimDurumu.ACIK
+    assert "Kütüphane sistemi" in belge.metin

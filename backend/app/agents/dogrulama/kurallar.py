@@ -131,6 +131,9 @@ class OkunanKanit:
     url: str | None = None
     # Bağlı hesapta tek katkıcılı repo / tek yazarlı yazı / bağlı portfolyo (§ 2).
     bireysel: bool = False
+    platform: str | None = None
+    # Modelin göreceği metin (uzun metinde seçilmiş parçalar); yoksa `metin`.
+    model_metni: str | None = None
 
 
 @dataclass(frozen=True)

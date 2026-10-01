@@ -14,9 +14,11 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.agents.dogrulama import DURUM_YANITLANDI, LinkKontrolu
+from app.agents.dogrulama import DURUM_YANITLANDI
 from app.agents.dogrulama.cikarim import KanitCikarimi
+from app.agents.dogrulama.kurallar import OkunanKanit
 from app.api.auth import hesap_olustur
+from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
 from app.core.kimlik import token_uret
 from app.models.kullanici import Kullanici
 from app.models.referans_istegi import ReferansIstegi
@@ -32,8 +34,13 @@ def sahte_degerlendirme(monkeypatch):
     """Link kontrolü ve model çıkarımı sahte; çıkarımın okuduğu kanıt adresi kaydedilir."""
     okunan: list[str | None] = []
 
-    async def link(adres):
-        return LinkKontrolu(True, 200, "Proje sayfası", "açılıyor")
+    async def oku(url, _sorgular, **_):
+        return OkunanKanit(
+            erisim=ErisimDurumu.ACIK,
+            seviye=KaynakSeviyesi.KAMUYA_ACIK,
+            metin="Proje sayfası",
+            url=url,
+        )
 
     async def cikar(alanlar):
         okunan.append(alanlar["kanit_adresi"])
@@ -46,7 +53,7 @@ def sahte_degerlendirme(monkeypatch):
             pay_ozgul=True,
         )
 
-    monkeypatch.setattr(kanit_servisi, "linki_kontrol_et", link)
+    monkeypatch.setattr(kanit_servisi, "kanit_oku", oku)
     monkeypatch.setattr(kanit_servisi, "cikar", cikar)
     return okunan
 

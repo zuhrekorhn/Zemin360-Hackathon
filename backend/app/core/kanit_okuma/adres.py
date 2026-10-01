@@ -2,7 +2,7 @@
 
 Kullanım: bir kalemde aynı link iki kez eklenmesin (tekillik) ve aynı
 kanıtın başka bir hesapta kullanıldığı fark edilsin (plan § 9). Getirmek için
-değil: istek atılacak adres `link_kontrolu.linki_normalize_et`'ten gelir.
+değil: istek atılacak adres `istek.adresi_hazirla`'dan gelir.
 
 Kurallar: şema https'e, alan adı küçük harfe ve `www.` öneksiz biçime iner;
 varsayılan port, parça (#…), sondaki `/` ve izleme parametreleri (utm_*,

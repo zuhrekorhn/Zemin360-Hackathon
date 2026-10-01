@@ -134,8 +134,6 @@ def test_bugunku_sistem_karnesi_degismedi(tmp_path):
             "scripts.karne",
             "--taslak",
             "--rapor-yazma",
-            "--ayristirma-suresi",
-            "5",
             "--json",
             str(cikti),
         ],

@@ -27,7 +27,7 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import socket
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
@@ -41,7 +41,15 @@ IpAdresi = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 
 class GuvensizAdres(Exception):
-    """Adres güvenli değil; istek atılmadı. Mesaj log ve rubrik içindir."""
+    """Adres güvenli değil; istek atılmadı. Mesaj log içindir."""
+
+
+class AdresBulunamadi(GuvensizAdres):
+    """Alan adı çözülemedi: sayfa yok (güvenlik sorunu değil; bulgu 6).
+
+    `GuvensizAdres`'in alt sınıfı: istek yine atılmaz, ama okuyucu "adres
+    bulunamadı" der, "güvensiz" değil.
+    """
 
 
 def ip_guvenli_mi(ip: IpAdresi) -> bool:
@@ -92,9 +100,9 @@ async def hedefi_dogrula(adres: str | httpx.URL) -> Hedef:
         try:
             ipler = await cozumleyici(host, port)
         except (OSError, UnicodeError) as hata:
-            raise GuvensizAdres("alan adı çözümlenemedi") from hata
+            raise AdresBulunamadi("alan adı çözümlenemedi") from hata
     if not ipler:
-        raise GuvensizAdres("alan adı çözümlenemedi")
+        raise AdresBulunamadi("alan adı çözümlenemedi")
     # Biri bile iç ağdaysa ret: çözümleyici her seferinde farklı sırayla dönebilir.
     guvensiz = [ip for ip in ipler if not ip_guvenli_mi(ip)]
     if guvensiz:
@@ -102,12 +110,16 @@ async def hedefi_dogrula(adres: str | httpx.URL) -> Hedef:
     return Hedef(url=url, host=host, ip=ipler[0])
 
 
-def _sabitlenmis_istek(istemci: httpx.AsyncClient, hedef: Hedef) -> httpx.Request:
+def _sabitlenmis_istek(
+    istemci: httpx.AsyncClient, hedef: Hedef, basliklar: Mapping[str, str] | None = None
+) -> httpx.Request:
     """Bağlantı denetlenen IP'ye; `Host` ve SNI özgün alan adı (yeniden bağlama kapalı)."""
     url = hedef.url.copy_with(host=str(hedef.ip))
     host_basligi = hedef.url.netloc.decode("ascii")
     uzantilar = {"sni_hostname": hedef.host} if hedef.url.scheme == "https" else {}
-    return istemci.build_request("GET", url, headers={"Host": host_basligi}, extensions=uzantilar)
+    return istemci.build_request(
+        "GET", url, headers={**(basliklar or {}), "Host": host_basligi}, extensions=uzantilar
+    )
 
 
 @asynccontextmanager
@@ -116,6 +128,7 @@ async def guvenli_get(
     *,
     zaman_asimi: float,
     transport: httpx.AsyncBaseTransport | None = None,
+    basliklar: Mapping[str, str] | None = None,
 ) -> AsyncIterator[httpx.Response]:
     """Kurallara uyan adrese akışlı GET; yönlendirmeleri kendisi ve denetleyerek izler.
 
@@ -128,9 +141,12 @@ async def guvenli_get(
         simdiki: httpx.URL = httpx.URL(adres)
         for _ in range(EN_COK_YONLENDIRME + 1):
             hedef = await hedefi_dogrula(simdiki)
-            yanit = await istemci.send(_sabitlenmis_istek(istemci, hedef), stream=True)
+            yanit = await istemci.send(_sabitlenmis_istek(istemci, hedef, basliklar), stream=True)
             konum = yanit.headers.get("location") if yanit.is_redirect else None
             if konum is None:
+                # Yönlendirmelerden sonraki özgün adres (bağlantı IP'ye kurulduğu için
+                # `yanit.url` IP'li): giriş duvarına yönlenme bununla anlaşılır.
+                yanit.extensions["ozgun_url"] = str(hedef.url)
                 try:
                     yield yanit
                 finally:

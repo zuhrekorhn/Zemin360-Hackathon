@@ -32,12 +32,22 @@ async def embedding_uret(metin: str, girdi_turu: GirdiTuru = "document") -> list
     Hata durumunda `EmbeddingHatasi` fırlatır — sessizce boş vektör dönmez,
     çünkü embedding'i olmayan kart eşleştirmeye hiç girmez.
     """
+    return (await embedding_listesi_uret([metin], girdi_turu))[0]
+
+
+async def embedding_listesi_uret(
+    metinler: list[str], girdi_turu: GirdiTuru = "document"
+) -> list[list[float]]:
+    """Birden çok metni tek istekte vektörlere çevirir (sıra korunur).
+
+    Uzun kanıt metninin parçaları için (docs/plans/dogrulama-iyilestirme.md § 5.4).
+    """
     ayarlar = get_settings()
     if not ayarlar.voyage_api_key:
         raise EmbeddingHatasi("VOYAGE_API_KEY tanımlı değil (.env)")
 
     govde = {
-        "input": [metin],
+        "input": metinler,
         "model": ayarlar.voyage_model,
         "input_type": girdi_turu,
         "output_dimension": EMBEDDING_DIM,
@@ -54,14 +64,14 @@ async def embedding_uret(metin: str, girdi_turu: GirdiTuru = "document") -> list
         raise EmbeddingHatasi(f"Voyage {yanit.status_code}: {yanit.text[:300]}")
 
     try:
-        vektor = yanit.json()["data"][0]["embedding"]
-    except (KeyError, IndexError, ValueError) as hata:
+        veriler = sorted(yanit.json()["data"], key=lambda d: d["index"])
+        vektorler = [d["embedding"] for d in veriler]
+    except (KeyError, IndexError, ValueError, TypeError) as hata:
         raise EmbeddingHatasi(f"Voyage yanıtı okunamadı: {yanit.text[:300]}") from hata
 
-    if len(vektor) != EMBEDDING_DIM:
-        raise EmbeddingHatasi(f"Beklenen boyut {EMBEDDING_DIM}, gelen {len(vektor)}")
-
-    return vektor
+    if len(vektorler) != len(metinler) or any(len(v) != EMBEDDING_DIM for v in vektorler):
+        raise EmbeddingHatasi(f"Beklenen {len(metinler)} × {EMBEDDING_DIM} vektör gelmedi")
+    return vektorler
 
 
 def ihtiyac_temsil_metni(*, problem_tanimi: str, basari_kriteri: str | None) -> str:

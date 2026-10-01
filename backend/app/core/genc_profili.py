@@ -75,7 +75,7 @@ def url_dogrula(deger: str | None) -> str | None:
     """http(s) adresi; şeması yoksa https:// eklenir. Boş değer None.
 
     Kullanıcılar "github.com/elif" diye yazıyor; bunu reddetmek yerine
-    tamamlıyoruz (Doğrulama'daki `linki_normalize_et` ile aynı yaklaşım).
+    tamamlıyoruz (kanıt okumadaki `adresi_hazirla` ile aynı yaklaşım).
     """
     if deger is None or not deger.strip():
         return None
