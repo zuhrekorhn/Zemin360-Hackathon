@@ -1,0 +1,7 @@
+# İkili dosyalar: satır sonu dönüşümü uygulanmaz (PDF bayt konumlarına dayanır).
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gz binary
