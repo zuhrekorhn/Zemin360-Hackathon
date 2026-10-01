@@ -1,7 +1,11 @@
-"""Doğrulama Ajanı uç noktaları (docs/api-contracts.md § Doğrulama).
+"""Doğrulama uç noktaları (docs/api-contracts.md § Doğrulama).
 
 Akışlar docs/sequence-diagrams.md § Akış 2'den:
   kanıt ekle → ön rubrik + referans isteği → (yanıt | zaman aşımı) → itiraz.
+
+Uç ince: şema, sahiplik, commit ve servis istisnalarının HTTP'ye çevrilmesi
+(404, 409, 429). Orkestrasyon `app/servisler/dogrulama/`'da, kurallar
+`app/agents/dogrulama/`'da.
 
 Zaman aşımı için zamanlayıcı yok: `bekliyor` → `yanit_yok` geçişi kanıt
 durumu okunduğu anda hesaplanıyor (Eşleştirme'deki cron'suz yaklaşımın aynısı).
@@ -9,34 +13,22 @@ durumu okunduğu anda hesaplanıyor (Eşleştirme'deki cron'suz yaklaşımın ay
 
 from __future__ import annotations
 
-import datetime as dt
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.agents.dogrulama import (
-    DURUM_BEKLIYOR,
-    DURUM_YANIT_YOK,
-    DURUM_YANITLANDI,
-    LinkKontrolu,
-    linki_kontrol_et,
-    referans_yeniden_istenebilir_mi,
-    zaman_asimina_ugradi_mi,
-)
-from app.api.bildirimler import bildirim_ekle
+from app.agents.dogrulama import GecersizReferansGecisi, yanitlanabilir_mi
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
-from app.core.is_kalemi import kanit_bekliyor
 from app.core.llm import HizSinirHatasi
 from app.db.session import get_session
-from app.models.bildirim import TUR_REFERANS_YANITI
-from app.models.guven_skoru import GuvenSkoru
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, Hesap
-from app.models.kullanici import Kullanici
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -51,7 +43,14 @@ from app.schemas.dogrulama import (
     ReferansYanitiSonucu,
     ReferansYenidenIsteIstegi,
 )
-from app.servisler.dogrulama import referans_guncel_mi, rubrigi_yaz, ucuncu_taraf_puani
+from app.servisler import dogrulama as dogrulama_servisi
+from app.servisler.dogrulama import (
+    CiktiBulunamadi,
+    ReferansYenidenIstenemez,
+    referans_guncel_mi,
+    zaman_asimini_isle,
+    zaman_asimlarini_isle,
+)
 
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
 
@@ -73,21 +72,15 @@ async def kanit_ekle(
     Yalnızca çıktının sahibi genç; başkasının çıktısı 404.
     """
     cikti = await _sahibinin_ciktisi(oturum, hesap, istek.somut_cikti_id)
-
-    if istek.kanit_linki:
-        cikti.kanit_linki = istek.kanit_linki
-    if istek.kanit_turu:
-        cikti.kanit_turu = istek.kanit_turu
-
-    kontrol = await linki_kontrol_et(cikti.kanit_linki)
-    await _rubrigi_yaz(cikti, kontrol)
-
-    if istek.referans_email:
-        cikti.referans_istekleri.append(ReferansIstegi(referans_email=str(istek.referans_email)))
-
-    await _kanit_bekleyen_guncelle(oturum, cikti.yetenek_karti_id)
+    with _hiz_siniri_429():
+        kontrol = await dogrulama_servisi.kanit_ekle(
+            oturum,
+            cikti,
+            kanit_linki=istek.kanit_linki,
+            kanit_turu=istek.kanit_turu,
+            referans_email=str(istek.referans_email) if istek.referans_email else None,
+        )
     await oturum.commit()
-
     return await _durum_yaniti(oturum, cikti.id, kontrol.erisilebilir)
 
 
@@ -109,39 +102,16 @@ async def referans_yaniti(
 
     # Zaman aşımı burada da uygulanıyor: GET "yanıtlanamaz" derken POST'un
     # yanıtı kabul etmesi, iki uç noktanın farklı kural işletmesi olurdu.
-    if _zaman_asimini_isle(referans):
+    if zaman_asimini_isle(referans):
         await oturum.commit()
-    _yanitlanabilirligi_dogrula(referans)
-
-    referans.durum = DURUM_YANITLANDI
-    referans.yanit_metni = istek.yorum
-    referans.puan = istek.puan
-    referans.yanit_tarihi = dt.datetime.now(dt.UTC)
-
-    cikti = await _ciktiyi_getir(oturum, referans.somut_cikti_id)
-    if cikti.guven_skoru is None:
-        # Kanıt puanlanmadan referans gelirse skor kaydı yoksa aç; diğer
-        # bileşenler 0 kalır, kanıt eklendiğinde/itirazda hesaplanır.
-        cikti.guven_skoru = GuvenSkoru(
-            kanit_orijinalligi=0,
-            sonuc_olculebilirligi=0,
-            rol_netligi=0,
-            ucuncu_taraf_onayi=0,
-            gerekce_metni=None,
+    try:
+        cikti = await dogrulama_servisi.referans_yanitla(
+            oturum, referans, puan=istek.puan, yorum=istek.yorum
         )
-    # Birden fazla referans yanıtlamış olabilir; son gelen öncekini ezmesin.
-    # İş kalemi sonradan değiştiyse, değişiklikten önceki yanıtlar sayılmaz.
-    cikti.guven_skoru.ucuncu_taraf_onayi = ucuncu_taraf_puani(cikti)
-    bildirim_ekle(
-        oturum,
-        await oturum.scalar(
-            select(Kullanici.hesap_id)
-            .join(YetenekKarti, YetenekKarti.kullanici_id == Kullanici.id)
-            .where(YetenekKarti.id == cikti.yetenek_karti_id)
-        ),
-        TUR_REFERANS_YANITI,
-        "Bir referansın yanıt verdi; güven göstergen güncellendi.",
-    )
+    except GecersizReferansGecisi as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
+    except CiktiBulunamadi as hata:
+        raise bulunamadi(CIKTI_BULUNAMADI) from hata
 
     await oturum.commit()
     return ReferansYanitiSonucu(baslik=cikti.baslik, durum=referans.durum)
@@ -169,7 +139,7 @@ async def referans_istegi_goruntule(
     if referans is None:
         raise HTTPException(status_code=404, detail="Bu referans linki geçersiz")
 
-    if _zaman_asimini_isle(referans):
+    if zaman_asimini_isle(referans):
         await oturum.commit()
 
     return referans_gorunumu(referans)
@@ -200,22 +170,13 @@ async def itiraz(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
-    """Kullanıcı skoru itiraz eder, rubrik yeniden hesaplanır.
-
-    Skor kaydı silinmez, üzerine yazılır. Üçüncü taraf onayı korunur —
-    referans zaten yanıtlamışsa itiraz onu geçersiz kılmamalı.
-    """
+    """Genç değerlendirmeye itiraz eder; rubrik yeniden hesaplanır (servis: itiraz.py)."""
     cikti = await _sahibinin_ciktisi(oturum, hesap, istek.somut_cikti_id)
-    if istek.yeni_kanit_linki:
-        cikti.kanit_linki = istek.yeni_kanit_linki
-
-    kontrol = await linki_kontrol_et(cikti.kanit_linki)
-    # İtiraz notu rubriğe kullanıcının BEYANI olarak giriyor; kanıt yerine
-    # geçmiyor (kuralı prompt'ta yazılı).
-    await _rubrigi_yaz(cikti, kontrol, itiraz_notu=istek.aciklama)
-    await _kanit_bekleyen_guncelle(oturum, cikti.yetenek_karti_id)
+    with _hiz_siniri_429():
+        kontrol = await dogrulama_servisi.itiraz_et(
+            oturum, cikti, yeni_kanit_linki=istek.yeni_kanit_linki, aciklama=istek.aciklama
+        )
     await oturum.commit()
-
     return await _durum_yaniti(oturum, cikti.id, kontrol.erisilebilir)
 
 
@@ -235,20 +196,10 @@ async def referans_yeniden_iste(
     if referans is None:
         raise bulunamadi("Referans isteği bulunamadı")
     cikti = await _sahibinin_ciktisi(oturum, hesap, referans.somut_cikti_id)
-    _zaman_asimini_isle(referans)
-    engel = referans_yeniden_istenebilir_mi(
-        durum=referans.durum,
-        guncel=referans_guncel_mi(cikti, referans),
-        ayni_kisiden_bekleyen_var=any(
-            r.id != referans.id
-            and r.referans_email == referans.referans_email
-            and r.durum == DURUM_BEKLIYOR
-            for r in cikti.referans_istekleri
-        ),
-    )
-    if engel:
-        raise HTTPException(status_code=409, detail=engel)
-    cikti.referans_istekleri.append(ReferansIstegi(referans_email=referans.referans_email))
+    try:
+        dogrulama_servisi.referansi_yeniden_iste(cikti, referans)
+    except ReferansYenidenIstenemez as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
     await oturum.commit()
     return await _durum_yaniti(oturum, cikti.id, None)
 
@@ -256,26 +207,20 @@ async def referans_yeniden_iste(
 # --- Ortak parçalar --------------------------------------------------------
 
 
-def _zaman_asimini_isle(referans: ReferansIstegi) -> bool:
-    """Süresi dolmuşsa durumu `yanit_yok` yapar; kaydedilecek değişiklik varsa True.
+@contextmanager
+def _hiz_siniri_429() -> Iterator[None]:
+    """Rubrik yazılırken hız sınırı 429 olur.
 
-    Zamanlayıcı yok (bilinçli): geçiş, kayda her dokunulduğunda hesaplanıyor.
+    Burada sessizce puansız devam etmek yanlış olurdu: kullanıcı kanıtının
+    değerlendirilmediğini bilmeli.
     """
-    if zaman_asimina_ugradi_mi(referans.olusturma_tarihi, referans.durum):
-        referans.durum = DURUM_YANIT_YOK
-        return True
-    return False
-
-
-def _yanitlanabilirligi_dogrula(referans: ReferansIstegi) -> None:
-    """Yanıt kabul edilebilir mi? GET ve POST aynı kuralı işletsin diye ortak."""
-    if referans.durum == DURUM_YANITLANDI:
-        raise HTTPException(status_code=409, detail="Bu referans zaten yanıtlanmış")
-    if referans.durum == DURUM_YANIT_YOK:
+    try:
+        yield
+    except HizSinirHatasi as hata:
         raise HTTPException(
-            status_code=409,
-            detail="Bu referans isteğinin süresi doldu, yanıt alınamıyor.",
-        )
+            status_code=429,
+            detail=f"Kanıt değerlendirilemedi. {HIZ_SINIRI_MESAJI}",
+        ) from hata
 
 
 def referans_gorunumu(referans: ReferansIstegi) -> ReferansIstegiYaniti:
@@ -287,7 +232,7 @@ def referans_gorunumu(referans: ReferansIstegi) -> ReferansIstegiYaniti:
         aciklama=cikti.aciklama,
         iddia_sahibi_adi=cikti.yetenek_karti.kullanici.ad,
         durum=referans.durum,
-        yanitlanabilir=referans.durum == DURUM_BEKLIYOR,
+        yanitlanabilir=yanitlanabilir_mi(referans.durum),
     )
 
 
@@ -297,11 +242,7 @@ async def _sahibinin_ciktisi(
     somut_cikti_id: uuid.UUID,
     girvak_okuyabilir: bool = False,
 ) -> SomutCikti:
-    """Çıktıyı getirir; hesap çıktının kartının sahibi değilse 404.
-
-    `_ciktiyi_getir` sahipliğe bakmıyor, çünkü girişsiz referans yanıtı da
-    onu kullanıyor (orada kimlik token'ın kendisi).
-    """
+    """Çıktıyı getirir; hesap çıktının kartının sahibi değilse 404."""
     cikti = await _ciktiyi_getir(oturum, somut_cikti_id)
     kart = await oturum.get(YetenekKarti, cikti.yetenek_karti_id)
     izinli = yetenek_kartinin_sahibi_mi(hesap, kart) or (girvak_okuyabilir and girvak_mi(hesap))
@@ -311,48 +252,10 @@ async def _sahibinin_ciktisi(
 
 
 async def _ciktiyi_getir(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> SomutCikti:
-    cikti = await oturum.scalar(
-        select(SomutCikti)
-        .options(
-            selectinload(SomutCikti.guven_skoru),
-            selectinload(SomutCikti.referans_istekleri),
-        )
-        .where(SomutCikti.id == somut_cikti_id)
-    )
-    if cikti is None:
-        raise bulunamadi(CIKTI_BULUNAMADI)
-    return cikti
-
-
-async def _rubrigi_yaz(
-    cikti: SomutCikti, kontrol: LinkKontrolu, itiraz_notu: str | None = None
-) -> None:
-    """Rubriği yazar (app/servisler/dogrulama.py); hız sınırı 429 olur.
-
-    Burada sessizce puansız devam etmek yanlış olurdu: kullanıcı kanıtının
-    değerlendirilmediğini bilmeli.
-    """
     try:
-        await rubrigi_yaz(cikti, kontrol, itiraz_notu=itiraz_notu)
-    except HizSinirHatasi as hata:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Kanıt değerlendirilemedi. {HIZ_SINIRI_MESAJI}",
-        ) from hata
-
-
-async def _kanit_bekleyen_guncelle(oturum: AsyncSession, yetenek_karti_id: uuid.UUID) -> None:
-    """Kartın `kanit_bekleyen` bayrağını çıktılarla tutarlı tutar
-    (kural: app/core/is_kalemi.kanit_bekliyor; onay ve düzenleme de onu kullanır)."""
-    kart = await oturum.scalar(
-        select(YetenekKarti)
-        .options(
-            selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.referans_istekleri)
-        )
-        .where(YetenekKarti.id == yetenek_karti_id)
-    )
-    if kart is not None:
-        kart.kanit_bekleyen = kanit_bekliyor(kart.somut_ciktilar)
+        return await dogrulama_servisi.cikti_getir(oturum, somut_cikti_id)
+    except CiktiBulunamadi as hata:
+        raise bulunamadi(CIKTI_BULUNAMADI) from hata
 
 
 async def _durum_yaniti(
@@ -361,12 +264,7 @@ async def _durum_yaniti(
     cikti = await _ciktiyi_getir(oturum, somut_cikti_id)
 
     # Zaman aşımı: okuma anında hesaplanıp kalıcılaştırılır.
-    zaman_asimi_oldu = False
-    for referans in cikti.referans_istekleri:
-        if zaman_asimina_ugradi_mi(referans.olusturma_tarihi, referans.durum):
-            referans.durum = DURUM_YANIT_YOK
-            zaman_asimi_oldu = True
-    if zaman_asimi_oldu:
+    if zaman_asimlarini_isle(cikti.referans_istekleri):
         await oturum.commit()
 
     skor = cikti.guven_skoru

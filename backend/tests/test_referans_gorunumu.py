@@ -185,12 +185,14 @@ def _yanitlanan_ve_diger_referans():
         durum=DURUM_YANITLANDI,
         puan=2,
         yanit_metni="Katkısı sınırlıydı",
+        yanit_tarihi=None,
     )
     cikti = SimpleNamespace(
         id=yanitlanan.somut_cikti_id,
         baslik="Mahalle kütüphanesi ödünç takip sistemi",
         yetenek_karti_id=uuid.uuid4(),
         guven_skoru=None,
+        icerik_tarihi=None,
         referans_istekleri=[yanitlanan, diger],
     )
     return yanitlanan, cikti

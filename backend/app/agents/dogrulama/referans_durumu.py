@@ -33,3 +33,51 @@ def zaman_asimina_ugradi_mi(
     if olusturma_tarihi.tzinfo is None:
         olusturma_tarihi = olusturma_tarihi.replace(tzinfo=dt.UTC)
     return an - olusturma_tarihi >= dt.timedelta(days=REFERANS_TIMEOUT_GUN)
+
+
+# --- Durum makinesi ------------------------------------------------------------------------
+# Eşleşme (app/agents/eslesme_durumu.py) ve takip durum makineleriyle aynı desen:
+# geçiş kuralı tek yerde ve saf; uçlar ve servisler yalnızca söyleneni uygular.
+#
+#     bekliyor ──yanit──────▶ yanitlandi
+#        └─────zaman_asimi──▶ yanit_yok      (okuma anında, nötr; ceza değil)
+
+OLAY_YANIT = "yanit"
+OLAY_ZAMAN_ASIMI = "zaman_asimi"
+
+# (olay, kaynak durum) → hedef durum
+GECISLER: dict[tuple[str, str], str] = {
+    (OLAY_YANIT, DURUM_BEKLIYOR): DURUM_YANITLANDI,
+    (OLAY_ZAMAN_ASIMI, DURUM_BEKLIYOR): DURUM_YANIT_YOK,
+}
+
+# 409 cümleleri referans kişinin sayfasında görünür (docs/icerik-rehberi.md).
+_GECERSIZ_GECIS_CUMLELERI: dict[tuple[str, str], str] = {
+    (OLAY_YANIT, DURUM_YANITLANDI): "Bu referans zaten yanıtlanmış",
+    (OLAY_YANIT, DURUM_YANIT_YOK): "Bu referans isteğinin süresi doldu, yanıt alınamıyor.",
+}
+
+
+class GecersizReferansGecisi(Exception):
+    """Tablo dışı geçiş. Mesaj kullanıcıya olduğu gibi gösterilebilir (uçta 409)."""
+
+    def __init__(self, durum: str, olay: str) -> None:
+        self.durum, self.olay = durum, olay
+        super().__init__(
+            _GECERSIZ_GECIS_CUMLELERI.get(
+                (olay, durum), "Bu referans isteği artık bu işlemi kabul etmiyor."
+            )
+        )
+
+
+def referans_gecisi(durum: str, olay: str) -> str:
+    """Olayın götürdüğü durum; tablo dışıysa `GecersizReferansGecisi`."""
+    hedef = GECISLER.get((olay, durum))
+    if hedef is None:
+        raise GecersizReferansGecisi(durum, olay)
+    return hedef
+
+
+def yanitlanabilir_mi(durum: str) -> bool:
+    """Referans kişinin sayfası formu gösterecek mi? (GET ve POST aynı kural.)"""
+    return (OLAY_YANIT, durum) in GECISLER

@@ -38,7 +38,7 @@ class ReferansIstegi(UUIDPrimaryKeyMixin, Base):
     # (docs/data-schema.md § Tasarım Kararları) — son yanıt öncekini ezemez.
     puan: Mapped[int | None] = mapped_column(Integer)
     # Zaman aşımı (5-7 gün) bu tarihten hesaplanır — ayrı bir zamanlayıcı yok,
-    # okuma anında değerlendirilir (app/agents/dogrulama.py)
+    # okuma anında değerlendirilir (app/agents/dogrulama/referans_durumu.py)
     olusturma_tarihi: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

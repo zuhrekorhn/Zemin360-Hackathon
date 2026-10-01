@@ -25,9 +25,9 @@ from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
-from app.servisler import dogrulama as dogrulama_servisi
 from app.servisler import eslestirme as eslestirme_servisi
 from app.servisler import kart_hazirlama
+from app.servisler.dogrulama import kanit as dogrulama_servisi
 from tests.test_profil import HazirTaslakGrafigi, _embedding_sahte
 from tests.veritabani import api_istemcisi, geri_alinan_oturum
 

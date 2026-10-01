@@ -68,7 +68,7 @@
 
 ### 1.1 Kanıt linkiyle yapılan
 
-`app/agents/dogrulama.py` › `linki_kontrol_et`:
+`app/agents/dogrulama/link_kontrolu.py` › `linki_kontrol_et` (o gün `app/agents/dogrulama.py`):
 
 - Linkin başında şema yoksa başa `https://` eklenir (`github.com/…` → `https://github.com/…`).
 - Sunucu linke `GET` isteği atar: 8 sn zaman aşımı, yönlendirmeler izlenir.

@@ -93,7 +93,7 @@ class ReferansYanitiIstegi(BaseModel):
     """
 
     token: str
-    # 1-5 skala; rubriğin 0-3'üne çevrilir (app/agents/dogrulama.py)
+    # 1-5 skala; rubriğin 0-3'üne çevrilir (app/agents/dogrulama/kurallar.py)
     puan: int = Field(ge=1, le=5)
     yorum: str | None = None
 

@@ -40,7 +40,7 @@ Karar 15 gereği şimdi değiştirilmiyor; toplu denetimde ele alınacak.
 | `frontend/src/lib/kart-duzenleme.ts` | Referans satırı notu | "Bu yanıt işin önceki hâline verildi; güven göstergesine girmiyor." | genç |
 | `frontend/src/components/kanit.tsx` | Referans satırı düğmesi | "Referansı yeniden iste" | genç |
 | `frontend/src/app/kart/[id]/page.tsx` | Kart sayfası | "Kartı düzenle", "İş ekle", "Kaydedildi.", "Bu kartta henüz iş yok. Aşağıdan ekleyebilirsin." (sahibi) / "Bu kartta somut çıktı yok." (diğerleri); satırlar "Sertifikalar", "Diller" | genç / herkes |
-| `backend/app/agents/dogrulama.py` | 409 cümleleri (arayüzde görünür) | "Bu kişiden yanıt zaten bekleniyor.", "Bu referans işin güncel hâli için zaten yanıt verdi." | genç |
+| `backend/app/agents/dogrulama/kurallar.py`, `referans_durumu.py` | 409 cümleleri (arayüzde görünür) | "Bu kişiden yanıt zaten bekleniyor.", "Bu referans işin güncel hâli için zaten yanıt verdi." | genç |
 | `backend/app/api/kart_duzenleme.py` | 404 cümlesi | "İş kalemi bulunamadı" | genç |
 
 ## 9. adım — İlgi durum makinesi (backend cümleleri; arayüz 10. adımda)
