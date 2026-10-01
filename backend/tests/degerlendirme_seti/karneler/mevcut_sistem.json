@@ -1,9 +1,9 @@
 {
  "akademik-arxiv-yazar-eslesiyor": {
   "hata": null,
-  "kanit": 3,
+  "kanit": 2,
   "referans": null,
-  "rol": 2,
+  "rol": 1,
   "sonuc": 0
  },
  "akademik-arxiv-yazar-eslesmiyor": {
@@ -15,303 +15,303 @@
  },
  "akademik-dergipark-ikinci-yazar": {
   "hata": null,
-  "kanit": 3,
+  "kanit": 2,
   "referans": null,
-  "rol": 2,
+  "rol": 1,
   "sonuc": 0
  },
  "gonulluluk-kanitsiz": {
   "hata": null,
   "kanit": null,
   "referans": null,
-  "rol": null,
-  "sonuc": null
+  "rol": 1,
+  "sonuc": 1
  },
  "gonulluluk-kurulus-ana-sayfasi-referansli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 0,
   "referans": 3,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "kapali-finans-beyan": {
   "hata": null,
   "kanit": null,
   "referans": null,
-  "rol": null,
-  "sonuc": null
+  "rol": 1,
+  "sonuc": 2
  },
  "kapali-ik-iki-referans": {
   "hata": null,
   "kanit": null,
   "referans": 2,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "kapali-satis-referans": {
   "hata": null,
   "kanit": null,
   "referans": 3,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "medya-instagram-profil": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 0,
   "referans": null,
-  "rol": 2,
+  "rol": 1,
   "sonuc": 0
  },
  "medya-youtube-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "medya-youtube-kanal-sayfasi": {
   "hata": null,
-  "kanit": 2,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "muhendislik-grabcad-bot-engeli": {
   "hata": null,
-  "kanit": 0,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "muhendislik-pdf-capasiz": {
   "hata": null,
   "kanit": null,
   "referans": null,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "pazarlama-ilgisiz-ansiklopedi": {
   "hata": null,
-  "kanit": 0,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "pazarlama-musteri-referansi": {
   "hata": null,
   "kanit": null,
   "referans": 3,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "sertifika-genel-rozet-sayfasi": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 0,
   "referans": null,
-  "rol": 3,
-  "sonuc": 1
+  "rol": 0,
+  "sonuc": 0
  },
  "sertifika-pdf-capasiz": {
   "hata": null,
   "kanit": null,
   "referans": null,
-  "rol": null,
-  "sonuc": null
+  "rol": 0,
+  "sonuc": 0
  },
  "staj-kurumsal-referans": {
   "hata": null,
   "kanit": null,
   "referans": 3,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "staj-linkedin-profil": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 2,
+  "rol": 1,
   "sonuc": 0
  },
  "staj-referans-olumsuz": {
   "hata": null,
   "kanit": null,
   "referans": 1,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "staj-referans-yanitsiz": {
   "hata": null,
   "kanit": null,
   "referans": null,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "tasarim-behance-bot-engeli": {
   "hata": null,
-  "kanit": 0,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "tasarim-dribbble-bagli": {
   "hata": null,
-  "kanit": 2,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "tasarim-dribbble-bagsiz": {
   "hata": null,
-  "kanit": 2,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "tasarim-portfolyo-bagli": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "tasarim-portfolyo-bagsiz": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "veri-kaggle-bagli": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "veri-kaggle-bagsiz": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "veri-kanitsiz-referansli": {
   "hata": null,
   "kanit": null,
   "referans": 3,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "yarisma-danisman-referansi": {
   "hata": null,
   "kanit": null,
   "referans": 2,
-  "rol": null,
-  "sonuc": null
+  "rol": 2,
+  "sonuc": 2
  },
  "yarisma-genel-ana-sayfa": {
   "hata": null,
-  "kanit": 2,
+  "kanit": 0,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazi-kisisel-blog-bagli": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "yazi-kisisel-blog-bagsiz": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "yazi-medium-bagli": {
   "hata": null,
-  "kanit": 0,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "yazi-medium-bagsiz": {
   "hata": null,
-  "kanit": 0,
+  "kanit": null,
   "referans": null,
-  "rol": 3,
+  "rol": 2,
   "sonuc": 0
  },
  "yazi-teknik-blog-bagli": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazilim-alan-adi-yok": {
   "hata": null,
   "kanit": 0,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazilim-baskasinin-reposu": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazilim-baskasinin-reposu-bagli-hesap": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazilim-bireysel-repo-bagli": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazilim-bireysel-repo-bagsiz": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazilim-ilgisiz-link": {
   "hata": null,
-  "kanit": 1,
+  "kanit": 0,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazilim-kanitsiz-belirsiz": {
   "hata": null,
   "kanit": null,
   "referans": null,
-  "rol": null,
-  "sonuc": null
+  "rol": 1,
+  "sonuc": 1
  },
  "yazilim-katki-yuzde-78-bagli": {
   "hata": null,
   "kanit": 2,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  },
  "yazilim-link-404": {
   "hata": null,
   "kanit": 0,
   "referans": null,
-  "rol": 3,
-  "sonuc": 3
+  "rol": 2,
+  "sonuc": 2
  }
 }

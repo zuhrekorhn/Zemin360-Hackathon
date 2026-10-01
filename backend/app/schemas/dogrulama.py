@@ -151,4 +151,5 @@ class ItirazIstegi(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    aciklama: str | None = Field(default=None, max_length=1000)
+    # Zorunlu: neyin gözden kaçtığı yazılmadan itiraz zar atmaya döner (bulgu 15).
+    aciklama: str = Field(min_length=3, max_length=1000)

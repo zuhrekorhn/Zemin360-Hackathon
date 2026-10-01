@@ -14,7 +14,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.agents.dogrulama import DURUM_YANITLANDI, LinkKontrolu, RubrikPuani
+from app.agents.dogrulama import DURUM_YANITLANDI, LinkKontrolu
+from app.agents.dogrulama.cikarim import KanitCikarimi
 from app.api.auth import hesap_olustur
 from app.core.kimlik import token_uret
 from app.models.kullanici import Kullanici
@@ -28,20 +29,25 @@ from tests.veritabani import api_istemcisi, geri_alinan_oturum
 
 @pytest.fixture
 def sahte_degerlendirme(monkeypatch):
-    """Link kontrolü ve rubrik sahte; rubrik çağrılarının okuduğu link kaydedilir."""
+    """Link kontrolü ve model çıkarımı sahte; çıkarımın okuduğu kanıt adresi kaydedilir."""
     okunan: list[str | None] = []
 
     async def link(adres):
         return LinkKontrolu(True, 200, "Proje sayfası", "açılıyor")
 
-    async def rubrik(*, kanit_linki, **_):
-        okunan.append(kanit_linki)
-        return RubrikPuani(
-            kanit_orijinalligi=2, sonuc_olculebilirligi=2, rol_netligi=3, gerekce_metni="not"
+    async def cikar(alanlar):
+        okunan.append(alanlar["kanit_adresi"])
+        return KanitCikarimi(
+            ilgili_mi=True,
+            sonuc_var=True,
+            sonuc_sayisal=True,
+            sonuc_olcut_acik=True,
+            pay_var=True,
+            pay_ozgul=True,
         )
 
     monkeypatch.setattr(kanit_servisi, "linki_kontrol_et", link)
-    monkeypatch.setattr(kanit_servisi, "rubrik_puanla", rubrik)
+    monkeypatch.setattr(kanit_servisi, "cikar", cikar)
     return okunan
 
 
@@ -143,7 +149,7 @@ def test_ayni_link_ikinci_kez_eklenemez(sahte_degerlendirme, kart_hazirlama_arka
     asyncio.run(senaryo())
 
 
-def test_son_linki_kaldirmak_degerlendirmeyi_bosaltir_referansi_korur(
+def test_son_linki_kaldirmak_kaniti_bosaltir_referansi_korur(
     sahte_degerlendirme, kart_hazirlama_arka_plani_yok
 ):
     async def senaryo():
@@ -161,8 +167,9 @@ def test_son_linki_kaldirmak_degerlendirmeyi_bosaltir_referansi_korur(
             )
             assert yanit.status_code == 200
             skor = yanit.json()["guven_skoru"]
-            assert (skor["kanit_orijinalligi"], skor["sonuc_olculebilirligi"]) == (None, None)
-            assert skor["rol_netligi"] is None
+            # Kanıt kalmadı: Kanıt "—", Sonuç ve Rol iddiayla (beyan tavanı 2), karar 10.
+            assert skor["kanit_orijinalligi"] is None
+            assert (skor["sonuc_olculebilirligi"], skor["rol_netligi"]) == (2, 2)
             assert skor["ucuncu_taraf_onayi"] == 3  # referans korunur
             assert yanit.json()["kanitlar"] == []
             # Kanıt yok ama referans var: "kanıt bekliyor" değil.
@@ -222,16 +229,43 @@ def test_referans_istemek_degerlendirmez_ve_rozeti_gunceller(
     asyncio.run(senaryo())
 
 
-def test_kanitsiz_kalem_degerlendirilemez(sahte_degerlendirme, kart_hazirlama_arka_plani_yok):
+def test_linksiz_kalem_degerlendirilir_ayni_girdi_modeli_yeniden_cagirmaz(
+    sahte_degerlendirme, kart_hazirlama_arka_plani_yok
+):
     async def senaryo():
         async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
             baslik, _, kalem_id = await _genc_ve_kalem(oturum)
-            for yol, govde in (("degerlendir", None), ("itiraz", {"aciklama": "x"})):
-                yanit = await istemci.post(
-                    f"/dogrulama/kalem/{kalem_id}/{yol}", headers=baslik, json=govde
-                )
-                assert yanit.status_code == 409
-            assert sahte_degerlendirme == []
+            yol = f"/dogrulama/kalem/{kalem_id}/degerlendir"
+            ilk = await istemci.post(yol, headers=baslik)
+            assert ilk.status_code == 200
+            skor = ilk.json()["guven_skoru"]
+            assert (skor["kanit_orijinalligi"], skor["sonuc_olculebilirligi"]) == (None, 2)
+            assert skor["gerekce_metni"].startswith("Kanıt: Henüz kanıt eklemedin.")
+
+            await istemci.post(yol, headers=baslik)  # aynı girdi: önbellek
+            assert sahte_degerlendirme == ["(kanıt yok)"]
+
+    asyncio.run(senaryo())
+
+
+def test_itiraz_notu_zorunlu_ve_hakki_sinirli(sahte_degerlendirme, kart_hazirlama_arka_plani_yok):
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, _, kalem_id = await _genc_ve_kalem(oturum)
+            yol = f"/dogrulama/kalem/{kalem_id}/itiraz"
+            assert (await istemci.post(yol, headers=baslik, json={})).status_code == 422
+
+            notlar = ["rolüm yazıyor", "sonuç sayılı", "linkte adım var"]
+            for not_ in notlar:
+                assert (
+                    await istemci.post(yol, headers=baslik, json={"aciklama": not_})
+                ).status_code == 200
+            # Aynı not önbellekten döner, hak harcamaz; yeni not dördüncü itiraz: 429.
+            tekrar = await istemci.post(yol, headers=baslik, json={"aciklama": notlar[-1]})
+            assert tekrar.status_code == 200
+            dorduncu = await istemci.post(yol, headers=baslik, json={"aciklama": "başka not"})
+            assert dorduncu.status_code == 429
+            assert len(sahte_degerlendirme) == 3
 
     asyncio.run(senaryo())
 

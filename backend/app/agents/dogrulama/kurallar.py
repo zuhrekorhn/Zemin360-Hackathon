@@ -10,6 +10,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 from app.agents.dogrulama.referans_durumu import DURUM_BEKLIYOR, DURUM_YANITLANDI
+from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
 
 # 1-5 referans skalasını rubriğin 0-3 aralığına indirger.
 # 3 ("ne iyi ne kötü") bir onay değildir, o yüzden 2'den fazlasını vermiyor;
@@ -67,18 +68,6 @@ def referans_yeniden_istenebilir_mi(
     return None
 
 
-def otomatik_puanlanir_mi(kanit_linki: str | None, puanlanmis: bool) -> bool:
-    """Kart onayı ya da düzenlemesinden sonra bu iş kalemi arka planda puanlanır mı?
-
-    Yalnızca linki olan ve henüz değerlendirilmemiş (ya da içeriği / kanıtı değişip
-    değerlendirmesi sıfırlanan) kalem. Yalnızca referans yanıtıyla açılmış gösterge
-    "değerlendirilmiş" sayılmaz (`degerlendirme_tarihi`). Linksiz kalem puanlanmaz,
-    "doğrulanmamış" nötr durumda kalır: kanıtsız kalem ceza almaz, bonus da almaz (plan
-    § 0, karar 7).
-    """
-    return bool(kanit_linki and kanit_linki.strip()) and not puanlanmis
-
-
 # --- Referans yanıtının geçerliliği (docs/plans/genc-akisi.md § 0, karar 8) ---------
 # İş kalemi değişince eski yanıt geçmişte kalır, puana girmez. Kart düzenleme
 # (sıfırlama) ve Doğrulama (üçüncü taraf onayı) aynı kuralı buradan kullanır.
@@ -113,3 +102,84 @@ def gecerli_referans_puanlari(
         for y in yanitlar
         if y.puan is not None and referans_gecerli_mi(y.yanit_tarihi, icerik_tarihi)
     ]
+
+
+# --- Puan kuralları (docs/plans/dogrulama-iyilestirme.md § 2, § 11.2) ---------------------
+# Model gerçekleri çıkarır (cikarim.py), puanı buradaki saf fonksiyonlar verir: aynı
+# gerçekler her zaman aynı puanı üretir ve kural tabloyla test edilir.
+
+# Kanıt başlığının seviye tavanı. Çapasız yüklenmiş dosya (D) 1; kamuya açık çalışma
+# (C) 2; bağlı hesap ya da düzenleyen (B, A) 3. Yazılmış iddia metni kanıt değildir:
+# hiç parça yoksa Kanıt "—".
+KANIT_TAVANI: dict[KaynakSeviyesi, int] = {
+    KaynakSeviyesi.BEYAN: 1,
+    KaynakSeviyesi.KAMUYA_ACIK: 2,
+    KaynakSeviyesi.PLATFORM: 3,
+    KaynakSeviyesi.DUZENLEYEN: 3,
+}
+BAGIMSIZ_SEVIYELER = frozenset({KaynakSeviyesi.PLATFORM, KaynakSeviyesi.DUZENLEYEN})
+CELISKI_TAVANI = 1
+
+
+@dataclass(frozen=True)
+class OkunanKanit:
+    """Bir kanıt parçasının okunuşu (adım 5'te okuyucu zinciri üretir)."""
+
+    erisim: ErisimDurumu
+    seviye: KaynakSeviyesi
+    metin: str
+    url: str | None = None
+    # Bağlı hesapta tek katkıcılı repo / tek yazarlı yazı / bağlı portfolyo (§ 2).
+    bireysel: bool = False
+
+
+@dataclass(frozen=True)
+class BaslikPuanlari:
+    kanit: int | None
+    sonuc: int | None
+    rol: int | None
+
+
+def kanit_puani(okunan: OkunanKanit | None, *, ilgili: bool, celisiyor: bool) -> int | None:
+    """Kanıt: iş var mı, bu kişinin mi? None = "—" (kanıt yok ya da okunamadı)."""
+    if okunan is None or okunan.erisim.okunamadi_mi:
+        return None
+    if okunan.erisim in (ErisimDurumu.BULUNAMADI, ErisimDurumu.GUVENSIZ):
+        return 0
+    if not ilgili:
+        return 0
+    tavan = KANIT_TAVANI[okunan.seviye]
+    return min(tavan, CELISKI_TAVANI) if celisiyor else tavan
+
+
+def sonuc_puani(
+    *, var: bool, sayisal: bool, olcut_acik: bool, bagimsiz_destek: bool, celisiyor: bool
+) -> int:
+    """Sonuç: açık yazılmış en çok 2; 3 için bağımsız destek (B/A kanıtı ya da referans)."""
+    if not var:
+        return 0
+    puan = 1 if not sayisal else 3 if (olcut_acik and bagimsiz_destek) else 2
+    return min(puan, CELISKI_TAVANI) if celisiyor else puan
+
+
+def rol_puani(*, var: bool, ozgul: bool, bagimsiz_destek: bool, celisiyor: bool) -> int:
+    """Rol: özgül yazılmış en çok 2; 3 için bağımsız destek (bireysel kural, B/A, referans)."""
+    if not var:
+        return 0
+    puan = 1 if not ozgul else 3 if bagimsiz_destek else 2
+    return min(puan, CELISKI_TAVANI) if celisiyor else puan
+
+
+def kalem_puani(parcalar: Iterable[BaslikPuanlari]) -> BaslikPuanlari:
+    """Başlık başına en güçlü parça; parçalar toplanmaz (kanıt eklemek puanı düşürmez)."""
+    liste = list(parcalar)
+
+    def en_guclu(degerler: Iterable[int | None]) -> int | None:
+        dolu = [d for d in degerler if d is not None]
+        return max(dolu) if dolu else None
+
+    return BaslikPuanlari(
+        kanit=en_guclu(p.kanit for p in liste),
+        sonuc=en_guclu(p.sonuc for p in liste),
+        rol=en_guclu(p.rol for p in liste),
+    )

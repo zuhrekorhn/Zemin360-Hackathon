@@ -13,7 +13,8 @@ import uuid
 import pytest
 from sqlalchemy import func, select
 
-from app.agents.dogrulama import LinkKontrolu, RubrikPuani, otomatik_puanlanir_mi
+from app.agents.dogrulama import LinkKontrolu
+from app.agents.dogrulama.cikarim import KanitCikarimi
 from app.api.auth import hesap_olustur
 from app.core.kimlik import token_uret
 from app.db.base import EMBEDDING_DIM
@@ -35,22 +36,6 @@ from tests.veritabani import api_istemcisi, geri_alinan_oturum
 # --- Saf kural ------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("link", "puanlanmis", "beklenen"),
-    [
-        ("https://github.com/elif/proje", False, True),
-        ("https://github.com/elif/proje", True, False),  # zaten puanlı: LLM yok
-        (None, False, False),  # linksiz: "doğrulanmamış", nötr
-        ("   ", False, False),
-    ],
-)
-def test_otomatik_puanlanir_mi(link, puanlanmis, beklenen):
-    assert otomatik_puanlanir_mi(link, puanlanmis) is beklenen
-
-
-# --- Gerçek veritabanında -------------------------------------------------------------------
-
-
 def _rastgele_yon() -> list[float]:
     """Yerel veritabanındaki gerçek kartlarla karışmasın diye rastgele bir yön."""
     vektor = [random.gauss(0, 1) for _ in range(EMBEDDING_DIM)]
@@ -64,23 +49,28 @@ def _email() -> str:
 
 @pytest.fixture
 def sahte_dis_servisler(monkeypatch):
-    """Link kontrolü, rubrik ve gerekçe sahte; rubrik çağrıları sayılır."""
+    """Link kontrolü, model çıkarımı ve gerekçe sahte; çıkarım çağrıları sayılır."""
     cagrilar: list[str] = []
 
     async def link(adres):
         return LinkKontrolu(True, 200, "Proje sayfası", "açılıyor")
 
-    async def rubrik(*, baslik, **_):
-        cagrilar.append(baslik)
-        return RubrikPuani(
-            kanit_orijinalligi=3, sonuc_olculebilirligi=2, rol_netligi=2, gerekce_metni="g"
+    async def cikar(alanlar):
+        cagrilar.append(alanlar["baslik"])
+        return KanitCikarimi(
+            ilgili_mi=True,
+            sonuc_var=True,
+            sonuc_sayisal=True,
+            sonuc_olcut_acik=True,
+            pay_var=True,
+            pay_ozgul=True,
         )
 
     async def gerekce(_ihtiyac, _aday):
         return "Kartlardaki somut noktalar örtüşüyor."
 
     monkeypatch.setattr(dogrulama_servisi, "linki_kontrol_et", link)
-    monkeypatch.setattr(dogrulama_servisi, "rubrik_puanla", rubrik)
+    monkeypatch.setattr(dogrulama_servisi, "cikar", cikar)
     monkeypatch.setattr(eslestirme_servisi, "gerekce_uret", gerekce)
     return cagrilar
 
@@ -142,8 +132,8 @@ def test_sonradan_gelen_genc_mevcut_ihtiyacla_eslesir_ve_is_idempotent(sahte_dis
             )
             assert bildirimler == 1
 
-            # Linkli kalem bir kez puanlandı; linksiz kalem nötr kaldı.
-            assert sahte_dis_servisler == ["Linkli iş"]
+            # Her kalem bir kez değerlendirildi; linksiz kalem de (karar 10).
+            assert sorted(sahte_dis_servisler) == ["Linkli iş", "Linksiz iş"]
             ciktilar = {
                 c.baslik: c
                 for c in await oturum.scalars(
@@ -154,15 +144,17 @@ def test_sonradan_gelen_genc_mevcut_ihtiyacla_eslesir_ve_is_idempotent(sahte_dis
             }
             await oturum.refresh(ciktilar["Linkli iş"], ["guven_skoru"])
             await oturum.refresh(ciktilar["Linksiz iş"], ["guven_skoru"])
-            assert ciktilar["Linkli iş"].guven_skoru.kanit_orijinalligi == 3
-            assert ciktilar["Linksiz iş"].guven_skoru is None
+            # Herkese açık link seviye C: Kanıt 2. Linksiz kalemde Kanıt "—", beyan 2.
+            assert ciktilar["Linkli iş"].guven_skoru.kanit_orijinalligi == 2
+            assert ciktilar["Linksiz iş"].guven_skoru.kanit_orijinalligi is None
+            assert ciktilar["Linksiz iş"].guven_skoru.sonuc_olculebilirligi == 2
 
-            # Puan eşleşme skoruna girdi: benzerlik 1.0, bonus (3+2+2)/9 tek kalemden;
-            # referans yok ("—"), paydaya girmez.
+            # Puan eşleşme skoruna girdi: benzerlik 1.0; bonus iki kalemin ortalaması,
+            # (2+2+2)/9 ve (2+2)/6, ikisi de 2/3. Boş başlık paydaya girmez.
             eslesme = await oturum.scalar(
                 select(Eslesme).where(Eslesme.yetenek_karti_id == kart.id)
             )
-            assert eslesme.skor == pytest.approx(0.75 + 0.25 * 7 / 9, abs=1e-3)
+            assert eslesme.skor == pytest.approx(0.75 + 0.25 * 2 / 3, abs=1e-3)
 
     asyncio.run(senaryo())
 

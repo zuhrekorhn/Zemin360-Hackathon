@@ -3,8 +3,8 @@
 Kart onaylanınca ya da değişince yanıttan sonra arka planda çalışır:
 
   1. Embedding: yoksa (ya da kart değiştiyse) hesaplanır.
-  2. Doğrulama: linki olan ve puanı olmayan iş kalemleri puanlanır. Linksiz
-     kalem puanlanmaz, "doğrulanmamış" nötr durumda kalır (plan § 0, karar 7).
+  2. Doğrulama: değerlendirilmemiş her iş kalemi değerlendirilir. Linksiz kalemde
+     Sonuç ve Rol beyan tavanıyla, Kanıt "—" (dogrulama-iyilestirme karar 10).
   3. Yeniden eşleştirme: kartla konu olarak ilgili (benzerlik alt sınırını
      geçen) açık ihtiyaç kartları ve kartın hâlâ `onerildi` önerisi olan
      ihtiyaç kartları için mevcut pipeline çalışır. Bu, "sonradan gelen genç
@@ -35,7 +35,6 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.agents.dogrulama import otomatik_puanlanir_mi
 from app.agents.eslestirme import BENZERLIK_ALT_SINIRI, DURUM_ONERILDI
 from app.api.yetenek_kartlari import embedding_hesapla
 from app.core.ilan import ARANAN_GENC
@@ -46,7 +45,7 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.servisler import eslestirme as eslestirme_servisi
-from app.servisler.dogrulama import birincil_link, ciktiyi_puanla, degerlendirildi_mi
+from app.servisler.dogrulama import ciktiyi_puanla, degerlendirildi_mi
 
 logger = logging.getLogger("zemin360.kart_hazirlama")
 
@@ -111,11 +110,12 @@ async def _ciktiyi_puanla_bir_kez(oturum: AsyncSession, cikti_id: uuid.UUID) -> 
         .with_for_update(of=SomutCikti)
         .execution_options(populate_existing=True)
     )
-    if cikti is None or not otomatik_puanlanir_mi(birincil_link(cikti), degerlendirildi_mi(cikti)):
+    # Değerlendirilmemiş her kalem (linksiz de, karar 10); değerlendirilmiş olan atlanır.
+    if cikti is None or degerlendirildi_mi(cikti):
         await oturum.rollback()  # kilidi bırak
         return
     try:
-        await ciktiyi_puanla(cikti)
+        await ciktiyi_puanla(oturum, cikti)
     except (HizSinirHatasi, ModelMesgulHatasi):
         logger.info("İş kalemi şimdi puanlanamadı, puansız kaldı (%s)", cikti_id)
         await oturum.rollback()

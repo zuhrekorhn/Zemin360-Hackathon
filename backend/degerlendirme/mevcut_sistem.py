@@ -24,15 +24,10 @@ from multiprocessing.pool import Pool
 from types import TracebackType
 from typing import Any
 
-from app.agents.dogrulama import (
-    LinkKontrolu,
-    RubrikPuani,
-    link_kontrolu,
-    linki_kontrol_et,
-    rubrik_puanla,
-    ucuncu_taraf_onayi_hesapla,
-)
-from app.core.is_kalemi import birlesik_aciklama
+from app.agents.dogrulama import link_kontrolu, linki_kontrol_et, ucuncu_taraf_onayi_hesapla
+from app.agents.dogrulama.cekirdek import DegerlendirmeGirdisi, kalemi_degerlendir
+from app.agents.dogrulama.cikarim import KanitCikarimi, cikar
+from app.agents.dogrulama.link_kontrolu import okunan_kanit
 from degerlendirme.degerlendirici import Degerlendirme
 from degerlendirme.kaset import AgKaseti, ModelKaseti
 from degerlendirme.vaka import ReferansGirdisi, Vaka
@@ -116,49 +111,44 @@ class MevcutSistemDegerlendirici:
         self._ayristirici.kapat()
 
     async def degerlendir(self, vaka: Vaka) -> Degerlendirme:
+        """Uygulamanın çekirdeğiyle (cekirdek.kalemi_degerlendir) aynı yol.
+
+        Uygulamanın bugün bilmediği girdiler kullanılmaz: bağlı hesap (adım 8),
+        dosya kanıtı (adım 9) ve referansın yapılandırılmış yanıtları (adım 7).
+        """
         referans_puanlari = [eski_olcege_cevir(r) for r in vaka.referanslar if r.yanitladi]
         ucuncu = ucuncu_taraf_onayi_hesapla(referans_puanlari)
-        linkler = vaka.linkler
+        link = vaka.linkler[0] if vaka.linkler else None
 
-        if not linkler:
-            if not referans_puanlari:
-                return Degerlendirme(ayrinti={"neden": "linksiz kalem puanlanmaz"})
-            return Degerlendirme(referans=ucuncu)
+        okunan = None
+        if link is not None:
+            try:
+                kontrol = await linki_kontrol_et(link, transport=self._ag.transport())
+            except AyristirmaZamanAsimi:
+                return Degerlendirme(hata="zaman_asimi", ayrinti={"link": link})
+            okunan = okunan_kanit(kontrol, link)
 
-        try:
-            kontrol = await linki_kontrol_et(linkler[0], transport=self._ag.transport())
-        except AyristirmaZamanAsimi:
-            return Degerlendirme(hata="zaman_asimi", ayrinti={"link": linkler[0]})
-
-        puan = await self._rubrik(vaka, linkler[0], kontrol)
+        girdi = DegerlendirmeGirdisi(
+            baslik=vaka.iddia.baslik,
+            aciklama=vaka.iddia.aciklama,
+            sonuc=vaka.iddia.olculebilir_sonuc,
+            pay=vaka.iddia.kendi_rolu,
+            yetenekler=vaka.kart_yetenekleri,
+        )
+        sonuc = await kalemi_degerlendir(girdi, okunan, self._cikar)
         return Degerlendirme(
-            kanit=puan.kanit_orijinalligi,
-            sonuc=puan.sonuc_olculebilirligi,
-            rol=puan.rol_netligi,
+            kanit=sonuc.puanlar.kanit,
+            sonuc=sonuc.puanlar.sonuc,
+            rol=sonuc.puanlar.rol,
             referans=ucuncu,
-            not_metni=puan.gerekce_metni,
-            ayrinti={"link_durumu": kontrol.aciklama, "link_ozeti": kontrol.ozet},
+            not_metni=sonuc.not_metni,
+            ayrinti={"erisim": okunan.erisim.value if okunan else None},
         )
 
-    async def _rubrik(self, vaka: Vaka, link: str, kontrol: LinkKontrolu) -> RubrikPuani:
-        aciklama = birlesik_aciklama(
-            vaka.iddia.aciklama, vaka.iddia.olculebilir_sonuc, vaka.iddia.kendi_rolu
-        )
-        girdi: dict[str, Any] = {
-            "baslik": vaka.iddia.baslik,
-            "aciklama": aciklama,
-            "kanit_linki": link,
-            "erisilebilir": kontrol.erisilebilir,
-            "link_durumu": kontrol.aciklama,
-            "link_ozeti": kontrol.ozet,
-        }
-
+    async def _cikar(self, alanlar: dict[str, str]) -> KanitCikarimi:
         async def gercek() -> dict[str, Any]:
-            puan = await rubrik_puanla(
-                baslik=vaka.iddia.baslik, aciklama=aciklama, kanit_linki=link, kontrol=kontrol
-            )
-            return puan.model_dump()
+            return (await cikar(alanlar)).model_dump()
 
-        return RubrikPuani.model_validate(
-            await self._model.cagir("dogrulama_rubrik", girdi, gercek)
+        return KanitCikarimi.model_validate(
+            await self._model.cagir("dogrulama_cikarim", alanlar, gercek)
         )

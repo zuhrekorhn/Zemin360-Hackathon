@@ -16,7 +16,8 @@ Paket düzeni (docs/plans/dogrulama-iyilestirme.md § 14.1):
   - `referans_durumu`: referans isteğinin durumları, geçişleri, zaman aşımı
   - `kurallar`: saf kurallar (referans puanı, üçüncü taraf onayı, geçerlilik)
   - `link_kontrolu`: linkin erişilebilirliği ve özeti (adım 5'te okuyucu zinciri)
-  - `rubrik`: modelin ön rubriği (adım 4'te çıkarım + kural çekirdeği)
+  - `cikarim`, `alinti`, `not_sablonu`, `cekirdek`: model gerçek çıkarır, kural
+    puanlar, şablon anlatır (adım 4)
 
 Dışarıya açılan adlar burada toplanır; içe aktaranlar alt modülü bilmek zorunda değil.
 """
@@ -26,7 +27,6 @@ from app.agents.dogrulama.kurallar import (
     ZATEN_BEKLENIYOR,
     ReferansYaniti,
     gecerli_referans_puanlari,
-    otomatik_puanlanir_mi,
     referans_gecerli_mi,
     referans_puanina_cevir,
     referans_yeniden_istenebilir_mi,
@@ -50,7 +50,6 @@ from app.agents.dogrulama.referans_durumu import (
     yanitlanabilir_mi,
     zaman_asimina_ugradi_mi,
 )
-from app.agents.dogrulama.rubrik import RUBRIK_SABLONU, RUBRIK_TALIMATI, RubrikPuani, rubrik_puanla
 
 __all__ = [
     "DURUM_BEKLIYOR",
@@ -60,23 +59,18 @@ __all__ = [
     "OLAY_ZAMAN_ASIMI",
     "REFERANS_PUAN_ESLEMESI",
     "REFERANS_TIMEOUT_GUN",
-    "RUBRIK_SABLONU",
-    "RUBRIK_TALIMATI",
     "ZATEN_BEKLENIYOR",
     "GecersizReferansGecisi",
     "LinkKontrolu",
     "ReferansYaniti",
-    "RubrikPuani",
     "gecerli_referans_puanlari",
     "link_ozetini_cikar",
     "linki_kontrol_et",
     "linki_normalize_et",
-    "otomatik_puanlanir_mi",
     "referans_gecerli_mi",
     "referans_gecisi",
     "referans_puanina_cevir",
     "referans_yeniden_istenebilir_mi",
-    "rubrik_puanla",
     "ucuncu_taraf_onayi_hesapla",
     "yanitlanabilir_mi",
     "zaman_asimina_ugradi_mi",

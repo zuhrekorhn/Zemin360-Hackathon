@@ -89,3 +89,5 @@ def gostergeyi_yeniden_degerlendirmeye_al(cikti: SomutCikti) -> None:
     skor.rol_netligi = None
     skor.gerekce_metni = None
     skor.degerlendirme_tarihi = None
+    skor.girdi_ozeti = None
+    skor.itiraz_sayisi = 0  # yeni girdi: itiraz hakkı tazelenir

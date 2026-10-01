@@ -13,9 +13,15 @@ from html.parser import HTMLParser
 
 import httpx
 
+from app.agents.dogrulama.kurallar import OkunanKanit
 from app.core.guvenli_istek import GuvensizAdres, guvenli_get
+from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
 
 logger = logging.getLogger("zemin360.dogrulama")
+
+LINK_YOK = "kanıt linki yok"
+GUVENSIZ_ADRES = "adres herkese açık bir web sayfası değil"
+OZET_OKUNAMADI = "(başlık/açıklama okunamadı)"
 
 LINK_TIMEOUT_SANIYE = 8
 # Sayfanın tamamı çekilmiyor: <head> bitene kadar okunuyor. Sabit bir ilk
@@ -30,6 +36,37 @@ class LinkKontrolu:
     durum_kodu: int | None
     ozet: str
     aciklama: str
+
+    @property
+    def erisim(self) -> ErisimDurumu | None:
+        """Plan § 5.2'deki erişim durumu; link yoksa None.
+
+        Geçici eşleme: okuyucu zinciri (adım 5) durumu doğrudan üretecek. Alan adı
+        çözülemeyen adres bugün `GUVENSIZ`'e düşüyor (bulgu 6, adım 5'te ayrılır).
+        """
+        if self.aciklama == LINK_YOK:
+            return None
+        if self.erisilebilir:
+            return ErisimDurumu.ICERIK_YOK if self.ozet == OZET_OKUNAMADI else ErisimDurumu.ACIK
+        if self.durum_kodu in (404, 410):
+            return ErisimDurumu.BULUNAMADI
+        if self.durum_kodu == 401:
+            return ErisimDurumu.GIRIS_GEREKLI
+        if self.durum_kodu is not None:
+            return ErisimDurumu.HATA if self.durum_kodu >= 500 else ErisimDurumu.ENGELLENDI
+        if self.aciklama == GUVENSIZ_ADRES:
+            return ErisimDurumu.GUVENSIZ
+        return ErisimDurumu.HATA
+
+
+def okunan_kanit(kontrol: LinkKontrolu, url: str | None) -> OkunanKanit | None:
+    """Link kontrolünü çekirdeğin girdisine çevirir. Bağlı hesap (B) adım 8'de;
+    bugün okunan herkese açık link seviye C'dir."""
+    erisim = kontrol.erisim
+    if erisim is None:
+        return None
+    metin = kontrol.ozet if erisim is ErisimDurumu.ACIK else ""
+    return OkunanKanit(erisim=erisim, seviye=KaynakSeviyesi.KAMUYA_ACIK, metin=metin, url=url)
 
 
 def linki_normalize_et(kanit_linki: str) -> str:
@@ -110,7 +147,7 @@ def link_ozetini_cikar(html: str) -> str:
 
     parcalar = [" ".join(p.split()) for p in (baslik, aciklama) if p and p.strip()]
     ozet = " — ".join(parcalar)
-    return ozet[:400] or "(başlık/açıklama okunamadı)"
+    return ozet[:400] or OZET_OKUNAMADI
 
 
 # --- Kanıt kontrolü --------------------------------------------------------
@@ -126,7 +163,7 @@ async def linki_kontrol_et(
     "açılmıyor" sayılır (SSRF engeli). `transport` yalnızca testler için.
     """
     if not kanit_linki:
-        return LinkKontrolu(False, None, "(kanıt linki verilmedi)", "kanıt linki yok")
+        return LinkKontrolu(False, None, "(kanıt linki verilmedi)", LINK_YOK)
 
     adres = linki_normalize_et(kanit_linki)
     try:
@@ -140,9 +177,7 @@ async def linki_kontrol_et(
             govde = await _basligi_oku(yanit)
     except GuvensizAdres as hata:
         logger.info("Kanıt linki güvenli değil, istenmedi: %s (%s)", adres, hata)
-        return LinkKontrolu(
-            False, None, "(sayfa açılmadı)", "adres herkese açık bir web sayfası değil"
-        )
+        return LinkKontrolu(False, None, "(sayfa açılmadı)", GUVENSIZ_ADRES)
     except httpx.HTTPError as hata:
         return LinkKontrolu(False, None, "(sayfa açılmadı)", f"erişilemedi: {type(hata).__name__}")
 

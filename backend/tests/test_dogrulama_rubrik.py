@@ -6,14 +6,12 @@ Sınırlar docs/agent-specs.md § 4 ve docs/sequence-diagrams.md § Akış 2'den
 import datetime as dt
 
 import pytest
-from pydantic import ValidationError
 
 from app.agents.dogrulama import (
     DURUM_BEKLIYOR,
     DURUM_YANIT_YOK,
     DURUM_YANITLANDI,
     REFERANS_TIMEOUT_GUN,
-    RubrikPuani,
     link_ozetini_cikar,
     linki_normalize_et,
     referans_puanina_cevir,
@@ -21,15 +19,6 @@ from app.agents.dogrulama import (
     zaman_asimina_ugradi_mi,
 )
 from app.models.referans_istegi import ReferansIstegi
-
-
-def test_rubrik_bilesenleri_0_3_araliginda_olmali():
-    with pytest.raises(ValidationError):
-        RubrikPuani(kanit_orijinalligi=4, sonuc_olculebilirligi=1, rol_netligi=1, gerekce_metni="x")
-    with pytest.raises(ValidationError):
-        RubrikPuani(
-            kanit_orijinalligi=-1, sonuc_olculebilirligi=1, rol_netligi=1, gerekce_metni="x"
-        )
 
 
 def test_referans_skalasi_0_3e_indirgenir():
@@ -215,29 +204,3 @@ def test_bozuk_oznitelikten_ham_html_sizmaz():
         '<meta property="og:title" content="NASA (&#064;nasa)" /></head>'
     )
     assert link_ozetini_cikar(html) == "NASA (@nasa)"
-
-
-# --- İtiraz notu ----------------------------------------------------------
-# Not rubriğe giriyor ama "doğrulanmış bilgi" olarak değil; kuralların
-# prompt'ta yazılı olduğunu burada sabitliyoruz (LLM'e gitmeden).
-
-from app.agents.dogrulama import RUBRIK_SABLONU, RUBRIK_TALIMATI  # noqa: E402
-
-
-def test_itiraz_notu_sablonda_yer_aliyor():
-    """Daha önce forma yazılan açıklama hiçbir yere gitmiyordu."""
-    assert "{itiraz_notu}" in str(RUBRIK_SABLONU)
-
-
-def test_itiraz_notu_beyan_olarak_isaretleniyor():
-    assert "DOĞRULANMIŞ BİLGİ DEĞİL" in RUBRIK_TALIMATI
-    assert "beyan" in RUBRIK_TALIMATI
-
-
-def test_itiraz_notu_tek_basina_tam_puan_vermiyor():
-    assert "tam puana (3) tek başına yetmez" in RUBRIK_TALIMATI
-
-
-def test_itiraz_notunun_tonu_olcut_degil():
-    """'Ne kadar ısrarlı yazılmış' bir kriter olamaz (önyargı riski)."""
-    assert "tonuna" in RUBRIK_TALIMATI

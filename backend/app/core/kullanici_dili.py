@@ -72,3 +72,17 @@ def metin_ihlalleri(metin: str, hitap: Hitap = "sen") -> list[str]:
         if siz:
             ihlaller.append(f"hitap: {', '.join(siz)}")
     return ihlaller
+
+
+_HITAP_KURALI = {
+    "sen": (
+        '\n- Okuyana "sen" diye hitap et ("yazmışsın", "payın"); "siz" ve üçüncü '
+        'şahıs ("kişinin") kullanma.'
+    ),
+    "siz": '\n- Okuyana "siz" diye hitap et ("yazmışsınız", "payınız").',
+}
+
+
+def kullanici_dili(hitap: Hitap) -> str:
+    """İstemin sonuna eklenen dil kuralları, hitabıyla birlikte (gence "sen", firmaya "siz")."""
+    return KULLANICI_DILI_KURALLARI + _HITAP_KURALI[hitap]

@@ -27,7 +27,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.agents.dogrulama import GecersizReferansGecisi, yanitlanabilir_mi
+from app.agents.dogrulama import GecersizReferansGecisi, LinkKontrolu, yanitlanabilir_mi
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
@@ -54,7 +54,7 @@ from app.servisler import dogrulama as dogrulama_servisi
 from app.servisler import kart_duzenleme, kart_hazirlama
 from app.servisler.dogrulama import (
     CiktiBulunamadi,
-    DegerlendirilecekKanitYok,
+    ItirazSiniri,
     KanitBulunamadi,
     KanitZatenVar,
     ReferansYenidenIstenemez,
@@ -109,11 +109,11 @@ async def kanit_linki_ekle(
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     try:
         with _hiz_siniri_429():
-            kontrol = await dogrulama_servisi.kanit_linki_ekle(cikti, istek.url)
+            kontrol = await dogrulama_servisi.kanit_linki_ekle(oturum, cikti, istek.url)
     except KanitZatenVar as hata:
         raise HTTPException(status_code=409, detail=str(hata)) from hata
     await _gosterge_degisti(oturum, cikti, arka_plan)
-    return await _durum_yaniti(oturum, somut_cikti_id, kontrol.erisilebilir)
+    return await _durum_yaniti(oturum, somut_cikti_id, _erisilebilir(kontrol))
 
 
 @router.delete("/kalem/{somut_cikti_id}/kanit/{parca_id}", response_model=KanitDurumuYaniti)
@@ -128,11 +128,11 @@ async def kanit_parcasini_sil(
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     try:
         with _hiz_siniri_429():
-            kontrol = await dogrulama_servisi.kanit_parcasini_sil(cikti, parca_id)
+            kontrol = await dogrulama_servisi.kanit_parcasini_sil(oturum, cikti, parca_id)
     except KanitBulunamadi as hata:
         raise bulunamadi(KANIT_BULUNAMADI) from hata
     await _gosterge_degisti(oturum, cikti, arka_plan)
-    return await _durum_yaniti(oturum, somut_cikti_id, kontrol.erisilebilir if kontrol else None)
+    return await _durum_yaniti(oturum, somut_cikti_id, _erisilebilir(kontrol))
 
 
 @router.post("/kalem/{somut_cikti_id}/degerlendir", response_model=KanitDurumuYaniti)
@@ -142,12 +142,13 @@ async def degerlendir(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
-    """Çalışmayı mevcut kanıtıyla değerlendirir (henüz değerlendirilmemiş kalem için)."""
+    """Çalışmayı değerlendirir (henüz değerlendirilmemiş kalem için). Linksiz çalışmada
+    Sonuç ve Rol beyan tavanıyla değerlendirilir, Kanıt "—" (karar 10)."""
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
-    with _degerlendirme_hatalari():
-        kontrol = await dogrulama_servisi.degerlendir(cikti)
+    with _hiz_siniri_429():
+        kontrol = await dogrulama_servisi.degerlendir(oturum, cikti)
     await _gosterge_degisti(oturum, cikti, arka_plan)
-    return await _durum_yaniti(oturum, somut_cikti_id, kontrol.erisilebilir)
+    return await _durum_yaniti(oturum, somut_cikti_id, _erisilebilir(kontrol))
 
 
 @router.post("/kalem/{somut_cikti_id}/itiraz", response_model=KanitDurumuYaniti)
@@ -158,12 +159,16 @@ async def itiraz(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
-    """Genç değerlendirmeye itiraz eder; rubrik yeniden hesaplanır (servis: itiraz.py)."""
+    """Genç değerlendirmeye itiraz eder (servis: itiraz.py). Not zorunlu; aynı not ve
+    girdi önceki sonucu döndürür; sürüm başına sınır aşılınca 429."""
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
-    with _degerlendirme_hatalari():
-        kontrol = await dogrulama_servisi.itiraz_et(cikti, aciklama=istek.aciklama)
+    try:
+        with _hiz_siniri_429():
+            kontrol = await dogrulama_servisi.itiraz_et(oturum, cikti, istek.aciklama)
+    except ItirazSiniri as hata:
+        raise HTTPException(status_code=429, detail=str(hata)) from hata
     await _gosterge_degisti(oturum, cikti, arka_plan)
-    return await _durum_yaniti(oturum, somut_cikti_id, kontrol.erisilebilir)
+    return await _durum_yaniti(oturum, somut_cikti_id, _erisilebilir(kontrol))
 
 
 @router.post("/kalem/{somut_cikti_id}/referans", response_model=KanitDurumuYaniti, status_code=201)
@@ -291,14 +296,9 @@ def _hiz_siniri_429() -> Iterator[None]:
         ) from hata
 
 
-@contextmanager
-def _degerlendirme_hatalari() -> Iterator[None]:
-    """Değerlendirme ve itirazın ortak çevirisi: kanıt yoksa 409, hız sınırı 429."""
-    try:
-        with _hiz_siniri_429():
-            yield
-    except DegerlendirilecekKanitYok as hata:
-        raise HTTPException(status_code=409, detail=str(hata)) from hata
+def _erisilebilir(kontrol: LinkKontrolu | None) -> bool | None:
+    """Bu istekte okunan linkin açılıp açılmadığı; link okunmadıysa None."""
+    return kontrol.erisilebilir if kontrol is not None else None
 
 
 async def _gosterge_degisti(

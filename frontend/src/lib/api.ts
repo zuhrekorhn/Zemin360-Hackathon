@@ -519,7 +519,9 @@ export type IsKalemiGirdisi = {
 
 /** İddianın düzenlenebilir alanları. Kanıt burada değil: kanıt bölümünden
  *  (tek kapı) eklenir ve kaldırılır. */
-export type IsKalemiGuncellemesi = Partial<Omit<IsKalemiGirdisi, "kanit_linki">>;
+export type IsKalemiGuncellemesi = Partial<
+  Omit<IsKalemiGirdisi, "kanit_linki">
+>;
 
 /** PATCH /yetenek-kartlari/{id} */
 export function kartGuncelle(
@@ -812,10 +814,9 @@ export function kanitParcasiSil(
   somutCiktiId: string,
   parcaId: string,
 ): Promise<KanitDurumu> {
-  return apiIstek<KanitDurumu>(
-    `${kalemYolu(somutCiktiId)}/kanit/${parcaId}`,
-    { method: "DELETE" },
-  );
+  return apiIstek<KanitDurumu>(`${kalemYolu(somutCiktiId)}/kanit/${parcaId}`, {
+    method: "DELETE",
+  });
 }
 
 /** POST /dogrulama/kalem/{id}/degerlendir — mevcut kanıtla değerlendirir. */
@@ -847,11 +848,11 @@ export function referansYenidenIste(referansId: string): Promise<KanitDurumu> {
 /** POST /dogrulama/kalem/{id}/itiraz — değerlendirmeyi yeniden hesaplatır. */
 export function itirazEt(
   somutCiktiId: string,
-  aciklama?: string | null,
+  aciklama: string,
 ): Promise<KanitDurumu> {
   return apiIstek<KanitDurumu>(`${kalemYolu(somutCiktiId)}/itiraz`, {
     method: "POST",
-    body: JSON.stringify({ aciklama: aciklama ?? null }),
+    body: JSON.stringify({ aciklama }),
   });
 }
 

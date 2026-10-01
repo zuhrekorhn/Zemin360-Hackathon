@@ -306,7 +306,7 @@ function Degerlendirme({
   kimlik: string;
   not: string | null;
   bekleniyor: boolean;
-  onItiraz: (aciklama: string | null) => Promise<boolean>;
+  onItiraz: (aciklama: string) => Promise<boolean>;
 }) {
   const [acik, setAcik] = useState(false);
   const [aciklama, setAciklama] = useState("");
@@ -325,7 +325,8 @@ function Degerlendirme({
           className="flex flex-col gap-3"
           onSubmit={(olay) => {
             olay.preventDefault();
-            void onItiraz(aciklama.trim() || null).then((tamam) => {
+            if (aciklama.trim().length < 3) return;
+            void onItiraz(aciklama.trim()).then((tamam) => {
               if (tamam) {
                 setAciklama("");
                 setAcik(false);
@@ -333,11 +334,7 @@ function Degerlendirme({
             });
           }}
         >
-          <FormAlani
-            etiket="İtiraz nedeni"
-            htmlFor={`itiraz-${kimlik}`}
-            istegeBagli
-          >
+          <FormAlani etiket="İtiraz nedeni" htmlFor={`itiraz-${kimlik}`}>
             <Input
               id={`itiraz-${kimlik}`}
               value={aciklama}
@@ -346,11 +343,15 @@ function Degerlendirme({
             />
           </FormAlani>
           <p className="text-xs text-muted-foreground">
-            Yeni bir kanıtın varsa yukarıdan ekle. Güven göstergesi yeniden
-            hesaplanır; referans yanıtı korunur.
+            Neyin gözden kaçtığını yaz; yeni bir kanıtın varsa yukarıdan ekle.
+            Güven göstergesi yeniden hesaplanır, referans yanıtı korunur.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button type="submit" size="sm" disabled={bekleniyor}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={bekleniyor || aciklama.trim().length < 3}
+            >
               {bekleniyor ? "Yeniden bakılıyor…" : "İtirazı gönder"}
             </Button>
             <Button
