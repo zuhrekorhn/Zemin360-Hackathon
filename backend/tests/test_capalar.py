@@ -437,3 +437,47 @@ def test_edevlet_barkodu(metin, beklenen):
     from app.core.capalar.edevlet import edevlet_barkodu
 
     assert edevlet_barkodu(metin) == beklenen
+
+
+# --- C2PA -----------------------------------------------------------------------------------
+
+
+def test_c2pa_yoksa_sonuc_cikarilmaz():
+    from app.core.capalar.c2pa_okuma import c2pa_oku
+    from tests import dosya_ornekleri as ornek
+
+    assert c2pa_oku(ornek.gorsel("PNG"), "image/png") is None
+    assert c2pa_oku(ornek.gorsel("JPEG"), "image/jpeg") is None
+
+
+def test_c2pa_ozeti_arac_ve_eylemler():
+    from app.core.capalar.c2pa_okuma import c2pa_ozeti
+
+    depo = {
+        "active_manifest": "urn:1",
+        "manifests": {
+            "urn:1": {
+                "claim_generator": "Adobe_Photoshop/25.0",
+                "assertions": [
+                    {
+                        "label": "c2pa.actions.v2",
+                        "data": {
+                            "actions": [
+                                {"action": "c2pa.created"},
+                                {"action": "c2pa.edited"},
+                                {"action": "c2pa.edited"},
+                            ]
+                        },
+                    }
+                ],
+                "signature_info": {"issuer": "Adobe Inc."},
+            }
+        },
+    }
+    assert c2pa_ozeti(depo) == {
+        "arac": "Adobe_Photoshop/25.0",
+        "eylemler": ["created", "edited"],
+        "imzalayan": "Adobe Inc.",
+        "gecerli": True,
+    }
+    assert c2pa_ozeti({"manifests": {}}) is None

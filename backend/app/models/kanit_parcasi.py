@@ -94,6 +94,11 @@ class KanitParcasi(UUIDPrimaryKeyMixin, Base):
         return (self.belge or {}).get("dosya", {}).get("boyut")
 
     @property
+    def uretim_araci(self) -> str | None:
+        """C2PA içerik kimlik bilgisindeki üretim aracı (varsa; plan § 4.3)."""
+        return ((self.belge or {}).get("c2pa") or {}).get("arac")
+
+    @property
     def girvak_incelemesi(self) -> str | None:
         """e-Devlet belgesi: "bekliyor" | "onaylandi" | "reddedildi"; yoksa None."""
         for capa in (self.belge or {}).get("capalar", []):

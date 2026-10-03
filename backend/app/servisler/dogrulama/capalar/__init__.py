@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.core.capalar import kodlar, rozet  # noqa: F401  (ön okuyucu kaydı)
+from app.core.capalar import c2pa_okuma, kodlar, rozet  # noqa: F401  (ön okuyucu kaydı)
 from app.servisler.dogrulama.capalar.adres import AdresDogrulayici
 from app.servisler.dogrulama.capalar.edevlet import EdevletDogrulayici
 from app.servisler.dogrulama.capalar.imza import ImzaDogrulayici

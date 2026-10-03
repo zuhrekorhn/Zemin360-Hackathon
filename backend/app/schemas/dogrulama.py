@@ -50,6 +50,8 @@ class KanitParcasiYaniti(BaseModel):
     gorunur_firmaya: bool = False
     # e-Devlet belgesinin GİRVAK incelemesi: bekliyor | onaylandi | reddedildi
     girvak_incelemesi: str | None = None
+    # Görselin C2PA bilgisindeki üretim aracı (ör. "Adobe Photoshop 25.0")
+    uretim_araci: str | None = None
 
     model_config = {"from_attributes": True}
 
