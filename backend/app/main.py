@@ -16,6 +16,7 @@ from app.api import (
     bildirimler,
     canlilik,
     dogrulama,
+    dosya,
     eposta_dogrulama,
     eslestirme,
     firma_karti,
@@ -108,3 +109,4 @@ app.include_router(canlilik.router)
 app.include_router(profil.router)
 app.include_router(firma_karti.router)
 app.include_router(hesap_baglama.router)
+app.include_router(dosya.router)

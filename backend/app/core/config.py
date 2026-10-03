@@ -85,6 +85,23 @@ class Settings(BaseSettings):
     # Doğrulama kodunu YouTube kanal açıklamasında okumak için (Data API, uygulama
     # anahtarı). Boşsa kanal sayfası okunur.
     youtube_api_anahtari: str = ""
+    # Dosya ve görsel kanıtı (plan § 4.4). Yerel: dosyalar `depo_klasoru`'nda, indirme
+    # backend'in /dosya ucundan (`api_adresi`). R2: yayında (Railway diski kalıcı değil).
+    depo_saglayici: Literal["r2", "yerel", "kapali"] = "yerel"
+    depo_klasoru: str = "yuklemeler"
+    api_adresi: str = "http://localhost:8000"
+    r2_hesap_kimligi: str = ""
+    r2_erisim_anahtari: str = ""
+    r2_gizli_anahtar: str = ""
+    r2_kova: str = ""
+    depo_zaman_asimi_sn: float = 15
+    # ClamAV (ayrı konteyner, clamd TCP). Kapalıyken dosya taranmadan kabul edilir.
+    virus_tarayici: Literal["clamav", "kapali"] = "kapali"
+    clamav_sunucu: str = "localhost"
+    clamav_port: int = 3310
+    virus_zaman_asimi_sn: float = 30
+    # Kullanıcı başına günlük dosya yükleme sınırı
+    gunluk_dosya_siniri: int = 30
 
     @property
     def cors_origin_list(self) -> list[str]:

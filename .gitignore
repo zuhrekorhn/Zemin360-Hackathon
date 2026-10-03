@@ -19,3 +19,5 @@ out/
 *.log
 .vscode/
 .idea/
+# Yerel kanıt dosyası deposu (DEPO_SAGLAYICI=yerel)
+backend/yuklemeler/

@@ -8,10 +8,13 @@ fabrika ve `servis_kipleri`'ne bir satır olarak eklenir.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from functools import lru_cache
+from pathlib import Path
 
 from app.core.config import Settings, get_settings
+from app.core.dis_servisler.depo import Depo, KapaliDepo, R2Depo, YerelDepo
 from app.core.dis_servisler.eposta import (
     EpostaGonderici,
     KapaliGonderici,
@@ -25,6 +28,7 @@ from app.core.dis_servisler.oauth import (
     OAuthSaglayici,
     OrcidOAuth,
 )
+from app.core.dis_servisler.virus import ClamavTarayici, KapaliTarayici, VirusTarayici
 from app.core.profil_kodu import (
     KisiselSitePlatformu,
     ProfilKoduPlatformu,
@@ -87,9 +91,45 @@ def profil_kodu_platformlari() -> dict[str, ProfilKoduPlatformu]:
     return {p.platform: p for p in platformlar}
 
 
+@lru_cache
+def depo() -> Depo:
+    return depo_sec(get_settings())
+
+
+def depo_sec(ayar: Settings) -> Depo:
+    if ayar.depo_saglayici == "r2":
+        alanlar = (ayar.r2_hesap_kimligi, ayar.r2_erisim_anahtari, ayar.r2_gizli_anahtar)
+        if all(alanlar) and ayar.r2_kova:
+            return R2Depo(
+                hesap_kimligi=ayar.r2_hesap_kimligi,
+                erisim_anahtari=ayar.r2_erisim_anahtari,
+                gizli_anahtar=ayar.r2_gizli_anahtar,
+                kova=ayar.r2_kova,
+                zaman_asimi_sn=ayar.depo_zaman_asimi_sn,
+            )
+        # Eksik ayarla açılış durmaz (İ9): yükleme 503, geri kalan her şey çalışır.
+        logger.warning("DEPO_SAGLAYICI=r2 ama R2_* alanlari eksik; dosya yukleme kapali")
+        return KapaliDepo()
+    if ayar.depo_saglayici == "yerel":
+        # İndirme token'ı oturum JWT'sinden ayrı bir anahtarla imzalanır.
+        imza = hashlib.sha256(f"dosya:{ayar.jwt_gizli_anahtar}".encode()).hexdigest()
+        return YerelDepo(Path(ayar.depo_klasoru).resolve(), imza, ayar.api_adresi)
+    return KapaliDepo()
+
+
+@lru_cache
+def virus_tarayici() -> VirusTarayici:
+    ayar = get_settings()
+    if ayar.virus_tarayici == "clamav":
+        return ClamavTarayici(ayar.clamav_sunucu, ayar.clamav_port, ayar.virus_zaman_asimi_sn)
+    return KapaliTarayici()
+
+
 def servis_kipleri() -> dict[str, str]:
     """Servis adı → o an kullanılan kip (sağlık ucu için)."""
     return {
         "eposta": eposta_gonderici().kip,
         "oauth": ", ".join(sorted(oauth_saglayicilari())) or "kapali",
+        "depo": depo().kip,
+        "virus": virus_tarayici().kip,
     }

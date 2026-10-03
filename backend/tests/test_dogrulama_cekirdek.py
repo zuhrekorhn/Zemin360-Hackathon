@@ -276,7 +276,9 @@ def test_birden_cok_parca_baslik_basina_en_gucluyu_alir():
     parça işaretleri sırayla döner, yetenek puanı veren parçayı bilir."""
 
     async def sahte(_alanlar):
-        return cikarim(kanitlanan_yetenekler=[{"yetenek": "Python", "alinti": "Python ile yazılmış kütüphane"}])
+        return cikarim(
+            kanitlanan_yetenekler=[{"yetenek": "Python", "alinti": "Python ile yazılmış kütüphane"}]
+        )
 
     girdi = DegerlendirmeGirdisi(baslik="Kütüphane", yetenekler=("Python",))
     parcalar = [okunan(erisim=E.ENGELLENDI), okunan(metin="Python ile yazılmış kütüphane")]

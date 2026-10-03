@@ -23,6 +23,18 @@ dependencies = [
     # Kimlik (docs/faz-b-kimlik-ve-dongu.md § 1): şifre hash'i ve JWT
     "argon2-cffi>=23.1",
     "PyJWT>=2.8",
+    # Dosya ve görsel kanıtı (docs/plans/dogrulama-iyilestirme.md § 4)
+    "python-multipart>=0.0.9",  # yükleme ucu
+    "boto3>=1.34",  # Cloudflare R2 (S3 uyumlu)
+    "filetype>=1.2",  # tür ilk baytlardan
+    "pikepdf>=9.0",  # PDF temizliği (JavaScript, gömülü dosya)
+    "pillow>=11.0",  # görselin yeniden kodlanması, EXIF
+    "pillow-heif>=0.18",  # HEIC
+    "pypdf>=5.0",  # PDF metni
+    "pypdfium2>=4.30",  # PDF sayfası → görüntü (QR)
+    "zxing-cpp>=2.2",  # QR / barkod
+    "pyhanko>=0.25",  # e-imza (PAdES)
+    "c2pa-python>=0.6",  # içerik kimlik bilgisi
 ]
 
 [project.optional-dependencies]

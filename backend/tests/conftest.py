@@ -144,3 +144,17 @@ def eposta_gonderilmez(monkeypatch):
     gonderici = SahteEpostaGonderici()
     monkeypatch.setattr(kurulum, "eposta_gonderici", lambda: gonderici)
     return gonderici
+
+
+@pytest.fixture(autouse=True)
+def depo(monkeypatch, tmp_path):
+    """Testler `.env`'deki depoya ve virüs tarayıcısına bağlı kalmaz: dosyalar
+    testin geçici klasörüne yazılır, tarama kapalı. Depoyu sınayan test bunu ister."""
+    from app.core.dis_servisler import kurulum
+    from app.core.dis_servisler.depo import YerelDepo
+    from app.core.dis_servisler.virus import KapaliTarayici
+
+    yerel = YerelDepo(tmp_path / "depo", "test-dosya-imzasi", "http://testserver")
+    monkeypatch.setattr(kurulum, "depo", lambda: yerel)
+    monkeypatch.setattr(kurulum, "virus_tarayici", lambda: KapaliTarayici())
+    return yerel
