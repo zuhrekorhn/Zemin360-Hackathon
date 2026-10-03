@@ -13,11 +13,12 @@ from collections.abc import Sequence
 
 import httpx
 
+from app.agents.dogrulama.capalar import CapaSonucu
 from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi, sahiplik_belirle
 from app.agents.dogrulama.kurallar import OkunanKanit
 from app.core.embeddings import embedding_listesi_uret
 from app.core.kanit_okuma import kaniti_oku
-from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi, ParcaTuru
+from app.core.kanit_okuma.belge import ErisimDurumu, ParcaTuru
 from app.core.kanit_okuma.parca_secimi import Gomucu, sec
 
 
@@ -51,7 +52,7 @@ async def dosya_okunusu(
     dosya_adi: str | None,
     tam_metin: str | None,
     betim: str | None,
-    seviye: KaynakSeviyesi,
+    capa: CapaSonucu,
     iddia_sorgulari: list[str],
     gom: Gomucu = embedding_listesi_uret,
 ) -> OkunanKanit:
@@ -59,7 +60,8 @@ async def dosya_okunusu(
     okunmuştur (`servisler/dogrulama/dosyalar.py`); burada ağ ve model yok.
 
     Model betimi ve metni birlikte görür (görselin çalışmayla ilgisi betimden
-    anlaşılır); alıntı denetimi yalnızca belgede yazan metne yapılır.
+    anlaşılır); alıntı denetimi yalnızca belgede yazan metne yapılır. Seviye
+    çapalardan gelir (`capalar.dosya_seviyesi`), çapasız dosya D.
     """
     yazili = (tam_metin or "").strip()
     satirlar = [f"[Görülen: {betim.strip()}]"] if betim and betim.strip() else []
@@ -69,7 +71,8 @@ async def dosya_okunusu(
     model_metni = await sec(metin, iddia_sorgulari, gom) if metin else ""
     return OkunanKanit(
         erisim=ErisimDurumu.ACIK if metin else ErisimDurumu.ICERIK_YOK,
-        seviye=seviye,
+        seviye=capa.seviye,
+        sahiplik_kaynagi=capa.sahiplik,
         metin=metin,
         platform="pdf" if tur == ParcaTuru.DOSYA.value else "gorsel",
         model_metni=model_metni,

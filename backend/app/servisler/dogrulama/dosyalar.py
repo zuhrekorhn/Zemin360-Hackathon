@@ -1,5 +1,5 @@
 """Dosya ve görsel kanıtının orkestrasyonu (plan § 4): sınırlar → yükleme hattı → içerik
-okuma → depo → tek kapıdan parça → değerlendirme.
+okuma → çapa doğrulaması → depo → tek kapıdan parça → değerlendirme.
 
 İçerik yükleme anında bir kez okunur ve maskelenmiş olarak saklanır (`tam_metin`,
 `gorsel_metni`, `belge["betim"]`); değerlendirme ve itiraz dosyayı yeniden
@@ -31,9 +31,12 @@ from app.core.dosya_hatti import DosyaReddedildi, HazirDosya, dosyayi_hazirla, g
 from app.core.kanit_okuma.belge import ParcaTuru
 from app.core.kanit_okuma.maskeleme import maskele
 from app.core.kanit_okuma.pdf import model_okumali_mi, pdf_metni
+from app.models.hesap import Hesap
 from app.models.kanit_parcasi import KanitParcasi
+from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler.dogrulama.capalar import CapaGirdisi, capalari_dogrula
 from app.servisler.dogrulama.kanit import degerlendir
 from app.servisler.dogrulama.parcalar import (
     DOSYA_TURLERI,
@@ -70,6 +73,21 @@ async def icerigi_oku(hazir: HazirDosya) -> DosyaIcerigi:
     return DosyaIcerigi(gorulen, gorulen, okunus.betim.strip() or None, sayfa, "model")
 
 
+async def _capa_girdisi(
+    oturum: AsyncSession, kullanici_id: uuid.UUID, hazir: HazirDosya, icerik: DosyaIcerigi
+) -> CapaGirdisi:
+    kullanici = await oturum.get(Kullanici, kullanici_id)
+    hesap = await oturum.get(Hesap, kullanici.hesap_id) if kullanici.hesap_id else None
+    return CapaGirdisi(
+        ham=hazir.ham,
+        icerik_turu=hazir.icerik_turu,
+        metin=icerik.tam_metin,
+        on_bilgi=hazir.on_bilgi,
+        ad=kullanici.ad,
+        eposta=hesap.email if hesap else kullanici.email,
+    )
+
+
 async def gunluk_yukleme_sayisi(oturum: AsyncSession, kullanici_id: uuid.UUID) -> int:
     """Son 24 saatte bu gencin yüklediği dosya sayısı (silinenler sayılmaz)."""
     sinir = dt.datetime.now(dt.UTC) - dt.timedelta(days=1)
@@ -101,6 +119,7 @@ async def dosya_ekle(
     hazir = await dosyayi_hazirla(ham, kurulum.virus_tarayici())
     dosya_eklenebilir_mi(cikti, hazir.ozet)  # model ve depodan önce
     icerik = await icerigi_oku(hazir)
+    capalar = await capalari_dogrula(await _capa_girdisi(oturum, kullanici_id, hazir, icerik))
     anahtar = f"kanit/{uuid.uuid4().hex}"
     belge = {
         "dosya": {
@@ -113,6 +132,7 @@ async def dosya_ekle(
         },
         **({"betim": icerik.betim} if icerik.betim else {}),
         **hazir.on_bilgi,
+        "capalar": capalar,
     }
     depo = kurulum.depo()
     await depo.koy(anahtar, hazir.veri, hazir.icerik_turu)

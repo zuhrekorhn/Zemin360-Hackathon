@@ -14,7 +14,7 @@ from app.api.kimlik import mevcut_hesap
 from app.db.session import get_session
 from app.models.hesap import Hesap
 from app.schemas.auth import EpostaDogrulamaIstegi, EpostaDogrulamaYaniti
-from app.servisler import kimlik_dogrulama
+from app.servisler import kart_hazirlama, kimlik_dogrulama
 
 router = APIRouter(tags=["kimlik"])
 
@@ -23,14 +23,20 @@ ZATEN_DOGRULANDI = "E-posta adresin zaten doğrulanmış."
 
 @router.post("/auth/eposta-dogrula", response_model=EpostaDogrulamaYaniti)
 async def eposta_dogrula(
-    istek: EpostaDogrulamaIstegi, oturum: AsyncSession = Depends(get_session)
+    istek: EpostaDogrulamaIstegi,
+    arka_plan: BackgroundTasks,
+    oturum: AsyncSession = Depends(get_session),
 ) -> EpostaDogrulamaYaniti:
-    """Geçersiz ya da süresi dolmuş bağlantı 400; aynı bağlantının tekrarı 200."""
+    """Geçersiz ya da süresi dolmuş bağlantı 400; aynı bağlantının tekrarı 200.
+    Gencin çapalı dosyaları varsa kalemleri arka planda yeniden okunur (kimlik koşulu)."""
     try:
-        await kimlik_dogrulama.dogrula(oturum, istek.token)
+        hesap = await kimlik_dogrulama.dogrula(oturum, istek.token)
     except kimlik_dogrulama.BaglantiGecersiz as hata:
         raise HTTPException(status_code=400, detail=str(hata)) from hata
+    kart_id = await kimlik_dogrulama.dogrulama_sonrasi_kart(oturum, hesap)
     await oturum.commit()
+    if kart_id is not None:
+        arka_plan.add_task(kart_hazirlama.kalemleri_yeniden_oku, kart_id)
     return EpostaDogrulamaYaniti(eposta_dogrulandi=True)
 
 

@@ -64,6 +64,8 @@ class DosyaReddedildi(ValueError):
 @dataclass(frozen=True)
 class HazirDosya:
     veri: bytes
+    # Temizlenmemiş dosya: çapa doğrulaması (imza bayt aralığı, rozet verisi) için
+    ham: bytes = field(repr=False)
     icerik_turu: str
     parca_turu: ParcaTuru
     # Ham dosyanın SHA-256'sı (tekrar denetimi, plan § 4.4)
@@ -232,6 +234,7 @@ async def dosyayi_hazirla(ham: bytes, tarayici: VirusTarayici) -> HazirDosya:
         veri, icerik_turu = await asyncio.to_thread(gorsel_temizle, ham, tur.icerik_turu)
     return HazirDosya(
         veri=veri,
+        ham=ham,
         icerik_turu=icerik_turu,
         parca_turu=tur.parca_turu,
         ozet=hashlib.sha256(ham).hexdigest(),

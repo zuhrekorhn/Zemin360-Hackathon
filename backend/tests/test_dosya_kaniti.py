@@ -10,6 +10,7 @@ from app.api.auth import hesap_olustur
 from app.core.dis_servisler import kurulum
 from app.core.dis_servisler.depo import KapaliDepo
 from app.core.kimlik import token_uret
+from app.models.yetenek_karti import YetenekKarti
 from app.servisler.dogrulama import parcalar
 from tests import dosya_ornekleri as ornek
 from tests.test_kanit_parcasi import _genc_ve_kalem, _kalemi_oku, sahte_degerlendirme  # noqa: F401
@@ -164,5 +165,68 @@ def test_sahiplik_401_403_404():
             assert (await _yukle(istemci, kalem_id, baska, ornek.pdf())).status_code == 404
             yok = f"/dogrulama/kalem/{kalem_id}/kanit/{uuid.uuid4()}/indir"
             assert (await istemci.get(yok, headers=baslik)).status_code == 404
+
+    asyncio.run(senaryo())
+
+
+def test_qr_ile_dogrulanan_belge_duzenleyen_seviyesinde(monkeypatch):
+    """QR bilinen düzenleyene gidiyor, sayfada gencin adı var, e-posta doğrulanmış
+    (ad kilitli): seviye A, Kanıt 3. E-posta doğrulanmamışken aynı belge C (Kanıt 2)."""
+    import datetime as dt
+
+    from sqlalchemy import select
+
+    from app.models.hesap import Hesap
+    from app.models.kullanici import Kullanici
+    from app.servisler.dogrulama.capalar import adres
+    from tests.test_capalar import _qr_png
+
+    async def sayfa(_adres, _transport):
+        return "Python Temelleri Sertifikası Elif"
+
+    monkeypatch.setattr(adres, "sayfa_metni", sayfa)
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, kart_id, kalem_id = await _genc_ve_kalem(oturum)
+            qr = _qr_png("https://www.credly.com/badges/abc-123")
+            yanit = await _yukle(istemci, kalem_id, baslik, qr, ad="rozet.png")
+            assert yanit.status_code == 201, yanit.text
+            assert yanit.json()["kanitlar"][0]["seviye"] == "kamuya_acik"
+            assert yanit.json()["guven_skoru"]["kanit_orijinalligi"] == 2
+
+            kart = await oturum.get(YetenekKarti, kart_id)
+            kullanici = await oturum.get(Kullanici, kart.kullanici_id)
+            hesap = await oturum.scalar(select(Hesap).where(Hesap.id == kullanici.hesap_id))
+            hesap.eposta_dogrulandi_tarihi = dt.datetime.now(dt.UTC)
+            await oturum.commit()
+            yeniden = await istemci.post(f"/dogrulama/kalem/{kalem_id}/degerlendir", headers=baslik)
+            assert yeniden.status_code == 200, yeniden.text
+            assert yeniden.json()["kanitlar"][0]["seviye"] == "duzenleyen"
+            assert yeniden.json()["guven_skoru"]["kanit_orijinalligi"] == 3
+            kalem = await _kalemi_oku(oturum, kalem_id)
+            [capa] = kalem.kanit_parcalari[0].belge["capalar"]
+            assert capa["duzenleyen"] == "Credly" and capa["ad_eslesti"] is True
+            assert kalem.kanit_parcalari[0].sahiplik_kaynagi == "ad"
+
+    asyncio.run(senaryo())
+
+
+def test_eposta_dogrulaninca_dosyasi_olan_kart_yeniden_okunur():
+    from sqlalchemy import select
+
+    from app.models.hesap import Hesap
+    from app.models.kullanici import Kullanici
+    from app.servisler import kimlik_dogrulama
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, kart_id, kalem_id = await _genc_ve_kalem(oturum)
+            kart = await oturum.get(YetenekKarti, kart_id)
+            kullanici = await oturum.get(Kullanici, kart.kullanici_id)
+            hesap = await oturum.scalar(select(Hesap).where(Hesap.id == kullanici.hesap_id))
+            assert await kimlik_dogrulama.dogrulama_sonrasi_kart(oturum, hesap) is None
+            await _yukle(istemci, kalem_id, baslik, ornek.pdf())
+            assert await kimlik_dogrulama.dogrulama_sonrasi_kart(oturum, hesap) == kart_id
 
     asyncio.run(senaryo())

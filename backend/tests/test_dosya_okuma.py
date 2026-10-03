@@ -5,14 +5,14 @@ import asyncio
 
 import pytest
 
-from app.agents.dogrulama.capalar import dosya_seviyesi
+from app.agents.dogrulama.capalar import BEYAN, dosya_seviyesi
 from app.agents.dogrulama.cekirdek import DegerlendirmeGirdisi, kalemi_degerlendir
 from app.agents.dogrulama.cikarim import KanitCikarimi
 from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu
 from app.agents.dogrulama.okuma import dosya_okunusu
 from app.core.dis_servisler.virus import KapaliTarayici
 from app.core.dosya_hatti import dosyayi_hazirla
-from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
+from app.core.kanit_okuma.belge import ErisimDurumu
 from app.core.kanit_okuma.maskeleme import maskele, tc_kimlik_gecerli_mi
 from app.core.kanit_okuma.pdf import model_okumali_mi, pdf_metni
 from app.servisler.dogrulama.dosyalar import icerigi_oku
@@ -88,7 +88,7 @@ def test_dosya_okunusu_betim_baglam_alinti_yalnizca_yazili_metin():
             dosya_adi="masa.jpg",
             tam_metin="",
             betim="Ahşaptan yapılmış bir masa",
-            seviye=KaynakSeviyesi.BEYAN,
+            capa=BEYAN,
             iddia_sorgulari=["Masa"],
             gom=_gom,
         )
@@ -102,7 +102,7 @@ def test_dosya_okunusu_betim_baglam_alinti_yalnizca_yazili_metin():
             dosya_adi="x.pdf",
             tam_metin=None,
             betim=None,
-            seviye=KaynakSeviyesi.BEYAN,
+            capa=BEYAN,
             iddia_sorgulari=[],
             gom=_gom,
         )
@@ -119,7 +119,7 @@ def test_capasiz_gorsel_kanit_1_betimden_alinti_sayilmaz():
             dosya_adi="masa.jpg",
             tam_metin="",
             betim="Ahşaptan yapılmış bir masa",
-            seviye=dosya_seviyesi({}),
+            capa=dosya_seviyesi({}),
             iddia_sorgulari=["Masa"],
             gom=_gom,
         )
@@ -142,20 +142,3 @@ def test_capasiz_gorsel_kanit_1_betimden_alinti_sayilmaz():
     assert sonuc.puanlar.kanit == 1
     assert sonuc.yetenek_kanitlari == ()
     assert "doğrulanabilir bir işaret" in sonuc.not_metni
-
-
-@pytest.mark.parametrize(
-    ("capalar", "beklenen"),
-    [
-        ([], KaynakSeviyesi.BEYAN),
-        ([{"tur": "qr", "sonuc": "gecersiz"}], KaynakSeviyesi.BEYAN),
-        ([{"tur": "edevlet", "sonuc": "incelemede"}], KaynakSeviyesi.BEYAN),
-        ([{"tur": "qr", "sonuc": "kamuya_acik"}], KaynakSeviyesi.KAMUYA_ACIK),
-        (
-            [{"tur": "qr", "sonuc": "kamuya_acik"}, {"tur": "imza", "sonuc": "dogrulandi"}],
-            KaynakSeviyesi.DUZENLEYEN,
-        ),
-    ],
-)
-def test_dosya_seviyesi_en_guclu_capa(capalar, beklenen):
-    assert dosya_seviyesi({"capalar": capalar}) is beklenen

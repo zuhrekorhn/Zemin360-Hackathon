@@ -18,7 +18,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.agents.dogrulama.capalar import dosya_seviyesi
+from app.agents.dogrulama.capalar import KimlikDurumu, dosya_seviyesi
 from app.agents.dogrulama.cekirdek import (
     KURAL_SURUMU,
     DegerlendirmeGirdisi,
@@ -28,12 +28,14 @@ from app.agents.dogrulama.cekirdek import (
 )
 from app.agents.dogrulama.cikarim import cikar
 from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi
+from app.agents.dogrulama.kimlik import ad_kilitli
 from app.agents.dogrulama.kurallar import OkunanKanit
 from app.agents.dogrulama.okuma import dosya_okunusu, kanit_oku
 from app.core.is_kalemi import kanit_bekliyor
 from app.core.kanit_okuma.belge import ParcaTuru
 from app.models.guven_skoru import GuvenSkoru
 from app.models.kanit_parcasi import KanitParcasi
+from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_kaniti import YetenekKaniti
 from app.models.yetenek_karti import YetenekKarti
@@ -69,7 +71,7 @@ async def hazirla(
     """Her kanıt parçasını okur ve iddiayı toplar (ağ ve embedding var, model yok)."""
     kart = await oturum.scalar(
         select(YetenekKarti)
-        .options(selectinload(YetenekKarti.kullanici))
+        .options(selectinload(YetenekKarti.kullanici).selectinload(Kullanici.hesap))
         .where(YetenekKarti.id == cikti.yetenek_karti_id)
     )
     girdi = _girdi(kart, cikti, itiraz_notu)
@@ -78,12 +80,26 @@ async def hazirla(
         return Hazirlik((), (), girdi)
     bagli = await bagli_hesap_bilgileri(oturum, kart.kullanici_id) if kart else ()
     sorgular = _iddia_sorgulari(girdi)
-    okunanlar = tuple([await _parcayi_oku(p, sorgular, bagli) for p in parcalar])
+    kimlik = _kimlik_durumu(kart)
+    okunanlar = tuple([await _parcayi_oku(p, sorgular, bagli, kimlik) for p in parcalar])
     return Hazirlik(parcalar, okunanlar, girdi)
 
 
+def _kimlik_durumu(kart: YetenekKarti | None) -> KimlikDurumu:
+    hesap = kart.kullanici.hesap if kart and kart.kullanici else None
+    if hesap is None:
+        return KimlikDurumu()
+    return KimlikDurumu(
+        eposta_dogrulandi=hesap.eposta_dogrulandi_tarihi is not None,
+        ad_kilitli=ad_kilitli(hesap.eposta_dogrulandi_tarihi),
+    )
+
+
 async def _parcayi_oku(
-    parca: KanitParcasi, sorgular: list[str], bagli: tuple[BagliHesapBilgisi, ...]
+    parca: KanitParcasi,
+    sorgular: list[str],
+    bagli: tuple[BagliHesapBilgisi, ...],
+    kimlik: KimlikDurumu,
 ) -> OkunanKanit:
     if parca.tur == ParcaTuru.LINK.value:
         return await kanit_oku(parca.url, sorgular, bagli_hesaplar=bagli)
@@ -92,7 +108,7 @@ async def _parcayi_oku(
         dosya_adi=parca.dosya_adi,
         tam_metin=parca.tam_metin,
         betim=(parca.belge or {}).get("betim"),
-        seviye=dosya_seviyesi(parca.belge or {}),
+        capa=dosya_seviyesi(parca.belge or {}, kimlik),
         iddia_sorgulari=sorgular,
     )
 

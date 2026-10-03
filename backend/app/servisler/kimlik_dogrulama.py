@@ -20,6 +20,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import secrets
+import uuid
 from urllib.parse import quote
 
 from sqlalchemy import delete, select, update
@@ -109,6 +110,20 @@ async def dogrula(oturum: AsyncSession, token: str) -> Hesap:
     if hesap.eposta_dogrulandi_tarihi is None:
         hesap.eposta_dogrulandi_tarihi = _simdi()
     return hesap
+
+
+async def dogrulama_sonrasi_kart(oturum: AsyncSession, hesap: Hesap) -> uuid.UUID | None:
+    """E-posta doğrulanınca kimlik koşulu değişir: çapalı dosyası olan gencin kalemleri
+    yeniden okunmalı (dosya seviyesi okuma anında kimlikle hesaplanır, plan § 6.3).
+    Döner: yeniden okunacak kart; yoksa None."""
+    return await oturum.scalar(
+        select(YetenekKarti.id)
+        .join(Kullanici, Kullanici.id == YetenekKarti.kullanici_id)
+        .join(SomutCikti, SomutCikti.yetenek_karti_id == YetenekKarti.id)
+        .join(KanitParcasi, KanitParcasi.somut_cikti_id == SomutCikti.id)
+        .where(Kullanici.hesap_id == hesap.id, KanitParcasi.dosya_anahtari.is_not(None))
+        .limit(1)
+    )
 
 
 def dogrulama_epostasi(hesap: Hesap, token: str) -> Eposta:
