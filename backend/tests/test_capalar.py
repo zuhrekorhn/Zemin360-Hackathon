@@ -291,3 +291,130 @@ def test_imzasiz_pdf_imza_capasi_yok():
     from tests import dosya_ornekleri as ornek
 
     assert asyncio.run(ImzaDogrulayici().dogrula(_imza_girdisi(ornek.pdf()))) == []
+
+
+# --- Open Badges ----------------------------------------------------------------------------
+
+ROZET_ADRESI = "https://www.credly.com/api/v1/obi/v2/badge_assertions/abc"
+
+
+def _alici(eposta="elif@ornek.com", tuz="tuz1"):
+    import hashlib
+
+    ozet = hashlib.sha256((eposta + tuz).encode()).hexdigest()
+    return {"type": "email", "hashed": True, "salt": tuz, "identity": f"sha256${ozet}"}
+
+
+def _rozet_png(veri: str) -> bytes:
+    from PIL.PngImagePlugin import PngInfo
+
+    bilgi = PngInfo()
+    bilgi.add_itxt("openbadges", veri)
+    cikti = io.BytesIO()
+    Image.new("RGB", (16, 16), "blue").save(cikti, format="PNG", pnginfo=bilgi)
+    return cikti.getvalue()
+
+
+def _rozet_girdisi(veri, sunulan, eposta="elif@ornek.com", monkeypatch=None):
+    import ipaddress
+    import json
+
+    from app.core import guvenli_istek
+
+    async def coz(host, port):
+        return [ipaddress.ip_address("93.184.216.34")]
+
+    monkeypatch.setattr(guvenli_istek, "cozumleyici", coz)
+
+    def isleyici(istek):
+        if sunulan is None:
+            return httpx.Response(404)
+        return httpx.Response(200, content=json.dumps(sunulan).encode())
+
+    from app.core.capalar.rozet import rozet_verisini_oku
+
+    return CapaGirdisi(
+        ham=b"",
+        icerik_turu="image/png",
+        metin="",
+        on_bilgi={"rozet": rozet_verisini_oku(_rozet_png(veri), "image/png")},
+        ad="Elif Yılmaz",
+        eposta=eposta,
+        transport=httpx.MockTransport(isleyici),
+    )
+
+
+def _rozet_dogrula(girdi):
+    from app.servisler.dogrulama.capalar.rozet import RozetDogrulayici
+
+    return asyncio.run(RozetDogrulayici().dogrula(girdi))
+
+
+def test_rozet_verisi_yeniden_kodlamadan_once_okunur():
+    import json
+
+    from app.core.dosya_hatti import gorsel_temizle
+
+    png = _rozet_png(json.dumps({"id": ROZET_ADRESI}))
+    from app.core.capalar.rozet import rozet_verisini_oku
+
+    assert ROZET_ADRESI in rozet_verisini_oku(png, "image/png")["veri"]
+    temiz, _ = gorsel_temizle(png, "image/png")
+    assert rozet_verisini_oku(temiz, "image/png") is None
+
+
+def test_barindirilan_rozet_alici_eposta_eslesirse_duzenleyen(monkeypatch):
+    import json
+
+    iddia = {"id": ROZET_ADRESI, "recipient": _alici(), "verification": {"type": "hosted"}}
+    sunulan = {**iddia, "badge": {"name": "AWS Cloud Practitioner"}}
+    [bulgu] = _rozet_dogrula(_rozet_girdisi(json.dumps(iddia), sunulan, monkeypatch=monkeypatch))
+    assert bulgu["dogrulandi"] and bulgu["eposta_eslesti"] and not bulgu["iptal"]
+    assert bulgu["duzenleyen"] == "Credly" and bulgu["rozet_adi"] == "AWS Cloud Practitioner"
+    assert seviye(bulgu) is S.DUZENLEYEN
+
+
+def test_baskasinin_rozeti_ve_iptal_edilmis_rozet_beyan(monkeypatch):
+    import json
+
+    iddia = {"id": ROZET_ADRESI, "recipient": _alici("baska@ornek.com")}
+    [bulgu] = _rozet_dogrula(_rozet_girdisi(json.dumps(iddia), iddia, monkeypatch=monkeypatch))
+    assert bulgu["dogrulandi"] and not bulgu["eposta_eslesti"]
+    assert seviye(bulgu) is S.BEYAN
+
+    iptal = {**iddia, "recipient": _alici(), "revoked": True}
+    [bulgu] = _rozet_dogrula(_rozet_girdisi(json.dumps(iptal), iptal, monkeypatch=monkeypatch))
+    assert seviye(bulgu) is S.BEYAN
+
+
+def test_sunulan_iddia_farkliysa_dogrulanmaz(monkeypatch):
+    import json
+
+    iddia = {"id": ROZET_ADRESI, "recipient": _alici()}
+    sunulan = {"id": ROZET_ADRESI, "recipient": _alici("baska@ornek.com")}
+    [bulgu] = _rozet_dogrula(_rozet_girdisi(json.dumps(iddia), sunulan, monkeypatch=monkeypatch))
+    assert bulgu["dogrulandi"] is False
+    [yok] = _rozet_dogrula(_rozet_girdisi(json.dumps(iddia), None, monkeypatch=monkeypatch))
+    assert yok["dogrulandi"] is False
+
+
+def test_imzali_rozet_dogrulanmaz(monkeypatch):
+    [bulgu] = _rozet_dogrula(
+        _rozet_girdisi("eyJhbGciOiJSUzI1NiJ9.eyJ9.c2ln", None, monkeypatch=monkeypatch)
+    )
+    assert bulgu["bicim"] == "imzali" and seviye(bulgu) is S.BEYAN
+
+
+@pytest.mark.parametrize(
+    ("alici", "beklenen"),
+    [
+        (_alici(), (True, True)),
+        ({"type": "email", "hashed": False, "identity": "Elif@Ornek.com"}, (True, True)),
+        ({"type": "url", "identity": "https://elif.dev"}, (False, False)),
+        ("elif@ornek.com", (True, True)),
+    ],
+)
+def test_alici_eslesmesi(alici, beklenen):
+    from app.core.capalar.rozet import alici_eslesir
+
+    assert alici_eslesir(alici, "elif@ornek.com") == beklenen
