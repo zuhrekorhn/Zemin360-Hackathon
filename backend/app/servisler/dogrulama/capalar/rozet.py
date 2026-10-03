@@ -58,6 +58,7 @@ class RozetDogrulayici:
         if not adres:
             return [bulgu]
         bulgu["adres"] = adres
+        bulgu["normal_adres"] = normal_url(adres)
         bulgu["duzenleyen"] = duzenleyen(adres)
         sunulan = await _iddiayi_getir(adres, girdi.transport)
         if sunulan is None:

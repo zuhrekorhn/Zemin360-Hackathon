@@ -36,7 +36,7 @@ from app.models.kanit_parcasi import KanitParcasi
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
-from app.servisler.dogrulama.capalar import CapaGirdisi, capalari_dogrula, edevlet
+from app.servisler.dogrulama.capalar import CapaGirdisi, capalari_dogrula, edevlet, tekillik
 from app.servisler.dogrulama.kanit import degerlendir
 from app.servisler.dogrulama.parcalar import (
     DOSYA_TURLERI,
@@ -147,6 +147,7 @@ async def dosya_ekle(
     )
     try:
         await edevlet.inceleme_ac(oturum, parca, cikti, kullanici_id)
+        await tekillik.belge_tekilligi(oturum, parca, cikti, kullanici_id)
         return await degerlendir(oturum, cikti)
     except Exception:
         await depo.sil(anahtar)  # işlem geri alınacak: dosya sahipsiz kalmasın

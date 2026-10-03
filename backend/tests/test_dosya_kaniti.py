@@ -282,3 +282,39 @@ def test_edevlet_belgesi_girvak_onayiyla_duzenleyen(dosya_modele_okutulmaz):
             assert yeniden.json()["guven_skoru"]["kanit_orijinalligi"] == 3
 
     asyncio.run(senaryo())
+
+
+def test_ayni_dogrulama_adresi_iki_hesapta_isaret(monkeypatch):
+    """Aynı QR adresli belge ikinci gencin çalışmasına yüklenince reddedilmez,
+    ikinci hesap için ayni_belge_iki_hesapta işareti açılır."""
+    from sqlalchemy import select
+
+    from app.models.inceleme_isareti import TUR_AYNI_BELGE_IKI_HESAPTA, IncelemeIsareti
+    from app.servisler.dogrulama.capalar import adres
+    from tests.test_capalar import _qr_png
+
+    async def sayfa(_adres, _transport):
+        return "Sertifika"
+
+    monkeypatch.setattr(adres, "sayfa_metni", sayfa)
+    qr = _qr_png("https://www.credly.com/badges/ayni-123")
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            b1, _, k1 = await _genc_ve_kalem(oturum)
+            assert (await _yukle(istemci, k1, b1, qr, ad="a.png")).status_code == 201
+            b2, _, k2 = await _genc_ve_kalem(oturum)
+            assert (await _yukle(istemci, k2, b2, qr, ad="b.png")).status_code == 201
+            isaretler = list(
+                await oturum.scalars(
+                    select(IncelemeIsareti).where(
+                        IncelemeIsareti.tur == TUR_AYNI_BELGE_IKI_HESAPTA,
+                        IncelemeIsareti.somut_cikti_id.in_([k1, k2]),
+                    )
+                )
+            )
+            assert [i.somut_cikti_id for i in isaretler] == [k2]
+            [eslesme] = isaretler[0].ayrinti["eslesmeler"]
+            assert eslesme["adres"] == "https://credly.com/badges/ayni-123"
+
+    asyncio.run(senaryo())
