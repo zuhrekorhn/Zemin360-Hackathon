@@ -205,8 +205,12 @@ def test_kalan_link_ile_yeniden_degerlendirilir(sahte_degerlendirme, kart_hazirl
                 k["id"] for k in ikinci.json()["kanitlar"] if k["url"] == "https://ilk.org/proje"
             )
             await istemci.delete(f"/dogrulama/kalem/{kalem_id}/kanit/{ilk_id}", headers=baslik)
-            # Önce birincil link (ilk), kaldırılınca kalan link okundu.
-            assert sahte_degerlendirme == ["https://ilk.org/proje", "https://ikinci.org/demo"]
+            # Her parça okunur; kaldırılınca yalnızca kalan link okunur.
+            assert sahte_degerlendirme == [
+                "https://ilk.org/proje",
+                "https://ikinci.org/demo",
+                "https://ikinci.org/demo",
+            ]
 
     asyncio.run(senaryo())
 

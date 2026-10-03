@@ -30,42 +30,53 @@ from app.agents.dogrulama.kurallar import OkunanKanit
 from app.agents.dogrulama.okuma import kanit_oku
 from app.core.is_kalemi import kanit_bekliyor
 from app.models.guven_skoru import GuvenSkoru
+from app.models.kanit_parcasi import KanitParcasi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_kaniti import YetenekKaniti
 from app.models.yetenek_karti import YetenekKarti
-from app.servisler.dogrulama.parcalar import birincil_link, link_parcasi_ekle, parca_sil
+from app.servisler.dogrulama.parcalar import link_parcasi_ekle, okunabilir_mi, parca_sil
 from app.servisler.dogrulama.referans import referans_destegi_hesapla, ucuncu_taraf_puani
 from app.servisler.dogrulama.sorgular import bagli_hesap_bilgileri
 
 
 @dataclass(frozen=True)
 class Hazirlik:
-    """Değerlendirmenin girdisi: kanıtın okunuşu ve iddia. Model henüz çağrılmadı."""
+    """Değerlendirmenin girdisi: parçaların okunuşu ve iddia. Model henüz çağrılmadı.
 
-    okunan: OkunanKanit | None
+    `parcalar` ve `okunanlar` aynı sırada: okunuş parçaya geri yazılır.
+    """
+
+    parcalar: tuple[KanitParcasi, ...]
+    okunanlar: tuple[OkunanKanit, ...]
     girdi: DegerlendirmeGirdisi
 
     @property
+    def okunan(self) -> OkunanKanit | None:
+        """Son eklenen parçanın okunuşu (kanıt ekleyen uç onu bildirir)."""
+        return self.okunanlar[-1] if self.okunanlar else None
+
+    @property
     def ozet(self) -> str:
-        return ozet_hesapla(self.girdi, self.okunan)
+        return ozet_hesapla(self.girdi, self.okunanlar)
 
 
 async def hazirla(
     oturum: AsyncSession, cikti: SomutCikti, itiraz_notu: str | None = None
 ) -> Hazirlik:
-    """Birincil linki okur ve iddiayı toplar (ağ ve embedding var, model yok)."""
+    """Her kanıt parçasını okur ve iddiayı toplar (ağ ve embedding var, model yok)."""
     kart = await oturum.scalar(
         select(YetenekKarti)
         .options(selectinload(YetenekKarti.kullanici))
         .where(YetenekKarti.id == cikti.yetenek_karti_id)
     )
     girdi = _girdi(kart, cikti, itiraz_notu)
-    link = birincil_link(cikti)
-    if not link:
-        return Hazirlik(None, girdi)
+    parcalar = tuple(p for p in cikti.kanit_parcalari if okunabilir_mi(p))
+    if not parcalar:
+        return Hazirlik((), (), girdi)
     bagli = await bagli_hesap_bilgileri(oturum, kart.kullanici_id) if kart else ()
-    okunan = await kanit_oku(link, _iddia_sorgulari(girdi), bagli_hesaplar=bagli)
-    return Hazirlik(okunan, girdi)
+    sorgular = _iddia_sorgulari(girdi)
+    okunanlar = tuple([await kanit_oku(p.url, sorgular, bagli_hesaplar=bagli) for p in parcalar])
+    return Hazirlik(parcalar, okunanlar, girdi)
 
 
 def _iddia_sorgulari(girdi: DegerlendirmeGirdisi) -> list[str]:
@@ -85,15 +96,15 @@ def onbellekte_mi(cikti: SomutCikti, hazirlik: Hazirlik) -> bool:
 
 async def uygula(oturum: AsyncSession, cikti: SomutCikti, hazirlik: Hazirlik) -> None:
     """Modeli çağırır, kuralla puanlar ve göstergeyi yazar."""
-    sonuc = await kalemi_degerlendir(hazirlik.girdi, hazirlik.okunan, cikar)
-    _sonucu_yaz(cikti, sonuc, hazirlik.okunan)
-    await _yetenek_kanitlarini_yaz(oturum, cikti, sonuc)
+    sonuc = await kalemi_degerlendir(hazirlik.girdi, hazirlik.okunanlar, cikar)
+    _sonucu_yaz(cikti, sonuc, hazirlik)
+    await _yetenek_kanitlarini_yaz(oturum, cikti, sonuc, hazirlik)
 
 
 async def degerlendir(
     oturum: AsyncSession, cikti: SomutCikti, itiraz_notu: str | None = None
 ) -> OkunanKanit | None:
-    """Çalışmayı değerlendirir ve göstergeyi yazar. Döner: link okunduysa okunuşu.
+    """Çalışmayı değerlendirir ve göstergeyi yazar. Döner: son eklenen parçanın okunuşu.
 
     Linksiz çalışma da değerlendirilir (karar 10): Sonuç ve Rol beyan tavanıyla,
     Kanıt "—". Aynı girdi (iddia, kanıt okunuşu, itiraz notu, kural sürümü) için
@@ -164,7 +175,7 @@ def _girdi(
     )
 
 
-def _sonucu_yaz(cikti: SomutCikti, sonuc: DegerlendirmeSonucu, okunan: OkunanKanit | None) -> None:
+def _sonucu_yaz(cikti: SomutCikti, sonuc: DegerlendirmeSonucu, hazirlik: Hazirlik) -> None:
     simdi = dt.datetime.now(dt.UTC)
     if cikti.guven_skoru is None:
         # Sıfırdan yazılıyor: değişiklikten sonra gelmiş referans yanıtı varsa o sayılır.
@@ -179,18 +190,19 @@ def _sonucu_yaz(cikti: SomutCikti, sonuc: DegerlendirmeSonucu, okunan: OkunanKan
     skor.kanit_ozeti = {**sonuc.kanit_ozeti, "destekler": list(sonuc.destekler)}
     skor.degerlendirme_tarihi = simdi
 
-    parca = next((p for p in cikti.kanit_parcalari if p.url == birincil_link(cikti)), None)
-    if parca is not None and okunan is not None:
+    for parca, okunan, isaretler in zip(
+        hazirlik.parcalar, hazirlik.okunanlar, sonuc.parca_isaretleri, strict=True
+    ):
         parca.erisim = okunan.erisim.value
         parca.seviye = okunan.seviye.value
         parca.sahiplik_kaynagi = okunan.sahiplik_kaynagi.value
         parca.platform = okunan.platform
         parca.okuma_tarihi = simdi
-        parca.isaretler = list(sonuc.isaretler)
+        parca.isaretler = list(isaretler)
 
 
 async def _yetenek_kanitlarini_yaz(
-    oturum: AsyncSession, cikti: SomutCikti, sonuc: DegerlendirmeSonucu
+    oturum: AsyncSession, cikti: SomutCikti, sonuc: DegerlendirmeSonucu, hazirlik: Hazirlik
 ) -> None:
     """Yetenek başına en güçlü kanıt tutulur (yalnızca yükselir)."""
     if not sonuc.yetenek_kanitlari:
@@ -201,11 +213,12 @@ async def _yetenek_kanitlarini_yaz(
             select(YetenekKaniti).where(YetenekKaniti.kart_id == cikti.yetenek_karti_id)
         )
     }
-    parca = next((p for p in cikti.kanit_parcalari if p.url == birincil_link(cikti)), None)
-    if parca is not None and parca.id is None:
+    if any(p.id is None for p in hazirlik.parcalar):
         await oturum.flush()  # yeni eklenen parçanın kimliği veritabanında atanır
-    seviye = sonuc.kanit_ozeti.get("seviye")
     for kanit in sonuc.yetenek_kanitlari:
+        parca = hazirlik.parcalar[kanit.parca] if kanit.parca is not None else None
+        kaynak = parca.id if parca else None
+        seviye = hazirlik.okunanlar[kanit.parca].seviye.value if parca else None
         kayit = mevcut.get(kanit.yetenek)
         if kayit is None:
             oturum.add(
@@ -213,11 +226,11 @@ async def _yetenek_kanitlarini_yaz(
                     kart_id=cikti.yetenek_karti_id,
                     yetenek=kanit.yetenek,
                     en_guclu_puan=kanit.puan,
-                    kaynak_parca_id=parca.id if parca else None,
+                    kaynak_parca_id=kaynak,
                     seviye=seviye,
                 )
             )
         elif kanit.puan > kayit.en_guclu_puan:
             kayit.en_guclu_puan = kanit.puan
-            kayit.kaynak_parca_id = parca.id if parca else None
+            kayit.kaynak_parca_id = kaynak
             kayit.seviye = seviye

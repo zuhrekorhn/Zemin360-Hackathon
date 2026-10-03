@@ -55,22 +55,23 @@ class MevcutSistemDegerlendirici:
             pay=vaka.iddia.kendi_rolu,
             yetenekler=vaka.kart_yetenekleri,
         )
-        link = vaka.linkler[0] if vaka.linkler else None
-        okunan = (
+        sorgular = [f"{girdi.baslik} {girdi.aciklama or ''}", girdi.sonuc or "", girdi.pay or ""]
+        bagli = tuple(
+            BagliHesapBilgisi(h.saglayici, h.kullanici_adi, h.yontem)
+            for h in vaka.kimlik.bagli_hesaplar
+        )
+        okunanlar = [
             await kanit_oku(
                 link,
-                [f"{girdi.baslik} {girdi.aciklama or ''}", girdi.sonuc or "", girdi.pay or ""],
-                bagli_hesaplar=tuple(
-                    BagliHesapBilgisi(h.saglayici, h.kullanici_adi, h.yontem)
-                    for h in vaka.kimlik.bagli_hesaplar
-                ),
+                sorgular,
+                bagli_hesaplar=bagli,
                 transport=self._ag.transport(),
                 gom=self._gom,
             )
-            if link
-            else None
-        )
-        sonuc = await kalemi_degerlendir(girdi, okunan, self._cikar)
+            for link in vaka.linkler
+        ]
+        sonuc = await kalemi_degerlendir(girdi, okunanlar, self._cikar)
+        okunan = okunanlar[0] if okunanlar else None
         return Degerlendirme(
             kanit=sonuc.puanlar.kanit,
             sonuc=sonuc.puanlar.sonuc,

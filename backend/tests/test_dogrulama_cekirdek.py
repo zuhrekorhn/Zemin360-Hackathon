@@ -156,7 +156,7 @@ def degerlendir(cik: KanitCikarimi, ok=None, **girdi_ek):
         return cik
 
     girdi = DegerlendirmeGirdisi(baslik="Kütüphane", yetenekler=("Python",), **girdi_ek)
-    return asyncio.run(kalemi_degerlendir(girdi, ok, sahte))
+    return asyncio.run(kalemi_degerlendir(girdi, [ok] if ok else [], sahte))
 
 
 def test_kamuya_acik_kanitta_beyan_ve_ici_iddia_en_cok_2():
@@ -263,6 +263,31 @@ def test_yetenek_kaniti_listede_ve_alintili_olmali():
 
 def test_ayni_girdi_ayni_ozet_itiraz_notu_degistirir():
     girdi = DegerlendirmeGirdisi(baslik="Kütüphane")
-    assert ozet_hesapla(girdi, okunan()) == ozet_hesapla(girdi, okunan())
+    assert ozet_hesapla(girdi, [okunan()]) == ozet_hesapla(girdi, [okunan()])
     itirazli = DegerlendirmeGirdisi(baslik="Kütüphane", itiraz_notu="rolüm yazıyor")
-    assert ozet_hesapla(itirazli, okunan()) != ozet_hesapla(girdi, okunan())
+    assert ozet_hesapla(itirazli, [okunan()]) != ozet_hesapla(girdi, [okunan()])
+
+
+# --- Birden çok parça (plan § 2) ---------------------------------------------------------
+
+
+def test_birden_cok_parca_baslik_basina_en_gucluyu_alir():
+    """Okunamayan link + kamuya açık link: Kanıt açık linkten gelir, not onu anlatır;
+    parça işaretleri sırayla döner, yetenek puanı veren parçayı bilir."""
+
+    async def sahte(_alanlar):
+        return cikarim(kanitlanan_yetenekler=[{"yetenek": "Python", "alinti": "Python ile yazılmış kütüphane"}])
+
+    girdi = DegerlendirmeGirdisi(baslik="Kütüphane", yetenekler=("Python",))
+    parcalar = [okunan(erisim=E.ENGELLENDI), okunan(metin="Python ile yazılmış kütüphane")]
+    sonuc = asyncio.run(kalemi_degerlendir(girdi, parcalar, sahte))
+    assert sonuc.puanlar.kanit == 2
+    assert "ait olduğunu" in sonuc.not_metni
+    assert sonuc.parca_isaretleri == ((), ())
+    assert [y.parca for y in sonuc.yetenek_kanitlari] == [1]
+    assert len(sonuc.kanit_ozeti["parcalar"]) == 2
+
+
+def test_parca_eklemek_ozeti_degistirir():
+    girdi = DegerlendirmeGirdisi(baslik="Kütüphane")
+    assert ozet_hesapla(girdi, [okunan()]) != ozet_hesapla(girdi, [okunan(), okunan()])

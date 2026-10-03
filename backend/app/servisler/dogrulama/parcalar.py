@@ -58,16 +58,10 @@ def parca_sil(cikti: SomutCikti, parca_id: uuid.UUID) -> None:
     raise KanitBulunamadi(parca_id)
 
 
-def birincil_link(cikti: SomutCikti) -> str | None:
-    """Değerlendirmenin okuduğu link: ilk eklenen link parçası.
-
-    Adım 4-5'e kadar değerlendirme tek link okur; sonra her parça okunur ve
-    başlık başına en güçlüsü seçilir (plan § 2).
-    """
-    for parca in cikti.kanit_parcalari:
-        if parca.tur == ParcaTuru.LINK.value and parca.url:
-            return parca.url
-    return None
+def okunabilir_mi(parca: KanitParcasi) -> bool:
+    """Değerlendirmenin okuyacağı parça mı? Her parça okunur, başlık başına en
+    güçlüsü kullanılır (plan § 2)."""
+    return parca.tur == ParcaTuru.LINK.value and bool(parca.url)
 
 
 def degerlendirildi_mi(cikti: SomutCikti) -> bool:

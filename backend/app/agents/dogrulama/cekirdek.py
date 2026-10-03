@@ -19,6 +19,7 @@ from app.agents.dogrulama.kurallar import (
     BAGIMSIZ_SEVIYELER,
     BaslikPuanlari,
     OkunanKanit,
+    kalem_puani,
     kanit_puani,
     rol_puani,
     sonuc_puani,
@@ -51,6 +52,8 @@ class DegerlendirmeGirdisi:
 class YetenekKanitSonucu:
     yetenek: str
     puan: int
+    # Puanı veren parçanın `okunanlar` içindeki sırası
+    parca: int | None = None
 
 
 @dataclass(frozen=True)
@@ -62,6 +65,8 @@ class DegerlendirmeSonucu:
     destekler: tuple[dict, ...] = ()
     yetenek_kanitlari: tuple[YetenekKanitSonucu, ...] = ()
     kanit_ozeti: dict = field(default_factory=dict)
+    # Parça başına işaretler (`okunanlar` sırasıyla; kanıtsız kalemde boş)
+    parca_isaretleri: tuple[tuple[str, ...], ...] = ()
 
 
 Cikarici = Callable[[dict[str, str]], Awaitable[KanitCikarimi]]
@@ -96,17 +101,33 @@ def girdi_ozeti(alanlar: dict[str, str], okunan: OkunanKanit | None, ek: dict) -
     return hashlib.sha256(json.dumps(ham, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
-def ozet_hesapla(girdi: DegerlendirmeGirdisi, okunan: OkunanKanit | None) -> str:
-    return girdi_ozeti(
-        cikarim_girdisi(girdi, okunan),
-        okunan,
-        {"ref_sonuc": girdi.referans_sonuc_evet, "ref_pay": girdi.referans_pay_evet},
-    )
+def ozet_hesapla(girdi: DegerlendirmeGirdisi, okunanlar: Sequence[OkunanKanit]) -> str:
+    """Kalemin özeti: parça özetlerinin sırasıyla birleşimi (parça değişirse değişir)."""
+    ek = {"ref_sonuc": girdi.referans_sonuc_evet, "ref_pay": girdi.referans_pay_evet}
+    parcalar = [
+        girdi_ozeti(cikarim_girdisi(girdi, okunan), okunan, ek) for okunan in okunanlar or [None]
+    ]
+    if len(parcalar) == 1:
+        return parcalar[0]
+    return hashlib.sha256("|".join(parcalar).encode()).hexdigest()
 
 
-async def kalemi_degerlendir(
+@dataclass(frozen=True)
+class ParcaSonucu:
+    """Tek bir kanıt parçasının (ya da kanıtsız iddianın) puanlanışı."""
+
+    puanlar: BaslikPuanlari
+    isaretler: tuple[str, ...]
+    destekler: tuple[dict, ...]
+    # Yetenek → bu parçanın verdiği puan
+    yetenekler: tuple[YetenekKanitSonucu, ...]
+    celisiyor: bool
+    oneri: str | None
+
+
+async def parcayi_degerlendir(
     girdi: DegerlendirmeGirdisi, okunan: OkunanKanit | None, cikar: Cikarici
-) -> DegerlendirmeSonucu:
+) -> ParcaSonucu:
     alanlar = cikarim_girdisi(girdi, okunan)
     cikarim = await cikar(alanlar)
     # Alıntı denetimi TAM metne: model seçilmiş parçaları görse de alıntı her yerden olabilir.
@@ -166,7 +187,6 @@ async def kalemi_degerlendir(
         or (duzenleyen and durum("pay", "destekleniyor")),
         celisiyor=durum("pay", "celisiyor"),
     )
-    puanlar = BaslikPuanlari(kanit=kanit, sonuc=sonuc, rol=rol)
 
     izinli = {y.casefold(): y for y in girdi.yetenekler}
     yetenekler = tuple(
@@ -174,20 +194,65 @@ async def kalemi_degerlendir(
         for y in cikarim.kanitlanan_yetenekler
         if kanit and y.yetenek.casefold() in izinli and alinti_gecerli_mi(y.alinti, metin)
     )
-    isaretler = (ISARET_ALAKASIZ,) if (metin and not cikarim.ilgili_mi) else ()
+    return ParcaSonucu(
+        puanlar=BaslikPuanlari(kanit=kanit, sonuc=sonuc, rol=rol),
+        isaretler=(ISARET_ALAKASIZ,) if (metin and not cikarim.ilgili_mi) else (),
+        destekler=tuple(d.model_dump() for d in destekler),
+        yetenekler=yetenekler,
+        celisiyor=kanit_celisiyor,
+        oneri=cikarim.oneri,
+    )
+
+
+async def kalemi_degerlendir(
+    girdi: DegerlendirmeGirdisi, okunanlar: Sequence[OkunanKanit], cikar: Cikarici
+) -> DegerlendirmeSonucu:
+    """Her parça ayrı puanlanır; başlık başına en güçlü parça (plan § 2: parçalar
+    toplanmaz, kanıt eklemek puanı düşürmez). Not, Kanıt'ı veren parçadan yazılır.
+    Kanıtsız kalemde iddia tek başına değerlendirilir (Kanıt "—")."""
+    liste: list[OkunanKanit | None] = list(okunanlar) or [None]
+    sonuclar = [await parcayi_degerlendir(girdi, okunan, cikar) for okunan in liste]
+    puanlar = kalem_puani(s.puanlar for s in sonuclar)
+
+    def guc(i: int) -> int:
+        kanit = sonuclar[i].puanlar.kanit
+        return -1 if kanit is None else kanit
+
+    onde = max(range(len(liste)), key=guc)  # eşitlikte ilk eklenen
+    okunan, lider = liste[onde], sonuclar[onde]
+
+    en_guclu: dict[str, YetenekKanitSonucu] = {}
+    for i, s in enumerate(sonuclar):
+        for y in s.yetenekler:
+            if y.yetenek not in en_guclu or y.puan > en_guclu[y.yetenek].puan:
+                en_guclu[y.yetenek] = YetenekKanitSonucu(y.yetenek, y.puan, parca=i)
 
     return DegerlendirmeSonucu(
         puanlar=puanlar,
-        not_metni=not_yaz(puanlar, okunan, kanit_celisiyor=kanit_celisiyor, oneri=cikarim.oneri),
-        girdi_ozeti=ozet_hesapla(girdi, okunan),
-        isaretler=isaretler,
-        destekler=tuple(d.model_dump() for d in destekler),
-        yetenek_kanitlari=yetenekler,
+        not_metni=not_yaz(puanlar, okunan, kanit_celisiyor=lider.celisiyor, oneri=lider.oneri),
+        girdi_ozeti=ozet_hesapla(girdi, okunanlar),
+        isaretler=tuple(dict.fromkeys(i for s in sonuclar for i in s.isaretler)),
+        destekler=tuple(d for s in sonuclar for d in s.destekler),
+        yetenek_kanitlari=tuple(en_guclu.values()),
         kanit_ozeti={
             "erisim": okunan.erisim.value if okunan else None,
             "seviye": okunan.seviye.value if okunan else None,
             "sahiplik": okunan.sahiplik_kaynagi.value if okunan else None,
             "url": okunan.url if okunan else None,
             "kural_surumu": KURAL_SURUMU,
+            "parcalar": [
+                {
+                    "url": o.url,
+                    "tur": o.tur,
+                    "erisim": o.erisim.value,
+                    "seviye": o.seviye.value,
+                    "kanit": s.puanlar.kanit,
+                    "sonuc": s.puanlar.sonuc,
+                    "rol": s.puanlar.rol,
+                }
+                for o, s in zip(liste, sonuclar, strict=True)
+                if o is not None
+            ],
         },
+        parca_isaretleri=tuple(s.isaretler for s in sonuclar) if okunanlar else (),
     )

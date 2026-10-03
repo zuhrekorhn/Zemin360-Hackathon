@@ -249,6 +249,8 @@ class OkunanKanit:
     platform_metni: str = ""
     # Seviyeyi neyin belirlediği (bağlı hesap yöntemi ya da yok; § 6).
     sahiplik_kaynagi: SahiplikKaynagi = SahiplikKaynagi.YOK
+    # ParcaTuru: link | dosya | gorsel
+    tur: str = "link"
 
 
 @dataclass(frozen=True)

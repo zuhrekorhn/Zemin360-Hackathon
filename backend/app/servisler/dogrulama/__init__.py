@@ -23,9 +23,9 @@ from app.servisler.dogrulama.kanit import (
 from app.servisler.dogrulama.parcalar import (
     KanitBulunamadi,
     KanitZatenVar,
-    birincil_link,
     degerlendirildi_mi,
     link_parcasi_ekle,
+    okunabilir_mi,
 )
 from app.servisler.dogrulama.referans import (
     FormYaniti,
@@ -60,7 +60,7 @@ __all__ = [
     "KendiReferansi",
     "ReferansYenidenIstenemez",
     "ReferansZatenBekliyor",
-    "birincil_link",
+    "okunabilir_mi",
     "cikti_getir",
     "ciktiyi_puanla",
     "degerlendir",
