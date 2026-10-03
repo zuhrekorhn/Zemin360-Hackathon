@@ -318,3 +318,49 @@ def test_ayni_dogrulama_adresi_iki_hesapta_isaret(monkeypatch):
             assert eslesme["adres"] == "https://credly.com/badges/ayni-123"
 
     asyncio.run(senaryo())
+
+
+def test_firma_yalnizca_acilan_dosyayi_gorur_ve_indirir(monkeypatch):
+    """Kartı gören firma dosyanın sonucunu görür; adını ve dosyayı yalnızca genç
+    "firmalar görebilir" dediyse. Açılmamış dosyanın indirme adresi firmaya 404."""
+    from app.api import yetenek_kartlari
+
+    async def gorebilir(_oturum, hesap, _kart):
+        return True
+
+    monkeypatch.setattr(yetenek_kartlari, "yetenek_kartini_gorebilir_mi", gorebilir)
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, kart_id, kalem_id = await _genc_ve_kalem(oturum)
+            yanit = await _yukle(istemci, kalem_id, baslik, ornek.pdf(), ad="maas-bordrosu.pdf")
+            parca_id = yanit.json()["kanitlar"][0]["id"]
+            kurum = await hesap_olustur(
+                oturum,
+                email=f"k-{uuid.uuid4().hex[:8]}@ornek.com",
+                sifre="yeterince-uzun",
+                rol="kurum",
+                ad="Firma",
+            )
+            firma = {"Authorization": f"Bearer {token_uret(kurum.id, kurum.rol)}"}
+            indir = f"/yetenek-kartlari/{kart_id}/kanit/{parca_id}/indir"
+
+            def firma_kaniti(kart):
+                return kart["somut_ciktilar"][0]["kanitlar"][0]
+
+            kart = (await istemci.get(f"/yetenek-kartlari/{kart_id}", headers=firma)).json()
+            assert firma_kaniti(kart)["dosya_adi"] is None
+            assert firma_kaniti(kart)["seviye"] == "beyan"
+            assert (await istemci.get(indir, headers=firma)).status_code == 404
+            assert (await istemci.get(indir, headers=baslik)).status_code == 200
+
+            await istemci.patch(
+                f"/dogrulama/kalem/{kalem_id}/kanit/{parca_id}",
+                headers=baslik,
+                json={"gorunur_firmaya": True},
+            )
+            kart = (await istemci.get(f"/yetenek-kartlari/{kart_id}", headers=firma)).json()
+            assert firma_kaniti(kart)["dosya_adi"] == "maas-bordrosu.pdf"
+            assert (await istemci.get(indir, headers=firma)).status_code == 200
+
+    asyncio.run(senaryo())

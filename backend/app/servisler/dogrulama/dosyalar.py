@@ -163,6 +163,10 @@ async def indirme_adresi(cikti: SomutCikti, parca_id: uuid.UUID) -> str:
     parca = parca_bul(cikti, parca_id)
     if not parca.dosya_anahtari:
         raise KanitBulunamadi(parca_id)
+    return await parca_indirme_adresi(parca)
+
+
+async def parca_indirme_adresi(parca: KanitParcasi) -> str:
     bilgi = dosya_bilgisi(parca)
     return await kurulum.depo().imzali_adres(
         parca.dosya_anahtari,

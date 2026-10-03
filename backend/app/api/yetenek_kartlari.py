@@ -24,13 +24,18 @@ from app.api.sahiplik import (
     yetenek_kartini_gorebilir_mi,
     yetenek_kartinin_sahibi_mi,
 )
+from app.core.dis_servisler.depo import DepoKapali
 from app.core.embeddings import EmbeddingHatasi, embedding_uret, yetenek_temsil_metni
 from app.core.is_kalemi import is_kalemi_metni
 from app.db.session import get_session
 from app.models.hesap import Hesap
+from app.models.kanit_parcasi import KanitParcasi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+from app.schemas.dogrulama import IndirmeAdresiYaniti
 from app.schemas.kesif import YetenekKartiYaniti
+from app.servisler.dogrulama import dosyalar
+from app.servisler.dogrulama.parcalar import DOSYA_TURLERI
 
 logger = logging.getLogger("zemin360.embedding")
 
@@ -113,7 +118,48 @@ async def yetenek_karti_getir(
     kart = await oturum.get(YetenekKarti, kart_id)
     if kart is None or not await yetenek_kartini_gorebilir_mi(oturum, hesap, kart):
         raise bulunamadi(KART_BULUNAMADI)
-    return await kart_yaniti(oturum, kart_id)
+    yanit = await kart_yaniti(oturum, kart_id)
+    if not (yetenek_kartinin_sahibi_mi(hesap, kart) or girvak_mi(hesap)):
+        _kapali_dosyalari_gizle(yanit)
+    return yanit
+
+
+def _kapali_dosyalari_gizle(yanit: YetenekKartiYaniti) -> None:
+    """Firma dosyanın sonucunu (seviye, gösterge) görür; gencin "firmalar görebilir"
+    demediği dosyanın adını ve içerik bilgisini görmez (plan § 4.4)."""
+    for cikti in yanit.somut_ciktilar:
+        for kanit in cikti.kanitlar:
+            if kanit.tur in DOSYA_TURLERI and not kanit.gorunur_firmaya:
+                kanit.dosya_adi = None
+                kanit.uretim_araci = None
+
+
+@router.get(
+    "/yetenek-kartlari/{kart_id}/kanit/{parca_id}/indir", response_model=IndirmeAdresiYaniti
+)
+async def kart_dosyasini_indir(
+    kart_id: uuid.UUID,
+    parca_id: uuid.UUID,
+    hesap: Hesap = Depends(mevcut_hesap),
+    oturum: AsyncSession = Depends(get_session),
+) -> IndirmeAdresiYaniti:
+    """Kart görünümünden dosya indirme. Firma yalnızca kartı görebiliyorsa ve genç
+    dosyayı firmalara açtıysa; açılmamış dosya firmaya 404 (varlık sızmasın)."""
+    kart = await oturum.get(YetenekKarti, kart_id)
+    if kart is None or not await yetenek_kartini_gorebilir_mi(oturum, hesap, kart):
+        raise bulunamadi(KART_BULUNAMADI)
+    parca = await oturum.scalar(
+        select(KanitParcasi)
+        .join(SomutCikti, SomutCikti.id == KanitParcasi.somut_cikti_id)
+        .where(KanitParcasi.id == parca_id, SomutCikti.yetenek_karti_id == kart_id)
+    )
+    tam_yetki = yetenek_kartinin_sahibi_mi(hesap, kart) or girvak_mi(hesap)
+    if parca is None or not parca.dosya_anahtari or not (tam_yetki or parca.gorunur_firmaya):
+        raise bulunamadi("Dosya bulunamadı.")
+    try:
+        return IndirmeAdresiYaniti(adres=await dosyalar.parca_indirme_adresi(parca))
+    except DepoKapali as hata:
+        raise HTTPException(status_code=503, detail="Dosya şu an indirilemiyor.") from hata
 
 
 @router.post("/yetenek-kartlari/{kart_id}/embedding", response_model=YetenekKartiYaniti)
