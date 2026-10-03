@@ -16,7 +16,7 @@ def pdf(*, javascript: bool = False, ek_dosya: bool = False) -> bytes:
     if ek_dosya:
         belge.attachments["gizli.exe"] = pikepdf.AttachedFileSpec(belge, b"MZ")
     cikti = io.BytesIO()
-    belge.save(cikti)
+    belge.save(cikti, deterministic_id=True)
     return cikti.getvalue()
 
 
@@ -30,4 +30,26 @@ def gorsel(bicim: str = "PNG", *, exif: bool = False, boyut=(8, 8)) -> bytes:
         ek["exif"] = veri.tobytes()
     cikti = io.BytesIO()
     resim.save(cikti, format=bicim, **ek)
+    return cikti.getvalue()
+
+
+def metinli_pdf(satirlar: list[str]) -> bytes:
+    """Metin katmanı olan tek sayfalık PDF (ASCII satırlar)."""
+    belge = pikepdf.new()
+    sayfa = belge.add_blank_page(page_size=(612, 792))
+    sayfa.Resources = pikepdf.Dictionary(
+        Font=pikepdf.Dictionary(
+            F1=pikepdf.Dictionary(
+                Type=pikepdf.Name.Font, Subtype=pikepdf.Name.Type1, BaseFont=pikepdf.Name.Helvetica
+            )
+        )
+    )
+    akis = (
+        "BT /F1 11 Tf 72 720 Td 14 TL "
+        + " ".join(f"({s.replace('(', '').replace(')', '')}) '" for s in satirlar)
+        + " ET"
+    )
+    sayfa.Contents = belge.make_stream(akis.encode("latin-1"))
+    cikti = io.BytesIO()
+    belge.save(cikti, deterministic_id=True)
     return cikti.getvalue()

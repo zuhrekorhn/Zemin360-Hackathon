@@ -251,6 +251,11 @@ class OkunanKanit:
     sahiplik_kaynagi: SahiplikKaynagi = SahiplikKaynagi.YOK
     # ParcaTuru: link | dosya | gorsel
     tur: str = "link"
+    # Alıntı denetiminin kaynağı, `metin`'den farklıysa: görselde betim modelin
+    # yazdığıdır, alıntı yalnızca görselde yazan metinden olabilir (plan § 4.3).
+    alinti_metni: str | None = None
+    # Yüklenen dosyanın görünen adı (modele "kanıt adresi" yerine)
+    dosya_adi: str | None = None
 
 
 @dataclass(frozen=True)

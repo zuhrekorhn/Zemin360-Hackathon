@@ -158,3 +158,22 @@ def depo(monkeypatch, tmp_path):
     monkeypatch.setattr(kurulum, "depo", lambda: yerel)
     monkeypatch.setattr(kurulum, "virus_tarayici", lambda: KapaliTarayici())
     return yerel
+
+
+@pytest.fixture(autouse=True)
+def dosya_modele_okutulmaz(monkeypatch):
+    """Taranmış PDF ve görsel yüklenirken modele okutuluyor (gerçek LLM). Testlerde
+    sabit bir okunuş döner; okumayı sınayan test bu nesneyi değiştirir."""
+    from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu
+    from app.servisler.dogrulama import dosyalar
+
+    okunus = {"deger": DosyaOkunusu(gorsel_metni="", betim="Boş bir sayfa")}
+    cagrilar: list = []
+
+    async def oku(veri, icerik_turu):
+        cagrilar.append(icerik_turu)
+        return okunus["deger"]
+
+    monkeypatch.setattr(dosyalar, "dosyayi_oku", oku)
+    okunus["cagrilar"] = cagrilar
+    return okunus

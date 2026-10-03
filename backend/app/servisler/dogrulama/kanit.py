@@ -18,6 +18,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.agents.dogrulama.capalar import dosya_seviyesi
 from app.agents.dogrulama.cekirdek import (
     KURAL_SURUMU,
     DegerlendirmeGirdisi,
@@ -26,9 +27,11 @@ from app.agents.dogrulama.cekirdek import (
     ozet_hesapla,
 )
 from app.agents.dogrulama.cikarim import cikar
+from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi
 from app.agents.dogrulama.kurallar import OkunanKanit
-from app.agents.dogrulama.okuma import kanit_oku
+from app.agents.dogrulama.okuma import dosya_okunusu, kanit_oku
 from app.core.is_kalemi import kanit_bekliyor
+from app.core.kanit_okuma.belge import ParcaTuru
 from app.models.guven_skoru import GuvenSkoru
 from app.models.kanit_parcasi import KanitParcasi
 from app.models.somut_cikti import SomutCikti
@@ -75,8 +78,23 @@ async def hazirla(
         return Hazirlik((), (), girdi)
     bagli = await bagli_hesap_bilgileri(oturum, kart.kullanici_id) if kart else ()
     sorgular = _iddia_sorgulari(girdi)
-    okunanlar = tuple([await kanit_oku(p.url, sorgular, bagli_hesaplar=bagli) for p in parcalar])
+    okunanlar = tuple([await _parcayi_oku(p, sorgular, bagli) for p in parcalar])
     return Hazirlik(parcalar, okunanlar, girdi)
+
+
+async def _parcayi_oku(
+    parca: KanitParcasi, sorgular: list[str], bagli: tuple[BagliHesapBilgisi, ...]
+) -> OkunanKanit:
+    if parca.tur == ParcaTuru.LINK.value:
+        return await kanit_oku(parca.url, sorgular, bagli_hesaplar=bagli)
+    return await dosya_okunusu(
+        tur=parca.tur,
+        dosya_adi=parca.dosya_adi,
+        tam_metin=parca.tam_metin,
+        betim=(parca.belge or {}).get("betim"),
+        seviye=dosya_seviyesi(parca.belge or {}),
+        iddia_sorgulari=sorgular,
+    )
 
 
 def _iddia_sorgulari(girdi: DegerlendirmeGirdisi) -> list[str]:

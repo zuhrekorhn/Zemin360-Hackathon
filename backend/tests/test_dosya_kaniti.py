@@ -43,7 +43,7 @@ def test_pdf_yuklenir_depoya_konur_ve_parca_olur(depo):
 
             # Aynı dosya ikinci kez: 409
             tekrar = await _yukle(istemci, kalem_id, baslik, ornek.pdf(javascript=True))
-            assert tekrar.status_code == 409
+            assert tekrar.status_code == 409, tekrar.text
 
     asyncio.run(senaryo())
 

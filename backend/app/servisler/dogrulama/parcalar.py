@@ -77,11 +77,18 @@ def dosya_parcasi_ekle(
     dosya_anahtari: str,
     dosya_ozeti: str,
     belge: dict,
+    tam_metin: str | None = None,
+    gorsel_metni: str | None = None,
 ) -> KanitParcasi:
     """Çalışmaya dosya ya da görsel parçası ekler; aynı dosya (ham özet) ikinci kez 409."""
     dosya_eklenebilir_mi(cikti, dosya_ozeti)
     parca = KanitParcasi(
-        tur=tur.value, dosya_anahtari=dosya_anahtari, dosya_ozeti=dosya_ozeti, belge=belge
+        tur=tur.value,
+        dosya_anahtari=dosya_anahtari,
+        dosya_ozeti=dosya_ozeti,
+        belge=belge,
+        tam_metin=tam_metin,
+        gorsel_metni=gorsel_metni,
     )
     cikti.kanit_parcalari.append(parca)
     gostergeyi_yeniden_degerlendirmeye_al(cikti)
@@ -106,8 +113,10 @@ def parca_sil(cikti: SomutCikti, parca_id: uuid.UUID) -> KanitParcasi:
 
 def okunabilir_mi(parca: KanitParcasi) -> bool:
     """Değerlendirmenin okuyacağı parça mı? Her parça okunur, başlık başına en
-    güçlüsü kullanılır (plan § 2)."""
-    return parca.tur == ParcaTuru.LINK.value and bool(parca.url)
+    güçlüsü kullanılır (plan § 2). Dosya ve görsel yüklenirken okunmuştur."""
+    if parca.tur == ParcaTuru.LINK.value:
+        return bool(parca.url)
+    return parca.tur in DOSYA_TURLERI
 
 
 def degerlendirildi_mi(cikti: SomutCikti) -> bool:

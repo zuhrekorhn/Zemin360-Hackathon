@@ -1,5 +1,11 @@
-"""Dosya ve görsel kanıtının orkestrasyonu (plan § 4): sınırlar → yükleme hattı → depo →
-tek kapıdan parça → değerlendirme.
+"""Dosya ve görsel kanıtının orkestrasyonu (plan § 4): sınırlar → yükleme hattı → içerik
+okuma → depo → tek kapıdan parça → değerlendirme.
+
+İçerik yükleme anında bir kez okunur ve maskelenmiş olarak saklanır (`tam_metin`,
+`gorsel_metni`, `belge["betim"]`); değerlendirme ve itiraz dosyayı yeniden
+indirmez, modele yeniden okutmaz.
+  - PDF: önce metin katmanı (`pypdf`); yoksa ya da sayfa başına çok azsa model okur.
+  - Görsel: model görülen metni ve betimi yazar (iki adımlı okumanın ilk adımı).
 
 Depo ve virüs tarayıcı kurulum noktasından gelir (`core/dis_servisler/kurulum.py`).
 Dosyanın depodan silinmesi commit'ten SONRA yapılır (arka planda, çağıranın işi):
@@ -12,14 +18,19 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import uuid
+from dataclasses import dataclass
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.dogrulama.dosya_cikarimi import dosyayi_oku
 from app.agents.dogrulama.kurallar import OkunanKanit
 from app.core.config import get_settings
 from app.core.dis_servisler import kurulum
-from app.core.dosya_hatti import DosyaReddedildi, dosyayi_hazirla, gorunen_ad
+from app.core.dosya_hatti import DosyaReddedildi, HazirDosya, dosyayi_hazirla, gorunen_ad
+from app.core.kanit_okuma.belge import ParcaTuru
+from app.core.kanit_okuma.maskeleme import maskele
+from app.core.kanit_okuma.pdf import model_okumali_mi, pdf_metni
 from app.models.kanit_parcasi import KanitParcasi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -33,6 +44,30 @@ from app.servisler.dogrulama.parcalar import (
 )
 
 logger = logging.getLogger("zemin360.dosyalar")
+
+
+@dataclass(frozen=True)
+class DosyaIcerigi:
+    # Alıntı kaynağı: belgede yazan metin (maskelenmiş)
+    tam_metin: str
+    # Modelin gördüğü metin; model okumadıysa None
+    gorsel_metni: str | None
+    betim: str | None
+    sayfa_sayisi: int | None
+    okuyan: str  # "metin_katmani" | "model"
+
+
+async def icerigi_oku(hazir: HazirDosya) -> DosyaIcerigi:
+    """Model hatası (hız sınırı, sağlayıcı) çağırana çıkar: yükleme düşer, genç yeniden dener."""
+    if hazir.parca_turu is ParcaTuru.DOSYA:
+        metin, sayfa = pdf_metni(hazir.veri)
+        if not model_okumali_mi(metin, sayfa):
+            return DosyaIcerigi(maskele(metin), None, None, sayfa, "metin_katmani")
+    else:
+        sayfa = None
+    okunus = await dosyayi_oku(hazir.veri, hazir.icerik_turu)
+    gorulen = maskele(okunus.gorsel_metni.strip())
+    return DosyaIcerigi(gorulen, gorulen, okunus.betim.strip() or None, sayfa, "model")
 
 
 async def gunluk_yukleme_sayisi(oturum: AsyncSession, kullanici_id: uuid.UUID) -> int:
@@ -64,6 +99,8 @@ async def dosya_ekle(
     if await gunluk_yukleme_sayisi(oturum, kullanici_id) >= get_settings().gunluk_dosya_siniri:
         raise DosyaReddedildi("Bugünlük dosya yükleme sınırına ulaştın; yarın yeniden dene.")
     hazir = await dosyayi_hazirla(ham, kurulum.virus_tarayici())
+    dosya_eklenebilir_mi(cikti, hazir.ozet)  # model ve depodan önce
+    icerik = await icerigi_oku(hazir)
     anahtar = f"kanit/{uuid.uuid4().hex}"
     belge = {
         "dosya": {
@@ -71,14 +108,22 @@ async def dosya_ekle(
             "icerik_turu": hazir.icerik_turu,
             "boyut": len(hazir.veri),
             "tarama": hazir.tarama.value,
+            "sayfa": icerik.sayfa_sayisi,
+            "okuyan": icerik.okuyan,
         },
+        **({"betim": icerik.betim} if icerik.betim else {}),
         **hazir.on_bilgi,
     }
-    dosya_eklenebilir_mi(cikti, hazir.ozet)  # depoya bir şey konmadan
     depo = kurulum.depo()
     await depo.koy(anahtar, hazir.veri, hazir.icerik_turu)
     dosya_parcasi_ekle(
-        cikti, tur=hazir.parca_turu, dosya_anahtari=anahtar, dosya_ozeti=hazir.ozet, belge=belge
+        cikti,
+        tur=hazir.parca_turu,
+        dosya_anahtari=anahtar,
+        dosya_ozeti=hazir.ozet,
+        belge=belge,
+        tam_metin=icerik.tam_metin,
+        gorsel_metni=icerik.gorsel_metni,
     )
     try:
         return await degerlendir(oturum, cikti)

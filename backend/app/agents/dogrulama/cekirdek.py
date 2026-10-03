@@ -82,10 +82,18 @@ def cikarim_girdisi(girdi: DegerlendirmeGirdisi, okunan: OkunanKanit | None) -> 
         "sonuc": girdi.sonuc or "(yazılmamış)",
         "pay": girdi.pay or "(yazılmamış)",
         "yetenekler": ", ".join(girdi.yetenekler) or "(yok)",
-        "kanit_adresi": (okunan.url if okunan and okunan.url else "(kanıt yok)"),
+        "kanit_adresi": _kanit_adresi(okunan),
         "kanit_metni": (okunan.model_metni or okunan.metin) if okunabildi else "(kanıt metni yok)",
         "itiraz_notu": girdi.itiraz_notu or "(itiraz yok)",
     }
+
+
+def _kanit_adresi(okunan: OkunanKanit | None) -> str:
+    if okunan is None:
+        return "(kanıt yok)"
+    if okunan.url:
+        return okunan.url
+    return f"yüklenen dosya: {okunan.dosya_adi or 'adsız'}"
 
 
 def girdi_ozeti(alanlar: dict[str, str], okunan: OkunanKanit | None, ek: dict) -> str:
@@ -133,12 +141,15 @@ async def parcayi_degerlendir(
     # Alıntı denetimi TAM metne: model seçilmiş parçaları görse de alıntı her yerden olabilir.
     okunabildi = okunan is not None and not okunan.erisim.okunamadi_mi
     metin = okunan.metin if (okunan is not None and okunabildi) else ""
+    alinti_kaynagi = (
+        okunan.alinti_metni if (okunabildi and okunan.alinti_metni is not None) else metin
+    )
 
     # Alıntısı tam metinde bulunmayan destek ve yetenek yok sayılır.
     destekler = [
         d
         for d in cikarim.destekler
-        if d.durum == "kanitta_yok" or alinti_gecerli_mi(d.alinti, metin)
+        if d.durum == "kanitta_yok" or alinti_gecerli_mi(d.alinti, alinti_kaynagi)
     ]
 
     def durum(iddia: str, aranan: str) -> bool:
@@ -192,7 +203,7 @@ async def parcayi_degerlendir(
     yetenekler = tuple(
         YetenekKanitSonucu(yetenek=izinli[y.yetenek.casefold()], puan=kanit)
         for y in cikarim.kanitlanan_yetenekler
-        if kanit and y.yetenek.casefold() in izinli and alinti_gecerli_mi(y.alinti, metin)
+        if kanit and y.yetenek.casefold() in izinli and alinti_gecerli_mi(y.alinti, alinti_kaynagi)
     )
     return ParcaSonucu(
         puanlar=BaslikPuanlari(kanit=kanit, sonuc=sonuc, rol=rol),
