@@ -230,3 +230,55 @@ def test_eposta_dogrulaninca_dosyasi_olan_kart_yeniden_okunur():
             assert await kimlik_dogrulama.dogrulama_sonrasi_kart(oturum, hesap) == kart_id
 
     asyncio.run(senaryo())
+
+
+def test_edevlet_belgesi_girvak_onayiyla_duzenleyen(dosya_modele_okutulmaz):
+    """Barkodlu e-Devlet belgesi GİRVAK kuyruğuna düşer (D); onay → A, red → D kalır."""
+    from sqlalchemy import select
+
+    from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu
+    from app.models.inceleme_isareti import TUR_EDEVLET_BARKODU, IncelemeIsareti
+
+    dosya_modele_okutulmaz["deger"] = DosyaOkunusu(
+        gorsel_metni=(
+            "T.C. Cumhurbaşkanlığı e-Devlet Kapısı Öğrenci Belgesi Elif "
+            "Barkod No: YOK-ABCD-1234-EFGH Bu belgeyi turkiye.gov.tr adresinden doğrulayın"
+        ),
+        betim="Bir öğrenci belgesi",
+    )
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, _, kalem_id = await _genc_ve_kalem(oturum)
+            yanit = await _yukle(istemci, kalem_id, baslik, ornek.gorsel("PNG"), ad="belge.png")
+            assert yanit.status_code == 201, yanit.text
+            assert yanit.json()["kanitlar"][0]["seviye"] == "beyan"
+            assert yanit.json()["kanitlar"][0]["girvak_incelemesi"] == "bekliyor"
+            isaret = await oturum.scalar(
+                select(IncelemeIsareti).where(
+                    IncelemeIsareti.somut_cikti_id == kalem_id,
+                    IncelemeIsareti.tur == TUR_EDEVLET_BARKODU,
+                )
+            )
+            assert isaret.ayrinti["parcalar"][0]["barkod"] == "YOK-ABCD-1234-EFGH"
+
+            girvak = await hesap_olustur(
+                oturum,
+                email=f"g-{uuid.uuid4().hex[:8]}@ornek.com",
+                sifre="yeterince-uzun",
+                rol="girvak",
+                ad="GİRVAK",
+            )
+            girvak_basligi = {"Authorization": f"Bearer {token_uret(girvak.id, girvak.rol)}"}
+            karar = await istemci.post(
+                f"/girvak/inceleme/{isaret.id}/karar",
+                headers=girvak_basligi,
+                json={"karar": "kapandi"},
+            )
+            assert karar.status_code == 200, karar.text
+            yeniden = await istemci.post(f"/dogrulama/kalem/{kalem_id}/degerlendir", headers=baslik)
+            assert yeniden.json()["kanitlar"][0]["seviye"] == "duzenleyen"
+            assert yeniden.json()["kanitlar"][0]["girvak_incelemesi"] == "onaylandi"
+            assert yeniden.json()["guven_skoru"]["kanit_orijinalligi"] == 3
+
+    asyncio.run(senaryo())

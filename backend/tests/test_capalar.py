@@ -418,3 +418,22 @@ def test_alici_eslesmesi(alici, beklenen):
     from app.core.capalar.rozet import alici_eslesir
 
     assert alici_eslesir(alici, "elif@ornek.com") == beklenen
+
+
+# --- e-Devlet -------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("metin", "beklenen"),
+    [
+        ("e-Devlet Kapısı ... Barkod No: ABCD-1234-EFGH-5678", "ABCD-1234-EFGH-5678"),
+        ("TÜRKİYE.GOV.TR belge doğrulama BARKOD : 12AB34CD56 ile", "12AB34CD56"),
+        ("Barkod No: ABCD-1234-EFGH-5678", None),  # e-Devlet ipucu yok
+        ("e-Devlet barkod: kısa1", None),
+        ("e-Devlet belgesi, barkod yok", None),
+    ],
+)
+def test_edevlet_barkodu(metin, beklenen):
+    from app.core.capalar.edevlet import edevlet_barkodu
+
+    assert edevlet_barkodu(metin) == beklenen

@@ -36,7 +36,7 @@ from app.models.kanit_parcasi import KanitParcasi
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
-from app.servisler.dogrulama.capalar import CapaGirdisi, capalari_dogrula
+from app.servisler.dogrulama.capalar import CapaGirdisi, capalari_dogrula, edevlet
 from app.servisler.dogrulama.kanit import degerlendir
 from app.servisler.dogrulama.parcalar import (
     DOSYA_TURLERI,
@@ -136,7 +136,7 @@ async def dosya_ekle(
     }
     depo = kurulum.depo()
     await depo.koy(anahtar, hazir.veri, hazir.icerik_turu)
-    dosya_parcasi_ekle(
+    parca = dosya_parcasi_ekle(
         cikti,
         tur=hazir.parca_turu,
         dosya_anahtari=anahtar,
@@ -146,6 +146,7 @@ async def dosya_ekle(
         gorsel_metni=icerik.gorsel_metni,
     )
     try:
+        await edevlet.inceleme_ac(oturum, parca, cikti, kullanici_id)
         return await degerlendir(oturum, cikti)
     except Exception:
         await depo.sil(anahtar)  # işlem geri alınacak: dosya sahipsiz kalmasın

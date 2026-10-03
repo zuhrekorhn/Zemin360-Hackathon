@@ -16,7 +16,7 @@ const TUR_ETIKETLERI: Record<string, string> = {
   belge_tutarsiz: "Belge tutarsız",
   kanit_celisiyor: "Kanıt iddiayla çelişiyor",
   profil_kodu_elle: "Doğrulama kodu elle kontrol edilecek",
-  eposta_barkodu: "e-Devlet barkodu doğrulanacak",
+  edevlet_barkodu: "e-Devlet barkodu doğrulanacak",
 };
 
 export function turEtiketi(tur: string): string {

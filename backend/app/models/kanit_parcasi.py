@@ -93,6 +93,14 @@ class KanitParcasi(UUIDPrimaryKeyMixin, Base):
     def dosya_boyutu(self) -> int | None:
         return (self.belge or {}).get("dosya", {}).get("boyut")
 
+    @property
+    def girvak_incelemesi(self) -> str | None:
+        """e-Devlet belgesi: "bekliyor" | "onaylandi" | "reddedildi"; yoksa None."""
+        for capa in (self.belge or {}).get("capalar", []):
+            if capa.get("tur") == "edevlet":
+                return capa.get("girvak_karari") or "bekliyor"
+        return None
+
     metin_parcalari: Mapped[list[KanitMetinParcasi]] = relationship(
         back_populates="kanit_parcasi",
         cascade="all, delete-orphan",

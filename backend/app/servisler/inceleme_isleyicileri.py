@@ -13,10 +13,12 @@ from app.agents.inceleme_durumu import KAPANDI
 from app.models.bildirim import TUR_INCELEME_SONUCU
 from app.models.inceleme_isareti import (
     TUR_AD_DEGISIKLIGI,
+    TUR_EDEVLET_BARKODU,
     TUR_PROFIL_KODU_ELLE,
     IncelemeIsareti,
 )
 from app.models.somut_cikti import SomutCikti
+from app.servisler.dogrulama.capalar.edevlet import EdevletIsleyici
 from app.servisler.hesap_baglama import ProfilKoduIsleyici
 from app.servisler.inceleme import KararEtkisi, KararIsleyici
 from app.servisler.kimlik_dogrulama import AdDegisikligiIsleyici
@@ -52,6 +54,7 @@ class KalemIsleyici:
 ISLEYICILER: dict[str, KararIsleyici] = {
     TUR_AD_DEGISIKLIGI: AdDegisikligiIsleyici(),
     TUR_PROFIL_KODU_ELLE: ProfilKoduIsleyici(),
+    TUR_EDEVLET_BARKODU: EdevletIsleyici(),
 }
 VARSAYILAN = KalemIsleyici()
 

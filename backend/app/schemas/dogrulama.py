@@ -48,6 +48,8 @@ class KanitParcasiYaniti(BaseModel):
     dosya_adi: str | None = None
     dosya_boyutu: int | None = None
     gorunur_firmaya: bool = False
+    # e-Devlet belgesinin GİRVAK incelemesi: bekliyor | onaylandi | reddedildi
+    girvak_incelemesi: str | None = None
 
     model_config = {"from_attributes": True}
 

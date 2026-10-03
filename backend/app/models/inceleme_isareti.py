@@ -29,7 +29,7 @@ TUR_KANIT_CELISIYOR = "kanit_celisiyor"
 TUR_ITIRAZ_SINIRI = "itiraz_siniri"
 TUR_AD_DEGISIKLIGI = "ad_degisikligi"
 TUR_PROFIL_KODU_ELLE = "profil_kodu_elle"
-TUR_EPOSTA_BARKODU = "eposta_barkodu"
+TUR_EDEVLET_BARKODU = "edevlet_barkodu"
 TURLER = (
     TUR_AYNI_IDDIA_COK_HESAPTA,
     TUR_AYNI_BELGE_IKI_HESAPTA,
@@ -40,7 +40,7 @@ TURLER = (
     TUR_ITIRAZ_SINIRI,
     TUR_AD_DEGISIKLIGI,
     TUR_PROFIL_KODU_ELLE,
-    TUR_EPOSTA_BARKODU,
+    TUR_EDEVLET_BARKODU,
 )
 
 

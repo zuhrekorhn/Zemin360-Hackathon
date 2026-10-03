@@ -13,6 +13,7 @@ from typing import Any
 
 from app.core.capalar import kodlar, rozet  # noqa: F401  (ön okuyucu kaydı)
 from app.servisler.dogrulama.capalar.adres import AdresDogrulayici
+from app.servisler.dogrulama.capalar.edevlet import EdevletDogrulayici
 from app.servisler.dogrulama.capalar.imza import ImzaDogrulayici
 from app.servisler.dogrulama.capalar.rozet import RozetDogrulayici
 from app.servisler.dogrulama.capalar.temel import CapaDogrulayici, CapaGirdisi
@@ -23,6 +24,7 @@ DOGRULAYICILAR: list[CapaDogrulayici] = [
     AdresDogrulayici(),
     ImzaDogrulayici(),
     RozetDogrulayici(),
+    EdevletDogrulayici(),
 ]
 
 
