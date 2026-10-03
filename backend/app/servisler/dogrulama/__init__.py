@@ -6,6 +6,7 @@ Kurallar `app/agents/dogrulama/`'da (saf); burada modele uygulanmaları:
   - `referans`: referans isteme, yanıt, geri çekme, zaman aşımı, hatırlatma, yeniden isteme
   - `referans_epostasi`: referans kişiye giden e-postalar
   - `itiraz`: itirazla yeniden değerlendirme
+  - `dosyalar`: dosya ve görsel kanıtı (yükleme hattı, depo, indirme adresi)
 
 Sözleşme (kart düzenleme servisiyle aynı): servis modeli değiştirir; commit,
 arka plan işi ve HTTP'ye çeviri (404, 409, 429, 202) çağıran ucun işidir. Bildirim,
@@ -26,6 +27,7 @@ from app.servisler.dogrulama.parcalar import (
     degerlendirildi_mi,
     link_parcasi_ekle,
     okunabilir_mi,
+    parca_bul,
 )
 from app.servisler.dogrulama.referans import (
     FormYaniti,
@@ -70,6 +72,7 @@ __all__ = [
     "kanit_linki_ekle",
     "kanit_parcasini_sil",
     "link_parcasi_ekle",
+    "parca_bul",
     "isteme_engeli",
     "istek_epostasi_hazirla",
     "istek_epostasi_kur",

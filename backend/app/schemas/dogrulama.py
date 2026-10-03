@@ -36,15 +36,32 @@ class ReferansIstegiGirdisi(BaseModel):
 
 
 class KanitParcasiYaniti(BaseModel):
-    """Bir kanıt parçası. `erisim` ve `platform` okuyucu zinciri gelince dolar (adım 5)."""
+    """Bir kanıt parçası: link, dosya ya da görsel. Dosyanın kendisi dönmez; indirme
+    adresi ayrı uçtan, kısa ömürlü (GET .../kanit/{id}/indir)."""
 
     id: uuid.UUID
     tur: str
     url: str | None
     platform: str | None = None
     erisim: str | None = None
+    seviye: str | None = None
+    dosya_adi: str | None = None
+    dosya_boyutu: int | None = None
+    gorunur_firmaya: bool = False
 
     model_config = {"from_attributes": True}
+
+
+class DosyaGorunurlukIstegi(BaseModel):
+    """Genç dosyanın firmalara görünüp görünmeyeceğini seçer (PATCH .../kanit/{id})."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    gorunur_firmaya: bool
+
+
+class IndirmeAdresiYaniti(BaseModel):
+    adres: str
 
 
 class GuvenSkoruYaniti(BaseModel):

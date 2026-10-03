@@ -31,6 +31,15 @@ class KanitBulunamadi(LookupError):
     """Parça bu çalışmaya ait değil ya da yok (uçta 404)."""
 
 
+class DosyaSiniri(ValueError):
+    """Çalışmanın dosya sınırı doldu (uçta 422); mesaj gence gösterilir."""
+
+
+# Çalışma başına en çok dosya / görsel (plan § 4.4)
+KALEM_BASINA_DOSYA = 5
+DOSYA_TURLERI = frozenset({ParcaTuru.DOSYA.value, ParcaTuru.GORSEL.value})
+
+
 def link_parcasi_ekle(cikti: SomutCikti, url: str) -> KanitParcasi:
     """Çalışmaya link parçası ekler; göstergenin değerlendirme kısmı sıfırlanır.
 
@@ -48,14 +57,51 @@ def link_parcasi_ekle(cikti: SomutCikti, url: str) -> KanitParcasi:
     return parca
 
 
-def parca_sil(cikti: SomutCikti, parca_id: uuid.UUID) -> None:
-    """Parçayı kaldırır; göstergenin değerlendirme kısmı sıfırlanır."""
+def dosya_eklenebilir_mi(cikti: SomutCikti, dosya_ozeti: str | None = None) -> None:
+    """Sınır dolduysa `DosyaSiniri`, aynı dosya varsa `KanitZatenVar`; dosya
+    işlenmeden ve depoya konmadan önce sorulur."""
+    if dosya_ozeti and any(p.dosya_ozeti == dosya_ozeti for p in cikti.kanit_parcalari):
+        raise KanitZatenVar("Bu dosya bu çalışmada zaten var.")
+    sayi = sum(1 for p in cikti.kanit_parcalari if p.tur in DOSYA_TURLERI)
+    if sayi >= KALEM_BASINA_DOSYA:
+        raise DosyaSiniri(
+            f"Bir çalışmaya en çok {KALEM_BASINA_DOSYA} dosya ekleyebilirsin; "
+            "yenisini eklemek için birini kaldır."
+        )
+
+
+def dosya_parcasi_ekle(
+    cikti: SomutCikti,
+    *,
+    tur: ParcaTuru,
+    dosya_anahtari: str,
+    dosya_ozeti: str,
+    belge: dict,
+) -> KanitParcasi:
+    """Çalışmaya dosya ya da görsel parçası ekler; aynı dosya (ham özet) ikinci kez 409."""
+    dosya_eklenebilir_mi(cikti, dosya_ozeti)
+    parca = KanitParcasi(
+        tur=tur.value, dosya_anahtari=dosya_anahtari, dosya_ozeti=dosya_ozeti, belge=belge
+    )
+    cikti.kanit_parcalari.append(parca)
+    gostergeyi_yeniden_degerlendirmeye_al(cikti)
+    return parca
+
+
+def parca_bul(cikti: SomutCikti, parca_id: uuid.UUID) -> KanitParcasi:
     for parca in cikti.kanit_parcalari:
         if parca.id == parca_id:
-            cikti.kanit_parcalari.remove(parca)
-            gostergeyi_yeniden_degerlendirmeye_al(cikti)
-            return
+            return parca
     raise KanitBulunamadi(parca_id)
+
+
+def parca_sil(cikti: SomutCikti, parca_id: uuid.UUID) -> KanitParcasi:
+    """Parçayı kaldırır; göstergenin değerlendirme kısmı sıfırlanır. Döner: kaldırılan
+    parça (dosyasını depodan silmek çağıranın işi, commit'ten sonra)."""
+    parca = parca_bul(cikti, parca_id)
+    cikti.kanit_parcalari.remove(parca)
+    gostergeyi_yeniden_degerlendirmeye_al(cikti)
+    return parca
 
 
 def okunabilir_mi(parca: KanitParcasi) -> bool:

@@ -25,7 +25,7 @@ import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Response, UploadFile
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -40,7 +40,9 @@ from app.agents.dogrulama.kurallar import OkunanKanit
 from app.agents.inceleme_durumu import ACIK
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
+from app.core.dis_servisler.depo import DepoKapali
 from app.core.dis_servisler.eposta import Eposta
+from app.core.dosya_hatti import AZAMI_BOYUT, MB, DosyaReddedildi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.kanit_okuma.belge import ErisimDurumu
 from app.core.llm import HizSinirHatasi
@@ -51,7 +53,9 @@ from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.dogrulama import (
+    DosyaGorunurlukIstegi,
     GuvenSkoruYaniti,
+    IndirmeAdresiYaniti,
     ItirazIstegi,
     KanitDurumuYaniti,
     KanitLinkiIstegi,
@@ -74,11 +78,13 @@ from app.servisler.dogrulama import (
     KendiReferansi,
     ReferansYenidenIstenemez,
     ReferansZatenBekliyor,
+    dosyalar,
     referans_guncel_mi,
     yeniden_isteme_engeli,
     zaman_asimini_isle,
     zaman_asimlarini_isle,
 )
+from app.servisler.dogrulama.parcalar import DosyaSiniri
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
 
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
@@ -141,12 +147,87 @@ async def kanit_parcasini_sil(
     """Parçayı kaldırır; başka link kaldıysa onunla yeniden değerlendirir."""
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     try:
+        anahtarlar = dosyalar.dosya_anahtarlari([dogrulama_servisi.parca_bul(cikti, parca_id)])
         with _hiz_siniri_429():
             kontrol = await dogrulama_servisi.kanit_parcasini_sil(oturum, cikti, parca_id)
     except KanitBulunamadi as hata:
         raise bulunamadi(KANIT_BULUNAMADI) from hata
     await _gosterge_degisti(oturum, cikti, arka_plan)
+    # Dosya depodan commit'ten sonra silinir (işlem düşerse satır da dosya da kalır).
+    arka_plan.add_task(dosyalar.depodan_sil, anahtarlar)
     return await _durum_yaniti(oturum, somut_cikti_id, _erisilebilir(kontrol))
+
+
+DOSYA_KAPALI = "Dosya yükleme şu an kapalı; kanıtını link ya da referansla ekleyebilirsin."
+
+
+@router.post("/kalem/{somut_cikti_id}/dosya", response_model=KanitDurumuYaniti, status_code=201)
+async def kanit_dosyasi_ekle(
+    somut_cikti_id: uuid.UUID,
+    arka_plan: BackgroundTasks,
+    dosya: UploadFile = File(...),
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> KanitDurumuYaniti:
+    """PDF ya da görsel ekler (plan § 4): güvenli hale getirilir, depoya konur, çalışma
+    hemen değerlendirilir. Kabul edilmeyen dosya 422, aynı dosya 409, depo kapalı 503."""
+    cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
+    ham = await dosya.read(AZAMI_BOYUT + 1)
+    if len(ham) > AZAMI_BOYUT:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Bu dosya çok büyük; en çok {AZAMI_BOYUT // MB} MB yükleyebilirsin.",
+        )
+    kart = await oturum.get(YetenekKarti, cikti.yetenek_karti_id)
+    try:
+        with _hiz_siniri_429():
+            kontrol = await dosyalar.dosya_ekle(
+                oturum, cikti, kart.kullanici_id, ham, dosya.filename
+            )
+    except (DosyaReddedildi, DosyaSiniri) as hata:
+        raise HTTPException(status_code=422, detail=str(hata)) from hata
+    except KanitZatenVar as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
+    except DepoKapali as hata:
+        raise HTTPException(status_code=503, detail=DOSYA_KAPALI) from hata
+    await _gosterge_degisti(oturum, cikti, arka_plan)
+    return await _durum_yaniti(oturum, somut_cikti_id, _erisilebilir(kontrol))
+
+
+@router.get("/kalem/{somut_cikti_id}/kanit/{parca_id}/indir", response_model=IndirmeAdresiYaniti)
+async def kanit_dosyasini_indir(
+    somut_cikti_id: uuid.UUID,
+    parca_id: uuid.UUID,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_GIRVAK)),
+    oturum: AsyncSession = Depends(get_session),
+) -> IndirmeAdresiYaniti:
+    """Dosyanın birkaç dakika geçerli indirme adresi. Genç ve GİRVAK; firma kart
+    görünümünden ve yalnızca gencin açtığı dosyalar için (`yetenek_kartlari`)."""
+    cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id, girvak_okuyabilir=True)
+    try:
+        return IndirmeAdresiYaniti(adres=await dosyalar.indirme_adresi(cikti, parca_id))
+    except KanitBulunamadi as hata:
+        raise bulunamadi(KANIT_BULUNAMADI) from hata
+    except DepoKapali as hata:
+        raise HTTPException(status_code=503, detail=DOSYA_KAPALI) from hata
+
+
+@router.patch("/kalem/{somut_cikti_id}/kanit/{parca_id}", response_model=KanitDurumuYaniti)
+async def dosya_gorunurlugu(
+    somut_cikti_id: uuid.UUID,
+    parca_id: uuid.UUID,
+    istek: DosyaGorunurlukIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
+    oturum: AsyncSession = Depends(get_session),
+) -> KanitDurumuYaniti:
+    """ "Firmalar görebilir" seçeneği. Gösterge ve kart sürümü değişmez."""
+    cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
+    try:
+        dosyalar.gorunurlugu_degistir(cikti, parca_id, istek.gorunur_firmaya)
+    except KanitBulunamadi as hata:
+        raise bulunamadi(KANIT_BULUNAMADI) from hata
+    await oturum.commit()
+    return await _durum_yaniti(oturum, somut_cikti_id, None)
 
 
 @router.post("/kalem/{somut_cikti_id}/degerlendir", response_model=KanitDurumuYaniti)

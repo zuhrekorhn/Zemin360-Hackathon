@@ -84,6 +84,15 @@ class KanitParcasi(UUIDPrimaryKeyMixin, Base):
     )
 
     somut_cikti: Mapped[SomutCikti] = relationship(back_populates="kanit_parcalari")
+
+    @property
+    def dosya_adi(self) -> str | None:
+        return (self.belge or {}).get("dosya", {}).get("ad")
+
+    @property
+    def dosya_boyutu(self) -> int | None:
+        return (self.belge or {}).get("dosya", {}).get("boyut")
+
     metin_parcalari: Mapped[list[KanitMetinParcasi]] = relationship(
         back_populates="kanit_parcasi",
         cascade="all, delete-orphan",

@@ -44,6 +44,7 @@ from app.schemas.kart_duzenleme import (
 from app.schemas.kesif import YetenekKartiYaniti
 from app.servisler import kart_duzenleme as duzenleme
 from app.servisler import kart_hazirlama
+from app.servisler.dogrulama.dosyalar import depodan_sil, dosya_anahtarlari
 from app.servisler.eslestirme import IHTIYAC_ACIK
 
 router = APIRouter(prefix="/yetenek-kartlari", tags=["kart-duzenleme"])
@@ -224,5 +225,10 @@ async def is_kalemini_sil(
     oturum: AsyncSession = Depends(get_session),
 ) -> YetenekKartiYaniti:
     kart = await _sahibinin_karti(oturum, hesap, kart_id)
-    duzenleme.is_kalemini_sil(kart, _is_kalemi(kart, cikti_id))
-    return await _sonuclandir(oturum, kart, True, arka_plan)
+    cikti = _is_kalemi(kart, cikti_id)
+    anahtarlar = dosya_anahtarlari(cikti.kanit_parcalari)
+    duzenleme.is_kalemini_sil(kart, cikti)
+    yanit = await _sonuclandir(oturum, kart, True, arka_plan)
+    # Kalem silinince dosyaları da silinir (plan § 4.4), commit'ten sonra.
+    arka_plan.add_task(depodan_sil, anahtarlar)
+    return yanit
