@@ -53,3 +53,52 @@ def metinli_pdf(satirlar: list[str]) -> bytes:
     cikti = io.BytesIO()
     belge.save(cikti, deterministic_id=True)
     return cikti.getvalue()
+
+
+def imzali_pdf(satirlar: list[str], imzalayan: str = "Ornek Universitesi"):
+    """Kendinden imzalı sertifikayla PAdES imzalı PDF. Döner: (pdf, asn1 sertifika)."""
+    import datetime as dt
+
+    from asn1crypto import keys, x509
+    from cryptography import x509 as cx509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.x509.oid import NameOID
+    from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
+    from pyhanko.sign import signers
+    from pyhanko_certvalidator.registry import SimpleCertificateStore
+
+    anahtar = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    ad = cx509.Name([cx509.NameAttribute(NameOID.COMMON_NAME, imzalayan)])
+    simdi = dt.datetime.now(dt.UTC)
+    sertifika = (
+        cx509.CertificateBuilder()
+        .subject_name(ad)
+        .issuer_name(ad)
+        .public_key(anahtar.public_key())
+        .serial_number(cx509.random_serial_number())
+        .not_valid_before(simdi - dt.timedelta(days=1))
+        .not_valid_after(simdi + dt.timedelta(days=30))
+        .add_extension(cx509.BasicConstraints(ca=True, path_length=None), critical=True)
+        .add_extension(
+            cx509.KeyUsage(True, True, False, False, False, True, False, False, False),
+            critical=True,
+        )
+        .sign(anahtar, hashes.SHA256())
+    )
+    asn1_sertifika = x509.Certificate.load(sertifika.public_bytes(serialization.Encoding.DER))
+    asn1_anahtar = keys.PrivateKeyInfo.load(
+        anahtar.private_bytes(
+            serialization.Encoding.DER,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+    )
+    imzaci = signers.SimpleSigner(
+        signing_cert=asn1_sertifika,
+        signing_key=asn1_anahtar,
+        cert_registry=SimpleCertificateStore.from_certs([asn1_sertifika]),
+    )
+    yazici = IncrementalPdfFileWriter(io.BytesIO(metinli_pdf(satirlar)))
+    cikti = signers.sign_pdf(yazici, signers.PdfSignatureMetadata(field_name="Imza"), signer=imzaci)
+    return cikti.getvalue(), asn1_sertifika

@@ -13,11 +13,12 @@ from typing import Any
 
 from app.core.capalar import kodlar  # noqa: F401  (ön okuyucu kaydı)
 from app.servisler.dogrulama.capalar.adres import AdresDogrulayici
+from app.servisler.dogrulama.capalar.imza import ImzaDogrulayici
 from app.servisler.dogrulama.capalar.temel import CapaDogrulayici, CapaGirdisi
 
 logger = logging.getLogger("zemin360.capalar")
 
-DOGRULAYICILAR: list[CapaDogrulayici] = [AdresDogrulayici()]
+DOGRULAYICILAR: list[CapaDogrulayici] = [AdresDogrulayici(), ImzaDogrulayici()]
 
 
 async def capalari_dogrula(girdi: CapaGirdisi) -> list[dict[str, Any]]:

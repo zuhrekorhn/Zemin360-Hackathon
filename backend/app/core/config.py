@@ -100,6 +100,8 @@ class Settings(BaseSettings):
     clamav_sunucu: str = "localhost"
     clamav_port: int = 3310
     virus_zaman_asimi_sn: float = 30
+    # E-imza doğrulamasında certifi'ye ek güvenilir kökler (ör. Kamu SM; .pem/.crt/.cer)
+    eimza_kok_klasoru: str = ""
     # Kullanıcı başına günlük dosya yükleme sınırı
     gunluk_dosya_siniri: int = 30
 

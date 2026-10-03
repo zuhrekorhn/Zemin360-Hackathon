@@ -9,7 +9,8 @@ hesaplanır: kimlik durumu ya da kural değişirse eski dosyalar da doğru okunu
 
 Çapa başına A (düzenleyen) ve C (kamuya açık) koşulları:
   - adres: A = bilinen düzenleyen + (e-posta eşleşmesi ya da ad üç koşulu); C = sayfa açıldı
-  - imza: A = geçerli, bütün, güvenilir kök + belgede ad üç koşulu; C = geçerli ve bütün
+  - imza: A = geçerli, bütün, güvenilir kök, imzalayan genç değil + belgede ad üç koşulu;
+    C = geçerli ve bütün
   - rozet: A = düzenleyen doğruladı, iptal yok + alıcı e-postası eşleşti;
     C = alıcı e-postayla tanımlanmamış
   - e-Devlet: A = GİRVAK onayladı
@@ -73,7 +74,7 @@ def capa_sonucu(c: Mapping[str, Any], kimlik: KimlikDurumu) -> CapaSonucu:
     if tur == TUR_IMZA:
         if not (c.get("gecerli") and c.get("butun")):
             return BEYAN
-        if c.get("guvenilir"):
+        if c.get("guvenilir") and not c.get("imzalayan_genc"):
             return _kimlikle_a(c, kimlik) or KAMUYA
         return KAMUYA
     if tur == TUR_ROZET:

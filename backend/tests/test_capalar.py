@@ -223,3 +223,71 @@ def test_dogrulayici_hatasi_yuklemeyi_dusurmez(monkeypatch):
 
     monkeypatch.setattr(capalar, "DOGRULAYICILAR", [Bozuk()])
     assert asyncio.run(capalari_dogrula(_girdi())) == []
+
+
+# --- E-imza ---------------------------------------------------------------------------------
+
+
+def _imza_girdisi(ham, metin="Elif Yilmaz bu kursu tamamlamistir"):
+    return CapaGirdisi(
+        ham=ham, icerik_turu="application/pdf", metin=metin, ad="Elif Yılmaz", eposta="e@o.com"
+    )
+
+
+def test_imzali_pdf_guvenilir_kokle_duzenleyen(monkeypatch):
+    from app.core.capalar import eimza
+    from app.servisler.dogrulama.capalar.imza import ImzaDogrulayici
+    from tests import dosya_ornekleri as ornek
+
+    ham, sertifika = ornek.imzali_pdf(["Katilim Belgesi", "Elif Yilmaz"])
+    monkeypatch.setattr(
+        "app.servisler.dogrulama.capalar.imza.guvenilir_kokler", lambda _k: (sertifika,)
+    )
+    [bulgu] = asyncio.run(ImzaDogrulayici().dogrula(_imza_girdisi(ham)))
+    assert bulgu["gecerli"] and bulgu["butun"] and bulgu["guvenilir"]
+    assert bulgu["imzalayan"].endswith("Ornek Universitesi")
+    assert bulgu["ad_eslesti"] is True and bulgu["imzalayan_genc"] is False
+    assert seviye(bulgu) is S.DUZENLEYEN
+
+    # Kök tanınmıyor: imza geçerli ve bütün ama C
+    monkeypatch.setattr("app.servisler.dogrulama.capalar.imza.guvenilir_kokler", lambda _k: ())
+    [tanınmayan] = asyncio.run(ImzaDogrulayici().dogrula(_imza_girdisi(ham)))
+    assert tanınmayan["gecerli"] and not tanınmayan["guvenilir"]
+    assert seviye(tanınmayan) is S.KAMUYA_ACIK
+    assert len(eimza.guvenilir_kokler()) > 50  # certifi
+
+
+def test_imzadan_sonra_degistirilen_pdf_beyan(monkeypatch):
+    from app.servisler.dogrulama.capalar.imza import ImzaDogrulayici
+    from tests import dosya_ornekleri as ornek
+
+    ham, sertifika = ornek.imzali_pdf(["Katilim Belgesi", "Elif Yilmaz"])
+    # İmzalı aralıktaki ilk akışın bir baytı değişir (belge imzadan sonra oynanmış).
+    i = ham.index(b"stream") + 8
+    bozuk = ham[:i] + bytes([ham[i] ^ 0x01]) + ham[i + 1 :]
+    monkeypatch.setattr(
+        "app.servisler.dogrulama.capalar.imza.guvenilir_kokler", lambda _k: (sertifika,)
+    )
+    [bulgu] = asyncio.run(ImzaDogrulayici().dogrula(_imza_girdisi(bozuk)))
+    assert bulgu["gecerli"] is False
+    assert seviye(bulgu) is S.BEYAN
+
+
+def test_gencin_kendi_imzaladigi_belge_en_cok_kamuya_acik(monkeypatch):
+    from app.servisler.dogrulama.capalar.imza import ImzaDogrulayici
+    from tests import dosya_ornekleri as ornek
+
+    ham, sertifika = ornek.imzali_pdf(["Rapor", "Elif Yilmaz"], imzalayan="Elif Yilmaz")
+    monkeypatch.setattr(
+        "app.servisler.dogrulama.capalar.imza.guvenilir_kokler", lambda _k: (sertifika,)
+    )
+    [bulgu] = asyncio.run(ImzaDogrulayici().dogrula(_imza_girdisi(ham)))
+    assert bulgu["imzalayan_genc"] is True
+    assert seviye(bulgu) is S.KAMUYA_ACIK
+
+
+def test_imzasiz_pdf_imza_capasi_yok():
+    from app.servisler.dogrulama.capalar.imza import ImzaDogrulayici
+    from tests import dosya_ornekleri as ornek
+
+    assert asyncio.run(ImzaDogrulayici().dogrula(_imza_girdisi(ornek.pdf()))) == []
