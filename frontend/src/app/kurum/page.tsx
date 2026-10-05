@@ -170,6 +170,16 @@ function KurumPaneliIcerigi() {
                   </Link>
                 </Button>
                 {ilanKapali(kart) ? null : (
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="w-fit shrink-0"
+                  >
+                    <Link href={`/kurum/ilan/${kart.id}/duzenle`}>Düzenle</Link>
+                  </Button>
+                )}
+                {ilanKapali(kart) ? null : (
                   // Kapanınca /me tazelenir: liste durumu oradan okuyor;
                   // öneriler de "kapandı" olduğu için yeniden okunur.
                   <IlanKapatma

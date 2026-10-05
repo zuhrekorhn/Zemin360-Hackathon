@@ -735,6 +735,23 @@ export function ihtiyacKartiKapat(
   });
 }
 
+/** GET /ihtiyac-kartlari/{id} — firma kendi ilanını görür; başkasının 404. */
+export function ihtiyacKarti(kartId: string): Promise<IhtiyacKartiYaniti> {
+  return apiIstek<IhtiyacKartiYaniti>(`/ihtiyac-kartlari/${kartId}`);
+}
+
+/** PATCH /ihtiyac-kartlari/{id} — açık ilanı yerinde düzenler (docs/plans/ilan-duzenleme.md).
+ *  Kapalı ya da iş birliği başlamış ilan 409 (cümle backend'den). Kapı değişmez. */
+export function ihtiyacKartiDuzenle(
+  kartId: string,
+  taslak: IhtiyacTaslagi,
+): Promise<IhtiyacKartiYaniti> {
+  return apiIstek<IhtiyacKartiYaniti>(`/ihtiyac-kartlari/${kartId}`, {
+    method: "PATCH",
+    body: JSON.stringify(taslak),
+  });
+}
+
 /** POST /ihtiyac-kartlari/{id}/embedding — kartı eşleştirmeye hazırlar;
  *  başarılıysa eşleştirme de arka planda başlar. */
 export function ihtiyacKartiHazirla(
