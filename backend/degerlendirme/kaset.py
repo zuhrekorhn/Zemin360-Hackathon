@@ -318,6 +318,9 @@ class YedekOkuyucuKaseti:
         self._servis_denetlendi = False
         kayitta = kip is KasetKipi.KAYDET
         self._kayit: dict[str, Any] = {} if kayitta else _json_oku(klasor / "yedek_okuyucu.json")
+        # Dosyaya yalnızca bu çalıştırmada kullanılanlar yazılır (kural değişince eski
+        # adresin kaydı kalmasın).
+        self._kullanilan: set[str] = set()
 
     @property
     def _yedek_klasoru(self) -> Path:
@@ -325,6 +328,7 @@ class YedekOkuyucuKaseti:
 
     async def ac(self, url: str, *, ekran: EkranKurali, en_az_metin: int) -> TarayiciSayfasi | None:
         anahtar = f"{url} {ekran.value} {en_az_metin}"
+        self._kullanilan.add(anahtar)
         canli = self.kaset_kipi is KasetKipi.KAYDET or (
             self.kaset_kipi is KasetKipi.TAMAMLA and anahtar not in self._kayit
         )
@@ -397,11 +401,12 @@ class YedekOkuyucuKaseti:
     def kaydet(self) -> None:
         if self.kaset_kipi is KasetKipi.OYNAT:
             return
-        _json_yaz(self.klasor / "yedek_okuyucu.json", self._kayit)
-        if self.kaset_kipi is not KasetKipi.KAYDET or not self._yedek_klasoru.exists():
+        kayit = {a: k for a, k in self._kayit.items() if a in self._kullanilan}
+        _json_yaz(self.klasor / "yedek_okuyucu.json", kayit)
+        if not self._yedek_klasoru.exists():
             return
-        kullanilan = {k["html"] for k in self._kayit.values() if k.get("html")} | {
-            d for k in self._kayit.values() for d in k.get("ekranlar", [])
+        kullanilan = {k["html"] for k in kayit.values() if k.get("html")} | {
+            d for k in kayit.values() for d in k.get("ekranlar", [])
         }
         for dosya in self._yedek_klasoru.iterdir():
             if dosya.name not in kullanilan:

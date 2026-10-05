@@ -7,8 +7,10 @@ Platform okuyucusu ya da genel okuyucu bir sonuç verdikten sonra çalışır:
     siteleri) sayfa açık okunsa bile ekran görüntüsü alınır: çalışma görseldir.
   - Tarayıcı da okuyamadıysa (servis yok, yine engel, yine boş ve görüntüsüz)
     ve bayrak açıksa üçüncü taraf servis (Jina Reader) denenir.
-Giriş duvarı, "bulunamadı" ve "güvensiz" yedeğe gitmez (tarayıcı da aşamaz ya da
-sonuç zaten kesindir). PDF dosya hattının işidir.
+Kapalı platformlar (Instagram, LinkedIn, Facebook) yedeğe gitmez: tarayıcıda
+açılsalar da içerik giriş penceresinin arkasındadır; okunamaz sayılır ve gence
+alternatif yol sunulur (§ 18). Giriş duvarı, "bulunamadı" ve "güvensiz" yedeğe
+gitmez (tarayıcı da aşamaz ya da sonuç zaten kesindir). PDF dosya hattının işidir.
 
 Kurallar saf (`yedek_gerekli_mi`, `ekran_kurali`, `birlestir`); ağ çağrısı
 yalnızca `yedekle`'de.
@@ -51,16 +53,22 @@ GORSEL_PLATFORMLAR = frozenset(
     }
 )
 
+KAPALI_PLATFORMLAR = frozenset({"instagram.com", "linkedin.com", "facebook.com"})
+
 _YEDEKLENEN = frozenset({ErisimDurumu.ENGELLENDI, ErisimDurumu.ICERIK_YOK})
 
 
-def gorsel_platform_mu(url: httpx.URL) -> bool:
+def _alanda_mi(url: httpx.URL, alanlar: frozenset[str]) -> bool:
     host = url.host.lower().removeprefix("www.")
-    return any(host == alan or host.endswith(f".{alan}") for alan in GORSEL_PLATFORMLAR)
+    return any(host == alan or host.endswith(f".{alan}") for alan in alanlar)
+
+
+def gorsel_platform_mu(url: httpx.URL) -> bool:
+    return _alanda_mi(url, GORSEL_PLATFORMLAR)
 
 
 def yedek_gerekli_mi(url: httpx.URL, belge: KanitBelgesi) -> bool:
-    if belge.platform == "pdf":
+    if belge.platform == "pdf" or _alanda_mi(url, KAPALI_PLATFORMLAR):
         return False
     if belge.erisim in _YEDEKLENEN:
         return True

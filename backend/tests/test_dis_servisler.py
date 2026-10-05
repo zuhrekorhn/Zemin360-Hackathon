@@ -103,5 +103,12 @@ def test_saglik_ucu_yalnizca_girvak():
     with giris_yapmis(sahte_hesap("girvak")):
         yanit = istemci.get("/saglik/servisler")
     assert yanit.status_code == 200
-    assert [s["servis"] for s in yanit.json()] == ["eposta", "oauth", "depo", "virus"]
+    assert [s["servis"] for s in yanit.json()] == [
+        "eposta",
+        "oauth",
+        "depo",
+        "virus",
+        "yedek_okuyucu",
+        "uzak_okuyucu",
+    ]
     assert yanit.json()[0]["kip"] == "sahte"

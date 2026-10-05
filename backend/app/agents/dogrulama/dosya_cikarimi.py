@@ -58,7 +58,9 @@ async def ekranlari_oku(goruntuler: Sequence[bytes]) -> DosyaOkunusu:
     """Kanıt sayfasının ekran görüntüleri (yukarıdan aşağı parçalar, JPEG)."""
     return await _oku(
         "Kanıt sayfasının ekran görüntüleri; aynı sayfanın yukarıdan aşağı parçaları. "
-        "Sitenin menüsü, çerez uyarısı gibi sayfanın kendi öğelerini betime katma.",
+        "Yalnızca çalışmanın kendisini oku: gorsel_metni'ne çalışmanın başlığını, "
+        "açıklamasını ve görsellerinin içinde yazanları yaz. Sitenin menüsünü, reklamları, "
+        "çerez uyarısını, öneri ve yorum listelerini ne gorsel_metni'ne ne betime kat.",
         [(g, EKRAN_GORUNTUSU_TURU) for g in goruntuler],
     )
 

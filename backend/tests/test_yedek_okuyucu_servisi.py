@@ -151,7 +151,7 @@ def test_tarayici_yerel_adrese_vekilsiz_ulasamaz(sahte_dns):
                 "Bir çalışma sayfası.</body></html>"
             ).encode()
             sayfa_yaniti = (
-                b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: "
+                b"HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: "
                 + str(len(sayfa_html)).encode()
                 + b"\r\nConnection: close\r\n\r\n"
                 + sayfa_html

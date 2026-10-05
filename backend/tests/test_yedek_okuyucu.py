@@ -88,6 +88,9 @@ def u(adres: str) -> httpx.URL:
         ("https://dribbble.com/shots/1-x", E.ACIK, "web", True),
         ("https://ayse.myportfolio.com/proje", E.ACIK, "web", True),
         ("https://www.behance.net/gallery/1/x", E.GIRIS_GEREKLI, "web", False),
+        # Kapalı platform: içerik giriş penceresinin arkasında (§ 18)
+        ("https://www.instagram.com/nasa/", E.ICERIK_YOK, "web", False),
+        ("https://tr.linkedin.com/in/ayse", E.ENGELLENDI, "web", False),
     ],
 )
 def test_yedek_gerekli_mi(adres, erisim, platform, beklenen):
