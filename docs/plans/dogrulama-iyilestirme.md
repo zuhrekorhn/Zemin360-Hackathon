@@ -791,10 +791,14 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
 
 ### Adım 13: Eşleştirme incelemesine hazırlık
 
+> **Durum: tamamlandı.** `matching-algorithm.md` § 4.1: iki seçenek, 45 vakadan türetilen oran dağılımı (ortalama 0,54, ortanca 0,50) ve örnek kart tablosuyla. (b) için `yetenek_kaniti` verisi sette yok ve ihtiyaç kartında gereken yeteneklerin listesi yok; bu iki sınır ve karar soruları belgede. Formül ve kod değişmedi.
+
 - **Bulgu:** 27.
 - **İş:** `matching-algorithm.md`'ye iki seçenek (§ 11.1) karne verisiyle birlikte yazılır. Formül **değişmez**; karar Eşleştirme incelemesinde verilir.
 
 ### Adım 14: Son belge denetimi
+
+> **Durum: tamamlandı.** README (Doğrulama satırı ve kapsam paragrafı: SMTP yok cümlesi eskiydi), CLAUDE.md (Doğrulama paragrafı), roadmap (Doğrulama incelemesi bölümü) güncellendi. Metinler `genc-akisi-metinler.md`'de, her adımda eklendi.
 
 Her adım kendi belgesini güncelledi. Bu adım yalnızca çapraz denetimdir: README, içerik rehberi (yeni metinler), CLAUDE.md "Şu an neredeyiz", roadmap.
 

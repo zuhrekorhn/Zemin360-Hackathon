@@ -216,6 +216,22 @@ Ajan inceleme sırasının 3. adımı. Kötü girdi senaryo seti
       ediyor; döngü edevlet'te tembel importla kırıldı, `embedding_hesapla` servis katmanına
       taşınmalı.
 
+## Doğrulama incelemesi (1-5 Eki) ✓
+
+Ajan inceleme sırasının 2. adımı. Plan ve adım adım durum: `plans/dogrulama-iyilestirme.md`
+(14 adım). Ölçüm: 45 vakalı değerlendirme seti ve karneler
+(`backend/tests/degerlendirme_seti/karneler/`); son karne Kanıt %96, Sonuç %84, Rol %84,
+sahte vakada yanlış 3: 0.
+
+- [x] Ölçüm altyapısı, katmanlama, "—" ve tek kanıt servisi, puan çekirdeği (1-4).
+- [x] Link, dosya ve görsel okuma; yedek okuyucu (5, 9, 10).
+- [x] Kimlik, e-posta ve inceleme kuyruğu; referans; hesap bağlama (6-8).
+- [x] Kötüye kullanım işaretleri (11).
+- [x] Link çürümesi yoklaması, GİRVAK gözlem paneli, adalet raporu, haftalık canlı karne (12).
+- [x] Eşleştirme incelemesine hazırlık: kart bonusu iki seçeneği `matching-algorithm.md` § 4.1'de (13). **Karar bekliyor, formül değişmedi.**
+- [x] Son belge denetimi (14).
+- [ ] Kullanıcıya kalan hesap ve anahtar işleri: `plans/dogrulama-iyilestirme.md` sonundaki Adım 12 durum bloğu.
+
 ## Faz E — Yayına alma + tohum veri (4 Eki)
 
 - [ ] Frontend: Vercel. Backend: Railway ya da Render. Postgres: pgvector
