@@ -25,13 +25,9 @@ from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.profil import kurumun_profilini_guncelle
 from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
-from app.core import calisma_modeli
 from app.core.alan_adlari import IHTIYAC_ALAN_ADLARI, bos_alan_mesaji
-from app.core.firma_karti import ISBIRLIGI_TURLERI
-from app.core.firma_profili import firma_turlerini_temizle
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.ilan import ARANAN_FIRMA, ARANAN_GENC
-from app.core.sehir import sehir_kanonik
 from app.db.session import get_session
 from app.models.hesap import ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -46,6 +42,7 @@ from app.schemas.tanimlama import (
     TanimlamaSohbetYaniti,
 )
 from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
+from app.servisler.ilan_duzenleme import taslak_alanlari
 
 router = APIRouter(prefix="/tanimlama", tags=["tanimlama"])
 
@@ -187,23 +184,8 @@ async def kart_onayla(
     kart = IhtiyacKarti(
         oturum_id=istek.oturum_id,
         kurum_id=kurum_id,
-        problem_tanimi=taslak.problem_tanimi,
-        basari_kriteri=taslak.basari_kriteri,
-        basari_olcutu=taslak.basari_olcutu.model_dump() if taslak.basari_olcutu else None,
-        kisitlar=taslak.kisitlar,
-        sehir_tercihi=sehir_kanonik(taslak.sehir_tercihi),
-        # Çalışma modeli ve müsaitlik genç ilanına özel; ortak ilanında yazılmaz.
-        calisma_modeli=(
-            taslak.calisma_modeli
-            if not ortak and calisma_modeli.gecerli_mi(taslak.calisma_modeli)
-            else None
-        ),
-        musaitlik_tercihi=None if ortak else taslak.musaitlik_tercihi,
         aranan=ARANAN_FIRMA if ortak else ARANAN_GENC,
-        aranan_firma_turleri=firma_turlerini_temizle(taslak.aranan_firma_turleri) if ortak else [],
-        isbirligi_turu=(
-            taslak.isbirligi_turu if ortak and taslak.isbirligi_turu in ISBIRLIGI_TURLERI else None
-        ),
+        **taslak_alanlari(taslak, ortak),
     )
     oturum.add(kart)
     try:

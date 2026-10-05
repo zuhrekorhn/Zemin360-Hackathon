@@ -34,6 +34,8 @@ TUR_ISBIRLIGI_TAMAMLANDI = "isbirligi_tamamlandi"
 TUR_GENC_ILGI = "genc_ilgi"  # firmaya: bir genç ilgi gösterdi
 TUR_KARSILIKLI_ILGI = "karsilikli_ilgi"  # gence: firma da ilgilendi, iş birliği açıldı
 TUR_FIRSAT_KAPANDI = "firsat_kapandi"  # gence: bekleyen fırsat kapandı (nötr)
+# İlan düzenleme (docs/plans/ilan-duzenleme.md)
+TUR_FIRSAT_GUNCELLENDI = "firsat_guncellendi"  # aday tarafına: ilgilendiği ilan düzenlendi
 # Firma akışı (docs/plans/firma-akisi.md § 6)
 TUR_FIRMA_DOGRULANDI = "firma_dogrulandi"  # firmaya: GİRVAK doğruladı
 # GİRVAK inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9)
