@@ -83,7 +83,7 @@ KVKK onayı mevcut `hesap.kvkk_onay_tarihi`'nde. Alan adı ipucu **saklanmaz**, 
 | `aranan` | `genc \| firma`, varsayılan `genc` (eski satırlar genç ilanı) |
 | `aranan_firma_turleri` | text[], boş = hepsi; yalnızca `aranan = firma` |
 | `isbirligi_turu` | yalnızca ortak ilanında, isteğe bağlı |
-| `kapanma_nedeni` | `platformda_bulundu \| baska_yoldan_bulundu \| vazgecildi`, nullable |
+| `kapanma_nedeni` | `platformda_bulundu \| baska_yoldan_bulundu \| vazgecildi \| hatali_girildi`, nullable |
 | `kapanma_tarihi` | nullable |
 
 **`eslesme`**: § 0, karar 11.

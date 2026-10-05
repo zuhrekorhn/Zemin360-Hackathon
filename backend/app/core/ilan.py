@@ -17,6 +17,16 @@ Aranan = Literal["genc", "firma"]
 PLATFORMDA_BULUNDU = "platformda_bulundu"
 BASKA_YOLDAN_BULUNDU = "baska_yoldan_bulundu"
 VAZGECILDI = "vazgecildi"
+# İlan yanlış ya da eksik girildi; firma düzeltip yeniden açar. Ayrı tutulur ki
+# GİRVAK'ın "vazgeçildi" sayısı bozulmasın (bir sonuç değil, giriş hatası).
+HATALI_GIRILDI = "hatali_girildi"
 
-KAPANMA_NEDENLERI: tuple[str, ...] = (PLATFORMDA_BULUNDU, BASKA_YOLDAN_BULUNDU, VAZGECILDI)
-KapanmaNedeni = Literal["platformda_bulundu", "baska_yoldan_bulundu", "vazgecildi"]
+KAPANMA_NEDENLERI: tuple[str, ...] = (
+    PLATFORMDA_BULUNDU,
+    BASKA_YOLDAN_BULUNDU,
+    VAZGECILDI,
+    HATALI_GIRILDI,
+)
+KapanmaNedeni = Literal[
+    "platformda_bulundu", "baska_yoldan_bulundu", "vazgecildi", "hatali_girildi"
+]

@@ -60,6 +60,8 @@ class KapananIhtiyaclar(BaseModel):
     platformda_bulundu: int = 0
     baska_yoldan_bulundu: int = 0
     vazgecildi: int = 0
+    # Giriş hatası: program sonucu değil, ayrı gösterilir.
+    hatali_girildi: int = 0
     nedensiz: int = 0
 
 

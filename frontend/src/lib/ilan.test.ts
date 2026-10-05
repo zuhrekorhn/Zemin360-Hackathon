@@ -10,11 +10,12 @@ import {
 } from "@/lib/ilan";
 
 describe("KAPANMA_NEDENLERI", () => {
-  it("backend'deki üç neden, sabit sırada", () => {
+  it("backend'deki dört neden, sabit sırada", () => {
     expect(KAPANMA_NEDENLERI.map((n) => n.deger)).toEqual([
       "platformda_bulundu",
       "baska_yoldan_bulundu",
       "vazgecildi",
+      "hatali_girildi",
     ]);
   });
 });

@@ -300,6 +300,10 @@ function GirvakSayfasi() {
                   etiket: "Vazgeçildi",
                   sayi: sayilar.kapanan_ihtiyaclar.vazgecildi,
                 },
+                {
+                  etiket: "Yanlış girildi",
+                  sayi: sayilar.kapanan_ihtiyaclar.hatali_girildi,
+                },
               ]}
             />
           </PanelBolumu>

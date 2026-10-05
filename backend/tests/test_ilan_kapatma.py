@@ -27,7 +27,12 @@ def _yol(d) -> str:
 
 
 def test_kapanma_nedenleri():
-    assert KAPANMA_NEDENLERI == ("platformda_bulundu", "baska_yoldan_bulundu", "vazgecildi")
+    assert KAPANMA_NEDENLERI == (
+        "platformda_bulundu",
+        "baska_yoldan_bulundu",
+        "vazgecildi",
+        "hatali_girildi",
+    )
 
 
 def test_kapatma_yetkisi():
@@ -112,6 +117,17 @@ def test_kapatma_bekleyenleri_kapatir_neden_gizli_tekrar_yan_etkisiz():
         # GİRVAK sayısı nedenle.
         sayilar = (await istemci.get("/girvak/sayilar", headers=d.girvak.baslik)).json()
         assert sayilar["kapanan_ihtiyaclar"]["platformda_bulundu"] == 1
+
+        # Giriş hatası ayrı sayılır, "vazgeçildi"yi şişirmez.
+        hatali = await istemci.post(
+            f"/ihtiyac-kartlari/{d.I2.id}/kapat",
+            headers=d.kurum2.baslik,
+            json={"neden": "hatali_girildi"},
+        )
+        assert hatali.status_code == 200
+        sayilar = (await istemci.get("/girvak/sayilar", headers=d.girvak.baslik)).json()
+        assert sayilar["kapanan_ihtiyaclar"]["hatali_girildi"] == 1
+        assert sayilar["kapanan_ihtiyaclar"]["vazgecildi"] == 0
 
     senaryo(adimlar)
 

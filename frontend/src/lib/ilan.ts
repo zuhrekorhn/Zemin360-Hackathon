@@ -9,12 +9,16 @@
 import type { IhtiyacKartiOzeti } from "@/lib/api";
 
 export type KapanmaNedeni =
-  "platformda_bulundu" | "baska_yoldan_bulundu" | "vazgecildi";
+  | "platformda_bulundu"
+  | "baska_yoldan_bulundu"
+  | "vazgecildi"
+  | "hatali_girildi";
 
 export const KAPANMA_NEDENLERI: { deger: KapanmaNedeni; etiket: string }[] = [
   { deger: "platformda_bulundu", etiket: "Platformda bulduk" },
   { deger: "baska_yoldan_bulundu", etiket: "Başka yoldan bulduk" },
   { deger: "vazgecildi", etiket: "Vazgeçtik" },
+  { deger: "hatali_girildi", etiket: "Yanlış ya da eksik girdik" },
 ];
 
 export function ilanKapali(ilan: Pick<IhtiyacKartiOzeti, "durum">): boolean {

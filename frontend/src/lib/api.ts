@@ -9,6 +9,7 @@
 
 import type { AlanAdiIpucu } from "@/lib/firma-dogrulama";
 import { ayrintiyiOku } from "@/lib/ayrinti";
+import type { KapanmaNedeni } from "@/lib/ilan";
 import { tokenOku, tokenSil } from "@/lib/token";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -726,7 +727,7 @@ export type IhtiyacKartiYaniti = {
 /** POST /ihtiyac-kartlari/{id}/kapat — firma ilanını nedenle kapatır; tekrar 200. */
 export function ihtiyacKartiKapat(
   kartId: string,
-  neden: "platformda_bulundu" | "baska_yoldan_bulundu" | "vazgecildi",
+  neden: KapanmaNedeni,
 ): Promise<IhtiyacKartiYaniti> {
   return apiIstek<IhtiyacKartiYaniti>(`/ihtiyac-kartlari/${kartId}/kapat`, {
     method: "POST",
@@ -1359,6 +1360,7 @@ export type GirvakSayilari = {
     platformda_bulundu: number;
     baska_yoldan_bulundu: number;
     vazgecildi: number;
+    hatali_girildi: number;
     nedensiz: number;
   };
   /** Toplamların eşleşme türüne göre kırılımı (docs/plans/firma-akisi.md § 0 karar 19). */
