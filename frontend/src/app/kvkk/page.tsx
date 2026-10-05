@@ -17,12 +17,13 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
       "Eğitim ve durum: öğrenci, mezun ya da çalışıyor; isteğe bağlı olarak okul, bölüm, sınıf, mezuniyet yılı.",
       "İsteğe bağlı bağlantılar: GitHub, LinkedIn, portfolyo adresi.",
       "Yetenek kartın: Keşif sohbetinde anlattığın işler, araçlar, kanıt linkleri ve belirttiğin referans kişilerin e-posta adresleri.",
+      "Kanıt olarak yüklediğin PDF ve görseller ile içlerinden okunan metin. Okunan metinde T.C. kimlik numarası, telefon ve adres maskelenerek saklanır; görselin konum ve cihaz bilgisi (EXIF) silinir.",
     ],
   },
   {
     baslik: "Hangi verileri bilinçli olarak toplamıyoruz",
     maddeler: [
-      "Fotoğraf, yaş ya da doğum tarihi, cinsiyet, medeni durum, TC kimlik numarası, adres ve ücret beklentisi. Eşleştirme yalnızca yetkinliğe dayanır.",
+      "Fotoğraf, yaş ya da doğum tarihi, cinsiyet, medeni durum, TC kimlik numarası, adres ve ücret beklentisi. Eşleştirme yalnızca yetkinliğe dayanır. Yüklediğin bir belgede bunlar yazıyorsa okunan metinde maskelenir ve eşleştirmede kullanılmaz.",
     ],
   },
   {
@@ -41,12 +42,25 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
       "Adın ve yetenek kartın, eşleştiğin firmalara görünür.",
       "E-posta adresin yalnızca karşılıklı ilgi oluştuğunda (bir firmanın ilgisini kabul ettiğinde ya da ilgi gösterdiğin firma da ilgilendiğinde) ve yalnızca o firmayla paylaşılır.",
       "Referans kişinin e-posta adresi firmalarla paylaşılmaz.",
+      "Yüklediğin dosyaları yalnızca sen ve GİRVAK görür; firmalar yalnızca değerlendirme sonucunu görür. İstersen dosya başına “Firmalar görebilir” seçeneğini açabilirsin.",
+      "e-Devlet belgesi yüklersen GİRVAK belgeyi barkoduyla turkiye.gov.tr üzerinden elle doğrular.",
+    ],
+  },
+  {
+    baslik: "Hizmet sağlayıcılar ve yurt dışına aktarım",
+    maddeler: [
+      "Google (Gemini): sohbetlerin, kanıt linklerinin içeriği ve yüklediğin dosyalar değerlendirme için işlenir.",
+      "Voyage AI: kartının ve kanıtlarının metni eşleştirme için sayısal temsile çevrilir.",
+      "Cloudflare R2: yüklediğin dosyalar özel bir depoda saklanır.",
+      "Resend: doğrulama ve referans e-postaları bu servisle gönderilir.",
+      "Bu sağlayıcıların sunucuları yurt dışındadır; veriler yalnızca yukarıdaki amaçlarla aktarılır.",
     ],
   },
   {
     baslik: "Hakların",
     maddeler: [
       "Profilini ve kartını istediğin zaman düzenleyebilirsin.",
+      "Bir kanıtı ya da çalışmayı silince yüklediğin dosya da depodan silinir.",
       "Verilerinle ilgili bilgi, düzeltme ya da silme talebi için program ekibine başvurabilirsin.",
     ],
   },

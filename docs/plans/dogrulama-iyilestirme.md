@@ -321,7 +321,7 @@ Zincir sırası:
 | `itiraz_siniri` | Bir içerik sürümünde 3 itiraz |
 | `ad_degisikligi` | Kilitli ad için değişiklik talebi |
 | `profil_kodu_elle` | Profil okunamadı, elle doğrulama bekliyor |
-| `eposta_barkodu` | e-Devlet barkodlu belge doğrulama bekliyor |
+| `edevlet_barkodu` | e-Devlet barkodlu belge doğrulama bekliyor (adım 9'da `eposta_barkodu` yazım hatası düzeltildi) |
 
 `alakasiz_kanit` kalem işaretidir; kuyruğa girmez (§ 3).
 
@@ -728,6 +728,12 @@ Sürüm 2 sırasından iki bilinçli sapma var, ikisinin de nedeni bağımlılı
   6. Frontend: "Hesaplarım" bölümü.
 
 ### Adım 9: Dosya ve görsel
+
+> **Durum: tamamlandı** (`39ccb0e` bütün parçaların değerlendirilmesi, `ee5bdaa` depo + virüs adaptörleri, `ff16a3a` yükleme hattı ve uçlar, `798305a` PDF / görsel okuma, `b2dfd90` çapa çekirdeği + QR, `5666326` e-imza, `634baa3` Open Badges, `34128de` e-Devlet, `d7df769` belge tekilliği, `dfa4340` C2PA, `4185632` firma görünürlüğü, `3fb3fa4` frontend, `4e0a35f` karne).
+> Uygulamada netleşen kararlar (Zühre, 3 Eki: öneriler onaylandı): (a) geliştirmede yerel disk deposu (`DEPO_SAGLAYICI=yerel`, indirme backend'in `/dosya/{token}` ucundan); yayında R2 gerekli (Railway diski kalıcı değil). (b) ClamAV kapalıyken ya da ulaşılamazken dosya taranmadan kabul edilir; temizlik her durumda çalışır, yalnızca "zararlı" reddeder. (c) Bilinen düzenleyenler küçük bir veri listesi (`core/capalar/duzenleyenler.py`), GİRVAK genişletir.
+> Plandan sapmalar: (1) **Değerlendirme artık bir çalışmanın bütün parçalarını okur** (önceden yalnızca ilk link): her parça ayrı puanlanır, başlık başına en güçlüsü (§ 2), not Kanıt'ı veren parçadan. Dosya ve linkin aynı çalışmada durabilmesi için ön koşuldu. (2) **Çapalar seviye değil gerçek yazar;** seviye okuma anında saf kuralla ve gencin o anki kimlik durumuyla hesaplanır (`agents/dogrulama/capalar.py`): e-posta doğrulanınca ya da GİRVAK kararı gelince eski dosyalar da doğru okunur (e-posta doğrulanınca dosyası olan kart arka planda yeniden okunur). (3) İçerik yükleme anında bir kez okunur ve maskelenip saklanır; değerlendirme ve itiraz dosyayı yeniden okumaz. (4) Görselde betim modele bağlamdır, alıntı kaynağı değildir (`OkunanKanit.alinti_metni`). (5) C2PA bilgisi nota değil kanıt satırına ("Oluşturan araç") yazılır: not puanlardan kurulan şablondur. (6) Kendi imzaladığı belge (imzalayan = genç) güvenilir kök olsa da en çok C. (7) Doğrulama sayfası için genel okuyucunun "en az metin" eşiği yok (doğrulama sayfaları kısadır).
+> **Ertelenen / borç:** pHash ve dosya özetinin başka hesapta tekrarı adım 11'de (`ayni_iddia_cok_hesapta`). İmzalı (JWS) Open Badges ve OB 3.0 doğrulanmıyor (D kalır). Kamu SM kökleri depoda yok: `EIMZA_KOK_KLASORU` verilmezse Kamu SM imzalı belge "geçerli ama kök tanınmıyor" (C). E-imza iptal denetimi soft-fail, ağ isteği yok. Adres maskelemesi kalıba dayanır (mahalle + numara), her adresi yakalamaz. Bozuk imza ve QR sayfasında farklı ad için `belge_tutarsiz` işareti adım 11'de. `belge->capalar` sorgusu indeksli değil (ölçek küçük). Gencin silinmesi (hesap silme) yolunda depo temizliği yok; kalem ve parça silmede var. Tarayıcıda uçtan uca denenmedi.
+> **Karne (`karneler/2026-10-05-mevcut_sistem-taslak-adim9.md`):** Kanıt birebir %76 → %80, Sonuç %84, Rol %84; sahte vakada yanlış 3: 0, dil ihlali: 0. İki çapasız PDF vakası "—" → 1 (beklenen). Görsel ve çapalı (QR, imza, rozet, e-Devlet) vaka sette yok; eklenirse etiketleri Zühre koyar. Testler: backend 1727, frontend 141.
 
 - **Bulgular:** 44, 48 (belge tekilliği).
 - **İş birimleri:**
