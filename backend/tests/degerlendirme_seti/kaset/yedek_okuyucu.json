@@ -1,0 +1,49 @@
+{
+ "https://dribbble.com/shots/23166201-Mobile-App-UI-Design her_zaman 200": {
+  "durum": 200,
+  "ekranlar": [
+   "9755ddf60be14b044192-0.jpg",
+   "9755ddf60be14b044192-1.jpg",
+   "9755ddf60be14b044192-2.jpg"
+  ],
+  "html": "9755ddf60be14b044192.html.gz",
+  "son_url": "https://dribbble.com/shots/23166201-Mobile-App-UI-Design"
+ },
+ "https://grabcad.com/library/v4-engine her_zaman 200": {
+  "durum": 200,
+  "ekranlar": [
+   "575cc20465fde6bf719d-0.jpg",
+   "575cc20465fde6bf719d-1.jpg"
+  ],
+  "html": "575cc20465fde6bf719d.html.gz",
+  "son_url": "https://grabcad.com/library/v4-engine"
+ },
+ "https://medium.com/@ev/welcome-to-medium-9e53ca408c48 metin_azsa 200": {
+  "durum": 200,
+  "ekranlar": [],
+  "html": "cd7eca5667268b8f8d1c.html.gz",
+  "son_url": "https://ev.medium.com/welcome-to-medium-9e53ca408c48"
+ },
+ "https://tr.wikipedia.org/wiki/Kedi metin_azsa 200": {
+  "durum": 200,
+  "ekranlar": [],
+  "html": "01fedcdaef49d69846cc.html.gz",
+  "son_url": "https://tr.wikipedia.org/wiki/Kedi"
+ },
+ "https://www.behance.net/gallery/32158897/Brand-Identity-Design her_zaman 200": {
+  "durum": 200,
+  "ekranlar": [
+   "1c2ffe46ed8ad401244d-0.jpg",
+   "1c2ffe46ed8ad401244d-1.jpg",
+   "1c2ffe46ed8ad401244d-2.jpg"
+  ],
+  "html": "1c2ffe46ed8ad401244d.html.gz",
+  "son_url": "https://www.behance.net/gallery/32158897/Brand-Identity-Design"
+ },
+ "https://www.kaggle.com/code/alexisbcook/titanic-tutorial metin_azsa 200": {
+  "durum": 200,
+  "ekranlar": [],
+  "html": "7bff53595e0d2f10b3f7.html.gz",
+  "son_url": "https://www.kaggle.com/code/alexisbcook/titanic-tutorial"
+ }
+}

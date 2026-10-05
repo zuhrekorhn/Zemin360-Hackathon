@@ -210,34 +210,6 @@
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
- "dogrulama_cikarim:467b939bd2bd2cfd3d32950aba10422f": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Genel bir ansiklopedi sayfası yerine hazırladığın blog yazılarının doğrudan bağlantılarını ve trafik artışını belgeleyen analitik ekran görüntülerini kanıt olarak ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
- },
  "dogrulama_cikarim:4b999488975d6bd4c4dee1a9551af424": {
   "destekler": [
    {
@@ -265,6 +237,39 @@
    }
   ],
   "oneri": "Vakıf bünyesinde yürüttüğün çalışmaların somut ve ölçülebilir sonuçlarını ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:5a49389952d01ea67874f3704ea16eb1": {
+  "destekler": [
+   {
+    "alinti": "Software: CATIA",
+    "durum": "celisiyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "Machine design",
+    "yetenek": "Makine tasarımı"
+   }
+  ],
+  "oneri": "SolidWorks ile hazırladığın kendi tasarım dosyalarını doğrudan gösteren bir bağlantı ekleyip çalışmanın sağladığı sonuçları belirterek anlatımını güçlendirebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
@@ -340,62 +345,6 @@
   "sonuc_olcut_acik": true,
   "sonuc_sayisal": true,
   "sonuc_var": true
- },
- "dogrulama_cikarim:6cd980d389d1228bc984c4a4d5860d44": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanın sana ait olduğunu ve detaylarını gösteren teknik çizim dosyalarını veya profil bağlantını kanıt olarak ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
- "dogrulama_cikarim:6cf4fefc2fccbd528a1cfe1001b25033": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanın detaylarını gösteren tasarımları ve elde ettiğin sonuçları içeren doğrulanabilir bir kanıt bağlantısı ekleyerek iddianı güçlendirebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
  },
  "dogrulama_cikarim:6fdb3128c3e0f160148ac79f2708351c": {
   "destekler": [
@@ -490,11 +439,11 @@
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
- "dogrulama_cikarim:87602d56490df4720e07f2a59f9ff014": {
+ "dogrulama_cikarim:86e69fb05b6edaf33de2fd31d646ee7f": {
   "destekler": [
    {
-    "alinti": null,
-    "durum": "kanitta_yok",
+    "alinti": "Best brand identity design, digital branding for startups, corporate identities and product logos by Ramotion",
+    "durum": "destekleniyor",
     "iddia": "is"
    },
    {
@@ -508,10 +457,10 @@
     "iddia": "pay"
    }
   ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
+  "ekip_ortakligi_belirtilmis": true,
+  "ilgili_mi": true,
   "kanitlanan_yetenekler": [],
-  "oneri": "Yazının içeriğini kanıt olarak ekleyip yazının kaç kişiye ulaştığı gibi ölçülebilir sonuçlar belirterek çalışmanı güçlendirebilirsin.",
+  "oneri": "Ramotion firmasına ait bu çalışmadaki rolünü ve tasarladığın logoları doğrudan doğrulayan bir profil bağlantısı ekleyebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
@@ -630,34 +579,6 @@
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
- "dogrulama_cikarim:9e0b4844a0367f372b0ceaad57281371": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanın değerlendirilebilmesi için içeriği görüntülenebilir bir kanıt bağlantısı ekleyebilir, ulaştığın sonucu da sayılarla belirtebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
  "dogrulama_cikarim:a80d720fcf078e377f7433b4c161836c": {
   "destekler": [
    {
@@ -690,6 +611,34 @@
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
   "sonuc_var": false
+ },
+ "dogrulama_cikarim:a8ed420968a099bbe27316d4b3eb671d": {
+  "destekler": [
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": false,
+  "kanitlanan_yetenekler": [],
+  "oneri": "Hazırladığın blog ve sosyal medya içeriklerinin yayımlandığı bağlantıları ya da trafik artışını belgeleyen analiz ekran görüntülerini ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
  },
  "dogrulama_cikarim:b19ea714789bfa351ef4c5ef1b3204bc": {
   "destekler": [
@@ -897,34 +846,6 @@
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
- "dogrulama_cikarim:cd1ecd9ab4baa123373bd4574f5086be": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Çalışmanı güçlendirmek için tasarımlarını ve rolünü açıkça gösteren geçerli bir kanıt bağlantısı ekleyebilir, elde ettiğin sonuçları belirtebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
  "dogrulama_cikarim:cfa8262fff788754fa4d6295c42612f6": {
   "destekler": [
    {
@@ -1014,6 +935,109 @@
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
+ "dogrulama_cikarim:e584a500cf88caa0ad3d1caf9f84efaa": {
+  "destekler": [
+   {
+    "alinti": "Mobile App UI Design designed by Süeda Turgut.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "Mobile App UI Design designed by Süeda Turgut.",
+    "durum": "destekleniyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "Mobile App UI Design",
+    "yetenek": "UI tasarımı"
+   }
+  ],
+  "oneri": "Çalışmana elde ettiğin somut sonuçları ve tasarım sürecinde kullandığın Figma dosyasının bağlantısını ekleyebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:e6c1775641231309e9dd49e6282b8476": {
+  "destekler": [
+   {
+    "alinti": "Why We Built Medium",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "Written by Ev Williams",
+    "durum": "destekleniyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "Written by Ev Williams",
+    "yetenek": "İçerik yazarlığı"
+   }
+  ],
+  "oneri": "Tanıtım yazısının ulaştığı okuyucu sayısı veya aldığı etkileşim gibi somut sonuçları ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:eecf4af308e13b95a327b2e7ff83e175": {
+  "destekler": [
+   {
+    "alinti": "Using data from Titanic - Machine Learning from Disaster",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "Yazarlar: alexisbcook",
+    "durum": "destekleniyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "Language Python",
+    "yetenek": "Python"
+   },
+   {
+    "alinti": "Machine Learning from Disaster",
+    "yetenek": "Makine öğrenmesi"
+   }
+  ],
+  "oneri": "Notebook'unun ulaştığı görüntülenme ve beğeni gibi sayısal verileri sonuç kısmına ekleyerek çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
  "dogrulama_cikarim:efcedf3ad42b6211d8319e187f353aae": {
   "destekler": [
    {
@@ -1035,7 +1059,7 @@
   "ekip_ortakligi_belirtilmis": false,
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
-  "oneri": "Hazırladığın görselleri veya paylaşımları doğrudan gösteren bir portfolyo bağlantısı ekleyerek ekip içindeki tam görevini ve elde ettiğin sonuçları belirtebilirsin.",
+  "oneri": "Hazırladığın görselleri, ekipteki rolünü ve elde edilen sayısal sonuçları doğrudan gösteren somut bir kanıt bağlantısı ekleyebilirsin.",
   "pay_ozgul": false,
   "pay_var": true,
   "sonuc_olcut_acik": false,
@@ -1167,5 +1191,17 @@
   "sonuc_olcut_acik": true,
   "sonuc_sayisal": true,
   "sonuc_var": true
+ },
+ "dogrulama_dosya_okuma:9c27ba2823c9a0408185da3ecad4bea0": {
+  "betim": "Görsellerde Behance üzerinde paylaşılan 'Brand Identity Design' başlıklı marka kimliği tasarım projesinin detayları ve örnek tasarımları yer almaktadır.",
+  "gorsel_metni": "Brand Identity Design\nDigital branding for startups, corporate identities and product logos by Ramotion - branding agency in San Francisco, CA.\nVOLUSION\n:: Check more process here ::\nvideo animation design, top branding agencies, color shapes, motion process, logo mark construction, greyscale color logotype, final brand identity, company style guide,, color palette, branding project, digital brand book\n52 pt\n84 pt\n120 pt\nEE4360\n7461AA\n44C3D9\nFDC300\n212933\nvolusion\nvolusion\nvolusion\nvolusion\nvolusion\nXENDER\n:: Read full case study ::\nblend gradient, best branding companies, brand book, branding, color palette,, file sharing service, greyscale logotype, logo design, product sign wordmark, style guide, visual identity, flip animation\nXender\nLOGOTYPE COLOR\nSuggested color solutions for different printing technologies.\nDigital products and printing\nXender\nStencil printing\nXender\nOne color print or plotter\nXender\nMOBINGI\n:: Read full case study ::\nbranding shapes, work in process, wip ios app, logo icon sketches, identity brandbook, shape web application, logo design, logotype work, branding ramotion, style guide, geometrical shapes"
+ },
+ "dogrulama_dosya_okuma:b5d7a17e569e27079aca7b2b7113e4fa": {
+  "betim": "GrabCAD web sitesinde yer alan bir V4 motor 3D CAD modeline ait ürün ve indirme sayfası ekran görüntüsüdür. Sayfada motorun saydam ve renkli 3D görseli, modelin başlığı, açıklama metni, dosya listesi ve YouTube video bağlantısı görülmektedir.",
+  "gorsel_metni": "V4 Engine\nQAPGAN™\nAugust 19th, 2012\nSimple V4 Engine Animated on Catia V5R20\n\nVideo\nhttps://youtu.be/OpxZKMLW38E\n\nFiles (3)\nV4 Engine /\nRenderings Folder November 7th, 2012\nSimple engine V4.rar rar August 21st, 2012\nEngine_Asm.stp stp August 19th, 2012\n\nDetails\nUploaded: August 19th, 2012\nSoftware: CATIA, STEP / IGES, Rendering\nCategories: Automotive, Educational, Machine design\nTags: engine, catia, animated, v5r20, v4"
+ },
+ "dogrulama_dosya_okuma:ce152105e6e5e22deea8644385e69e60": {
+  "betim": "Bir mobil uygulamanın rozet, ödül ve kupon detay ekranlarını içeren UI/UX tasarımının Dribbble üzerindeki sunum sayfası görülmektedir.",
+  "gorsel_metni": "Mobile App\n\nPROFILE\nJohn Doe\nIndividual Account\n250 SEQUENCES\n22.3K PHOTO\n2.3K METERS\n\nBADGES\n\n3000 pts\nYou used 12000pts.\n\nSpotify Voucher %10 sale 1000 pts\nGetir Voucher %30 sale 600 pts\nStarbucks Voucher %30 sale 600 pts\n\n5000 pts\nShell Voucher %30 promo 2000 pts\nAmazon Voucher %30 promo 7000 pts\nBp Voucher %30 promo 3500 pts\n\nEarned Awards\nSpotify Voucher %10 promotion 1000 pts\nGetir Voucher %30 promotion 600 pts\n\nEARNED AWARDS\nSpotify Voucher 1000 pts\nGetir Voucher 600 pts\nStarbucks Voucher 600 pts\n\nGIFTS\nShell Voucher %30 promo 2000 pts\nAmazon Voucher %30 promo 7000 pts\nBp Voucher %30 promo 1000 pts\n\nEARNED VOUCHER PAGE\nEARNED VOUCHER DETAIL\nGIFT VOUCHER DETAIL\n\nSpotify Voucher\nYou will recieve a 10$ equivalent promo code for Spotify Premium. You will receive the code by email within 7-14 working days. Enjoy the music, Get yours now!\nDONE\n\nAmazon Voucher\nYou will recieve a 10$ equivalent promo code for Amazon. You will receive the code by email within 7-14 working days. Enjoy the music, Get yours now!\nGET VOUCHER"
  }
 }

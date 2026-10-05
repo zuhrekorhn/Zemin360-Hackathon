@@ -78,7 +78,7 @@
  },
  "muhendislik-grabcad-bot-engeli": {
   "hata": null,
-  "kanit": null,
+  "kanit": 1,
   "referans": null,
   "rol": 2,
   "sonuc": 0
@@ -92,7 +92,7 @@
  },
  "pazarlama-ilgisiz-ansiklopedi": {
   "hata": null,
-  "kanit": null,
+  "kanit": 0,
   "referans": null,
   "rol": 2,
   "sonuc": 2
@@ -148,21 +148,21 @@
  },
  "tasarim-behance-bot-engeli": {
   "hata": null,
-  "kanit": null,
+  "kanit": 2,
   "referans": null,
   "rol": 2,
   "sonuc": 0
  },
  "tasarim-dribbble-bagli": {
   "hata": null,
-  "kanit": null,
+  "kanit": 2,
   "referans": null,
   "rol": 2,
   "sonuc": 0
  },
  "tasarim-dribbble-bagsiz": {
   "hata": null,
-  "kanit": null,
+  "kanit": 2,
   "referans": null,
   "rol": 2,
   "sonuc": 0
@@ -183,14 +183,14 @@
  },
  "veri-kaggle-bagli": {
   "hata": null,
-  "kanit": null,
+  "kanit": 3,
   "referans": null,
   "rol": 2,
   "sonuc": 0
  },
  "veri-kaggle-bagsiz": {
   "hata": null,
-  "kanit": null,
+  "kanit": 2,
   "referans": null,
   "rol": 2,
   "sonuc": 0
@@ -232,14 +232,14 @@
  },
  "yazi-medium-bagli": {
   "hata": null,
-  "kanit": null,
+  "kanit": 3,
   "referans": null,
   "rol": 3,
   "sonuc": 0
  },
  "yazi-medium-bagsiz": {
   "hata": null,
-  "kanit": null,
+  "kanit": 2,
   "referans": null,
   "rol": 2,
   "sonuc": 0
