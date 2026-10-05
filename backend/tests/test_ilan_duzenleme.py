@@ -117,6 +117,9 @@ def test_is_birligi_baslamis_ilan_409(eslestirme_kaydi):
 
 def test_duzenleme_ilgiyi_korur_gerekceyi_sifirlar_bildirir(eslestirme_kaydi):
     async def adimlar(istemci, d):
+        # Uç değişmeyen düzenlemede geri alır; paylaşılan oturumdaki nesneler süresi
+        # dolmuş olur, kimlikler önceden alınır.
+        genc1_hesap, genc2_hesap = d.genc1.hesap.id, d.genc2.hesap.id
         # E1: genç ilgilendi (dokunulmaz); E3: firma ilgileniyor (gerekçe yeniden yazılır).
         e1 = await d.oturum.get(Eslesme, d.E1.id)
         e1.durum = "genc_ilgilendi"
@@ -139,7 +142,8 @@ def test_duzenleme_ilgiyi_korur_gerekceyi_sifirlar_bildirir(eslestirme_kaydi):
         assert govde["basari_kriteri"] == GOVDE["basari_kriteri"]
         assert govde["aranan"] == "genc"  # kapı değişmez
         assert govde["embedding_var"] is True
-        assert eslestirme_kaydi == [d.I1.id]
+        ilan_id = d.I1.id
+        assert eslestirme_kaydi == [ilan_id]
 
         e1 = await _taze(d.oturum, Eslesme, d.E1.id)
         assert (e1.durum, e1.skor, e1.gerekce_metni) == (
@@ -150,8 +154,8 @@ def test_duzenleme_ilgiyi_korur_gerekceyi_sifirlar_bildirir(eslestirme_kaydi):
         e3 = await _taze(d.oturum, Eslesme, e3.id)
         assert (e3.durum, e3.gerekce_metni) == ("ilgileniliyor", None)
 
-        genc1 = await _bildirimler(d.oturum, d.genc1.hesap.id)
-        genc2 = await _bildirimler(d.oturum, d.genc2.hesap.id)
+        genc1 = await _bildirimler(d.oturum, genc1_hesap)
+        genc2 = await _bildirimler(d.oturum, genc2_hesap)
         assert len(genc1) == len(genc2) == 1
         assert genc1[0].metin == "İlgilendiğin bir fırsatın ayrıntıları güncellendi."
         assert "@" not in genc1[0].metin
@@ -159,8 +163,8 @@ def test_duzenleme_ilgiyi_korur_gerekceyi_sifirlar_bildirir(eslestirme_kaydi):
         # Aynı değerle ikinci düzenleme: 200, bildirim, embedding, eşleştirme yok.
         tekrar = await istemci.patch(_yol(d), headers=d.kurum1.baslik, json=GOVDE)
         assert tekrar.status_code == 200
-        assert len(await _bildirimler(d.oturum, d.genc1.hesap.id)) == 1
-        assert eslestirme_kaydi == [d.I1.id]
+        assert len(await _bildirimler(d.oturum, genc1_hesap)) == 1
+        assert eslestirme_kaydi == [ilan_id]
 
     senaryo(adimlar)
 
