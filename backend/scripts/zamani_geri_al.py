@@ -75,10 +75,16 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("profil_kodu", "son_gecerlilik"),
 )
 
-# Bilerek kaydırılmayanlar: sistem zamanı değil, kullanıcının yazdığı tarih.
+# Bilerek kaydırılmayanlar: kullanıcının yazdığı tarih ya da gözlem kaydı (sistemin kendi
+# ölçümü; Canlılık simülasyonunu etkilemez, 90 gün saklama gerçek zamana göre işler).
 KAYDIRILMAYANLAR: tuple[tuple[str, str], ...] = (
     ("somut_cikti", "tarih"),
     ("kullanici", "musaitlik_baslangici"),
+    ("kanit_gozlemi", "tarih"),
+    ("degerlendirme_gozlemi", "tarih"),
+    ("servis_gunlugu", "gun"),
+    ("servis_gunlugu", "son_basari"),
+    ("servis_gunlugu", "son_hata"),
 )
 
 
