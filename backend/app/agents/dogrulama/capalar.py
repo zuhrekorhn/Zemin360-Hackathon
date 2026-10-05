@@ -103,3 +103,33 @@ def dosya_sonucu(capalar: Iterable[Mapping[str, Any]], kimlik: KimlikDurumu) -> 
 
 def dosya_seviyesi(belge: Mapping[str, Any], kimlik: KimlikDurumu | None = None) -> CapaSonucu:
     return dosya_sonucu(belge.get("capalar", ()), kimlik or KimlikDurumu())
+
+
+# --- Belge tutarsızlığı (plan § 9 `belge_tutarsiz`) ---------------------------------------
+
+NEDEN_BOZUK_IMZA = "bozuk_imza"
+NEDEN_AD_ESLESMEDI = "ad_eslesmedi"
+
+
+def belge_tutarsizliklari(capalar: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Çapanın söylediği belgeyle çelişen gerçekler; seviye zaten D'ye düşer, bu yalnızca
+    GİRVAK'ın görmesi içindir (İ1).
+
+      - imza: geçerli değil ya da belge imzadan sonra değişmiş;
+      - doğrulama sayfası (QR'dan ya da bilinen düzenleyende) açıldı ama ne gencin
+        adı ne e-postası geçiyor. Metinde geçen tanınmayan adres sayılmaz: her
+        bağlantı bir doğrulama sayfası değildir.
+    """
+    bulgular: list[dict[str, Any]] = []
+    for c in capalar:
+        tur = c.get("tur")
+        if tur == TUR_IMZA and not (c.get("gecerli") and c.get("butun")):
+            bulgular.append({"neden": NEDEN_BOZUK_IMZA, "imzalayan": c.get("imzalayan")})
+        elif (
+            tur == TUR_ADRES
+            and c.get("okundu")
+            and (c.get("kaynak") == "kod" or c.get("duzenleyen"))
+            and not (c.get("ad_eslesti") or c.get("eposta_eslesti"))
+        ):
+            bulgular.append({"neden": NEDEN_AD_ESLESMEDI, "adres": c.get("adres")})
+    return bulgular

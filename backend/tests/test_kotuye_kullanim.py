@@ -480,3 +480,140 @@ def test_izler_90_gun_sonra_silinir_sinyaller_kalir():
             assert istek.yanit_isareti == {"sinyaller": ["hizli_yanit"]}
 
     asyncio.run(senaryo())
+
+
+# --- Belge tutarsız ve kanıt çelişiyor --------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("capa", "neden"),
+    [
+        ({"tur": "imza", "gecerli": False, "butun": False}, "bozuk_imza"),
+        ({"tur": "imza", "gecerli": True, "butun": False}, "bozuk_imza"),
+        ({"tur": "imza", "gecerli": True, "butun": True}, None),
+        ({"tur": "adres", "okundu": True, "kaynak": "kod", "adres": "https://a"}, "ad_eslesmedi"),
+        (
+            {"tur": "adres", "okundu": True, "kaynak": "metin", "duzenleyen": "Credly"},
+            "ad_eslesmedi",
+        ),
+        ({"tur": "adres", "okundu": True, "kaynak": "metin"}, None),  # tanınmayan adres
+        ({"tur": "adres", "okundu": True, "kaynak": "kod", "ad_eslesti": True}, None),
+        ({"tur": "adres", "okundu": True, "kaynak": "kod", "eposta_eslesti": True}, None),
+        ({"tur": "adres", "okundu": False, "kaynak": "kod"}, None),  # açılmadı: tutarsızlık değil
+    ],
+)
+def test_belge_tutarsizligi_kurali(capa, neden):
+    from app.agents.dogrulama.capalar import belge_tutarsizliklari
+
+    assert [b["neden"] for b in belge_tutarsizliklari([capa])] == ([neden] if neden else [])
+
+
+def test_celiski_yalnizca_alintisi_metinde_olan():
+    from app.agents.dogrulama.cekirdek import DegerlendirmeGirdisi, kalemi_degerlendir
+    from app.agents.dogrulama.cikarim import IddiaDestegi, KanitCikarimi
+    from app.agents.dogrulama.kurallar import OkunanKanit
+    from app.core.kanit_okuma.belge import ErisimDurumu, KaynakSeviyesi
+
+    okunan = OkunanKanit(
+        erisim=ErisimDurumu.ACIK,
+        seviye=KaynakSeviyesi.KAMUYA_ACIK,
+        metin="Proje ekibi: takım lideri Ayşe Kaya, arayüz Elif.",
+        url="https://ornek.com",
+    )
+
+    async def cikar(_alanlar):
+        return KanitCikarimi(
+            ilgili_mi=True,
+            sonuc_var=False,
+            sonuc_sayisal=False,
+            sonuc_olcut_acik=False,
+            pay_var=True,
+            pay_ozgul=True,
+            destekler=[
+                IddiaDestegi(iddia="pay", durum="celisiyor", alinti="takım lideri Ayşe Kaya"),
+                IddiaDestegi(iddia="is", durum="celisiyor", alinti="metinde olmayan cümle"),
+            ],
+        )
+
+    girdi = DegerlendirmeGirdisi(baslik="Site", pay="Takımı ben yönettim")
+    sonuc = asyncio.run(kalemi_degerlendir(girdi, [okunan], cikar))
+    assert sonuc.parca_celiskileri == (({"iddia": "pay", "alinti": "takım lideri Ayşe Kaya"},),)
+    assert sonuc.puanlar.rol == 1  # çelişki tavanı (puan kuralı değişmedi)
+
+
+@pytest.fixture
+def celisen_degerlendirme(monkeypatch):
+    from app.agents.dogrulama.cikarim import IddiaDestegi, KanitCikarimi
+    from app.servisler.dogrulama import kanit as kanit_servisi
+
+    async def cikar(_alanlar):
+        return KanitCikarimi(
+            ilgili_mi=True,
+            sonuc_var=True,
+            sonuc_sayisal=True,
+            sonuc_olcut_acik=True,
+            pay_var=True,
+            pay_ozgul=True,
+            destekler=[IddiaDestegi(iddia="is", durum="celisiyor", alinti="Proje sayfası")],
+        )
+
+    monkeypatch.setattr(kanit_servisi, "cikar", cikar)
+
+
+@pytest.mark.usefixtures("sahte_degerlendirme", "celisen_degerlendirme")
+def test_celisen_kanit_kuyruga_bir_kez_duser():
+    from app.models.inceleme_isareti import TUR_KANIT_CELISIYOR
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, _, kalem_id = await _genc_ve_kalem(oturum)
+            yanit = await istemci.post(
+                f"/dogrulama/kalem/{kalem_id}/kanit", headers=baslik, json={"url": LINK}
+            )
+            assert yanit.status_code == 201, yanit.text
+            assert yanit.json()["guven_skoru"]["kanit_orijinalligi"] == 1  # tavan, işaretten değil
+            [isaret] = await _isaretler(oturum, TUR_KANIT_CELISIYOR, [kalem_id])
+            [celiski] = isaret.ayrinti["celiskiler"]
+            assert (celiski["iddia"], celiski["alinti"], celiski["adres"]) == (
+                "is",
+                "Proje sayfası",
+                LINK,
+            )
+            # İtiraz aynı çelişkiyi yeniden üretir: işarete ikinci kez eklenmez.
+            yanit = await istemci.post(
+                f"/dogrulama/kalem/{kalem_id}/itiraz",
+                headers=baslik,
+                json={"aciklama": "Sayfa benim projem"},
+            )
+            assert yanit.status_code == 200, yanit.text
+            [isaret] = await _isaretler(oturum, TUR_KANIT_CELISIYOR, [kalem_id])
+            assert len(isaret.ayrinti["celiskiler"]) == 1
+
+    asyncio.run(senaryo())
+
+
+@pytest.mark.usefixtures("sahte_degerlendirme", "dosya_modele_okutulmaz", "depo")
+def test_bozuk_imzali_belge_isaret_acar(monkeypatch):
+    from app.models.inceleme_isareti import TUR_BELGE_TUTARSIZ
+    from app.servisler.dogrulama import dosyalar
+
+    async def capalar(_girdi):
+        return [{"tur": "imza", "gecerli": False, "butun": False, "imzalayan": "X"}]
+
+    monkeypatch.setattr(dosyalar, "capalari_dogrula", capalar)
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, _, kalem_id = await _genc_ve_kalem(oturum)
+            yanit = await istemci.post(
+                f"/dogrulama/kalem/{kalem_id}/dosya",
+                headers=baslik,
+                files={"dosya": ("sertifika.pdf", _pdf())},
+            )
+            assert yanit.status_code == 201, yanit.text
+            assert yanit.json()["guven_skoru"]["kanit_orijinalligi"] == 1  # D: çapasız gibi
+            [isaret] = await _isaretler(oturum, TUR_BELGE_TUTARSIZ, [kalem_id])
+            [bulgu] = isaret.ayrinti["bulgular"]
+            assert (bulgu["neden"], bulgu["dosya_adi"]) == ("bozuk_imza", "sertifika.pdf")
+
+    asyncio.run(senaryo())

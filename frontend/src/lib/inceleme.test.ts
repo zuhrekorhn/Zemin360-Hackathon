@@ -132,3 +132,37 @@ describe("şüpheli referans yanıtı", () => {
     ]);
   });
 });
+
+describe("belge, çelişki ve başka sayfadaki görsel", () => {
+  it("türüne göre satır ve indirilecek dosya", () => {
+    const belge = satir("belge_tutarsiz", {
+      bulgular: [
+        { neden: "bozuk_imza", parca_id: "p1", dosya_adi: "sertifika.pdf" },
+        { neden: "ad_eslesmedi", parca_id: "p1", adres: "https://dogrula.ornek.com/1" },
+      ],
+    });
+    expect(ayrintiSatirlari(belge)).toEqual([
+      "E-imza geçersiz ya da belge imzadan sonra değişmiş: sertifika.pdf",
+      "Doğrulama sayfasında gencin adı ya da e-postası geçmiyor: https://dogrula.ornek.com/1",
+    ]);
+    expect(incelenecekBelgeler(belge)).toEqual(["p1"]);
+
+    const celiski = satir("kanit_celisiyor", {
+      celiskiler: [
+        { iddia: "pay", alinti: "Takım lideri: Ayşe", adres: "https://ornek.com" },
+      ],
+    });
+    expect(ayrintiSatirlari(celiski)).toEqual([
+      "Rol kanıtla çelişiyor: “Takım lideri: Ayşe” (https://ornek.com)",
+    ]);
+    expect(incelenecekBelgeler(celiski)).toEqual([]);
+
+    const gorsel = satir("gorsel_baskasinda", {
+      sayfalar: [{ parca_id: "g1", dosya_adi: "afis.png", adres: "https://behance.net/x" }],
+    });
+    expect(ayrintiSatirlari(gorsel)).toEqual([
+      "afis.png şu sayfada da var: https://behance.net/x",
+    ]);
+    expect(incelenecekBelgeler(gorsel)).toEqual(["g1"]);
+  });
+});

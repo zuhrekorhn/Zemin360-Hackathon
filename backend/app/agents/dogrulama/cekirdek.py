@@ -67,6 +67,9 @@ class DegerlendirmeSonucu:
     kanit_ozeti: dict = field(default_factory=dict)
     # Parça başına işaretler (`okunanlar` sırasıyla; kanıtsız kalemde boş)
     parca_isaretleri: tuple[tuple[str, ...], ...] = ()
+    # Parça başına alıntısı denetimden geçmiş çelişkiler ({"iddia", "alinti"};
+    # `kanit_celisiyor` işareti bunlardan açılır, plan § 11.2)
+    parca_celiskileri: tuple[tuple[dict, ...], ...] = ()
 
 
 Cikarici = Callable[[dict[str, str]], Awaitable[KanitCikarimi]]
@@ -131,6 +134,8 @@ class ParcaSonucu:
     yetenekler: tuple[YetenekKanitSonucu, ...]
     celisiyor: bool
     oneri: str | None
+    # Alıntısı tam metinde bulunan "çelişiyor" destekleri (başlık ne olursa olsun)
+    celiskiler: tuple[dict, ...] = ()
 
 
 async def parcayi_degerlendir(
@@ -212,6 +217,9 @@ async def parcayi_degerlendir(
         yetenekler=yetenekler,
         celisiyor=kanit_celisiyor,
         oneri=cikarim.oneri,
+        celiskiler=tuple(
+            {"iddia": d.iddia, "alinti": d.alinti} for d in destekler if d.durum == "celisiyor"
+        ),
     )
 
 
@@ -266,4 +274,5 @@ async def kalemi_degerlendir(
             ],
         },
         parca_isaretleri=tuple(s.isaretler for s in sonuclar) if okunanlar else (),
+        parca_celiskileri=tuple(s.celiskiler for s in sonuclar) if okunanlar else (),
     )

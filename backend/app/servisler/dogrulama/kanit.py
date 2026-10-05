@@ -140,7 +140,9 @@ async def uygula(oturum: AsyncSession, cikti: SomutCikti, hazirlik: Hazirlik) ->
     await _yetenek_kanitlarini_yaz(oturum, cikti, sonuc, hazirlik)
     if hazirlik.kullanici_id is not None:
         await oturum.flush()  # yeni parçaların kimliği sinyallere yazılır
-        await isaretler.degerlendirme_isaretleri(oturum, cikti, hazirlik.kullanici_id)
+        await isaretler.degerlendirme_isaretleri(
+            oturum, cikti, hazirlik.kullanici_id, hazirlik.parcalar, sonuc.parca_celiskileri
+        )
 
 
 async def degerlendir(

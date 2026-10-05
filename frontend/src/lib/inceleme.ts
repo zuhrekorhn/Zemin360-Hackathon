@@ -52,13 +52,29 @@ function nesneListesi(deger: unknown): Record<string, unknown>[] {
     : [];
 }
 
-/** İşaretin indirilecek belgeleri (e-Devlet barkodu: GİRVAK belgeyi açıp barkodu okur). */
+// Dosyası incelenecek işaretler: ayrıntıdaki listenin adı (e-Devlet barkodu,
+// bozuk imza / adsız doğrulama sayfası, başka sayfada bulunan görsel).
+const BELGE_LISTELERI: Record<string, string> = {
+  edevlet_barkodu: "parcalar",
+  belge_tutarsiz: "bulgular",
+  gorsel_baskasinda: "sayfalar",
+};
+
+/** İşaretin indirilecek belgeleri: GİRVAK dosyayı açıp kendisi bakar. */
 export function incelenecekBelgeler(satir: IncelemeSatiri): string[] {
-  if (satir.tur !== "edevlet_barkodu") return [];
-  return nesneListesi(satir.ayrinti.parcalar)
+  const liste = BELGE_LISTELERI[satir.tur];
+  if (!liste) return [];
+  const idler = nesneListesi(satir.ayrinti[liste])
     .map((p) => p.parca_id)
     .filter((id): id is string => typeof id === "string");
+  return [...new Set(idler)];
 }
+
+const IDDIA_ADLARI: Record<string, string> = {
+  is: "Çalışma",
+  sonuc: "Sonuç",
+  pay: "Rol",
+};
 
 /** Eşleşmedeki öteki gençlerin kartları (aynı çalışma başka hesapta): GİRVAK karşılaştırır. */
 export function karsilastirilacakKartlar(satir: IncelemeSatiri): string[] {
@@ -138,6 +154,25 @@ export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
         `Referans yanıtı: ${metinListesi(r.sinyaller)
           .map((sinyal) => referansSinyali(sinyal, r))
           .join(" · ")}`,
+    );
+  }
+  if (satir.tur === "belge_tutarsiz") {
+    return nesneListesi(a.bulgular).map((b) =>
+      b.neden === "bozuk_imza"
+        ? `E-imza geçersiz ya da belge imzadan sonra değişmiş: ${String(b.dosya_adi ?? "—")}`
+        : `Doğrulama sayfasında gencin adı ya da e-postası geçmiyor: ${String(b.adres ?? "—")}`,
+    );
+  }
+  if (satir.tur === "kanit_celisiyor") {
+    return nesneListesi(a.celiskiler).map(
+      (c) =>
+        `${IDDIA_ADLARI[String(c.iddia)] ?? "İddia"} kanıtla çelişiyor: “${String(c.alinti ?? "—")}” (${String(c.adres ?? c.dosya_adi ?? "—")})`,
+    );
+  }
+  if (satir.tur === "gorsel_baskasinda") {
+    return nesneListesi(a.sayfalar).map(
+      (g) =>
+        `${String(g.dosya_adi ?? "Görsel")} şu sayfada da var: ${String(g.adres ?? "—")}`,
     );
   }
   if (satir.tur === "itiraz_siniri") {
