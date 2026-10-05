@@ -28,6 +28,10 @@ python -m scripts.karne --ag kaydet --model kaydet   # yeni vaka: gerçek ağ + 
 - **Ağ kaydı** sıfırdan başlar ve bütün sayfaları yeniden çeker. Sayfalar zamanla değiştiği için yalnızca yeni vaka eklenince kullanılır.
 - **Model kaydı** daha önce görülmüş girdiyi yeniden çağırmaz. Dosyaya yalnızca o çalıştırmada kullanılan kayıtları yazar.
 
+## Adalet
+
+Karne, alan başına adalet tablosunu da yazar (`degerlendirme/adalet.py`, plan § 10.2): ortalama Kanıt, "—" oranı, Kanıt 3'e giden vakalar ve sorun işaretleri. Her alanda 3'e giden en az bir yol olmalı; işaret varsa vaka ya da yol eklenir (tavan düşürülmez). Etiketsiz vaka bu tabloya da girmez.
+
 ## Etiketleme durumu
 
 - Vakaların `onerilen` alanı taslaktır, etiket değildir. Etiketi Zühre koyar (`beklenen` + `etiketleyen`).

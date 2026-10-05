@@ -350,6 +350,8 @@ Zincir sırası:
 
 Dürüst vakalarda alan başına ortalama Kanıt ve ulaşılabilir en yüksek puan ölçülür. Her alanda en az bir yolla 3'e ulaşılabilmelidir. Fark büyürse yeni bir yol eklenir; tavanlar düşürülmez. "—" bonusa girmez.
 
+**Uygulama (adım 12):** `degerlendirme/adalet.py` (saf) karnenin "Adalet" bölümünü üretir. Yalnızca dürüst, etiketli vakalar; alan başına ortalama Kanıt ("—" ortalamaya girmez, ayrı oran), sistemin en yüksek Kanıt'ı, etiketlerin ulaşılabilir saydığı tavan ve Kanıt 3'e ulaşan vakalar ("3 yolu"). Sorun işaretleri: alanda 3'e giden yol yok; ortalama genel ortalamadan `FARK_ESIGI` (0,5 puan; plan sayı vermiyordu, varsayım) fazla geride; üçten az dürüst vaka (ölçüm güvenilir değil). Bunlar kabul kapısı değil, iştir: işaretli alana yeni yol (vaka ya da kanıt türü) eklenir, tavan düşürülmez; bu yüzden `esikleri_geciyor_mu`'ya girmez.
+
 ### 10.3 Gözlem
 
 Her değerlendirme için şunlar kaydedilir:
