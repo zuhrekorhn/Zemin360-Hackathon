@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import uuid
 
+from app.agents.dogrulama.curume import curumus_mu
 from app.core.kanit_okuma.adres import normal_url
 from app.core.kanit_okuma.belge import ParcaTuru
 from app.models.kanit_parcasi import KanitParcasi
@@ -115,9 +116,10 @@ def parca_sil(cikti: SomutCikti, parca_id: uuid.UUID) -> KanitParcasi:
 
 def okunabilir_mi(parca: KanitParcasi) -> bool:
     """Değerlendirmenin okuyacağı parça mı? Her parça okunur, başlık başına en
-    güçlüsü kullanılır (plan § 2). Dosya ve görsel yüklenirken okunmuştur."""
+    güçlüsü kullanılır (plan § 2). Dosya ve görsel yüklenirken okunmuştur.
+    Çürümüş link (silinmiş ya da gizlenmiş, plan § 10.4) okunmaz: Kanıt "—" olur."""
     if parca.tur == ParcaTuru.LINK.value:
-        return bool(parca.url)
+        return bool(parca.url) and not curumus_mu(parca.curume_sayaci or 0)
     return parca.tur in DOSYA_TURLERI
 
 

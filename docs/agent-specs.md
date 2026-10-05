@@ -76,6 +76,8 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 
 **Genç akışı eki:** genç ilgi gösterdi ve firma 5 gündür yanıt vermediyse firmaya tek hatırlatma (`genc_ilgisi_yanitsiz`, yalnızca şablon, "siz" hitabı).
 
+**Doğrulama eki (adım 12):** aynı tarama, eskiden açık okunmuş kanıt linklerini haftada bir yoklar; üst üste 3 kez silinmiş ya da gizlenmiş çıkan link Kanıt'a girmez, gence nötr bildirim gider (kurallar `plans/dogrulama-iyilestirme.md` § 10.4).
+
 **Nasıl sağlayacak:** Günlük bir arka plan işi, `ESLESME` kayıtlarının `son_aktivite_tarihi`nı tarar, eşik altına düşenler için LLM'e bağlama dayalı bir hatırlatma mesajı yazdırır (`CANLILIK_OLAYI` tablosuna yazılır).
 
 ## 6. Takip Ajanı

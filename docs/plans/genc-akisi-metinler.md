@@ -152,3 +152,9 @@ Kalemin etiketi ve itirazı (gence "sen"); kuyruk satırları GİRVAK'a ("siz" g
 | KVKK (ne için) | "Kötüye kullanımı fark etmek: referans istediğinde ve referansın yanıt verdiğinde IP adresinin ve tarayıcı bilgisinin geri çevrilemez bir özeti 90 gün saklanır; ham adres saklanmaz. Şüpheli bir durum GİRVAK'ın incelemesine gider, puanını kendiliğinden değiştirmez." |
 | KVKK (hizmet sağlayıcı) | "Google Cloud Vision: tasarım ya da fotoğraf alanındaysan, yüklediğin görselin küçültülmüş bir kopyası internette başka bir sayfada yayımlanmış mı diye aranabilir." |
 | GİRVAK kuyruğu | Aynı çalışma / dosya / görsel başka hesapta, şüpheli referans yanıtı, belge tutarsız, kanıt çelişiyor satırları (`lib/inceleme.ts`) |
+
+## Doğrulama adım 12 — süreklilik ve ölçüm (5 Eki)
+
+| Yer | Metin |
+|---|---|
+| Bildirim `kanit_curudu` (gence "sen") | "“{çalışma başlığı}” çalışmandaki kanıt linki art arda üç kontrolde açılmadı; silinmiş ya da gizlenmiş olabilir. Kanıt başlığı şimdilik boş. Linki düzeltir ya da yeni bir kanıt eklersen gösterge yeniden hesaplanır." (`app/servisler/dogrulama/curume.py`) |

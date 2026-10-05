@@ -40,6 +40,8 @@ TUR_FIRMA_DOGRULANDI = "firma_dogrulandi"  # firmaya: GİRVAK doğruladı
 TUR_INCELEME_SONUCU = "inceleme_sonucu"  # gence: çalışmasıyla ilgili işaret kapandı
 TUR_AD_DEGISIKLIGI_SONUCU = "ad_degisikligi_sonucu"  # gence: ad değişikliği talebi sonuçlandı
 TUR_HESAP_BAGLAMA_SONUCU = "hesap_baglama_sonucu"  # gence: GİRVAK doğrulama kodunu inceledi
+# Link çürümesi (docs/plans/dogrulama-iyilestirme.md § 10.4)
+TUR_KANIT_CURUDU = "kanit_curudu"  # gence: kanıt linki art arda açılmadı (nötr)
 
 
 class Bildirim(UUIDPrimaryKeyMixin, Base):

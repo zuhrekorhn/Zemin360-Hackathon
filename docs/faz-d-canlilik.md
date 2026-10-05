@@ -111,6 +111,8 @@ bilinçli" kararıyla aynı. Soru yalnızca bu ucu kimin, ne sıklıkla çağır
 
 **Referans istekleri (Doğrulama iyileştirmesi adım 7, `plans/dogrulama-iyilestirme.md` § 7).** Aynı tarama, eşleşmeye bağlı olmayan bir işi de yapar: bekleyen referans isteğine 3. gün tek hatırlatma e-postası gider (yalnızca sistemin e-posta gönderdiği isteklere), 7. günde istek `yanit_yok` olur ve gence nötr bir bildirim yazılır. Canlılık olayı yazılmaz; özetin `olaylar` sözlüğünde `referans_hatirlatma` ve `referans_yanit_yok` sayaçları görünür. E-postalar commit'ten sonra gönderilir, hata taramayı düşürmez. Servis: `app/servisler/dogrulama/referans.py` › `referans_taramasi`.
 
+**Link çürümesi (Doğrulama iyileştirmesi adım 12, `plans/dogrulama-iyilestirme.md` § 10.4).** Aynı tarama, eskiden açık okunmuş kanıt linklerini en çok haftada bir yeniden açar (yalnızca erişim durumu: yedek okuyucu ve model yok; taramada en çok 100 link). `bulunamadi` ve `giris_gerekli` sayaca eklenir, `engellendi` ve `hata` eklenmez, `acik` sayacı sıfırlar. Üst üste 3 sayılan sonuçta o link Kanıt'a girmez (başlıkta "—"), çalışma yeniden değerlendirilir, gence nötr `kanit_curudu` bildirimi gider, önceki puan saklanır; link geri gelirse puan yeniden hesaplanır. Canlılık olayı yazılmaz; özette `link_yoklandi` ve `link_curudu` sayaçları görünür. Yoklama arızası taramayı düşürmez. Servis: `app/servisler/dogrulama/curume.py`, kurallar `app/agents/dogrulama/curume.py`.
+
 ## 5. Kişiye özel hatırlatma metni
 
 - **Hızlı katman, tek LLM çağrısı:** Girdi yapılandırılmıştır: tür, alıcının rolü, karşı tarafın adı, kaç gün, adım adı. Çıktı en fazla iki cümle, nötr ve destekleyici, bir eylem çağrısıyla. Suçlama ve uydurma yoktur; kurallar Takip özetiyle aynı.

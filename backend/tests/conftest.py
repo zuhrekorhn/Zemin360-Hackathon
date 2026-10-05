@@ -195,3 +195,17 @@ def yedek_okuyucu_yok(monkeypatch):
     # Görsel kaynak araması (Cloud Vision) da kapalı; sınayan test sahtesini verir.
     monkeypatch.setattr(kurulum, "gorsel_arayici", lambda: KapaliGorselArayici())
     okuma.EKRAN_OKUNUSLARI.temizle()
+
+
+@pytest.fixture(autouse=True)
+def link_yoklamasi_ag_yok(monkeypatch):
+    """Canlılık taraması kanıt linklerini yoklar (gerçek ağ). Testlerde yerel
+    veritabanındaki linklere gidilmesin: nötr sonuç (sayaç değişmez). Yoklamayı
+    sınayan test okuyucuyu kendisi verir."""
+    from app.core.kanit_okuma.belge import ErisimDurumu
+    from app.servisler.dogrulama import curume
+
+    async def notr(_url):
+        return ErisimDurumu.ENGELLENDI
+
+    monkeypatch.setattr(curume, "erisimi_oku", notr)

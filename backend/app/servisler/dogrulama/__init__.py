@@ -13,6 +13,7 @@ arka plan işi ve HTTP'ye çeviri (404, 409, 429, 202) çağıran ucun işidir. 
 olayı yazan servisle aynı işlemde yazılır.
 """
 
+from app.servisler.dogrulama.curume import CurumeSonucu, curume_yoklamasi
 from app.servisler.dogrulama.itiraz import ITIRAZ_SINIRI, ItirazIncelemede, itiraz_et
 from app.servisler.dogrulama.kanit import (
     ciktiyi_puanla,
@@ -53,6 +54,8 @@ from app.servisler.dogrulama.referans import (
 from app.servisler.dogrulama.sorgular import CiktiBulunamadi, cikti_getir
 
 __all__ = [
+    "CurumeSonucu",
+    "curume_yoklamasi",
     "ITIRAZ_SINIRI",
     "CiktiBulunamadi",
     "ItirazIncelemede",

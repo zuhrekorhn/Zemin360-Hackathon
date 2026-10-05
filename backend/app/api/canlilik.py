@@ -74,6 +74,9 @@ logger = logging.getLogger("zemin360.canlilik")
 # Tarama özetindeki referans sayaçları (canlılık olayı değil).
 REFERANS_HATIRLATMA = "referans_hatirlatma"
 REFERANS_YANIT_YOK = "referans_yanit_yok"
+# Link çürümesi yoklaması (plan § 10.4): yoklanan ve çürüyen link sayıları.
+LINK_YOKLANDI = "link_yoklandi"
+LINK_CURUDU = "link_curudu"
 
 router = APIRouter(prefix="/canlilik", tags=["canlilik"])
 
@@ -404,6 +407,7 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
     metinler = await metinleri_uret([temsilci for temsilci, _ in bildirimlik])
 
     olaylar: Counter[str] = Counter()
+    bildirim_sayisi = len(bildirimlik)
     for (temsilci, grup), metin in zip(bildirimlik, metinler, strict=True):
         for y in grup:
             oturum.add(
@@ -438,6 +442,18 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
         olaylar[REFERANS_YANIT_YOK] = referans.zaman_asimi
     # Referans isteklerindeki IP / tarayıcı özetleri 90 gün tutulur (plan § 9).
     await referans_suphesi.eski_izleri_temizle(oturum, simdi)
+    # Kanıt linklerinin haftalık yoklaması (plan § 10.4); arızası taramayı düşürmez.
+    try:
+        async with oturum.begin_nested():
+            curume = await dogrulama_servisi.curume_yoklamasi(oturum, simdi)
+    except Exception:
+        logger.warning("Link yoklaması başarısız", exc_info=True)
+    else:
+        if curume.yoklanan:
+            olaylar[LINK_YOKLANDI] = curume.yoklanan
+        if curume.curuyen:
+            olaylar[LINK_CURUDU] = curume.curuyen
+        bildirim_sayisi += curume.curuyen
     await oturum.commit()
     # E-posta commit'ten sonra: gönderim hatası taramayı düşürmez (İ9).
     await epostalari_gonder(referans.hatirlatmalar)
@@ -445,7 +461,7 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
     return TaramaSonucu(
         tarih=simdi,
         olaylar=dict(olaylar),
-        bildirim=len(bildirimlik) + referans.zaman_asimi,
+        bildirim=bildirim_sayisi + referans.zaman_asimi,
         sure_sn=round(time.perf_counter() - baslangic, 2),
     )
 
