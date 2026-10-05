@@ -113,3 +113,22 @@ describe("aynı çalışma başka hesapta", () => {
     expect(karsilastirilacakKartlar(satir("itiraz_siniri", {}))).toEqual([]);
   });
 });
+
+describe("şüpheli referans yanıtı", () => {
+  it("sinyalleri tek satırda okur", () => {
+    const s = satir("referans_supheli", {
+      referanslar: [
+        {
+          sinyaller: ["ip_genc_ile_ayni", "hizli_yanit", "cok_gence_yanit"],
+          form_suresi_sn: 8,
+          genc_sayisi: 4,
+        },
+        { sinyaller: ["form_acilmadan"] },
+      ],
+    });
+    expect(ayrintiSatirlari(s)).toEqual([
+      "Referans yanıtı: genç ile aynı internet bağlantısından yanıtlanmış · form 8 saniyede gönderilmiş · bu kişi 4 farklı gence referans vermiş",
+      "Referans yanıtı: form sayfası açılmadan gönderilmiş",
+    ]);
+  });
+});

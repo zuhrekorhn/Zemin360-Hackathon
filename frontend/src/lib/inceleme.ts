@@ -74,6 +74,24 @@ const TEKRAR_NEDENLERI: Record<string, string> = {
   gorsel: "Benzer görsel başka bir hesapta da var",
 };
 
+/** Referans yanıtının şüphe sinyalleri (backend: agents/dogrulama/referans_suphesi.py). */
+function referansSinyali(sinyal: string, r: Record<string, unknown>): string {
+  switch (sinyal) {
+    case "ip_genc_ile_ayni":
+      return "genç ile aynı internet bağlantısından yanıtlanmış";
+    case "tarayici_genc_ile_ayni":
+      return "gencin kullandığı tarayıcıdan yanıtlanmış";
+    case "hizli_yanit":
+      return `form ${String(r.form_suresi_sn ?? "birkaç")} saniyede gönderilmiş`;
+    case "form_acilmadan":
+      return "form sayfası açılmadan gönderilmiş";
+    case "cok_gence_yanit":
+      return `bu kişi ${String(r.genc_sayisi ?? "birçok")} farklı gence referans vermiş`;
+    default:
+      return sinyal;
+  }
+}
+
 /** Ayrıntının GİRVAK'a gösterilen satırları (türe göre). */
 export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
   const a = satir.ayrinti;
@@ -112,6 +130,14 @@ export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
     return nesneListesi(a.eslesmeler).map(
       (e) =>
         `${TEKRAR_NEDENLERI[String(e.neden)] ?? "Başka bir hesapta da var"}: ${String(e.adres ?? e.dosya_adi ?? "—")}`,
+    );
+  }
+  if (satir.tur === "referans_supheli") {
+    return nesneListesi(a.referanslar).map(
+      (r) =>
+        `Referans yanıtı: ${metinListesi(r.sinyaller)
+          .map((sinyal) => referansSinyali(sinyal, r))
+          .join(" · ")}`,
     );
   }
   if (satir.tur === "itiraz_siniri") {

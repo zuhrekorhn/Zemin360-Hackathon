@@ -25,6 +25,7 @@ from app.api.kimlik import rol_gerekli
 from app.api.profil import gencin_profilini_guncelle
 from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
+from app.core import istek_izi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.is_kalemi import kanit_bekliyor
 from app.core.metin import gecerli_eposta
@@ -186,7 +187,8 @@ async def kart_onayla(
     if not kullanici.sehir:
         raise HTTPException(status_code=422, detail=SEHIR_GEREKLI)
 
-    is_kalemleri = [_is_kalemi(c, hesap.email) for c in taslak.somut_ciktilar]
+    iz = istek_izi.istekten(request)
+    is_kalemleri = [_is_kalemi(c, hesap.email, iz) for c in taslak.somut_ciktilar]
     kart = YetenekKarti(
         oturum_id=istek.oturum_id,
         kullanici_id=kullanici.id,
@@ -229,7 +231,9 @@ async def kart_onayla(
     return await kart_yaniti(oturum, kart.id)
 
 
-def _is_kalemi(taslak: SomutCiktiTaslagi, gencin_epostasi: str) -> SomutCikti:
+def _is_kalemi(
+    taslak: SomutCiktiTaslagi, gencin_epostasi: str, iz: istek_izi.IstekIzi | None = None
+) -> SomutCikti:
     """Taslaktaki iş kalemi; referans e-postası iş kalemine referans isteği olur.
 
     Geçersiz e-posta ve gencin kendi adresi sessizce atılır: sohbetten çıkarılan
@@ -250,7 +254,7 @@ def _is_kalemi(taslak: SomutCiktiTaslagi, gencin_epostasi: str) -> SomutCikti:
     eposta = gecerli_eposta(taslak.referans_email)
     if eposta:
         try:
-            yeni_istek_ac(cikti, eposta, gencin_epostasi)
+            yeni_istek_ac(cikti, eposta, gencin_epostasi, iz)
         except (KendiReferansi, ReferansZatenBekliyor):
             pass
     return cikti

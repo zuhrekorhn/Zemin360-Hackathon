@@ -302,3 +302,181 @@ def test_tasarimcinin_gorseli_baska_portfolyoda_isaret(monkeypatch):
             assert gorsel.belge["kaynak_aramasi"]["tam_eslesen_sayfa"] == 2
 
     asyncio.run(senaryo())
+
+
+# --- Şüpheli referans yanıtı -----------------------------------------------------------------
+
+
+def test_referans_sinyalleri_kurali():
+    from app.agents.dogrulama.referans_suphesi import referans_sinyalleri
+
+    def sinyal(**ek):
+        girdi = dict(
+            yanit_ip="a",
+            yanit_tarayici="t",
+            genc_ipleri={"b"},
+            genc_tarayicilari={"u"},
+            form_acildi=True,
+            form_suresi_sn=120.0,
+            genc_sayisi=1,
+        )
+        return referans_sinyalleri(**{**girdi, **ek})
+
+    assert sinyal() == ()
+    assert sinyal(genc_ipleri={"a"}, genc_tarayicilari={"t"}) == (
+        "ip_genc_ile_ayni",
+        "tarayici_genc_ile_ayni",
+    )
+    assert sinyal(yanit_ip=None, genc_ipleri={None}) == ()
+    assert sinyal(form_suresi_sn=8.0) == ("hizli_yanit",)
+    assert sinyal(form_acildi=False, form_suresi_sn=None) == ("form_acilmadan",)
+    assert sinyal(genc_sayisi=3) == ("cok_gence_yanit",)
+
+
+def test_istek_izi_tuzlu_ozet_ve_yerel_adres():
+    from starlette.requests import Request
+
+    from app.core import istek_izi
+
+    def istek(basliklar, istemci=("10.0.0.5", 1)):
+        return Request(
+            {
+                "type": "http",
+                "headers": [(k.lower().encode(), v.encode()) for k, v in basliklar.items()],
+                "client": istemci,
+            }
+        )
+
+    ua = {"User-Agent": "Tarayici/1.0", "Accept-Language": "tr"}
+    iz = istek_izi.istekten(istek({**ua, "X-Forwarded-For": "9.9.9.9, 85.10.20.30"}))
+    assert iz.ip == istek_izi.ozetle("ip:85.10.20.30") and "85.10" not in iz.ip
+    assert iz.tarayici == istek_izi.istekten(istek(ua)).tarayici
+    # Yerel / özel ağ adresinin özeti alınmaz (yerelde herkes aynı adrestir)
+    assert istek_izi.istekten(istek(ua)).ip is None
+    assert istek_izi.istekten(istek({})).tarayici is None
+
+
+AYNI_AG = {"X-Forwarded-For": "85.10.20.30", "User-Agent": "Tarayici/1.0"}
+
+
+async def _referans_isteyen_genc(oturum, istemci, referans_email=None):
+    import uuid
+
+    from app.models.referans_istegi import ReferansIstegi
+
+    baslik, _, kalem_id = await _genc_ve_kalem(oturum)
+    yanit = await istemci.post(
+        f"/dogrulama/kalem/{kalem_id}/referans",
+        headers={**baslik, **AYNI_AG},
+        json={"referans_email": referans_email or f"hoca-{uuid.uuid4().hex[:8]}@ornek.edu.tr"},
+    )
+    assert yanit.status_code == 201, yanit.text
+    istek = await oturum.scalar(
+        select(ReferansIstegi)
+        .where(ReferansIstegi.somut_cikti_id == kalem_id)
+        .execution_options(populate_existing=True)
+    )
+    return kalem_id, istek
+
+
+@pytest.mark.usefixtures("eposta_gonderilmez")
+def test_genc_ile_ayni_agdan_hizli_yanit_isaret_acar():
+    from app.models.inceleme_isareti import TUR_REFERANS_SUPHELI
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            kalem_id, istek = await _referans_isteyen_genc(oturum, istemci)
+            assert istek.yanit_isareti["istek_izi"]["ip"]
+            assert (await istemci.get(f"/dogrulama/referans/{istek.token}")).status_code == 200
+            yanit = await istemci.post(
+                "/dogrulama/referans-yaniti",
+                headers=AYNI_AG,
+                json={"token": istek.token, "iliski": "diger", "iddia_dogru": "evet"},
+            )
+            assert yanit.status_code == 200, yanit.text
+            [isaret] = await _isaretler(oturum, TUR_REFERANS_SUPHELI, [kalem_id])
+            [satir] = isaret.ayrinti["referanslar"]
+            assert satir["sinyaller"] == [
+                "ip_genc_ile_ayni",
+                "tarayici_genc_ile_ayni",
+                "hizli_yanit",
+            ]
+            assert "@" not in str(isaret.ayrinti)  # işarette e-posta yok
+            await oturum.refresh(istek)
+            assert istek.yanit_isareti["sinyaller"] == satir["sinyaller"]
+            # Referans başlığı yanıttan hesaplandı: işaret puanı değiştirmez (İ1)
+            durum = await istemci.get(
+                f"/dogrulama/kalem/{kalem_id}",
+                headers={"Authorization": (await _sahibin_basligi(oturum, kalem_id))},
+            )
+            assert durum.json()["guven_skoru"]["ucuncu_taraf_onayi"] == 3
+
+    asyncio.run(senaryo())
+
+
+async def _sahibin_basligi(oturum, kalem_id):
+    from app.core.kimlik import token_uret
+    from app.models.hesap import Hesap
+    from app.models.kullanici import Kullanici
+    from app.models.somut_cikti import SomutCikti
+    from app.models.yetenek_karti import YetenekKarti
+
+    hesap = await oturum.scalar(
+        select(Hesap)
+        .join(Kullanici, Kullanici.hesap_id == Hesap.id)
+        .join(YetenekKarti, YetenekKarti.kullanici_id == Kullanici.id)
+        .join(SomutCikti, SomutCikti.yetenek_karti_id == YetenekKarti.id)
+        .where(SomutCikti.id == kalem_id)
+    )
+    return f"Bearer {token_uret(hesap.id, hesap.rol)}"
+
+
+@pytest.mark.usefixtures("eposta_gonderilmez")
+def test_cok_gence_yanit_ve_form_acilmadan():
+    from app.models.inceleme_isareti import TUR_REFERANS_SUPHELI
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            import uuid
+
+            kalemler = []
+            ayni_kisi = f"Hoca-{uuid.uuid4().hex[:8]}@Ornek.edu.tr"
+            for i in range(3):
+                # Büyük / küçük harf farkı aynı kişiyi ayırmaz
+                eposta = ayni_kisi if i % 2 else ayni_kisi.lower()
+                kalem_id, istek = await _referans_isteyen_genc(oturum, istemci, eposta)
+                kalemler.append(kalem_id)
+                yanit = await istemci.post(
+                    "/dogrulama/referans-yaniti",
+                    headers={"X-Forwarded-For": "91.1.1.1", "User-Agent": "Baska/2"},
+                    json={"token": istek.token, "iliski": "diger", "iddia_dogru": "evet"},
+                )
+                assert yanit.status_code == 200, yanit.text
+            isaretler = await _isaretler(oturum, TUR_REFERANS_SUPHELI, kalemler)
+            sinyaller = {
+                i.somut_cikti_id: i.ayrinti["referanslar"][0]["sinyaller"] for i in isaretler
+            }
+            assert sinyaller[kalemler[0]] == ["form_acilmadan"]
+            assert sinyaller[kalemler[2]] == ["form_acilmadan", "cok_gence_yanit"]
+
+    asyncio.run(senaryo())
+
+
+@pytest.mark.usefixtures("eposta_gonderilmez")
+def test_izler_90_gun_sonra_silinir_sinyaller_kalir():
+    import datetime as dt
+
+    from app.servisler.dogrulama.isaretler.referans_suphesi import eski_izleri_temizle
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            _, istek = await _referans_isteyen_genc(oturum, istemci)
+            istek.yanit_isareti = {**istek.yanit_isareti, "sinyaller": ["hizli_yanit"]}
+            await oturum.commit()
+            simdi = istek.olusturma_tarihi + dt.timedelta(days=89)
+            assert await eski_izleri_temizle(oturum, simdi) == 0
+            simdi = istek.olusturma_tarihi + dt.timedelta(days=91)
+            assert await eski_izleri_temizle(oturum, simdi) >= 1
+            assert istek.yanit_isareti == {"sinyaller": ["hizli_yanit"]}
+
+    asyncio.run(senaryo())

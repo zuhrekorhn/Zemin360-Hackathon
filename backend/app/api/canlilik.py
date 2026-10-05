@@ -66,6 +66,7 @@ from app.models.isbirligi import Isbirligi
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.canlilik import CanlilikOlayiYaniti, PasifBaglanti, TaramaSonucu
 from app.servisler import dogrulama as dogrulama_servisi
+from app.servisler.dogrulama.isaretler import referans_suphesi
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
 
 logger = logging.getLogger("zemin360.canlilik")
@@ -435,6 +436,8 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
         olaylar[REFERANS_HATIRLATMA] = len(referans.hatirlatmalar)
     if referans.zaman_asimi:
         olaylar[REFERANS_YANIT_YOK] = referans.zaman_asimi
+    # Referans isteklerindeki IP / tarayıcı özetleri 90 gün tutulur (plan § 9).
+    await referans_suphesi.eski_izleri_temizle(oturum, simdi)
     await oturum.commit()
     # E-posta commit'ten sonra: gönderim hatası taramayı düşürmez (İ9).
     await epostalari_gonder(referans.hatirlatmalar)

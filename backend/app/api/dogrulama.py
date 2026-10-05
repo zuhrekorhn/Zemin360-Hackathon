@@ -21,11 +21,21 @@ linki ve token hiçbir yanıtta dönmez (bulgu 31).
 
 from __future__ import annotations
 
+import datetime as dt
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+)
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -40,6 +50,7 @@ from app.agents.dogrulama.kurallar import OkunanKanit
 from app.agents.inceleme_durumu import ACIK
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
+from app.core import istek_izi
 from app.core.dis_servisler.depo import DepoKapali
 from app.core.dis_servisler.eposta import Eposta
 from app.core.dosya_hatti import AZAMI_BOYUT, MB, DosyaReddedildi
@@ -84,6 +95,7 @@ from app.servisler.dogrulama import (
     zaman_asimini_isle,
     zaman_asimlarini_isle,
 )
+from app.servisler.dogrulama.isaretler.referans_suphesi import form_acildi
 from app.servisler.dogrulama.parcalar import DosyaSiniri
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
 
@@ -274,6 +286,7 @@ async def itiraz(
 async def referans_iste(
     somut_cikti_id: uuid.UUID,
     istek: ReferansIstegiGirdisi,
+    request: Request,
     arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
@@ -283,7 +296,7 @@ async def referans_iste(
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     try:
         eposta = await dogrulama_servisi.referans_iste(
-            oturum, cikti, str(istek.referans_email), hesap.email
+            oturum, cikti, str(istek.referans_email), hesap.email, istek_izi.istekten(request)
         )
     except KendiReferansi as hata:
         raise HTTPException(status_code=422, detail=str(hata)) from hata
@@ -301,6 +314,7 @@ async def referans_iste(
 @router.post("/referans-yaniti", response_model=ReferansYanitiSonucu)
 async def referans_yaniti(
     istek: ReferansYanitiIstegi,
+    request: Request,
     arka_plan: BackgroundTasks,
     oturum: AsyncSession = Depends(get_session),
 ) -> ReferansYanitiSonucu:
@@ -331,6 +345,7 @@ async def referans_yaniti(
                 sonuc=istek.sonuc_dogru,
                 yorum=(istek.yorum or "").strip() or None,
             ),
+            istek_izi.istekten(request),
         )
     except GecersizReferansGecisi as hata:
         raise HTTPException(status_code=409, detail=str(hata)) from hata
@@ -366,7 +381,9 @@ async def referans_istegi_goruntule(
     if referans is None:
         raise HTTPException(status_code=404, detail="Bu referans linki geçersiz")
 
-    if await zaman_asimini_isle(oturum, referans):
+    zaman_asimi = await zaman_asimini_isle(oturum, referans)
+    # Formun ilk açılışı: yanıt süresi buradan ölçülür (referans_supheli).
+    if form_acildi(referans, dt.datetime.now(dt.UTC)) or zaman_asimi:
         await oturum.commit()
 
     return referans_gorunumu(referans)
@@ -375,6 +392,7 @@ async def referans_istegi_goruntule(
 @router.post("/referans-yeniden-iste", response_model=KanitDurumuYaniti, status_code=201)
 async def referans_yeniden_iste(
     istek: ReferansYenidenIsteIstegi,
+    request: Request,
     arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
@@ -387,7 +405,9 @@ async def referans_yeniden_iste(
     """
     cikti, referans = await _sahibinin_referansi(oturum, hesap, istek.referans_id)
     try:
-        eposta = await dogrulama_servisi.referansi_yeniden_iste(oturum, cikti, referans)
+        eposta = await dogrulama_servisi.referansi_yeniden_iste(
+            oturum, cikti, referans, istek_izi.istekten(request)
+        )
     except ReferansYenidenIstenemez as hata:
         raise HTTPException(status_code=409, detail=str(hata)) from hata
     await oturum.commit()

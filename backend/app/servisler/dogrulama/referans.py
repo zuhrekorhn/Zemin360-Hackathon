@@ -42,11 +42,13 @@ from app.agents.dogrulama import (
 )
 from app.api.bildirimler import bildirim_ekle
 from app.core.dis_servisler.eposta import Eposta
+from app.core.istek_izi import IstekIzi
 from app.models.bildirim import TUR_REFERANS_YANIT_YOK, TUR_REFERANS_YANITI
 from app.models.guven_skoru import GuvenSkoru
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler.dogrulama.isaretler import referans_suphesi
 from app.servisler.dogrulama.referans_epostasi import (
     ReferansEpostaBaglami,
     hatirlatma_epostasi,
@@ -235,7 +237,10 @@ class YanitSonucu:
 
 
 async def referans_yanitla(
-    oturum: AsyncSession, referans: ReferansIstegi, yanit: FormYaniti
+    oturum: AsyncSession,
+    referans: ReferansIstegi,
+    yanit: FormYaniti,
+    yanit_izi: IstekIzi | None = None,
 ) -> YanitSonucu:
     """Yanıtı koşullu güncellemeyle yazar, Referans başlığını günceller, gence bildirir.
 
@@ -243,10 +248,13 @@ async def referans_yanitla(
     `UPDATE … WHERE durum = 'bekliyor' RETURNING id` (bulgu 24). Geçersiz geçişte
     (yanıtlanmış, süresi dolmuş, geri çekilmiş) `GecersizReferansGecisi`. Zaman
     aşımını çağıran önce işler: GET ve POST aynı kuralı uygulasın diye.
+    Yanıtın şüphe sinyalleri (`referans_supheli`) aynı işlemde yazılır; puanı
+    değiştirmez (İ1).
     """
     hedef = referans_gecisi(referans.durum, OLAY_YANIT)
     cikti = await cikti_getir(oturum, referans.somut_cikti_id)
     onceki_destek = referans_destegi_hesapla(cikti)
+    simdi = _simdi()
     degerler = {
         "durum": hedef,
         "iliski": yanit.iliski,
@@ -255,7 +263,7 @@ async def referans_yanitla(
         "pay_dogru": yanit.pay if cikti.kendi_rolu else None,
         "sonuc_dogru": yanit.sonuc if cikti.olculebilir_sonuc else None,
         "yanit_metni": yanit.yorum,
-        "yanit_tarihi": _simdi(),
+        "yanit_tarihi": simdi,
     }
     kaydedilen = await oturum.scalar(
         update(ReferansIstegi)
@@ -269,6 +277,7 @@ async def referans_yanitla(
         raise GecersizReferansGecisi(hedef, OLAY_YANIT)
     for alan, deger in degerler.items():
         setattr(referans, alan, deger)
+    await referans_suphesi.yanit_sinyalleri(oturum, referans, cikti, yanit_izi, simdi)
 
     if cikti.guven_skoru is None:
         # Kanıt değerlendirilmeden referans gelirse yalnızca Referans başlığı
@@ -288,13 +297,17 @@ async def referans_yanitla(
 # --- İsteme, geri çekme, yeniden isteme ------------------------------------------------------
 
 
-def _yeni_istek(cikti: SomutCikti, referans_email: str) -> ReferansIstegi:
+def _yeni_istek(
+    cikti: SomutCikti, referans_email: str, istek_izi: IstekIzi | None = None
+) -> ReferansIstegi:
     # Token burada üretiliyor: e-posta flush'tan önce kuruluyor.
     istek = ReferansIstegi(
         referans_email=referans_email.strip(),
         token=secrets.token_urlsafe(32),
         gonderim_tarihi=_simdi(),
     )
+    # İsteyen gencin izi: referansın yanıtıyla karşılaştırılır (referans_supheli).
+    referans_suphesi.istek_izi_yaz(istek, istek_izi)
     cikti.referans_istekleri.append(istek)
     return istek
 
@@ -335,22 +348,29 @@ def istek_epostasi_hazirla(istek: ReferansIstegi, baslik: str, genc_adi: str | N
 
 
 def yeni_istek_ac(
-    cikti: SomutCikti, referans_email: str, gencin_epostasi: str | None
+    cikti: SomutCikti,
+    referans_email: str,
+    gencin_epostasi: str | None,
+    istek_izi: IstekIzi | None = None,
 ) -> ReferansIstegi:
     """Engelleri uygular ve isteği açar (e-postası `istek_epostasi_kur` ile kurulur).
 
     Göstergeye dokunmaz, model çağrılmaz (bulgu 16).
     """
     isteme_engeli(cikti, referans_email, gencin_epostasi)
-    return _yeni_istek(cikti, referans_email)
+    return _yeni_istek(cikti, referans_email, istek_izi)
 
 
 async def referans_iste(
-    oturum: AsyncSession, cikti: SomutCikti, referans_email: str, gencin_epostasi: str | None
+    oturum: AsyncSession,
+    cikti: SomutCikti,
+    referans_email: str,
+    gencin_epostasi: str | None,
+    istek_izi: IstekIzi | None = None,
 ) -> Eposta:
     """Yeni referans isteği açar ve gönderilecek e-postayı döner."""
     await zaman_asimlarini_isle(oturum, cikti.referans_istekleri)
-    istek = yeni_istek_ac(cikti, referans_email, gencin_epostasi)
+    istek = yeni_istek_ac(cikti, referans_email, gencin_epostasi, istek_izi)
     return await istek_epostasi_kur(oturum, cikti, istek)
 
 
@@ -379,7 +399,10 @@ def yeniden_isteme_engeli(cikti: SomutCikti, referans: ReferansIstegi) -> str | 
 
 
 async def referansi_yeniden_iste(
-    oturum: AsyncSession, cikti: SomutCikti, referans: ReferansIstegi
+    oturum: AsyncSession,
+    cikti: SomutCikti,
+    referans: ReferansIstegi,
+    istek_izi: IstekIzi | None = None,
 ) -> Eposta:
     """Aynı kişiye yeni istek (yeni token, yeni e-posta); eski yanıt geçmiş olarak kalır.
 
@@ -389,4 +412,5 @@ async def referansi_yeniden_iste(
     engel = yeniden_isteme_engeli(cikti, referans)
     if engel:
         raise ReferansYenidenIstenemez(engel)
-    return await istek_epostasi_kur(oturum, cikti, _yeni_istek(cikti, referans.referans_email))
+    yeni = _yeni_istek(cikti, referans.referans_email, istek_izi)
+    return await istek_epostasi_kur(oturum, cikti, yeni)

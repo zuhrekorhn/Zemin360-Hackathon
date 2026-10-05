@@ -34,6 +34,7 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
       "Referans gösterdiğin kişiye adını ve çalışmanın başlığını içeren bir yanıt isteği e-postası (ve yanıt gelmezse bir hatırlatma) göndermek.",
       "Eşleşme, iş birliği ve hatırlatmalarla ilgili uygulama içi bildirim göndermek.",
       "Programın hedeflerini ölçmek (yalnızca toplu sayılar; kişisel veri içermez).",
+      "Kötüye kullanımı fark etmek: referans istediğinde ve referansın yanıt verdiğinde IP adresinin ve tarayıcı bilgisinin geri çevrilemez bir özeti 90 gün saklanır; ham adres saklanmaz. Şüpheli bir durum GİRVAK'ın incelemesine gider, puanını kendiliğinden değiştirmez.",
     ],
   },
   {
