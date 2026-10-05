@@ -1,6 +1,6 @@
 # İlan düzenleme ("Düzenle" düğmesi)
 
-Durum: **onaylandı (5 Eki), uygulanmadı.** Tanımlama incelemesinin ertelenen maddesi
+Durum: **uygulandı (5 Eki), dört adım dört commit.** Tanımlama incelemesinin ertelenen maddesi
 (`docs/roadmap.md` § Tanımlama incelemesi). Kod 7 Ekim akşamı donar; 6 Ekim akşamına
 kadar bitmezse 3. adım (arayüz) atılmaz, uç zararsız kalır.
 

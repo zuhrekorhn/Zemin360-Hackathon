@@ -200,9 +200,9 @@ Ajan inceleme sırasının 3. adımı. Kötü girdi senaryo seti
       "ölçüm yöntemi belirlenecek" işareti.
 - [x] D: sayfa yenilenince sohbet geri gelir (`GET /tanimlama/sohbet/{id}`, `sessionStorage`).
 - [x] C: kapatma nedeni `hatali_girildi`; GİRVAK sayılarında ayrı.
-- [ ] **"Düzelt" düğmesi ve ilgi aktarımı:** açık ilanı önceden doldurulmuş formla düzeltip yeniden
-      açmak; eski ilana gösterilmiş ilgiler yeni ilana aktarılır (aktarılmazsa yazım hatası
-      düzeltmek bütün ilgileri düşürür). Ayrı bir düzenleme ucu da bu başlıkta.
+- [x] **"Düzenle" düğmesi** (5 Eki, `plans/ilan-duzenleme.md`): açık ilan yerinde düzenlenir
+      (`PATCH /ihtiyac-kartlari/{id}`, onaydaki form); kopyalama ve ilgi aktarımı gerekmedi,
+      ilgiler kendiliğinden korunur. İş birliği başlamış ya da kapalı ilan 409.
 - [ ] Genç kapısında firmanın kayıt bilgileri bağlam olarak gitmiyor (bulgu 5): örnek sorular
       sektöre uyarlanamıyor. Firma kartı sohbetinde de örnekler sektöre uyarlanmıyor.
 - [ ] Sohbet ilk mesajda kapanabiliyor; kısıtlar ve şehir sohbette sorulmuyor (bulgu 6'nın

@@ -112,6 +112,7 @@ ajan · pipeline · embedding · vektör · rubrik · skor · eşik · token · 
 ### 5.7 Bildirimler
 - **Kim + ne oldu + ne yapabilirsin:** "Kooperatif A profilinle ilgileniyor. Kabul edersen iletişim bilgileriniz paylaşılır."
 - Olumsuz durumlar nötr: "Kooperatif A'nın ihtiyacı kapandı." Neden kapandığı yazılmaz.
+- Firma ilanı düzenleyince ilgilenmiş adaya: "İlgilendiğin bir fırsatın ayrıntıları güncellendi." (aday firmaysa "İlgilendiğiniz…"). Neyin değiştiği yazılmaz; ayrıntı fırsatın kendisinde.
 
 ### 5.8 Bekleme ve arka plan işleri
 - Kullanıcı neyi beklediğini ve ne zaman biteceğini bilmeli. Süreyi bilmiyorsak kesin süre vermeyiz.
