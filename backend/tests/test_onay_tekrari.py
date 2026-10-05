@@ -325,6 +325,44 @@ def test_ihtiyac_embeddingi_varsa_eslestirme_baslar(tanimlama, monkeypatch):
     assert len(tanimlama.eslestirilenler) == 1
 
 
+def test_ihtiyac_zorunlu_alan_bossa_kart_yazilmaz(tanimlama, monkeypatch):
+    """Sohbet tavana gelip alanı boş kapatabilir; yer tutucu yazılmıyor, onay
+    boş (ya da yalnızca boşluk) alanı firmaya alan adıyla söyler."""
+    embedding_basarili(monkeypatch)
+
+    yanit = TestClient(app).post(
+        "/tanimlama/kart/onayla",
+        json={
+            "oturum_id": str(uuid.uuid4()),
+            "duzeltilmis_taslak": {"problem_tanimi": "   ", "basari_kriteri": None},
+        },
+    )
+
+    assert yanit.status_code == 422
+    assert yanit.json()["detail"] == (
+        "Problem ve Başarı kriteri boş bırakılamaz. Doldurup yeniden kaydedin."
+    )
+    assert tanimlama.oturum.eklenenler == []
+
+
+def test_ihtiyac_metni_kirpilir_ve_uzunlugu_sinirli(tanimlama, monkeypatch):
+    embedding_basarili(monkeypatch)
+    istemci = TestClient(app)
+
+    def onayla(**taslak):
+        return istemci.post(
+            "/tanimlama/kart/onayla",
+            json={"oturum_id": str(uuid.uuid4()), "duzeltilmis_taslak": taslak},
+        )
+
+    uzun = onayla(problem_tanimi="x" * 1001, basari_kriteri="%50")
+    assert uzun.status_code == 422
+
+    yanit = onayla(problem_tanimi="  Biletler elle ayrılıyor \n", basari_kriteri="%50")
+    assert yanit.status_code == 201
+    assert yanit.json()["problem_tanimi"] == "Biletler elle ayrılıyor"
+
+
 # --- Tüm çıktılar silinirse "potansiyel" ------------------------------------
 # Taslak ekranında kullanıcı çıktıların hepsini "Çıkar" diyebiliyor. Arayüz o
 # anda "potansiyel olarak kaydedilecek" diyordu ama kart sohbetteki eski

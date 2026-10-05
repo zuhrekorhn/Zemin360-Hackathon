@@ -81,12 +81,11 @@ def ihtiyac_temsil_metni(*, problem_tanimi: str, basari_kriteri: str | None) -> 
     tercih alanları bilinçli olarak DIŞARIDA: onlar sert filtre adımında
     SQL ile çalışıyor, benzerlik metnini bulandırmamalı.
     """
-    return "\n".join(
-        [
-            f"Problem: {problem_tanimi}",
-            f"Başarı kriteri: {basari_kriteri or ''}",
-        ]
-    )
+    satirlar = [f"Problem: {problem_tanimi}"]
+    # Boş kriter satırı yazılmaz: içeriksiz başlık benzerliği bulandırıyordu.
+    if basari_kriteri:
+        satirlar.append(f"Başarı kriteri: {basari_kriteri}")
+    return "\n".join(satirlar)
 
 
 def firma_temsil_metni(

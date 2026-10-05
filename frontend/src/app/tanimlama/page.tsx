@@ -19,6 +19,7 @@ import {
 } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   type IhtiyacKartiYaniti,
   type IhtiyacTaslagi,
@@ -263,6 +264,10 @@ function TaslakBolumu({
   );
   // Eşleştirmenin sert filtresi; ajan yanlış anlamış olabilir, kurum düzeltsin.
   const [musaitlik, setMusaitlik] = useState(taslak.musaitlik_tercihi ?? "");
+  // Sohbetten çıkan metinler düzenlenebilir (sohbet tavana gelip boş kapatmış olabilir).
+  const [problem, setProblem] = useState(taslak.problem_tanimi ?? "");
+  const [kriter, setKriter] = useState(taslak.basari_kriteri ?? "");
+  const [kisitlar, setKisitlar] = useState(taslak.kisitlar ?? "");
   // Ortak ilanı (docs/plans/firma-akisi.md § 5): aranan firma türleri ve iş
   // birliği türü; çalışma modeli ve müsaitlik sorulmaz.
   const [firmaTurleri, setFirmaTurleri] = useState<string[]>(
@@ -273,15 +278,65 @@ function TaslakBolumu({
   );
 
   return (
-    <div className="flex flex-col gap-8">
-      <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-xl font-semibold text-ana">
-          İhtiyaç kartı taslağınız
-        </h2>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Sohbetten çıkan kart bu. Gözden geçirin, doğruysa aşağıdan onaylayın.
-        </p>
-        <TaslakKarti taslak={taslak} ortak={ortak} />
+    <form
+      className="flex flex-col gap-8"
+      onSubmit={(olay) => {
+        olay.preventDefault();
+        if (bekleniyor) return;
+        onOnayla(
+          {
+            sektor: sektor.trim() || null,
+            sehir: sehir || null,
+          },
+          {
+            ...taslak,
+            problem_tanimi: problem.trim() || null,
+            basari_kriteri: kriter.trim() || null,
+            kisitlar: kisitlar.trim() || null,
+            sehir_tercihi: aranilanSehir || null,
+            calisma_modeli: ortak ? null : secimDegeri(calismaModeli),
+            musaitlik_tercihi: ortak ? null : secimDegeri(musaitlik),
+            aranan_firma_turleri: ortak ? firmaTurleri : [],
+            isbirligi_turu: ortak ? isbirligiTuru || null : null,
+          },
+        );
+      }}
+    >
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="font-heading text-xl font-semibold text-ana">
+            İhtiyaç kartı taslağınız
+          </h2>
+          <p className="text-sm text-pretty text-muted-foreground">
+            Sohbetten çıkan kart bu. Gözden geçirin, gerekirse düzeltin, sonra
+            aşağıdan onaylayın.
+          </p>
+        </div>
+
+        <MetinAlani
+          id="problem"
+          etiket="Problem"
+          deger={problem}
+          setDeger={setProblem}
+          enUzun={PROBLEM_EN_UZUN}
+          sohbetteBos={!taslak.problem_tanimi}
+        />
+        <MetinAlani
+          id="basari-kriteri"
+          etiket="Başarı kriteri"
+          deger={kriter}
+          setDeger={setKriter}
+          enUzun={KRITER_EN_UZUN}
+          sohbetteBos={!taslak.basari_kriteri}
+        />
+        <MetinAlani
+          id="kisitlar"
+          etiket="Kısıtlar"
+          deger={kisitlar}
+          setDeger={setKisitlar}
+          enUzun={KRITER_EN_UZUN}
+          istegeBagli
+        />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -295,27 +350,7 @@ function TaslakBolumu({
           </p>
         </div>
 
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(olay) => {
-            olay.preventDefault();
-            if (bekleniyor) return;
-            onOnayla(
-              {
-                sektor: sektor.trim() || null,
-                sehir: sehir || null,
-              },
-              {
-                ...taslak,
-                sehir_tercihi: aranilanSehir || null,
-                calisma_modeli: ortak ? null : calismaModeli || null,
-                musaitlik_tercihi: ortak ? null : musaitlik || null,
-                aranan_firma_turleri: ortak ? firmaTurleri : [],
-                isbirligi_turu: ortak ? isbirligiTuru || null : null,
-              },
-            );
-          }}
-        >
+        <div className="flex flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
             {firmaBilgisiSor ? (
               <>
@@ -405,18 +440,21 @@ function TaslakBolumu({
             </>
           ) : (
             <>
-              <FormAlani
-                etiket="Çalışma modeli"
-                htmlFor="calisma-modeli"
-                istegeBagli
-              >
+              {/* Eşleştirmenin sert filtreleri: zorunlu seçim. "Fark etmez"
+                  boş değer olarak gider ve filtre uygulanmaz; firma bunu
+                  unutarak değil, bilerek seçmiş olur. */}
+              <FormAlani etiket="Çalışma modeli" htmlFor="calisma-modeli">
                 <select
                   id="calisma-modeli"
+                  required
                   value={calismaModeli}
                   onChange={(olay) => setCalismaModeli(olay.target.value)}
                   className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
                 >
-                  <option value="">Belirtmek istemiyorum</option>
+                  <option value="" disabled>
+                    Seçin
+                  </option>
+                  <option value={FARK_ETMEZ}>Fark etmez</option>
                   {CALISMA_MODELLERI.map((model) => (
                     <option key={model.deger} value={model.deger}>
                       {model.etiket}
@@ -425,18 +463,25 @@ function TaslakBolumu({
                 </select>
               </FormAlani>
 
-              <FormAlani etiket="Müsaitlik" htmlFor="musaitlik" istegeBagli>
+              <FormAlani etiket="Müsaitlik" htmlFor="musaitlik">
                 <select
                   id="musaitlik"
+                  required
                   value={musaitlik}
                   onChange={(olay) => setMusaitlik(olay.target.value)}
                   className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
                 >
-                  {MUSAITLIK_SECENEKLERI.map((secenek) => (
-                    <option key={secenek.deger} value={secenek.deger}>
-                      {secenek.etiket}
-                    </option>
-                  ))}
+                  <option value="" disabled>
+                    Seçin
+                  </option>
+                  <option value={FARK_ETMEZ}>Fark etmez</option>
+                  {MUSAITLIK_SECENEKLERI.filter((s) => s.deger).map(
+                    (secenek) => (
+                      <option key={secenek.deger} value={secenek.deger}>
+                        {secenek.etiket}
+                      </option>
+                    ),
+                  )}
                 </select>
               </FormAlani>
             </>
@@ -478,9 +523,60 @@ function TaslakBolumu({
           >
             {bekleniyor ? "Kaydediliyor…" : "Kartı onayla"}
           </Button>
-        </form>
+        </div>
       </section>
-    </div>
+    </form>
+  );
+}
+
+// Zorunlu seçimlerde "Fark etmez": backend'e boş gider (filtre yok).
+const FARK_ETMEZ = "fark_etmez";
+
+function secimDegeri(deger: string): string | null {
+  return deger && deger !== FARK_ETMEZ ? deger : null;
+}
+
+// Backend'deki sınırlarla aynı (app/schemas/tanimlama.py).
+const PROBLEM_EN_UZUN = 1000;
+const KRITER_EN_UZUN = 500;
+
+/** Taslağın düzenlenebilir metin alanı; sohbette çıkmadıysa bunu söyler. */
+function MetinAlani({
+  id,
+  etiket,
+  deger,
+  setDeger,
+  enUzun,
+  sohbetteBos = false,
+  istegeBagli = false,
+}: {
+  id: string;
+  etiket: string;
+  deger: string;
+  setDeger: (deger: string) => void;
+  enUzun: number;
+  sohbetteBos?: boolean;
+  istegeBagli?: boolean;
+}) {
+  const eksik = !istegeBagli && sohbetteBos && !deger.trim();
+  return (
+    <FormAlani etiket={etiket} htmlFor={id} istegeBagli={istegeBagli}>
+      <Textarea
+        id={id}
+        rows={3}
+        required={!istegeBagli}
+        maxLength={enUzun}
+        value={deger}
+        aria-invalid={eksik || undefined}
+        onChange={(olay) => setDeger(olay.target.value)}
+        className={eksik ? "border-destructive" : undefined}
+      />
+      {eksik ? (
+        <p className="text-xs text-pretty text-destructive">
+          Sohbette netleşmedi. Onaylamadan önce buraya yazın.
+        </p>
+      ) : null}
+    </FormAlani>
   );
 }
 

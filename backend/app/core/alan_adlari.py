@@ -23,6 +23,11 @@ FIRMA_ALAN_ADLARI: dict[str, str] = {
     "sehir": "Şehir",
 }
 
+IHTIYAC_ALAN_ADLARI: dict[str, str] = {
+    "problem_tanimi": "Problem",
+    "basari_kriteri": "Başarı kriteri",
+}
+
 KART_ALAN_ADLARI: dict[str, str] = {
     "ne_yapiyoruz": "Ne yaptığınız",
     "yetkinlikler": "Yetkinlikler",

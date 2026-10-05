@@ -7,7 +7,13 @@ böyle bir dal tanımlanmamış). Sadece eksik alan takibi var.
 import asyncio
 
 from app.agents import sohbet_motoru as motor
-from app.agents.tanimlama import TANIMLAMA, IhtiyacCikarimi, bos_taslak
+from app.agents.tanimlama import (
+    MAKS_ZORUNLU_TURU,
+    TANIMLAMA,
+    TANIMLAMA_ORTAK,
+    IhtiyacCikarimi,
+    bos_taslak,
+)
 
 
 def karar(durum: dict) -> dict:
@@ -48,10 +54,20 @@ def test_llm_soru_uretmezse_sokratik_yedek_soru_kullanilir():
     assert "sayıyla" in sonuc["sonraki_soru"].casefold()
 
 
-def test_iki_tur_sonra_taslak_kapanir():
-    sonuc = karar({"taslak": dolu_taslak(basari_kriteri=None), "takip_turu": motor.MAKS_TAKIP_TURU})
+def test_tavana_kadar_sorulur_sonra_taslak_bos_alanla_kapanir():
+    """Yer tutucu yazılmaz: "belirtilmedi" ilana ve eşleştirme metnine giriyordu.
+    Boş alan taslak ekranında zorunlu görünür, onay boş alanı kabul etmez."""
+    eksik = dolu_taslak(basari_kriteri=None)
+    son_soru = karar({"taslak": eksik, "takip_turu": MAKS_ZORUNLU_TURU - 1})
+    assert son_soru["taslak_hazir"] is False
+
+    sonuc = karar({"taslak": eksik, "takip_turu": MAKS_ZORUNLU_TURU})
     assert sonuc["taslak_hazir"] is True
-    assert sonuc["taslak"]["basari_kriteri"] == "belirtilmedi"
+    assert sonuc["taslak"]["basari_kriteri"] is None
+
+
+def test_iki_kapida_tavan_ayni():
+    assert TANIMLAMA.maks_zorunlu_turu == TANIMLAMA_ORTAK.maks_zorunlu_turu == 4
 
 
 def test_alanlar_tamamsa_dogrudan_taslak():

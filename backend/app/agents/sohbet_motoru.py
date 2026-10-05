@@ -554,17 +554,3 @@ def grafik_derle(
 
 def kullanici_mesaji(metin: str) -> HumanMessage:
     return HumanMessage(content=metin)
-
-
-def zorunlu_alanlari_doldur(
-    taslak: dict[str, Any],
-    zorunlu: Sequence[str],
-    metin_alanlari: Sequence[str],
-    yer_tutucu: str = "belirtilmedi",
-) -> dict[str, Any]:
-    """Takip turları bitince boş kalan zorunlu alanları doldurur."""
-    son = dict(taslak)
-    for alan in zorunlu:
-        if not son.get(alan):
-            son[alan] = yer_tutucu if alan in metin_alanlari else []
-    return son

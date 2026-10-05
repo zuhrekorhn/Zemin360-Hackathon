@@ -8,7 +8,8 @@ docs/agent-specs.md § 2:
   - Kurumun stratejik kararını vermez, sadece ifadesini netleştirir.
 
 Keşif'teki "hiç projem yok" fallback zincirinin karşılığı burada YOK —
-spec'te böyle bir dal tanımlanmamış. Tek dal: eksik alan takibi (2 tur).
+spec'te böyle bir dal tanımlanmamış. Tek dal: eksik alan takibi
+(`MAKS_ZORUNLU_TURU`).
 """
 
 from __future__ import annotations
@@ -31,6 +32,13 @@ ACILIS_SORUSU = (
 )
 
 ZORUNLU_ALANLAR = ("problem_tanimi", "basari_kriteri")
+
+# Zorunlu alanlar için soru turu tavanı, iki kapıda da. Eskiden 2'ydi ve
+# "rol tarifiyle" başlayan firmada problem iki soruda çıkmayınca taslak
+# "belirtilmedi" yer tutucusuyla kapanıyor, ilan bu metinle eşleşiyordu.
+# Tavana gelinirse taslak yine kapanır ama boş alana yer tutucu YAZILMAZ: alan
+# taslak ekranında boş ve zorunlu görünür, onay boş alanı kabul etmez.
+MAKS_ZORUNLU_TURU = 4
 
 ACIKLAMA_YEDEGI = (
     "Kesin bir cevap gerekmiyor; aklınıza gelen ilk örneği kendi cümlelerinizle yazmanız yeterli."
@@ -161,14 +169,8 @@ TANIMLAMA = motor.AjanTanimi(
         "musaitlik_tercihi",
     ),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
-    # Tanımlama iki turda kapanmaya devam ediyor: kurumun problemi iki soruda
-    # netleşmiyorsa daha fazla sormak yerine taslağı göstermek daha iyi,
-    # kurum kartı elle düzeltebiliyor. (Keşif'te tavan daha yüksek.)
-    maks_zorunlu_turu=motor.MAKS_TAKIP_TURU,
+    maks_zorunlu_turu=MAKS_ZORUNLU_TURU,
     yedek_sorular=YEDEK_SORULAR,
-    tamamla=lambda taslak: motor.zorunlu_alanlari_doldur(
-        taslak, ZORUNLU_ALANLAR, metin_alanlari=ZORUNLU_ALANLAR
-    ),
 )
 
 
@@ -283,11 +285,8 @@ TANIMLAMA_ORTAK = motor.AjanTanimi(
     ),
     liste_alanlari=("aranan_firma_turleri",),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
-    maks_zorunlu_turu=motor.MAKS_TAKIP_TURU,
+    maks_zorunlu_turu=MAKS_ZORUNLU_TURU,
     yedek_sorular=YEDEK_SORULAR_ORTAK,
-    tamamla=lambda taslak: motor.zorunlu_alanlari_doldur(
-        taslak, ZORUNLU_ALANLAR, metin_alanlari=ZORUNLU_ALANLAR
-    ),
 )
 
 

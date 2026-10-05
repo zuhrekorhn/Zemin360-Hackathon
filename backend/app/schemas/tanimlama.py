@@ -6,13 +6,28 @@ docs/api-contracts.md § Tanımlama, docs/data-schema.md § IHTIYAC_KARTI.
 from __future__ import annotations
 
 import uuid
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
 from app.core.firma_karti import IsbirligiTuru
 from app.core.firma_profili import FirmaTuru
 from app.core.ilan import Aranan, KapanmaNedeni
 from app.core.musaitlik import HosgoruluMusaitlik, KatiMusaitlik
+
+# Taslak ekranındaki metin alanlarının üst sınırı (formdaki maxLength ile aynı)
+PROBLEM_EN_UZUN = 1000
+KRITER_EN_UZUN = 500
+
+
+def _kirp(deger: Any) -> Any:
+    """Baştaki/sondaki boşluk atılır; boş kalan metin None."""
+    if isinstance(deger, str):
+        return deger.strip() or None
+    return deger
+
+
+KirpilmisMetin = Annotated[str | None, BeforeValidator(_kirp)]
 
 
 class IhtiyacTaslagi(BaseModel):
@@ -44,6 +59,11 @@ class IhtiyacTaslagiGirdisi(IhtiyacTaslagi):
     atmak yerine 422 ile söylüyoruz.
     """
 
+    # Metin alanları taslak ekranında düzenlenebiliyor: yalnızca boşluktan
+    # oluşan metin boş sayılır (onay zorunlu alanı reddeder), uzunluk sınırlı.
+    problem_tanimi: KirpilmisMetin = Field(default=None, max_length=PROBLEM_EN_UZUN)
+    basari_kriteri: KirpilmisMetin = Field(default=None, max_length=KRITER_EN_UZUN)
+    kisitlar: KirpilmisMetin = Field(default=None, max_length=KRITER_EN_UZUN)
     musaitlik_tercihi: KatiMusaitlik = None
     aranan_firma_turleri: list[FirmaTuru] = []
     isbirligi_turu: IsbirligiTuru | None = None

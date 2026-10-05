@@ -20,11 +20,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.firma_karti import profil_baglami
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
+from app.agents.tanimlama import ZORUNLU_ALANLAR
 from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.profil import kurumun_profilini_guncelle
 from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.core import calisma_modeli
+from app.core.alan_adlari import IHTIYAC_ALAN_ADLARI, bos_alan_mesaji
 from app.core.firma_karti import ISBIRLIGI_TURLERI
 from app.core.firma_profili import firma_turlerini_temizle
 from app.core.hatalar import HIZ_SINIRI_MESAJI
@@ -142,8 +144,12 @@ async def kart_onayla(
         raise HTTPException(status_code=409, detail="Taslağınız henüz hazır değil.")
 
     taslak = istek.duzeltilmis_taslak or IhtiyacTaslagi(**mevcut.values["taslak"])
-    if not taslak.problem_tanimi:
-        raise HTTPException(status_code=422, detail="İhtiyacınızda problem tanımı olmalı.")
+    # Sohbet tavana gelip zorunlu alanı boş kapatmış olabilir; yer tutucu
+    # yazılmıyor, firma alanı taslak ekranında doldurur.
+    if bos := [alan for alan in ZORUNLU_ALANLAR if not getattr(taslak, alan)]:
+        raise HTTPException(
+            status_code=422, detail=bos_alan_mesaji(bos, IHTIYAC_ALAN_ADLARI, siz=True)
+        )
     ortak = _aranan(mevcut.values) == ARANAN_FIRMA
 
     # Kart token'daki hesabın kurumuna bağlanır (docs/faz-b-kimlik-ve-dongu.md § 4).
