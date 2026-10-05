@@ -25,7 +25,10 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
 from typing import Any, Literal
 
 import httpx
@@ -110,6 +113,51 @@ def llm_hatasini_cevir(hata: Exception) -> Exception:
     if mesgul_hatasi_mi(hata):
         return ModelMesgulHatasi(str(hata) or type(hata).__name__)
     return hata
+
+
+@dataclass
+class KullanimToplayici:
+    """Bir işin (ör. bir değerlendirmenin) bütün model çağrılarının toplam kullanımı."""
+
+    cagri: int = 0
+    girdi_token: int = 0
+    cikti_token: int = 0
+
+
+_TOPLAYICI: ContextVar[KullanimToplayici | None] = ContextVar("llm_kullanim", default=None)
+
+
+@contextmanager
+def kullanim_topla() -> Iterator[KullanimToplayici]:
+    """İçerideki her model çağrısının token kullanımı toplayıcıya yazılır (gözlem, plan § 10.3).
+
+    Çağrılar aynı görev içinde ya da `gather` ile açılan alt görevlerde olabilir:
+    bağlam kopyalanır ama toplayıcı nesnesi paylaşılır.
+    """
+    toplayici = KullanimToplayici()
+    belirtec = _TOPLAYICI.set(toplayici)
+    try:
+        yield toplayici
+    finally:
+        _TOPLAYICI.reset(belirtec)
+
+
+def _kullanim_oku(response: Any) -> dict[str, Any] | None:
+    try:
+        return response.generations[0][0].message.usage_metadata or None
+    except (AttributeError, IndexError, TypeError):
+        return None
+
+
+def _kullanimi_topla(response: Any) -> None:
+    toplayici = _TOPLAYICI.get()
+    if toplayici is None:
+        return
+    toplayici.cagri += 1
+    kullanim = _kullanim_oku(response)
+    if kullanim:
+        toplayici.girdi_token += int(kullanim.get("input_tokens") or 0)
+        toplayici.cikti_token += int(kullanim.get("output_tokens") or 0)
 
 
 def _token_ozeti(response: Any) -> str:
@@ -199,6 +247,7 @@ class SureOlcer(BaseCallbackHandler):
         **kwargs: Any,
     ) -> None:
         sure, deneme = self._bitir(run_id, parent_run_id)
+        _kullanimi_topla(response)
         logger.info(
             "LLM yanıtladı [%s] %s: %.2f sn, deneme %d — %s",
             self.is_adi,

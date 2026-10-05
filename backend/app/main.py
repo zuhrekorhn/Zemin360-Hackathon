@@ -21,6 +21,7 @@ from app.api import (
     eslestirme,
     firma_karti,
     girvak,
+    girvak_gozlem,
     girvak_inceleme,
     health,
     hesap_baglama,
@@ -36,6 +37,7 @@ from app.api import (
 from app.core.config import get_settings
 from app.core.hatalar import hata_isleyicilerini_kur
 from app.core.llm import model_adlarini_dogrula
+from app.servisler.gozlem import kalici_saglik_ac
 
 # LLM süreleri ve hata ayrıntıları sunucu günlüğüne düşsün (app/core/llm.py,
 # app/core/hatalar.py). uvicorn kendi yapılandırmasını sonra kuruyor ama kök
@@ -56,6 +58,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     ile oluşturur; bunlar LangGraph'a ait olduğu için Alembic'e girmiyor.
     """
     ayarlar = get_settings()
+    kalici_saglik_ac()  # dış servis sağlığı süreç yeniden başlayınca kaybolmasın
     # .env'deki model adlarını sağlayıcının listesiyle karşılaştır. Arka planda:
     # açılışı beklemez, ağ yoksa sessizce geçer (app/core/llm.py).
     model_kontrolu = asyncio.create_task(model_adlarini_dogrula())
@@ -103,6 +106,7 @@ app.include_router(eslestirme.router)
 app.include_router(dogrulama.router)
 app.include_router(isbirlikleri.router)
 app.include_router(girvak.router)
+app.include_router(girvak_gozlem.router)
 app.include_router(girvak_inceleme.router)
 app.include_router(takip.router)
 app.include_router(canlilik.router)

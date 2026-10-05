@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import logging
+import time
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -24,8 +25,10 @@ from app.api.bildirimler import bildirim_ekle
 from app.core.kanit_okuma import kaniti_oku
 from app.core.kanit_okuma.belge import ErisimDurumu, ParcaTuru
 from app.models.bildirim import TUR_KANIT_CURUDU
+from app.models.gozlem import KAYNAK_YOKLAMA
 from app.models.kanit_parcasi import KanitParcasi
 from app.models.somut_cikti import SomutCikti
+from app.servisler import gozlem
 from app.servisler.dogrulama.kanit import degerlendir
 from app.servisler.dogrulama.parcalar import gostergeyi_yeniden_degerlendirmeye_al
 from app.servisler.dogrulama.sorgular import cikti_getir, gencin_hesap_id
@@ -110,15 +113,26 @@ async def curume_yoklamasi(
 
     sinir = asyncio.Semaphore(ESZAMANLI_YOKLAMA)
 
-    async def tek(parca: KanitParcasi) -> ErisimDurumu:
+    async def tek(parca: KanitParcasi) -> tuple[ErisimDurumu, int]:
         async with sinir:
-            return await _okuyabildigi(oku, parca.url)
+            baslangic = time.perf_counter()
+            erisim = await _okuyabildigi(oku, parca.url)
+            return erisim, round((time.perf_counter() - baslangic) * 1000)
 
     sonuclar = await asyncio.gather(*(tek(p) for p in yoklanacaklar))
 
     # Kalem başına bir kez yeniden değerlendirilir: eşiği geçen ya da toparlanan.
     degisenler: dict[uuid.UUID, list[KanitParcasi]] = {}
-    for parca, erisim in zip(yoklanacaklar, sonuclar, strict=True):
+    for parca, (erisim, sure_ms) in zip(yoklanacaklar, sonuclar, strict=True):
+        gozlem.kanit_okuma_ekle(
+            oturum,
+            kaynak=KAYNAK_YOKLAMA,
+            platform=parca.platform,
+            okuyucu="dogrudan",
+            erisim=erisim.value,
+            seviye=parca.seviye,
+            sure_ms=sure_ms,
+        )
         parca.curume_sayaci = sayac_gecisi(parca.curume_sayaci or 0, erisim)
         parca.belge = {**(parca.belge or {}), "yoklama_tarihi": simdi.isoformat()}
         curumus = curumus_mu(parca.curume_sayaci)

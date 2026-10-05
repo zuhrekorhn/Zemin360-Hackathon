@@ -7,6 +7,7 @@ from app.models.canlilik_olayi import CanlilikOlayi
 from app.models.eposta_dogrulama import EpostaDogrulama
 from app.models.eslesme import Eslesme
 from app.models.firma_karti import FirmaKarti
+from app.models.gozlem import DegerlendirmeGozlemi, KanitGozlemi, ServisGunlugu
 from app.models.guven_skoru import GuvenSkoru
 from app.models.hesap import Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -27,6 +28,7 @@ __all__ = [
     "Base",
     "Bildirim",
     "CanlilikOlayi",
+    "DegerlendirmeGozlemi",
     "EpostaDogrulama",
     "Eslesme",
     "FirmaKarti",
@@ -35,6 +37,7 @@ __all__ = [
     "IhtiyacKarti",
     "IncelemeIsareti",
     "Isbirligi",
+    "KanitGozlemi",
     "KanitMetinParcasi",
     "KanitParcasi",
     "Kullanici",
@@ -42,6 +45,7 @@ __all__ = [
     "Milestone",
     "ProfilKodu",
     "ReferansIstegi",
+    "ServisGunlugu",
     "ServisKullanimi",
     "SomutCikti",
     "YetenekKaniti",

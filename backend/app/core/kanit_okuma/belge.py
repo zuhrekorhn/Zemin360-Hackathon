@@ -113,3 +113,5 @@ class KanitBelgesi:
     # Yedek okuyucunun aldığı ekran görüntüleri (JPEG, § 5.5). Model okuması
     # değerlendirme katmanında yapılır (`agents/dogrulama/okuma.py`).
     ekran_goruntuleri: tuple[bytes, ...] = ()
+    # Sayfayı kimin okuduğu (gözlem, plan § 10.3): "dogrudan" | "yedek" (tarayıcı) | "uzak" (Jina).
+    okuyucu: str = "dogrudan"

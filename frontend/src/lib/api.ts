@@ -1461,6 +1461,46 @@ export function girvakSayilari(): Promise<GirvakSayilari> {
   return apiIstek<GirvakSayilari>("/girvak/sayilar", { cache: "no-store" });
 }
 
+/* --- GİRVAK gözlem paneli (docs/plans/dogrulama-iyilestirme.md § 10.3) -------
+   Tipler backend'deki app/schemas/gozlem.py ile birebir eşleşir. */
+
+export type PlatformErisimi = {
+  platform: string;
+  toplam: number;
+  /** erişim durumu → okuma sayısı */
+  erisimler: Record<string, number>;
+  /** 0-1 */
+  acik_orani: number;
+};
+
+export type ServisDurumu = {
+  servis: string;
+  kip: string | null;
+  basari_sayisi: number;
+  hata_sayisi: number;
+  son_basari: string | null;
+  son_hata: string | null;
+  son_hata_turu: string | null;
+};
+
+export type GozlemYaniti = {
+  gun: number;
+  erisim: PlatformErisimi[];
+  servisler: ServisDurumu[];
+  degerlendirme: {
+    sayi: number;
+    ortalama_sure_ms: number;
+    girdi_token: number;
+    cikti_token: number;
+  };
+};
+
+export function girvakGozlem(gun: number): Promise<GozlemYaniti> {
+  return apiIstek<GozlemYaniti>(`/girvak/gozlem?gun=${gun}`, {
+    cache: "no-store",
+  });
+}
+
 /* --- Takip Ajanı (docs/faz-c-takip.md § 7) --------------------------------
    Tipler backend'deki app/schemas/takip.py ile birebir eşleşir. */
 

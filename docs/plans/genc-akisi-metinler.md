@@ -158,3 +158,19 @@ Kalemin etiketi ve itirazı (gence "sen"); kuyruk satırları GİRVAK'a ("siz" g
 | Yer | Metin |
 |---|---|
 | Bildirim `kanit_curudu` (gence "sen") | "“{çalışma başlığı}” çalışmandaki kanıt linki art arda üç kontrolde açılmadı; silinmiş ya da gizlenmiş olabilir. Kanıt başlığı şimdilik boş. Linki düzeltir ya da yeni bir kanıt eklersen gösterge yeniden hesaplanır." (`app/servisler/dogrulama/curume.py`) |
+
+GİRVAK gözlem bölümü (`components/gozlem-paneli.tsx`, `lib/gozlem.ts`; GİRVAK'a "siz" gerektiren cümle yok, olgu cümleleri):
+
+| Yer | Metin |
+|---|---|
+| Bölüm başlığı ve açıklaması | "Gözlem" · "Kanıt linklerinin ne kadarının açılabildiği ve dış servislerin durumu. Kayıtlarda kişi ya da adres bulunmaz; 90 gün saklanır." |
+| Dönem düğmeleri | "Son 7 gün" · "Son 30 gün" · "Son 90 gün" |
+| Alt başlıklar | "Platform bazında erişim" · "Servis durumu" |
+| Boş durum | "Bu dönemde okunan kanıt linki yok." |
+| Platform satırı | "%80 açık · 12 okuma"; diğerleri "Giriş istiyor: 2 · Bulunamadı: 1" |
+| Erişim etiketleri | Açık · Giriş istiyor · Engelledi · İçerik yok · Bulunamadı · Güvenli değil · Okunamadı |
+| Servis etiketleri | E-posta · Hesap bağlama · Dosya deposu · Virüs taraması · Yedek okuyucu · Uzak okuyucu · Görsel arama |
+| Servis durumu | "Kapalı" · "Çalışıyor" · "Son çağrı hatalı" · "Henüz çağrılmadı"; "12 başarılı · 1 hatalı"; "Son hata: {tarih}" |
+| Değerlendirme özeti | "{n} değerlendirme · ortalama 3,2 sn · yapay zekâya giden 12.400, gelen 3.100 metin birimi." ("token" kelimesi gösterilmez) |
+| Tarama özeti etiketleri | "Referans hatırlatması" · "Yanıtsız referans" · "Yoklanan kanıt linki" · "Açılmayan kanıt linki" |
+

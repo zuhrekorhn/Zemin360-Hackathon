@@ -14,6 +14,11 @@ export const CANLILIK_TUR_ETIKETLERI: Record<string, string> = {
   yeni_firsat: "Yeni fırsat",
   // Genç akışı: genç ilgi gösterdi, firma yanıt vermedi (GİRVAK panelinde).
   genc_ilgisi_yanitsiz: "Yanıtsız genç ilgisi",
+  // Doğrulama: tarama özetinde görünen sayaçlar (olay değil).
+  referans_hatirlatma: "Referans hatırlatması",
+  referans_yanit_yok: "Yanıtsız referans",
+  link_yoklandi: "Yoklanan kanıt linki",
+  link_curudu: "Açılmayan kanıt linki",
 };
 
 export function turEtiketi(tur: string): string {

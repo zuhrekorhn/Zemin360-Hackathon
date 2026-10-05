@@ -66,6 +66,7 @@ from app.models.isbirligi import Isbirligi
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.canlilik import CanlilikOlayiYaniti, PasifBaglanti, TaramaSonucu
 from app.servisler import dogrulama as dogrulama_servisi
+from app.servisler import gozlem
 from app.servisler.dogrulama.isaretler import referans_suphesi
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
 
@@ -442,6 +443,8 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
         olaylar[REFERANS_YANIT_YOK] = referans.zaman_asimi
     # Referans isteklerindeki IP / tarayıcı özetleri 90 gün tutulur (plan § 9).
     await referans_suphesi.eski_izleri_temizle(oturum, simdi)
+    # Gözlem kayıtları (okuma, değerlendirme, servis günlüğü) 90 gün saklanır (plan § 10.3).
+    await gozlem.eski_gozlemleri_temizle(oturum, simdi)
     # Kanıt linklerinin haftalık yoklaması (plan § 10.4); arızası taramayı düşürmez.
     try:
         async with oturum.begin_nested():

@@ -136,10 +136,13 @@ async def yedekle(
         return belge
     sayfa = await yedek.ac(str(url), ekran=ekran_kurali(url), en_az_metin=EN_AZ_METIN)
     sonuc = birlestir(str(url), belge, sayfa) if sayfa is not None else belge
+    okuyucu = "yedek" if sayfa is not None else belge.okuyucu
     if not _okundu_mu(sonuc):
         uzak_sayfa = await uzak.oku(str(url))
         if uzak_sayfa is not None:
             sonuc = uzak_birlestir(sonuc, uzak_sayfa)
+            okuyucu = "uzak"
+    sonuc = dataclasses.replace(sonuc, okuyucu=okuyucu)
     logger.info(
         "yedek okuyucu url_host=%s once=%s sonra=%s ekran=%d",
         url.host,

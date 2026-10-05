@@ -75,6 +75,7 @@ async def kanit_oku(
         platform_metni=belge.platform_metni,
         sahiplik_kaynagi=sahiplik.kaynak,
         alinti_metni=alinti,
+        okuyucu=belge.okuyucu,
     )
 
 

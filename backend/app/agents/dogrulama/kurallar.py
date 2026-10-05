@@ -256,6 +256,8 @@ class OkunanKanit:
     alinti_metni: str | None = None
     # Yüklenen dosyanın görünen adı (modele "kanıt adresi" yerine)
     dosya_adi: str | None = None
+    # Sayfayı kimin okuduğu (gözlem): "dogrudan" | "yedek" | "uzak"
+    okuyucu: str = "dogrudan"
 
 
 @dataclass(frozen=True)

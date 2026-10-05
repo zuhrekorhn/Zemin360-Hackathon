@@ -11,6 +11,7 @@ yakalayıp kalemi değerlendirilmemiş bırakır. Commit çağıranın işi.
 from __future__ import annotations
 
 import datetime as dt
+import time
 import uuid
 from dataclasses import dataclass
 
@@ -33,12 +34,15 @@ from app.agents.dogrulama.kurallar import OkunanKanit
 from app.agents.dogrulama.okuma import dosya_okunusu, kanit_oku
 from app.core.is_kalemi import kanit_bekliyor
 from app.core.kanit_okuma.belge import ParcaTuru
+from app.core.llm import kullanim_topla
+from app.models.gozlem import KAYNAK_DEGERLENDIRME
 from app.models.guven_skoru import GuvenSkoru
 from app.models.kanit_parcasi import KanitParcasi
 from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_kaniti import YetenekKaniti
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler import gozlem
 from app.servisler.dogrulama import isaretler
 from app.servisler.dogrulama.parcalar import link_parcasi_ekle, okunabilir_mi, parca_sil
 from app.servisler.dogrulama.referans import referans_destegi_hesapla, ucuncu_taraf_puani
@@ -85,8 +89,41 @@ async def hazirla(
     bagli = await bagli_hesap_bilgileri(oturum, kart.kullanici_id) if kart else ()
     sorgular = _iddia_sorgulari(girdi)
     kimlik = _kimlik_durumu(kart)
-    okunanlar = tuple([await _parcayi_oku(p, sorgular, bagli, kimlik) for p in parcalar])
-    return Hazirlik(parcalar, okunanlar, girdi, kullanici_id)
+    olcumler = [await _olcumlu_oku(p, sorgular, bagli, kimlik) for p in parcalar]
+    okunanlar = tuple(okunan for okunan, _ in olcumler)
+    hazirlik = Hazirlik(parcalar, okunanlar, girdi, kullanici_id)
+    _okumalari_gozle(oturum, hazirlik, [ms for _, ms in olcumler])
+    return hazirlik
+
+
+async def _olcumlu_oku(
+    parca: KanitParcasi,
+    sorgular: list[str],
+    bagli: tuple[BagliHesapBilgisi, ...],
+    kimlik: KimlikDurumu,
+) -> tuple[OkunanKanit, int]:
+    baslangic = time.perf_counter()
+    okunan = await _parcayi_oku(parca, sorgular, bagli, kimlik)
+    return okunan, round((time.perf_counter() - baslangic) * 1000)
+
+
+def _okumalari_gozle(oturum: AsyncSession, hazirlik: Hazirlik, sureler_ms: list[int]) -> None:
+    """Her link okuması gözlem kaydına yazılır (plan § 10.3); dosya yüklenirken okunmuştur."""
+    ozet = hazirlik.ozet
+    for parca, okunan, sure_ms in zip(
+        hazirlik.parcalar, hazirlik.okunanlar, sureler_ms, strict=True
+    ):
+        if parca.tur == ParcaTuru.LINK.value:
+            gozlem.kanit_okuma_ekle(
+                oturum,
+                kaynak=KAYNAK_DEGERLENDIRME,
+                platform=okunan.platform,
+                okuyucu=okunan.okuyucu,
+                erisim=okunan.erisim.value,
+                seviye=okunan.seviye.value,
+                sure_ms=sure_ms,
+                girdi_ozeti=ozet,
+            )
 
 
 def _kimlik_durumu(kart: YetenekKarti | None) -> KimlikDurumu:
@@ -135,7 +172,18 @@ def onbellekte_mi(cikti: SomutCikti, hazirlik: Hazirlik) -> bool:
 async def uygula(oturum: AsyncSession, cikti: SomutCikti, hazirlik: Hazirlik) -> None:
     """Modeli çağırır, kuralla puanlar, göstergeyi yazar ve kötüye kullanım
     sinyallerini inceleme kuyruğuna bırakır (puanı değiştirmezler, İ1)."""
-    sonuc = await kalemi_degerlendir(hazirlik.girdi, hazirlik.okunanlar, cikar)
+    baslangic = time.perf_counter()
+    with kullanim_topla() as kullanim:
+        sonuc = await kalemi_degerlendir(hazirlik.girdi, hazirlik.okunanlar, cikar)
+    gozlem.degerlendirme_ekle(
+        oturum,
+        girdi_ozeti=sonuc.girdi_ozeti,
+        parca_sayisi=len(hazirlik.parcalar),
+        sure_ms=round((time.perf_counter() - baslangic) * 1000),
+        model_cagrisi=kullanim.cagri,
+        girdi_token=kullanim.girdi_token,
+        cikti_token=kullanim.cikti_token,
+    )
     _sonucu_yaz(cikti, sonuc, hazirlik)
     await _yetenek_kanitlarini_yaz(oturum, cikti, sonuc, hazirlik)
     if hazirlik.kullanici_id is not None:

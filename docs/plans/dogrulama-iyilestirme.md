@@ -575,7 +575,7 @@ Hiç kanıt parçası olmayan kalem de beyan tavanıyla değerlendirilir: Sonuç
 - **Arayüz ve bayrak:** her servis bir arayüzün arkasındadır ve bir özellik bayrağı (`.env`) vardır.
 - **Zarif düşüş:** servis yoksa ya da hata verirse ilgili sinyal "—" olur, akış devam eder. Hata gözlem kaydına yazılır.
 - **Zaman aşımı:** her çağrıda zaman aşımı vardır (`zaman_asimli` decorator'ı).
-- **Sağlık kontrolü:** `GET /saglik/servisler` yalnızca GİRVAK içindir; durum gözlem panelinde görünür.
+- **Sağlık kontrolü:** `GET /saglik/servisler` yalnızca GİRVAK içindir; durum gözlem panelinde görünür. Sağlık kaydı süreç içinde tutulur, ayrıca `servis_gunlugu` tablosuna günlük sayaç olarak yazılır (adım 12): panel süreç yeniden başlasa da geçmişi gösterir.
 
 | Servis | Varsayılan | Not |
 |---|---|---|
