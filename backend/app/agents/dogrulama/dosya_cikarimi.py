@@ -7,10 +7,13 @@
     için değerlendirmeye bağlam olarak gider; alıntı kaynağı değildir.
 İkinci adım (iddia karşılaştırması) her kanıtın geçtiği çekirdekte
 (`cekirdek.py`). Yapay zekâ ile üretilmiş mi tespiti yapılmaz (plan § 4.3).
+Yedek okuyucunun aldığı sayfa ekran görüntüleri de aynı okumadan geçer (§ 5.5):
+parçalar tek çağrıda, yukarıdan aşağı sırayla.
 """
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from functools import lru_cache
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -20,7 +23,8 @@ from pydantic import BaseModel, Field
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 
 SISTEM = (
-    "Sana bir gencin çalışmasına kanıt olarak yüklediği bir belge ya da görsel veriliyor. "
+    "Sana bir gencin çalışmasına kanıt olarak verdiği bir belge, görsel ya da web sayfası "
+    "görüntüsü veriliyor. "
     "Görevin yalnızca görmek ve yazmak; değerlendirme yapma.\n"
     "1. gorsel_metni: içinde okunabilen bütün metni olduğu gibi, yorum ve düzeltme "
     "katmadan yaz. Metin yoksa boş bırak.\n"
@@ -43,13 +47,29 @@ def _zincir() -> Runnable:
     )
 
 
+EKRAN_GORUNTUSU_TURU = "image/jpeg"
+
+
 async def dosyayi_oku(veri: bytes, icerik_turu: str) -> DosyaOkunusu:
+    return await _oku("Kanıt dosyası:", [(veri, icerik_turu)])
+
+
+async def ekranlari_oku(goruntuler: Sequence[bytes]) -> DosyaOkunusu:
+    """Kanıt sayfasının ekran görüntüleri (yukarıdan aşağı parçalar, JPEG)."""
+    return await _oku(
+        "Kanıt sayfasının ekran görüntüleri; aynı sayfanın yukarıdan aşağı parçaları. "
+        "Sitenin menüsü, çerez uyarısı gibi sayfanın kendi öğelerini betime katma.",
+        [(g, EKRAN_GORUNTUSU_TURU) for g in goruntuler],
+    )
+
+
+async def _oku(baslik: str, ortamlar: Sequence[tuple[bytes, str]]) -> DosyaOkunusu:
     mesajlar = [
         SystemMessage(SISTEM),
         HumanMessage(
             content=[
-                {"type": "text", "text": "Kanıt dosyası:"},
-                {"type": "media", "mime_type": icerik_turu, "data": veri},
+                {"type": "text", "text": baslik},
+                *({"type": "media", "mime_type": tur, "data": veri} for veri, tur in ortamlar),
             ]
         ),
     ]

@@ -5,12 +5,14 @@ canlı model (her çağrı farklı yanıt verebilir) bunu bozar. Kayıt kipinde 
 çağrı yapılır ve yanıt dosyaya yazılır; oynatma kipinde yalnızca dosya okunur,
 kayıtta olmayan çağrı `KasetEksik` hatasıdır (sessizce ağa çıkılmaz).
 
-Üç kayıt:
+Dört kayıt:
   - `dns.json`: alan adı → IP listesi ya da çözülemedi. `guvenli_istek` isteği
     atmadan önce adresi çözüyor; oynatmada çözümleyici de kayıttan döner.
   - `ag.json` + `govdeler/`: istek anahtarı → durum, başlıklar, gövde (gzip).
     Anahtar `Host` başlığından kurulur: `guvenli_istek` bağlantıyı IP'ye açar.
   - `model.json`: iş adı + girdi özeti → model çıktısı.
+  - `yedek_okuyucu.json` + `yedek/`: yedek okuyucu (Playwright servisi) yanıtları;
+    HTML gzip'li, ekran görüntüleri JPEG olarak.
 """
 
 from __future__ import annotations
@@ -28,6 +30,7 @@ from typing import Any
 import httpx
 
 from app.core import guvenli_istek
+from app.core.dis_servisler.yedek_okuyucu import EkranKurali, TarayiciSayfasi, YedekOkuyucu
 
 KASET_KLASORU = Path(__file__).resolve().parent.parent / "tests" / "degerlendirme_seti" / "kaset"
 
@@ -297,3 +300,109 @@ class ModelKaseti:
                 self.klasor / self.dosya,
                 {a: c for a, c in self._kayit.items() if a in self._kullanilan},
             )
+
+
+class YedekOkuyucuKaseti:
+    """Yedek okuyucunun yanıtları. Kayıt ve tamamlama kipinde gerçek servis çağrılır
+    (yerelde `python -m yedek_okuyucu` çalışıyor olmalı); servis ayakta değilse
+    sessizce "okunamadı" kaydedilmez, hata verilir."""
+
+    kip = "kaset"
+
+    def __init__(
+        self, kip: KasetKipi, gercek: YedekOkuyucu | None = None, klasor: Path = KASET_KLASORU
+    ) -> None:
+        self.kaset_kipi = kip
+        self.klasor = klasor
+        self._gercek = gercek
+        self._servis_denetlendi = False
+        kayitta = kip is KasetKipi.KAYDET
+        self._kayit: dict[str, Any] = {} if kayitta else _json_oku(klasor / "yedek_okuyucu.json")
+
+    @property
+    def _yedek_klasoru(self) -> Path:
+        return self.klasor / "yedek"
+
+    async def ac(self, url: str, *, ekran: EkranKurali, en_az_metin: int) -> TarayiciSayfasi | None:
+        anahtar = f"{url} {ekran.value} {en_az_metin}"
+        canli = self.kaset_kipi is KasetKipi.KAYDET or (
+            self.kaset_kipi is KasetKipi.TAMAMLA and anahtar not in self._kayit
+        )
+        if canli:
+            sayfa = await self._canli(url, ekran, en_az_metin)
+            self._kayit[anahtar] = self._yaz(anahtar, sayfa)
+            return sayfa
+        if anahtar not in self._kayit:
+            raise KasetEksik(f"yedek okuyucu kaydı yok: {anahtar}")
+        return self._oku(self._kayit[anahtar])
+
+    async def _canli(
+        self, url: str, ekran: EkranKurali, en_az_metin: int
+    ) -> TarayiciSayfasi | None:
+        if self._gercek is None:
+            from app.core.dis_servisler import kurulum
+
+            self._gercek = kurulum.yedek_okuyucu()
+        if not self._servis_denetlendi:
+            await self._servisi_denetle()
+        return await self._gercek.ac(url, ekran=ekran, en_az_metin=en_az_metin)
+
+    async def _servisi_denetle(self) -> None:
+        from app.core.config import get_settings
+
+        adres = get_settings().yedek_okuyucu_adresi.rstrip("/")
+        try:
+            async with httpx.AsyncClient(timeout=5) as istemci:
+                (await istemci.get(f"{adres}/saglik")).raise_for_status()
+        except httpx.HTTPError as hata:
+            raise RuntimeError(
+                f"Yedek okuyucu servisi çalışmıyor ({adres}); kayıttan önce "
+                "`python -m yedek_okuyucu` ile başlatın."
+            ) from hata
+        self._servis_denetlendi = True
+
+    def _yaz(self, anahtar: str, sayfa: TarayiciSayfasi | None) -> dict[str, Any]:
+        if sayfa is None:
+            return {"yok": True}
+        ozet = _ozet(anahtar)[:20]
+        self._yedek_klasoru.mkdir(parents=True, exist_ok=True)
+        (self._yedek_klasoru / f"{ozet}.html.gz").write_bytes(
+            gzip.compress(sayfa.html.encode("utf-8"), mtime=0)
+        )
+        ekranlar = []
+        for i, goruntu in enumerate(sayfa.ekran_goruntuleri):
+            dosya = f"{ozet}-{i}.jpg"
+            (self._yedek_klasoru / dosya).write_bytes(goruntu)
+            ekranlar.append(dosya)
+        return {
+            "durum": sayfa.durum,
+            "son_url": sayfa.son_url,
+            "html": f"{ozet}.html.gz",
+            "ekranlar": ekranlar,
+        }
+
+    def _oku(self, kayit: dict[str, Any]) -> TarayiciSayfasi | None:
+        if kayit.get("yok"):
+            return None
+        html = gzip.decompress((self._yedek_klasoru / kayit["html"]).read_bytes()).decode("utf-8")
+        return TarayiciSayfasi(
+            durum=kayit["durum"],
+            son_url=kayit["son_url"],
+            html=html,
+            ekran_goruntuleri=tuple(
+                (self._yedek_klasoru / d).read_bytes() for d in kayit.get("ekranlar", [])
+            ),
+        )
+
+    def kaydet(self) -> None:
+        if self.kaset_kipi is KasetKipi.OYNAT:
+            return
+        _json_yaz(self.klasor / "yedek_okuyucu.json", self._kayit)
+        if self.kaset_kipi is not KasetKipi.KAYDET or not self._yedek_klasoru.exists():
+            return
+        kullanilan = {k["html"] for k in self._kayit.values() if k.get("html")} | {
+            d for k in self._kayit.values() for d in k.get("ekranlar", [])
+        }
+        for dosya in self._yedek_klasoru.iterdir():
+            if dosya.name not in kullanilan:
+                dosya.unlink()

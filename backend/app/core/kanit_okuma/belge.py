@@ -110,3 +110,6 @@ class KanitBelgesi:
     # kendisi değil: oradaki sayı gencin iddiasıdır (§ 2). Bağlı hesapta Sonuç'u
     # yalnızca bu kısımdaki alıntı bağımsız olarak destekler.
     platform_metni: str = ""
+    # Yedek okuyucunun aldığı ekran görüntüleri (JPEG, § 5.5). Model okuması
+    # değerlendirme katmanında yapılır (`agents/dogrulama/okuma.py`).
+    ekran_goruntuleri: tuple[bytes, ...] = ()

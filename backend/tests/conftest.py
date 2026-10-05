@@ -177,3 +177,16 @@ def dosya_modele_okutulmaz(monkeypatch):
     monkeypatch.setattr(dosyalar, "dosyayi_oku", oku)
     okunus["cagrilar"] = cagrilar
     return okunus
+
+
+@pytest.fixture(autouse=True)
+def yedek_okuyucu_yok(monkeypatch):
+    """Testler yerelde çalışan bir Playwright servisine bağlı kalmaz: yedek okuyucu
+    kapalı, ekran görüntüsü okunuş önbelleği her testte boş. Yedek yolu sınayan
+    test kanıt okumaya sahte bir yedek okuyucu verir."""
+    from app.agents.dogrulama import okuma
+    from app.core.dis_servisler import kurulum
+    from app.core.dis_servisler.yedek_okuyucu import KapaliYedekOkuyucu
+
+    monkeypatch.setattr(kurulum, "yedek_okuyucu", lambda: KapaliYedekOkuyucu())
+    okuma.EKRAN_OKUNUSLARI.temizle()

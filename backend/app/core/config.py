@@ -104,6 +104,13 @@ class Settings(BaseSettings):
     eimza_kok_klasoru: str = ""
     # Kullanıcı başına günlük dosya yükleme sınırı
     gunluk_dosya_siniri: int = 30
+    # Yedek okuyucu (plan § 5.5): Playwright servisi (backend/yedek_okuyucu/). Düz
+    # istekle okunamayan ya da görsel ağırlıklı sayfa onunla açılır. Servis ayakta
+    # değilse okuma önceki sonuçla biter (zarif düşüş). Anahtar servisinkiyle aynı.
+    yedek_okuyucu: Literal["playwright", "kapali"] = "playwright"
+    yedek_okuyucu_adresi: str = "http://localhost:8100"
+    yedek_okuyucu_anahtari: str = ""
+    yedek_okuyucu_zaman_asimi_sn: float = 60
 
     @property
     def cors_origin_list(self) -> list[str]:

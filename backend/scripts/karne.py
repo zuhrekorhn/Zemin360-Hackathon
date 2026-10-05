@@ -3,6 +3,7 @@
     python -m scripts.karne                      # çevrimdışı: kayıtlı yanıtlarla
     python -m scripts.karne --model kaydet       # kayıtlı ağ, eksik model çağrıları gerçek
     python -m scripts.karne --ag tamamla --model kaydet  # yeni okuyucu: eksik istekler canlı
+                                                 # (yedek okuyucu servisi de açık olmalı)
     python -m scripts.karne --ag kaydet --model kaydet   # gerçek ağ ve model (yeni vaka)
     python -m scripts.karne --taslak             # etiket yoksa önerilen etiketle
     python -m scripts.karne --json cikti.json    # vaka başına sonuçlar (gerileme)
@@ -27,7 +28,7 @@ from dotenv import load_dotenv
 from app.core.config import get_settings
 from degerlendirme import rapor
 from degerlendirme.calistir import hepsini_degerlendir
-from degerlendirme.kaset import AgKaseti, KasetKipi, ModelKaseti
+from degerlendirme.kaset import AgKaseti, KasetKipi, ModelKaseti, YedekOkuyucuKaseti
 from degerlendirme.mevcut_sistem import MevcutSistemDegerlendirici
 from degerlendirme.olcutler import karne_hesapla
 from degerlendirme.vaka import SETI_KLASORU, vakalari_yukle
@@ -59,12 +60,15 @@ async def calistir(argv: list[str] | None = None) -> int:
         load_dotenv()
         get_settings.cache_clear()  # ayarlar .env yüklenmeden önbelleğe alınmış olabilir
     embedding = ModelKaseti(KasetKipi(arg.model), dosya="embedding.json.gz")
-    degerlendirici = MevcutSistemDegerlendirici(ag, model, embedding)
+    # Yedek okuyucu ağın parçası: ağ kaseti hangi kipteyse o.
+    yedek = YedekOkuyucuKaseti(KasetKipi(arg.ag))
+    degerlendirici = MevcutSistemDegerlendirici(ag, model, embedding, yedek)
     vakalar = vakalari_yukle()
 
     with ag.dns_baglami():
         sonuclar = await hepsini_degerlendir(degerlendirici, vakalar)
     ag.kaydet()
+    yedek.kaydet()
     model.kaydet()
     embedding.kaydet()
 

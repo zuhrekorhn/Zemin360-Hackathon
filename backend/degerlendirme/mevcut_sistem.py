@@ -1,21 +1,22 @@
 """Uygulamadaki Doğrulama'nın adaptörü (plan § 15): karne her adımda bununla ölçer.
 
-Uygulamanın yolunu izler: okuyucu zinciri (`okuma.kanit_oku`), dosya hattı
-(`dosya_hatti` → `dosyalar.dosyayi_isle` → `okuma.dosya_okunusu`), uzun metinde
-parça seçimi ve çekirdek (`cekirdek.kalemi_degerlendir`). Ağ, model ve embedding
-yanıtları kasetten gelir. Kanıtlar vakadaki sırayla okunur (link ve dosya).
+Uygulamanın yolunu izler: okuyucu zinciri ve yedek okuyucu (`okuma.kanit_oku`),
+dosya hattı (`dosya_hatti` → `dosyalar.dosyayi_isle` → `okuma.dosya_okunusu`), uzun
+metinde parça seçimi ve çekirdek (`cekirdek.kalemi_degerlendir`). Ağ, yedek okuyucu,
+model ve embedding yanıtları kasetten gelir. Kanıtlar vakadaki sırayla okunur (link ve dosya).
 """
 
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from typing import Any
 
 from app.agents.dogrulama import ucuncu_taraf_onayi_hesapla
 from app.agents.dogrulama.capalar import KimlikDurumu, dosya_seviyesi
 from app.agents.dogrulama.cekirdek import DegerlendirmeGirdisi, kalemi_degerlendir
 from app.agents.dogrulama.cikarim import KanitCikarimi, cikar
-from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu, dosyayi_oku
+from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu, dosyayi_oku, ekranlari_oku
 from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi
 from app.agents.dogrulama.kurallar import OkunanKanit
 from app.agents.dogrulama.okuma import dosya_okunusu, kanit_oku
@@ -24,7 +25,7 @@ from app.core.dosya_hatti import dosyayi_hazirla
 from app.core.embeddings import embedding_listesi_uret
 from app.servisler.dogrulama.dosyalar import dosyayi_isle
 from degerlendirme.degerlendirici import Degerlendirme
-from degerlendirme.kaset import AgKaseti, ModelKaseti
+from degerlendirme.kaset import AgKaseti, ModelKaseti, YedekOkuyucuKaseti
 from degerlendirme.vaka import SETI_KLASORU, ReferansGirdisi, Vaka
 
 DOSYA_KLASORU = SETI_KLASORU / "dosyalar"
@@ -48,10 +49,17 @@ def eski_olcege_cevir(referans: ReferansGirdisi) -> int:
 class MevcutSistemDegerlendirici:
     ad = "mevcut_sistem"
 
-    def __init__(self, ag: AgKaseti, model: ModelKaseti, embedding: ModelKaseti) -> None:
+    def __init__(
+        self,
+        ag: AgKaseti,
+        model: ModelKaseti,
+        embedding: ModelKaseti,
+        yedek: YedekOkuyucuKaseti,
+    ) -> None:
         self._ag = ag
         self._model = model
         self._embedding = embedding
+        self._yedek = yedek
 
     async def degerlendir(self, vaka: Vaka) -> Degerlendirme:
         referans_puanlari = [eski_olcege_cevir(r) for r in vaka.referanslar if r.yanitladi]
@@ -82,6 +90,8 @@ class MevcutSistemDegerlendirici:
                         bagli_hesaplar=bagli,
                         transport=self._ag.transport(),
                         gom=self._gom,
+                        yedek=self._yedek,
+                        ekran_oku=self._ekranlari_oku,
                     )
                 )
             elif kanit.dosya:
@@ -128,6 +138,15 @@ class MevcutSistemDegerlendirici:
             return (await dosyayi_oku(veri, icerik_turu)).model_dump()
 
         girdi = {"ozet": hashlib.sha256(veri).hexdigest(), "tur": icerik_turu}
+        return DosyaOkunusu.model_validate(
+            await self._model.cagir("dogrulama_dosya_okuma", girdi, gercek)
+        )
+
+    async def _ekranlari_oku(self, goruntuler: Sequence[bytes]) -> DosyaOkunusu:
+        async def gercek() -> dict[str, Any]:
+            return (await ekranlari_oku(goruntuler)).model_dump()
+
+        girdi = {"ozet": hashlib.sha256(b"".join(goruntuler)).hexdigest(), "tur": "ekran"}
         return DosyaOkunusu.model_validate(
             await self._model.cagir("dogrulama_dosya_okuma", girdi, gercek)
         )

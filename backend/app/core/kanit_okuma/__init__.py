@@ -1,9 +1,10 @@
 """Kanıt okuma: okuyucu zinciri (Strategy + Chain of Responsibility; plan § 5.1).
 
 `kaniti_oku(adres)` adresi tanıyan ilk platform okuyucusunu dener; okuyamazsa
-(`None`) sıradakine, en sonunda genel okuyucuya geçer. Her istek güvenli istek
-katmanından geçer. Yeni platform: `okuyucular/` altında bir sınıf ve aşağıdaki
-listeye bir satır.
+(`None`) sıradakine, en sonunda genel okuyucuya geçer. Sonuç engel ya da boş
+sayfaysa, ya da platform görsel ağırlıklıysa yedek okuyucu (tarayıcı) dener
+(`yedek.py`). Her istek güvenli istek katmanından geçer. Yeni platform:
+`okuyucular/` altında bir sınıf ve aşağıdaki listeye bir satır.
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from __future__ import annotations
 import httpx
 
 from app.core.config import get_settings
+from app.core.dis_servisler.yedek_okuyucu import KapaliYedekOkuyucu, YedekOkuyucu
 from app.core.kanit_okuma.belge import ErisimDurumu, KanitBelgesi
 from app.core.kanit_okuma.istek import adresi_hazirla
 from app.core.kanit_okuma.okuyucu import OkumaBaglami, Okuyucu
@@ -20,6 +22,7 @@ from app.core.kanit_okuma.okuyucular.gitlab import GitlabOkuyucu
 from app.core.kanit_okuma.okuyucular.google import GoogleOkuyucu
 from app.core.kanit_okuma.okuyucular.medium import MediumOkuyucu
 from app.core.kanit_okuma.okuyucular.oembed import OembedOkuyucu
+from app.core.kanit_okuma.yedek import yedekle
 
 PLATFORM_OKUYUCULARI: tuple[Okuyucu, ...] = (
     GithubOkuyucu(),
@@ -32,13 +35,26 @@ GENEL_OKUYUCU = GenelOkuyucu()
 
 
 async def kaniti_oku(
-    adres: str, *, transport: httpx.AsyncBaseTransport | None = None
+    adres: str,
+    *,
+    transport: httpx.AsyncBaseTransport | None = None,
+    yedek: YedekOkuyucu | None = None,
 ) -> KanitBelgesi:
+    """`yedek`: tarayıcıyla okuma (kurulum noktasından değerlendirme katmanı verir);
+    verilmezse zincir genel okuyucuda biter."""
     try:
         url = httpx.URL(adresi_hazirla(adres))
     except (httpx.InvalidURL, ValueError):
         return KanitBelgesi(url=adres, erisim=ErisimDurumu.GUVENSIZ)
-    baglam = OkumaBaglami(transport=transport, github_token=get_settings().github_token)
+    baglam = OkumaBaglami(
+        transport=transport,
+        github_token=get_settings().github_token,
+        yedek=yedek or KapaliYedekOkuyucu(),
+    )
+    return await yedekle(url, await _zincir(url, baglam), baglam.yedek)
+
+
+async def _zincir(url: httpx.URL, baglam: OkumaBaglami) -> KanitBelgesi:
     for okuyucu in PLATFORM_OKUYUCULARI:
         if okuyucu.uygun_mu(url):
             belge = await okuyucu.oku(url, baglam)

@@ -7,11 +7,12 @@ listesine bir satır (`__init__.py`); mevcut kod değişmez.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
 import httpx
 
+from app.core.dis_servisler.yedek_okuyucu import KapaliYedekOkuyucu, YedekOkuyucu
 from app.core.kanit_okuma.belge import HesapIzi, KanitBelgesi
 
 
@@ -20,6 +21,8 @@ class OkumaBaglami:
     # Testler ve değerlendirme seti kayıtlı yanıtları verir (kaset).
     transport: httpx.AsyncBaseTransport | None = None
     github_token: str = ""
+    # Yedek okuyucu (Playwright servisi, § 5.5)
+    yedek: YedekOkuyucu = field(default_factory=KapaliYedekOkuyucu)
 
 
 class Okuyucu(Protocol):

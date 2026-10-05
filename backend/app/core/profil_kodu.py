@@ -8,7 +8,8 @@ okunmaz: sorgu dizesindeki kod sayfada yankılanıp başkasının profilini
 yorumlar kod taşıyabilir).
 
 Yeni platform = `kurulum.profil_kodu_platformlari`'na bir satır (sayfa okunan
-platformlarda yalnızca adres şablonu).
+platformlarda yalnızca adres şablonu). Bot engeline takılan ya da boş görünen
+profil önce yedek okuyucuyla (tarayıcı) denenir; o da okuyamazsa GİRVAK'a gider.
 """
 
 from __future__ import annotations
@@ -16,18 +17,23 @@ from __future__ import annotations
 import re
 import secrets
 import string
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 from urllib.parse import quote
 
 import httpx
 
+from app.core.dis_servisler.yedek_okuyucu import (
+    EkranKurali,
+    KapaliYedekOkuyucu,
+    YedekOkuyucu,
+)
 from app.core.guvenli_istek import GuvensizAdres
 from app.core.kanit_okuma.belge import ErisimDurumu
 from app.core.kanit_okuma.erisim import erisim_durumu, hata_durumu
 from app.core.kanit_okuma.hesap_izi import Saglayici, adresteki_hesap
 from app.core.kanit_okuma.html_ozeti import html_ozeti
-from app.core.kanit_okuma.istek import getir
+from app.core.kanit_okuma.istek import Sayfa, getir
 
 KOD_ONEKI = "z360-"
 _KOD_ALFABESI = string.ascii_lowercase + string.digits
@@ -71,15 +77,33 @@ class ProfilKoduPlatformu(Protocol):
     ) -> ProfilOkumasi: ...
 
 
+_YEDEKLENEN = frozenset({ErisimDurumu.ENGELLENDI, ErisimDurumu.ICERIK_YOK})
+
+
 async def sayfayi_oku(
-    adres: str, transport: httpx.AsyncBaseTransport | None = None
+    adres: str,
+    transport: httpx.AsyncBaseTransport | None = None,
+    yedek: YedekOkuyucu | None = None,
 ) -> ProfilOkumasi:
     """Profil sayfasını okur. Kısa açıklamalı profil de okunmuş sayılır: kod
-    başlıkta ya da meta açıklamasında olabilir (içerik uzunluğu şartı yok)."""
+    başlıkta ya da meta açıklamasında olabilir (içerik uzunluğu şartı yok).
+    Engellenen ya da boş görünen sayfa `yedek` ile (tarayıcıda) yeniden okunur."""
     try:
-        sayfa = await getir(adres, transport=transport)
+        okuma = _okuma(await getir(adres, transport=transport))
     except (GuvensizAdres, httpx.HTTPError) as hata:
         return ProfilOkumasi(hata_durumu(hata))
+    if okuma.erisim not in _YEDEKLENEN or yedek is None:
+        return okuma
+    islenmis = await yedek.ac(adres, ekran=EkranKurali.HAYIR, en_az_metin=0)
+    if islenmis is None:
+        return okuma
+    yeni = _okuma(
+        Sayfa(islenmis.durum, islenmis.son_url, "text/html; charset=utf-8", islenmis.html.encode())
+    )
+    return yeni if yeni.erisim in (ErisimDurumu.ACIK, ErisimDurumu.ICERIK_YOK) else okuma
+
+
+def _okuma(sayfa: Sayfa) -> ProfilOkumasi:
     ozet = html_ozeti(sayfa.metin)
     metin = "\n".join([ozet.gorunen_baslik or "", *ozet.meta.values(), ozet.metin]).strip()
     erisim = erisim_durumu(
@@ -98,6 +122,7 @@ class SayfaPlatformu:
     platform: str
     # `{ad}` kullanıcı adıyla doldurulur.
     sablon: str
+    yedek: YedekOkuyucu = field(default_factory=KapaliYedekOkuyucu)
 
     def profil(self, adres: str) -> Profil | None:
         iz = adresteki_hesap(adres)
@@ -109,11 +134,14 @@ class SayfaPlatformu:
     async def oku(
         self, profil: Profil, transport: httpx.AsyncBaseTransport | None = None
     ) -> ProfilOkumasi:
-        return await sayfayi_oku(profil.adres, transport)
+        return await sayfayi_oku(profil.adres, transport, self.yedek)
 
 
 class KisiselSitePlatformu:
     platform = Saglayici.KISISEL_SITE.value
+
+    def __init__(self, yedek: YedekOkuyucu | None = None) -> None:
+        self.yedek = yedek or KapaliYedekOkuyucu()
 
     def profil(self, adres: str) -> Profil | None:
         iz = adresteki_hesap(adres)
@@ -126,7 +154,7 @@ class KisiselSitePlatformu:
     async def oku(
         self, profil: Profil, transport: httpx.AsyncBaseTransport | None = None
     ) -> ProfilOkumasi:
-        return await sayfayi_oku(profil.adres, transport)
+        return await sayfayi_oku(profil.adres, transport, self.yedek)
 
 
 class YoutubePlatformu:
@@ -136,8 +164,9 @@ class YoutubePlatformu:
     platform = Saglayici.YOUTUBE.value
     API = "https://www.googleapis.com/youtube/v3/channels"
 
-    def __init__(self, api_anahtari: str = "") -> None:
+    def __init__(self, api_anahtari: str = "", yedek: YedekOkuyucu | None = None) -> None:
         self._api_anahtari = api_anahtari
+        self.yedek = yedek or KapaliYedekOkuyucu()
 
     def profil(self, adres: str) -> Profil | None:
         iz = adresteki_hesap(adres)
@@ -156,7 +185,7 @@ class YoutubePlatformu:
         self, profil: Profil, transport: httpx.AsyncBaseTransport | None = None
     ) -> ProfilOkumasi:
         if not self._api_anahtari:
-            return await sayfayi_oku(profil.adres, transport)
+            return await sayfayi_oku(profil.adres, transport, self.yedek)
         kanal_no = profil.adres.startswith("https://www.youtube.com/channel/")
         sorgu = (
             f"id={quote(profil.kullanici_adi)}"
@@ -172,7 +201,7 @@ class YoutubePlatformu:
             ogeler = None
         if ogeler is None:
             # API arızası değerlendirmeyi düşürmez (İ9): sayfa yoluna düşülür.
-            return await sayfayi_oku(profil.adres, transport)
+            return await sayfayi_oku(profil.adres, transport, self.yedek)
         if not ogeler:
             return ProfilOkumasi(ErisimDurumu.BULUNAMADI)
         snippet = ogeler[0].get("snippet") or {}
@@ -183,12 +212,14 @@ class YoutubePlatformu:
         )
 
 
-def sayfa_platformlari() -> tuple[SayfaPlatformu, ...]:
-    return (
-        SayfaPlatformu(Saglayici.KAGGLE.value, "https://www.kaggle.com/{ad}"),
-        SayfaPlatformu(Saglayici.BEHANCE.value, "https://www.behance.net/{ad}"),
-        SayfaPlatformu(Saglayici.DRIBBBLE.value, "https://dribbble.com/{ad}"),
-        SayfaPlatformu(Saglayici.MEDIUM.value, "https://medium.com/@{ad}"),
-        SayfaPlatformu(Saglayici.VIMEO.value, "https://vimeo.com/{ad}"),
-        SayfaPlatformu(Saglayici.SOUNDCLOUD.value, "https://soundcloud.com/{ad}"),
+def sayfa_platformlari(yedek: YedekOkuyucu | None = None) -> tuple[SayfaPlatformu, ...]:
+    yedek = yedek or KapaliYedekOkuyucu()
+    sablonlar = (
+        (Saglayici.KAGGLE, "https://www.kaggle.com/{ad}"),
+        (Saglayici.BEHANCE, "https://www.behance.net/{ad}"),
+        (Saglayici.DRIBBBLE, "https://dribbble.com/{ad}"),
+        (Saglayici.MEDIUM, "https://medium.com/@{ad}"),
+        (Saglayici.VIMEO, "https://vimeo.com/{ad}"),
+        (Saglayici.SOUNDCLOUD, "https://soundcloud.com/{ad}"),
     )
+    return tuple(SayfaPlatformu(s.value, sablon, yedek) for s, sablon in sablonlar)

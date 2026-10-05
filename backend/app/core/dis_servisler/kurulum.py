@@ -29,6 +29,11 @@ from app.core.dis_servisler.oauth import (
     OrcidOAuth,
 )
 from app.core.dis_servisler.virus import ClamavTarayici, KapaliTarayici, VirusTarayici
+from app.core.dis_servisler.yedek_okuyucu import (
+    KapaliYedekOkuyucu,
+    PlaywrightYedekOkuyucu,
+    YedekOkuyucu,
+)
 from app.core.profil_kodu import (
     KisiselSitePlatformu,
     ProfilKoduPlatformu,
@@ -83,10 +88,11 @@ def oauth_saglayicilarini_sec(ayar: Settings) -> dict[str, OAuthSaglayici]:
 
 @lru_cache
 def profil_kodu_platformlari() -> dict[str, ProfilKoduPlatformu]:
+    yedek = yedek_okuyucu()
     platformlar: list[ProfilKoduPlatformu] = [
-        YoutubePlatformu(get_settings().youtube_api_anahtari),
-        *sayfa_platformlari(),
-        KisiselSitePlatformu(),
+        YoutubePlatformu(get_settings().youtube_api_anahtari, yedek),
+        *sayfa_platformlari(yedek),
+        KisiselSitePlatformu(yedek),
     ]
     return {p.platform: p for p in platformlar}
 
@@ -125,6 +131,18 @@ def virus_tarayici() -> VirusTarayici:
     return KapaliTarayici()
 
 
+@lru_cache
+def yedek_okuyucu() -> YedekOkuyucu:
+    ayar = get_settings()
+    if ayar.yedek_okuyucu == "playwright" and ayar.yedek_okuyucu_adresi:
+        return PlaywrightYedekOkuyucu(
+            ayar.yedek_okuyucu_adresi,
+            ayar.yedek_okuyucu_anahtari,
+            ayar.yedek_okuyucu_zaman_asimi_sn,
+        )
+    return KapaliYedekOkuyucu()
+
+
 def servis_kipleri() -> dict[str, str]:
     """Servis adı → o an kullanılan kip (sağlık ucu için)."""
     return {
@@ -132,4 +150,5 @@ def servis_kipleri() -> dict[str, str]:
         "oauth": ", ".join(sorted(oauth_saglayicilari())) or "kapali",
         "depo": depo().kip,
         "virus": virus_tarayici().kip,
+        "yedek_okuyucu": yedek_okuyucu().kip,
     }
