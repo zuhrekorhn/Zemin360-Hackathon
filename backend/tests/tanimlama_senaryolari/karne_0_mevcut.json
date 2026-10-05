@@ -1,0 +1,169 @@
+{
+  "tek_cumle": {
+    "tur": 3,
+    "hazir": true,
+    "turlar": [
+      [
+        "Dijitalleşmek istiyoruz.",
+        "Dijitalleşme ihtiyacınızı biraz daha somutlaştırabilir miyiz? Şu an en çok hangi iş sürecinizde yavaşlık veya aksama yaşıyorsunuz?"
+      ],
+      [
+        "Siparişleri hâlâ telefonla alıp kâğıda yazıyoruz; günde 80 sipariş geliyor ve karışıyor.",
+        "Sipariş sürecini dijitalleştirdiğimizde sistemin başarılı sayılması için bu karışıklıkların oranı kaça düşmeli ya da günlük sipariş alma süreniz ne kadar kısalmalı?"
+      ],
+      [
+        "Yanlış giden sipariş oranı ayda %10 civarı, 3 ay içinde %2'ye inmesini istiyoruz.",
+        null
+      ]
+    ],
+    "taslak": {
+      "problem_tanimi": "Günde gelen yaklaşık 80 siparişin telefonla alınıp kâğıda yazılması nedeniyle siparişlerde karışıklık ve aksama yaşanıyor.",
+      "basari_kriteri": "Yanlış giden sipariş oranının 3 ay içinde %10 seviyesinden %2 seviyesine düşmesi.",
+      "kisitlar": null,
+      "sehir_tercihi": null,
+      "calisma_modeli": null,
+      "musaitlik_tercihi": null
+    },
+    "kontroller": {
+      "ilk cevapla kapanmadı": true,
+      "problem dolu": true,
+      "kriter dolu": true,
+      "taslak hazır": true,
+      "yer tutucu yok": true
+    }
+  },
+  "rol_tarifi": {
+    "tur": 3,
+    "hazir": true,
+    "turlar": [
+      [
+        "3 yıl deneyimli bir full stack developer arıyoruz.",
+        "Bu kişi ekibe katıldığında ilk olarak hangi sorunu çözecek? Şu an o tarafta süreç nasıl yürüyor ve nerede tıkanıyor?"
+      ],
+      [
+        "Müşteri paneli yok; müşteriler sipariş durumunu öğrenmek için çağrı merkezini arıyor, günde 200 çağrı geliyor.",
+        "Müşteri paneli devreye girdikten sonra çağrı merkezine gelen günlük 200 çağrının kaça düşmesini ya da yüzde kaç azalmasını hedefliyorsunuz?"
+      ],
+      [
+        "6 ay içinde bu çağrıların yarısı panelden çözülsün.",
+        null
+      ]
+    ],
+    "taslak": {
+      "problem_tanimi": "Müşteri paneli bulunmadığı için müşterilerin sipariş durumunu öğrenmek amacıyla çağrı merkezini araması ve günde 200 çağrılık yoğunluk oluşması",
+      "basari_kriteri": "6 ay içinde sipariş durumu sorgulama çağrılarının %50 azalması ve panel üzerinden çözülmesi",
+      "kisitlar": "3 yıl deneyimli full stack geliştirici bekleniyor",
+      "sehir_tercihi": null,
+      "calisma_modeli": null,
+      "musaitlik_tercihi": null
+    },
+    "kontroller": {
+      "rol tarifi problem sayılmadı (1. tur)": true,
+      "son problemde rol yok": true,
+      "problem dolu": true,
+      "kriter dolu": true,
+      "yer tutucu yok": true
+    }
+  },
+  "olculemez_kriter": {
+    "tur": 3,
+    "hazir": true,
+    "turlar": [
+      [
+        "Müşteri şikâyetleri çok, kargolar geç çıkıyor.",
+        "Kargoların geç çıkması sorununu çözdüğümüzde, teslimat süresini veya günlük geciken kargo oranını hangi seviyeye düşürmeyi hedefliyorsunuz?"
+      ],
+      [
+        "Müşteri memnuniyeti artsın.",
+        "Müşteri memnuniyetindeki artışı nasıl ölçeceğiz, örneğin kargoların çıkış süresini kaç güne indirmeyi ya da geciken kargo oranını yüzde kaçın altına düşürmeyi hedefliyorsunuz?"
+      ],
+      [
+        "Bunu ölçmüyoruz, şu an bir rakam veremeyiz.",
+        null
+      ]
+    ],
+    "taslak": {
+      "problem_tanimi": "Müşteri şikâyetlerinin yüksek olması ve kargoların geç çıkması.",
+      "basari_kriteri": "belirtilmedi",
+      "kisitlar": null,
+      "sehir_tercihi": null,
+      "calisma_modeli": null,
+      "musaitlik_tercihi": null
+    },
+    "kontroller": {
+      "ölçülemez cevapta kapanmadı": true,
+      "problem dolu": true,
+      "hedef ya da 'belirlenecek' işareti": false,
+      "taslak hazır": true,
+      "yer tutucu yok": false
+    }
+  },
+  "sayisiz_olculebilir": {
+    "tur": 2,
+    "hazir": true,
+    "turlar": [
+      [
+        "Depo sayımını elle yapıyoruz, her seferinde bir hafta sürüyor.",
+        "Bu çalışmanın başarılı sayılması için bir haftalık sayım süresini kaça indirmeyi hedefliyorsunuz?"
+      ],
+      [
+        "Sayım süresi yarıya insin.",
+        null
+      ]
+    ],
+    "taslak": {
+      "problem_tanimi": "Depo sayımının elle yapılması nedeniyle sürecin uzun sürmesi",
+      "basari_kriteri": "Sayım süresinin 3.5 güne (yarı yarıya) indirilmesi",
+      "kisitlar": null,
+      "sehir_tercihi": null,
+      "calisma_modeli": null,
+      "musaitlik_tercihi": null
+    },
+    "kontroller": {
+      "kriter dolu": true,
+      "hedef değer çıkarıldı": false,
+      "en çok 3 turda kapandı": true,
+      "yer tutucu yok": true
+    }
+  },
+  "bilmiyorum": {
+    "tur": 5,
+    "hazir": true,
+    "turlar": [
+      [
+        "Bilmiyorum.",
+        "Mevcut durumda işleyişinizde aksayan, zaman alan veya sizi yoran bir süreci düşünebilirsiniz. Örneğin, müşteri taleplerine yetişmekte zorlanıyor veya raporları hazırlarken çok zaman kaybediyor olabilirsiniz. Şu an firmanızda en çok hangi işte tıkanıklık yaşıyorsunuz?"
+      ],
+      [
+        "Bilmiyorum.",
+        "Örneğin, gelen e-postalara geç dönülmesi veya sipariş takibinin elle yapılması yüzünden zaman kaybedilmesi somut bir sıkıntıdır. Firmanızda şu an operasyonu yavaşlatan veya çözmek istediğiniz benzer bir süreç var mı?"
+      ],
+      [
+        "Bilmiyorum.",
+        "Firmanızda ekiplerin gün içinde en çok vakit harcadığı veya şikayet ettiği iş hangisidir?"
+      ],
+      [
+        "Bilmiyorum.",
+        "Müşterilerinizden veya çalışanlarınızdan son zamanlarda hiç şikayet ya da geri bildirim aldınız mı? Bu geri bildirimler genelde hangi konuyla ilgili oluyor?"
+      ],
+      [
+        "Bilmiyorum.",
+        null
+      ]
+    ],
+    "taslak": {
+      "problem_tanimi": "belirtilmedi",
+      "basari_kriteri": "belirtilmedi",
+      "kisitlar": null,
+      "sehir_tercihi": null,
+      "calisma_modeli": null,
+      "musaitlik_tercihi": null
+    },
+    "kontroller": {
+      "sohbet sonlandı (döngü yok)": true,
+      "problem uydurulmadı": true,
+      "kriter uydurulmadı": true,
+      "yer tutucu yok": false
+    }
+  }
+}
