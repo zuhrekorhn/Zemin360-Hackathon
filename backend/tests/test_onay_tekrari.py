@@ -363,6 +363,32 @@ def test_ihtiyac_metni_kirpilir_ve_uzunlugu_sinirli(tanimlama, monkeypatch):
     assert yanit.json()["problem_tanimi"] == "Biletler elle ayrılıyor"
 
 
+def test_ihtiyac_basari_olcutu_karta_yazilir(tanimlama, monkeypatch):
+    embedding_basarili(monkeypatch)
+
+    yanit = TestClient(app).post(
+        "/tanimlama/kart/onayla",
+        json={
+            "oturum_id": str(uuid.uuid4()),
+            "duzeltilmis_taslak": {
+                "problem_tanimi": "Şikâyet çok",
+                "basari_kriteri": "Memnuniyet artsın",
+                "basari_olcutu": {"metrik": " memnuniyet ", "olcum_bilinmiyor": True},
+            },
+        },
+    )
+
+    assert yanit.status_code == 201
+    kart = tanimlama.oturum.eklenenler[0]
+    assert kart.basari_olcutu == {
+        "metrik": "memnuniyet",
+        "mevcut_deger": None,
+        "hedef_deger": None,
+        "sure": None,
+        "olcum_bilinmiyor": True,
+    }
+
+
 # --- Tüm çıktılar silinirse "potansiyel" ------------------------------------
 # Taslak ekranında kullanıcı çıktıların hepsini "Çıkar" diyebiliyor. Arayüz o
 # anda "potansiyel olarak kaydedilecek" diyordu ama kart sohbetteki eski

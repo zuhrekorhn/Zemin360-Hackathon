@@ -8,6 +8,7 @@ import asyncio
 
 from app.agents import sohbet_motoru as motor
 from app.agents.tanimlama import (
+    HEDEF_SORUSU,
     MAKS_ZORUNLU_TURU,
     TANIMLAMA,
     TANIMLAMA_ORTAK,
@@ -24,6 +25,7 @@ def dolu_taslak(**degisiklikler) -> dict:
     taslak = {
         "problem_tanimi": "Destek ekibi gelen talepleri elle sınıflandırıyor",
         "basari_kriteri": "Tier-1 biletlerin %50'si insan müdahalesi olmadan çözülsün",
+        "basari_olcutu": {"metrik": "insansız çözülen tier-1 bilet", "hedef_deger": "%50"},
         "kisitlar": None,
         "sehir_tercihi": None,
         "musaitlik_tercihi": None,
@@ -40,6 +42,7 @@ def test_bos_taslak_ihtiyac_alanlarini_icerir():
         "sehir_tercihi",
         "calisma_modeli",
         "musaitlik_tercihi",
+        "basari_olcutu",
     }
 
 
@@ -156,3 +159,45 @@ def test_zorunlu_konulu_sokratik_soru_kullanilir():
         }
     )
     assert sonuc["sonraki_soru"] == soru
+
+
+# --- Başarı ölçütü (model çıkarır, kural karar verir) ---------------------------------
+
+
+def test_hedef_yoksa_bir_kez_sorulur_sonra_kapanir():
+    taslak = dolu_taslak(basari_kriteri="Müşteri memnuniyeti artsın", basari_olcutu={})
+    soru = karar({"taslak": taslak, "takip_turu": 1})
+    assert soru["sonraki_soru"] == HEDEF_SORUSU
+    assert soru["sorulan_ekler"] == ["basari_hedefi"]
+
+    # Firma yine değer vermedi: ısrar yok, kart "belirlenecek" olarak kapanır.
+    sonuc = karar({"taslak": taslak, "takip_turu": 1, **soru})
+    assert sonuc["taslak_hazir"] is True
+
+
+def test_olcmedigini_soyleyen_firmaya_hedef_sorulmaz():
+    taslak = dolu_taslak(
+        basari_kriteri="Müşteri memnuniyeti artsın", basari_olcutu={"olcum_bilinmiyor": True}
+    )
+    assert karar({"taslak": taslak, "takip_turu": 1})["taslak_hazir"] is True
+
+
+def test_basari_kriteri_yoksa_hedef_degil_kriter_sorulur():
+    taslak = dolu_taslak(basari_kriteri=None, basari_olcutu=None)
+    assert karar({"taslak": taslak, "takip_turu": 0})["sonraki_soru"] != HEDEF_SORUSU
+
+
+def test_olcut_alan_alan_birlesir_bos_gelen_silmez():
+    from app.agents.tanimlama import BasariOlcutuCikarimi
+
+    olcut = BasariOlcutuCikarimi(metrik="sayım süresi", mevcut_deger="1 hafta")
+    ilk = motor.birlestir(TANIMLAMA, bos_taslak(), IhtiyacCikarimi(basari_olcutu=olcut))
+    sonra = motor.birlestir(
+        TANIMLAMA, ilk, IhtiyacCikarimi(basari_olcutu=BasariOlcutuCikarimi(hedef_deger="yarısı"))
+    )
+    assert sonra["basari_olcutu"] == {
+        "metrik": "sayım süresi",
+        "mevcut_deger": "1 hafta",
+        "hedef_deger": "yarısı",
+    }
+    assert motor.birlestir(TANIMLAMA, sonra, IhtiyacCikarimi()) == sonra

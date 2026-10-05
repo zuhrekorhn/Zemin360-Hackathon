@@ -161,6 +161,7 @@ async def kart_onayla(
         kurum_id=kurum_id,
         problem_tanimi=taslak.problem_tanimi,
         basari_kriteri=taslak.basari_kriteri,
+        basari_olcutu=taslak.basari_olcutu.model_dump() if taslak.basari_olcutu else None,
         kisitlar=taslak.kisitlar,
         sehir_tercihi=sehir_kanonik(taslak.sehir_tercihi),
         # Çalışma modeli ve müsaitlik genç ilanına özel; ortak ilanında yazılmaz.

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import DateTime, ForeignKey, String, Text, func, text
-from sqlalchemy.dialects.postgresql import ARRAY, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import EMBEDDING_DIM, Base, UUIDPrimaryKeyMixin
@@ -24,6 +24,9 @@ class IhtiyacKarti(UUIDPrimaryKeyMixin, Base):
     )
     problem_tanimi: Mapped[str] = mapped_column(Text)
     basari_kriteri: Mapped[str | None] = mapped_column(Text)
+    # Başarı kriterinin parçaları: metrik, mevcut_deger, hedef_deger, sure,
+    # olcum_bilinmiyor (app/core/basari_olcutu.py). Bu alandan önceki kartta NULL.
+    basari_olcutu: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     kisitlar: Mapped[str | None] = mapped_column(Text)
     # Nullable: Eşleştirme'nin sert filtresi SQL'den çalışsın diye ayrı alanlar (data-schema.md)
     sehir_tercihi: Mapped[str | None] = mapped_column(String)

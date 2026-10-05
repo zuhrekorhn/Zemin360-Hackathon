@@ -22,6 +22,7 @@ from app.api.sahiplik import (
     ihtiyac_kartinin_sahibi_mi,
 )
 from app.api.yetenek_kartlari import EMBEDDING_HATA_MESAJI
+from app.core.basari_olcutu import olcum_belirlenecek
 from app.core.embeddings import EmbeddingHatasi, embedding_uret, ihtiyac_temsil_metni
 from app.core.firma_dogrulama import DOGRULANDI
 from app.db.session import get_session
@@ -51,6 +52,8 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> IhtiyacKartiY
         id=kart.id,
         problem_tanimi=kart.problem_tanimi,
         basari_kriteri=kart.basari_kriteri,
+        basari_olcutu=kart.basari_olcutu,
+        olcum_belirlenecek=olcum_belirlenecek(kart.basari_olcutu),
         kisitlar=kart.kisitlar,
         sehir_tercihi=kart.sehir_tercihi,
         calisma_modeli=kart.calisma_modeli,

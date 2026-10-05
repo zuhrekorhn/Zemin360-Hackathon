@@ -654,9 +654,19 @@ export function kartOnayla(
 /* --- Tanımlama Ajanı (docs/api-contracts.md § Tanımlama) ------------------
    Tipler backend'deki app/schemas/tanimlama.py ile birebir eşleşir. */
 
+/** Başarı kriterinin parçaları (backend app/core/basari_olcutu.py). */
+export type BasariOlcutu = {
+  metrik?: string | null;
+  mevcut_deger?: string | null;
+  hedef_deger?: string | null;
+  sure?: string | null;
+  olcum_bilinmiyor?: boolean;
+};
+
 export type IhtiyacTaslagi = {
   problem_tanimi: string | null;
   basari_kriteri: string | null;
+  basari_olcutu?: BasariOlcutu | null;
   kisitlar: string | null;
   sehir_tercihi: string | null;
   /** Tek seçim: is_yerinde | hibrit | uzaktan. */
@@ -697,6 +707,9 @@ export type IhtiyacKartiYaniti = {
   id: string;
   problem_tanimi: string;
   basari_kriteri: string | null;
+  basari_olcutu: BasariOlcutu | null;
+  /** Hedef değeri olmayan ölçüt: "Ölçüm yöntemi belirlenecek". */
+  olcum_belirlenecek: boolean;
   kisitlar: string | null;
   sehir_tercihi: string | null;
   calisma_modeli: string | null;

@@ -268,6 +268,12 @@ function TaslakBolumu({
   const [problem, setProblem] = useState(taslak.problem_tanimi ?? "");
   const [kriter, setKriter] = useState(taslak.basari_kriteri ?? "");
   const [kisitlar, setKisitlar] = useState(taslak.kisitlar ?? "");
+  // Başarı ölçütü: sohbette çıkarılan parçalar düzeltilebilir. Hedef boşsa
+  // kart "ölçüm yöntemi belirlenecek" olarak kaydedilir.
+  const olcut = taslak.basari_olcutu ?? {};
+  const [mevcutDeger, setMevcutDeger] = useState(olcut.mevcut_deger ?? "");
+  const [hedefDeger, setHedefDeger] = useState(olcut.hedef_deger ?? "");
+  const [sure, setSure] = useState(olcut.sure ?? "");
   // Ortak ilanı (docs/plans/firma-akisi.md § 5): aranan firma türleri ve iş
   // birliği türü; çalışma modeli ve müsaitlik sorulmaz.
   const [firmaTurleri, setFirmaTurleri] = useState<string[]>(
@@ -292,6 +298,12 @@ function TaslakBolumu({
             ...taslak,
             problem_tanimi: problem.trim() || null,
             basari_kriteri: kriter.trim() || null,
+            basari_olcutu: {
+              ...olcut,
+              mevcut_deger: mevcutDeger.trim() || null,
+              hedef_deger: hedefDeger.trim() || null,
+              sure: sure.trim() || null,
+            },
             kisitlar: kisitlar.trim() || null,
             sehir_tercihi: aranilanSehir || null,
             calisma_modeli: ortak ? null : secimDegeri(calismaModeli),
@@ -329,6 +341,37 @@ function TaslakBolumu({
           enUzun={KRITER_EN_UZUN}
           sohbetteBos={!taslak.basari_kriteri}
         />
+        <div className="flex flex-col gap-3">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <OlcutAlani
+              id="mevcut-deger"
+              etiket="Bugünkü durum"
+              deger={mevcutDeger}
+              setDeger={setMevcutDeger}
+            />
+            <OlcutAlani
+              id="hedef-deger"
+              etiket="Hedef"
+              deger={hedefDeger}
+              setDeger={setHedefDeger}
+            />
+            <OlcutAlani
+              id="sure"
+              etiket="Süre"
+              deger={sure}
+              setDeger={setSure}
+            />
+          </div>
+          {hedefDeger.trim() ? null : (
+            <div className="flex flex-col items-start gap-1.5">
+              <OlcumBelirlenecekRozeti />
+              <p className="text-xs text-pretty text-muted-foreground">
+                Hedefi biliyorsanız yukarıya yazın; bilmiyorsanız ihtiyacınız
+                bu işaretle kaydedilir.
+              </p>
+            </div>
+          )}
+        </div>
         <MetinAlani
           id="kisitlar"
           etiket="Kısıtlar"
@@ -539,6 +582,40 @@ function secimDegeri(deger: string): string | null {
 // Backend'deki sınırlarla aynı (app/schemas/tanimlama.py).
 const PROBLEM_EN_UZUN = 1000;
 const KRITER_EN_UZUN = 500;
+const OLCUT_EN_UZUN = 200;
+
+/** Başarı ölçütünün tek satırlık parçası (isteğe bağlı). */
+function OlcutAlani({
+  id,
+  etiket,
+  deger,
+  setDeger,
+}: {
+  id: string;
+  etiket: string;
+  deger: string;
+  setDeger: (deger: string) => void;
+}) {
+  return (
+    <FormAlani etiket={etiket} htmlFor={id} istegeBagli>
+      <Input
+        id={id}
+        maxLength={OLCUT_EN_UZUN}
+        value={deger}
+        onChange={(olay) => setDeger(olay.target.value)}
+      />
+    </FormAlani>
+  );
+}
+
+/** Hedef değeri olmayan başarı kriteri. */
+function OlcumBelirlenecekRozeti() {
+  return (
+    <span className="rounded-sm border border-kenar px-2.5 py-1 text-xs text-muted-foreground">
+      Ölçüm yöntemi belirlenecek
+    </span>
+  );
+}
 
 /** Taslağın düzenlenebilir metin alanı; sohbette çıkmadıysa bunu söyler. */
 function MetinAlani({
@@ -586,11 +663,19 @@ function TaslakKarti({
   taslak,
   ortak = false,
   kurumAdi,
+  olcumBelirlenecek = false,
 }: {
   taslak: IhtiyacTaslagi;
   ortak?: boolean;
   kurumAdi?: string;
+  olcumBelirlenecek?: boolean;
 }) {
+  const olcut = taslak.basari_olcutu;
+  const olcutParcalari = [
+    olcut?.mevcut_deger ? `Bugün: ${olcut.mevcut_deger}` : null,
+    olcut?.hedef_deger ? `Hedef: ${olcut.hedef_deger}` : null,
+    olcut?.sure ? `Süre: ${olcut.sure}` : null,
+  ].filter(Boolean);
   return (
     <article className="rounded-sm border border-kenar bg-card">
       {kurumAdi ? (
@@ -612,6 +697,15 @@ function TaslakKarti({
         <p className="text-sm text-pretty break-words">
           {taslak.basari_kriteri || "—"}
         </p>
+        {olcumBelirlenecek ? (
+          <div className="mt-2">
+            <OlcumBelirlenecekRozeti />
+          </div>
+        ) : olcutParcalari.length ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {olcutParcalari.join(" · ")}
+          </p>
+        ) : null}
       </div>
 
       {taslak.kisitlar ? (
@@ -708,6 +802,7 @@ function KayitliKart({
         taslak={kart}
         ortak={kart.aranan === "firma"}
         kurumAdi={kart.kurum.ad}
+        olcumBelirlenecek={kart.olcum_belirlenecek}
       />
 
       <p className="font-mono text-xs text-muted-foreground">

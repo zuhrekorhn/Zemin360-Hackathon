@@ -29,6 +29,28 @@ def _kirp(deger: Any) -> Any:
 
 KirpilmisMetin = Annotated[str | None, BeforeValidator(_kirp)]
 
+# Başarı ölçütünün her parçası kısa bir ifade ("ayda %10", "3 ay içinde")
+OLCUT_EN_UZUN = 200
+
+
+class BasariOlcutu(BaseModel):
+    """Başarı kriterinin parçaları (app/core/basari_olcutu.py)."""
+
+    metrik: str | None = None
+    mevcut_deger: str | None = None
+    hedef_deger: str | None = None
+    sure: str | None = None
+    olcum_bilinmiyor: bool = False
+
+
+class BasariOlcutuGirdisi(BasariOlcutu):
+    """Taslak ekranında düzeltilen ölçüt: kırpılır, uzunluk sınırlı."""
+
+    metrik: KirpilmisMetin = Field(default=None, max_length=OLCUT_EN_UZUN)
+    mevcut_deger: KirpilmisMetin = Field(default=None, max_length=OLCUT_EN_UZUN)
+    hedef_deger: KirpilmisMetin = Field(default=None, max_length=OLCUT_EN_UZUN)
+    sure: KirpilmisMetin = Field(default=None, max_length=OLCUT_EN_UZUN)
+
 
 class IhtiyacTaslagi(BaseModel):
     """Kuruma onay için gösterilen taslak — henüz veritabanında değil.
@@ -40,6 +62,8 @@ class IhtiyacTaslagi(BaseModel):
 
     problem_tanimi: str | None = None
     basari_kriteri: str | None = None
+    # Sohbette çıkarılan parçalar; bu alandan önce açılmış sohbette yok.
+    basari_olcutu: BasariOlcutu | None = None
     kisitlar: str | None = None
     # Eşleştirme'nin sert filtreleri bu alanlardan çalışıyor (data-schema.md)
     sehir_tercihi: str | None = None
@@ -63,6 +87,7 @@ class IhtiyacTaslagiGirdisi(IhtiyacTaslagi):
     # oluşan metin boş sayılır (onay zorunlu alanı reddeder), uzunluk sınırlı.
     problem_tanimi: KirpilmisMetin = Field(default=None, max_length=PROBLEM_EN_UZUN)
     basari_kriteri: KirpilmisMetin = Field(default=None, max_length=KRITER_EN_UZUN)
+    basari_olcutu: BasariOlcutuGirdisi | None = None
     kisitlar: KirpilmisMetin = Field(default=None, max_length=KRITER_EN_UZUN)
     musaitlik_tercihi: KatiMusaitlik = None
     aranan_firma_turleri: list[FirmaTuru] = []
@@ -131,6 +156,9 @@ class IhtiyacKartiYaniti(BaseModel):
     id: uuid.UUID
     problem_tanimi: str
     basari_kriteri: str | None
+    basari_olcutu: BasariOlcutu | None = None
+    # Hedef değeri olmayan ölçüt: kartta "ölçüm yöntemi belirlenecek"
+    olcum_belirlenecek: bool = False
     kisitlar: str | None
     sehir_tercihi: str | None
     calisma_modeli: str | None

@@ -160,6 +160,9 @@ class AjanTanimi:
     skaler_alanlar: tuple[str, ...] = ()
     liste_alanlari: tuple[str, ...] = ()
     nesne_listeleri: tuple[NesneListesi, ...] = ()
+    # Tek nesneden oluşan alanlar (Tanımlama'da başarı ölçütü): alan alan
+    # birleşir, dolu yeni değer eskisinin yerine geçer, boş gelen silmez.
+    nesne_alanlari: tuple[str, ...] = ()
     zorunlu_alanlar: tuple[str, ...] = ()
     # Zorunlu alan eksikken kaç tur soru sorulabilir (ajana göre değişir).
     maks_zorunlu_turu: int = MAKS_ZORUNLU_TURU
@@ -207,6 +210,8 @@ def bos_taslak(tanim: AjanTanimi) -> dict[str, Any]:
         taslak[alan] = []
     for liste in tanim.nesne_listeleri:
         taslak[liste.alan] = []
+    for alan in tanim.nesne_alanlari:
+        taslak[alan] = None
     return taslak
 
 
@@ -312,6 +317,13 @@ def birlestir(tanim: AjanTanimi, taslak: dict[str, Any], cikarim: BaseModel) -> 
         yeni[liste.alan] = _nesneleri_birlestir(
             yeni.get(liste.alan) or [], getattr(cikarim, liste.alan, []) or [], liste
         )
+
+    for alan in tanim.nesne_alanlari:
+        gelen = getattr(cikarim, alan, None)
+        if gelen is not None:
+            nesne = dict(yeni.get(alan) or {})
+            _kaydi_guncelle(nesne, gelen.model_dump(), korunan="")
+            yeni[alan] = nesne
 
     return yeni
 

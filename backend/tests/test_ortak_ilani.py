@@ -14,6 +14,7 @@ from types import SimpleNamespace
 from app.agents import sohbet_motoru as motor
 from app.agents.tanimlama import (
     ACILIS_SORUSU_ORTAK,
+    HEDEF_SORUSU,
     TANIMLAMA_ORTAK,
     YEDEK_SORULAR_ORTAK,
     bos_ortak_taslak,
@@ -56,13 +57,14 @@ def test_ortak_soru_seti():
         "isbirligi_turu",
         "sehir_tercihi",
         "aranan_firma_turleri",
+        "basari_olcutu",
     }
     durum = {"taslak": bos_ortak_taslak(), "takip_turu": 0}
     assert (
         asyncio.run(motor.karar(TANIMLAMA_ORTAK, durum))["sonraki_soru"]
         == (YEDEK_SORULAR_ORTAK["problem_tanimi"])
     )
-    for soru in [ACILIS_SORUSU_ORTAK, *YEDEK_SORULAR_ORTAK.values()]:
+    for soru in [ACILIS_SORUSU_ORTAK, HEDEF_SORUSU, *YEDEK_SORULAR_ORTAK.values()]:
         kelimeler = set(soru.lower().replace("?", " ").replace(":", " ").split())
         assert not {"sen", "senin", "anlat", "yaz"} & kelimeler, soru
 

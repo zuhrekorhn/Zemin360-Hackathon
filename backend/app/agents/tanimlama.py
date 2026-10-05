@@ -19,10 +19,11 @@ from typing import Any, Literal
 
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from app.agents import sohbet_motoru as motor
 from app.agents.sohbet_motoru import SohbetDurumu
+from app.core.basari_olcutu import hedef_sorulmali
 from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.core.musaitlik import Musaitlik
 
@@ -39,6 +40,49 @@ ZORUNLU_ALANLAR = ("problem_tanimi", "basari_kriteri")
 # Tavana gelinirse taslak yine kapanır ama boş alana yer tutucu YAZILMAZ: alan
 # taslak ekranında boş ve zorunlu görünür, onay boş alanı kabul etmez.
 MAKS_ZORUNLU_TURU = 4
+
+# İki kapının ortak kuralı: başarı kriterinin parçaları. "Ölçülebilir mi"
+# kararını kod verir (app/core/basari_olcutu.py): hedef değer yoksa bir kez
+# sorulur, firma bilmediğini söylerse kart "ölçüm yöntemi belirlenecek" olur.
+OLCUT_KURALI = """
+ÖLÇÜT (basari_olcutu): başarı kriterini parçalarına ayır; yalnızca firmanın
+söylediğini yaz, hesap yapma, tahmin etme.
+- metrik: neyin ölçüldüğü ("yanlış giden sipariş oranı", "sayım süresi").
+- mevcut_deger: bugünkü değer, söylendiyse ("ayda %10", "bir hafta").
+- hedef_deger: ulaşılmak istenen değer, firmanın ifadesiyle ("%2", "yarısı",
+  "iki katı"). Sayı içermese de oransal ya da karşılaştırmalı bir hedefse yaz.
+  "Artsın", "iyileşsin" gibi yönü olan ama değeri olmayan ifade hedef DEĞİLDİR.
+  Hedefle ilgisi olmayan sayılar (yıl, çalışan sayısı) hedef değildir.
+- sure: hedefe ne kadar sürede ulaşılacağı, söylendiyse ("3 ay içinde").
+- olcum_bilinmiyor: firma bunu ölçmediğini, rakam veremeyeceğini ya da
+  bilmediğini açıkça söylediyse true.
+"""
+
+# Hedef yoksa sorulan ek soru; "bilmiyoruz" demek de geçerli bir cevap.
+HEDEF_SORUSU = (
+    "Bunu bir değerle ifade edebilir misiniz: bugün durum ne, hedef ne ve ne kadar "
+    "sürede? Henüz ölçmüyorsanız bunu söylemeniz de yeterli."
+)
+
+
+class BasariOlcutuCikarimi(BaseModel):
+    """Başarı kriterinin parçaları; boş gelen alan önceki değeri silmez."""
+
+    metrik: str | None = None
+    mevcut_deger: str | None = None
+    hedef_deger: str | None = Field(
+        default=None, description="Değeri olan hedef; 'artsın' gibi yön hedef değildir"
+    )
+    sure: str | None = None
+    olcum_bilinmiyor: bool = Field(
+        default=False, description="Firma ölçmediğini ya da bilmediğini açıkça söyledi"
+    )
+
+
+def hedef_eksigi(taslak: dict[str, Any]) -> list[tuple[str, str]]:
+    """Zorunlulardan sonra, hedef değer yoksa bir kez sorulur (kural kodda)."""
+    return [("basari_hedefi", HEDEF_SORUSU)] if hedef_sorulmali(taslak) else []
+
 
 ACIKLAMA_YEDEGI = (
     "Kesin bir cevap gerekmiyor; aklınıza gelen ilk örneği kendi cümlelerinizle yazmanız yeterli."
@@ -71,9 +115,10 @@ GİBİ problem_tanimi'na YAZMA — bu bir iş ilanı, problem değil. Bu durumda
 Alanlar:
 - problem_tanimi: kurumun yaşadığı somut problem, kendi ifadesiyle ama toparlanmış.
   Bir rol/pozisyon tarifi buraya yazılmaz (yukarıdaki kurala bak).
-- basari_kriteri: "bu iş başarılı oldu" demelerini sağlayacak ÖLÇÜLEBİLİR kriter.
-  Sayı, oran veya süre içermeli. Kurum ölçülebilir bir şey söylemediyse boş bırak
-  ve takip sorusunda bunu sor.
+- basari_kriteri: "bu iş başarılı oldu" demelerini sağlayacak sonuç, toparlanmış.
+  Ölçülebilir olması iyi, ama firma ölçülebilir bir şey söylemediyse de söylediği
+  sonucu yaz ("müşteri memnuniyetinin artması"); hiç sonuç söylemediyse boş bırak.
+- basari_olcutu: başarı kriterinin parçaları (aşağıdaki ÖLÇÜT kuralı).
 - kisitlar: bütçe, süre, mevzuat, ekip gibi serbest metin kısıtlar.
 - sehir_tercihi: işin yapılacağı şehir, yalnızca bir şehir şartı varsa (yoksa boş).
 - calisma_modeli: işin nerede yapılacağı — "is_yerinde", "hibrit" veya
@@ -87,7 +132,7 @@ takip_sorusu ve takip_konusu: problem_tanimi ya da basari_kriteri eksikse
 takip sorusunda ÖNCE bunlardan birini sor ve takip_konusu'na o alanın adını
 yaz. Sorunun konusu eksik bir zorunlu alan değilse sistem senin soruna yer vermez.
 """
-SISTEM_TALIMATI += KULLANICI_DILI_KURALLARI
+SISTEM_TALIMATI += OLCUT_KURALI + KULLANICI_DILI_KURALLARI
 
 YEDEK_SORULAR = {
     "problem_tanimi": (
@@ -110,8 +155,9 @@ class IhtiyacCikarimi(motor.SohbetCikarimi):
     problem_tanimi: str | None = None
     basari_kriteri: str | None = Field(
         default=None,
-        description="Ölçülebilir olmalı (sayı/oran/süre). Değilse boş bırak.",
+        description="Firmanın 'oldu' diyeceği sonuç; hiç söylenmediyse boş bırak.",
     )
+    basari_olcutu: BasariOlcutuCikarimi | None = None
     kisitlar: str | None = Field(
         default=None, description="Bütçe, süre, mevzuat, ekip gibi kısıtlar"
     )
@@ -168,8 +214,11 @@ TANIMLAMA = motor.AjanTanimi(
         "calisma_modeli",
         "musaitlik_tercihi",
     ),
+    nesne_alanlari=("basari_olcutu",),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
     maks_zorunlu_turu=MAKS_ZORUNLU_TURU,
+    ek_eksikler=hedef_eksigi,
+    maks_ek_turu=1,
     yedek_sorular=YEDEK_SORULAR,
 )
 
@@ -216,8 +265,10 @@ Alanlar:
 - problem_tanimi: iş birliğiyle çözülecek somut problem, toparlanmış. "Bir yapay
   zekâ girişimi arıyoruz" gibi bir ortak tarifi problem değildir: bu durumda
   problem_tanimi'nı boş bırak ve ortağın hangi sorunu çözeceğini sor.
-- basari_kriteri: iş birliği başarılı oldu demelerini sağlayacak ÖLÇÜLEBİLİR kriter
-  (sayı, oran ya da süre). Söylenmediyse boş bırak.
+- basari_kriteri: iş birliği başarılı oldu demelerini sağlayacak sonuç, toparlanmış.
+  Ölçülebilir olması iyi, ama ölçülebilir bir şey söylenmediyse de söylenen sonucu
+  yaz; hiç sonuç söylenmediyse boş bırak.
+- basari_olcutu: başarı kriterinin parçaları (aşağıdaki ÖLÇÜT kuralı).
 - kisitlar: bütçe, süre, mevzuat, veri paylaşımı gibi kısıtlar.
 - isbirligi_turu: pilot, tedarik, ortak_urun, yatirim ya da diger; söylenmediyse boş.
 - aranan_firma_turleri: girisim, kobi, kurumsal değerlerinden söylenenler; söylenmediyse boş.
@@ -226,7 +277,7 @@ Alanlar:
 takip_sorusu ve takip_konusu: problem_tanimi ya da basari_kriteri eksikse takip
 sorusunda ÖNCE bunlardan birini sor ve takip_konusu'na o alanın adını yaz.
 """
-SISTEM_TALIMATI_ORTAK += KULLANICI_DILI_KURALLARI
+SISTEM_TALIMATI_ORTAK += OLCUT_KURALI + KULLANICI_DILI_KURALLARI
 
 YEDEK_SORULAR_ORTAK = {
     "problem_tanimi": (
@@ -245,8 +296,9 @@ class OrtakIlanCikarimi(motor.SohbetCikarimi):
 
     problem_tanimi: str | None = None
     basari_kriteri: str | None = Field(
-        default=None, description="Ölçülebilir olmalı (sayı/oran/süre). Değilse boş bırak."
+        default=None, description="Firmanın 'oldu' diyeceği sonuç; hiç söylenmediyse boş bırak."
     )
+    basari_olcutu: BasariOlcutuCikarimi | None = None
     kisitlar: str | None = None
     isbirligi_turu: Literal["pilot", "tedarik", "ortak_urun", "yatirim", "diger"] | None = None
     aranan_firma_turleri: list[Literal["girisim", "kobi", "kurumsal"]] = Field(
@@ -284,8 +336,11 @@ TANIMLAMA_ORTAK = motor.AjanTanimi(
         "sehir_tercihi",
     ),
     liste_alanlari=("aranan_firma_turleri",),
+    nesne_alanlari=("basari_olcutu",),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
     maks_zorunlu_turu=MAKS_ZORUNLU_TURU,
+    ek_eksikler=hedef_eksigi,
+    maks_ek_turu=1,
     yedek_sorular=YEDEK_SORULAR_ORTAK,
 )
 
