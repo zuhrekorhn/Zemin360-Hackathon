@@ -70,6 +70,39 @@ dogrulama_bonus = min(1.0, guven_orani + 0.5 × [tamamlanan_pilot ≥ 1])
 
 Pilotu olmayan kartın skoru Faz C öncesiyle birebir aynı (demo kalibrasyonu bozulmaz); pilot skora en çok `0.25 × 0.5 = +0.125` ekler. Sayı değil varlık sayılır: bir pilot yeter. Sinyal saklanmaz, `isbirligi.durum = tamamlandi` kayıtlarından hesaplanır (`tamamlanan_pilot_sayilari`). Alakayı yaratmaz: benzerlik alt sınırı (§ 5) skordan önce uygulanmaya devam eder. Gerekçe istemine de "Tamamlanmış pilot: N" satırı gider.
 
+### 4.1 Kart bonusu: Eşleştirme incelemesinde karar verilecek iki seçenek
+
+> **Durum: karar verilmedi, formül değişmedi.** Bugün geçerli olan yukarıdaki kuraldır (çalışma oranlarının ortalaması). Bu bölüm incelemeye hazırlıktır (`plans/dogrulama-iyilestirme.md` § 11.1, bulgu 27, adım 13). Hiçbir seçeneğin uygulaması yapılmadı.
+
+**Sorun.** Ortalama, kartın en iyi kanıtını zayıf kalemler ağırlaştırır: güçlü bir çalışmanın yanına zayıf bir çalışma eklemek bonusu düşürür. Doğrulama iyileştirmesinin ilk üç adımı iki kaynağı kapattı (boş başlık artık paydada değil, kalem içinde parçalar toplanmaz, en güçlü parça alınır). Kalan kaynak kalemler arası ortalamadır.
+
+**Veri (karne `karneler/2026-10-05-mevcut_sistem-taslak-adim12.md`, taslak etiket).** 45 vakanın her biri tek çalışma sayılıp bugünkü kuralla orana çevrildi: ortalama 0,54, ortanca 0,50, aralık 0,11–1,00. Yani çalışmaların yarısı 0,50'nin altında. Örnek kart: oranları 0,89 / 0,44 / 0,22 olan üç çalışma.
+
+| Kart | Bugün (hepsinin ortalaması) | (a) en güçlü iki | (b) ihtiyacın yetenekleri |
+|---|---|---|---|
+| 0,89 + 0,44 + 0,22 | 0,52 | 0,67 | ihtiyaca göre: 0,89 (yetenek yalnızca en güçlü çalışmada kanıtlıysa) ya da 0,22 (yalnızca zayıfta kanıtlıysa) |
+| 0,89 tek çalışma | 0,89 | 0,89 | ihtiyaca göre |
+| 0,44 + 0,22 | 0,33 | 0,33 | ihtiyaca göre |
+
+Skora etkisi en çok `0,25 × bonus` kadardır; yukarıdaki örnekte (a) kartı 0,25 × (0,67 − 0,52) ≈ +0,04 yukarı alır.
+
+**Ölçülemeyen kısım.** Karne çalışma vakalarıdır, kart vakası değildir; (b) için gereken `yetenek_kaniti` kayıtları sette yok. (b)'nin gerçek etkisini ancak canlıdaki kartlarla ölçebiliriz: seçenek (b) seçilirse önce kartların `yetenek_kaniti` dolu oranına bakılır.
+
+| | (a) En güçlü iki kalemin ortalaması | (b) İhtiyacın gerektirdiği yeteneklerin `yetenek_kaniti` ortalaması |
+|---|---|---|
+| Ne ölçer | Kartın en iyi iki kanıtı | Kartın bu ihtiyaca özel kanıtı |
+| Zayıf kalem eklemek | Üçüncü ve sonraki kalemler bonusu düşürmez; ilk iki kalem hâlâ ortalamaya girer | Hiç düşürmez: yalnızca ihtiyacın yeteneklerinin kanıtına bakılır |
+| Kanıtı olmayan yetenek | Konu dışı | Bonusa girmez (ceza değil) |
+| Hesap | Mevcut verilerle, kart başına tek sıralama | İhtiyaç başına hesaplanır; ihtiyaç kartında gereken yeteneklerin yapılandırılmış listesi yok (`problem_tanimi`, `basari_olcutu`), yeni bir çıkarım adımı gerekir |
+| Bağımlılık | Yok | İhtiyaçtan yetenek çıkarımı ve adların kartın `yetenek_kaniti.yetenek` adlarıyla eşlenmesi (kartın yetenek adları serbest metin) |
+| Risk | Tek kalemli kart tek kalemiyle ölçülür; iki kalemli kart ikisinin ortalamasıyla (tek kalem kuralı ayrıca yazılmalı) | Eşleme tutmazsa kart bonussuz kalır; sessizce adaletsizlik yaratabilir |
+| Değişen kod | `dogrulama_bonus` hesabı (saf fonksiyon) | Hesap + ihtiyaç tarafında yetenek çıkarımı (model çağrısı, ek maliyet) + eşleme + testler |
+
+**Karar için sorular (incelemeye).**
+1. İhtiyaçtan gereken yetenekler çıkarılacak mı ve kartın yetenek adlarıyla nasıl eşlenecek (bugün ikisi de serbest metin; ihtiyaçta liste yok)? Bu çözülmeden (b) uygulanamaz.
+2. (a) seçilirse tek kalemli kartta ikinci kalem yok sayılır mı, yoksa paydaya 0 olarak mı girer? İkincisi tek kalemli kartı cezalandırır; ilki tek kalemi ortalamayla aynı tutar.
+3. Karar alınırsa demo kalibrasyonu (benzerlik alt sınırı, skor eşiği) yeniden denenmeli: ikisi de bonusu yukarı çeker.
+
 ## 5. Eşik ve Sıralama
 
 > **Karar verilmiş kayıtlar korunur** (`plans/genc-akisi.md` § 0 karar 14). Yeniden hesap yalnızca `onerildi` kayıtlarını siler ve en iyi 5 sınırı yalnızca onlara uygulanır. Kurumun karar verdiği kayıtlarda (`ilgileniliyor`, `kabul_edildi`, `reddedildi`) yalnızca skor tazelenir; gencin ilgi gösterdiği kayıtta (`genc_ilgilendi`) skor ve gerekçe de değişmez, kayıt ilk 5'in dışına düşse de firmanın "İlgi gösterenler" listesinde kalır. Kapalı ihtiyaç için aday aranmaz.
