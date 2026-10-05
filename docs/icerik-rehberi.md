@@ -52,6 +52,9 @@ Her kavramın **tek** adı var. "Kullanma" sütunundaki karşılıklar kullanıc
 | Çalışmayı gösteren link | **kanıt** | delil, belge | Form etiketinde "Kanıt linki" olabilir |
 | Çalışmayı doğrulayan kişi | **referans** | üçüncü taraf, onaylayan | |
 | Gencin GitHub, YouTube vb. hesabı | **bağlı hesap** ("hesabını bağla") | entegrasyon, OAuth, sosyal hesap, hesap bağlama | Bölüm başlığı: "Bağlı hesaplar" |
+| Kanıt olarak yüklenen PDF / resim | **dosya** (PDF) · **görsel** (resim) | belge (tek başına), ek, upload | Form etiketi: "PDF ya da görsel ekle"; buton: "Yükle ve değerlendir" |
+| Gencin dosyayı firmalara açması | **Firmalar görebilir** | herkese açık, paylaş | Varsayılan kapalı: "Dosyayı yalnızca sen ve GİRVAK görür" |
+| Barkodlu resmî belge | **e-Devlet belgesi** | barkodlu belge, resmî evrak | "e-Devlet belgen GİRVAK’ın incelemesinde." |
 | Profil açıklamasına yazılan kod (`z360-…`) | **doğrulama kodu** | profil kodu, token, doğrulama tokenı | "Profil" kayıt bilgileri demek; platformdaki sayfa için "profilin" yalnızca platform adıyla ("Medium profilin") |
 | Dört bileşenli değerlendirme | **güven göstergesi** | rubrik, güven skoru, puan, doğrulama skoru | |
 | Göstergenin dört başlığı | **Kanıt · Sonuç · Rol · Referans** | kanıt orijinalliği, sonuç ölçülebilirliği, rol netliği, üçüncü taraf onayı | Uzun adlar yalnızca açıklama metninde |

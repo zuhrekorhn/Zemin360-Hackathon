@@ -279,6 +279,7 @@ function KartIcerigi() {
                 <div key={cikti.id} className="flex flex-col gap-3">
                   <CiktiOzeti
                     cikti={cikti}
+                    kartId={kart.id}
                     sahibiBakiyor={sahibi}
                     referansVar={
                       (kanitlar[cikti.id]?.referanslar.length ?? 0) > 0

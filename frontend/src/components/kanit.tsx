@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useRef, useState } from "react";
 
 import { OnayAlani } from "@/components/onay-alani";
 import { FormAlani } from "@/components/sohbet";
@@ -10,8 +11,11 @@ import {
   type KanitDurumu,
   type KanitParcasi,
   type ReferansDurumu,
+  dosyaGorunurlugu,
   itirazEt,
   kalemiDegerlendir,
+  kanitDosyasiAdresi,
+  kanitDosyasiEkle,
   kanitLinkiEkle,
   kanitParcasiSil,
   referansGeriCek,
@@ -19,7 +23,17 @@ import {
   referansYenidenIste,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
-import { degerlendirildiMi, kanitAdresi, kanitLinkleri } from "@/lib/kanit";
+import {
+  KABUL_EDILEN_DOSYALAR,
+  type SecenekKutusu as SecenekKutusuVerisi,
+  degerlendirildiMi,
+  dosyaBoyutu,
+  dosyaParcalari,
+  girvakIncelemesiMetni,
+  kanitAdresi,
+  kanitLinkleri,
+  okunamayanSecenekleri,
+} from "@/lib/kanit";
 import { referansSatiri } from "@/lib/kart-duzenleme";
 import { REFERANS_DURUMLARI, referansOzeti } from "@/lib/referans";
 
@@ -27,8 +41,10 @@ import { REFERANS_DURUMLARI, referansOzeti } from "@/lib/referans";
  * Bir çalışmanın kanıt bölümü (docs/plans/dogrulama-iyilestirme.md § 3).
  *
  * Dört iş, dört ayrı eylem:
- *   - Kanıtlar: link eklenir (çalışma hemen değerlendirilir) ya da kaldırılır.
- *     Kanıt yalnızca buradan değişir; iddia düzenleme formu linke dokunmaz.
+ *   - Kanıtlar: link, PDF ya da görsel eklenir (çalışma hemen değerlendirilir)
+ *     ya da kaldırılır. Kanıt yalnızca buradan değişir; iddia düzenleme formu
+ *     linke dokunmaz. Okunamayan linkin altında seçenek kutusu (§ 3); dosyayı
+ *     varsayılan olarak yalnızca genç ve GİRVAK görür, genç firmalara açabilir.
  *   - Değerlendirme: linki olup henüz değerlendirilmemiş çalışma için.
  *   - Referans: istemek değerlendirmeyi yeniden çalıştırmaz. E-postayı sistem
  *     gönderir; yanıt linki gence gösterilmez (plan § 7, adım 7). Yanlış
@@ -51,7 +67,10 @@ export function KanitBolumu({
   onHata: (hata: Hata | null) => void;
 }) {
   const [bekleniyor, setBekleniyor] = useState(false);
-  const linkler = kanitLinkleri(durum?.kanitlar ?? kanitlar);
+  const parcalar = durum?.kanitlar ?? kanitlar;
+  const linkler = kanitLinkleri(parcalar);
+  const dosyalar = dosyaParcalari(parcalar);
+  const kanitVar = linkler.length + dosyalar.length > 0;
   const degerlendirildi = degerlendirildiMi(durum?.guven_skoru);
 
   /** Bir eylemi çalıştırır; başarılıysa true (formlar kendini temizlesin diye). */
@@ -75,8 +94,8 @@ export function KanitBolumu({
         <h4 className="font-heading text-sm font-semibold text-ana">
           Kanıtlar
         </h4>
-        {linkler.length > 0 ? (
-          <ul className="flex flex-col gap-2">
+        {kanitVar ? (
+          <ul className="flex flex-col gap-3">
             {linkler.map((parca) => (
               <KanitSatiri
                 key={parca.id}
@@ -87,11 +106,27 @@ export function KanitBolumu({
                 }
               />
             ))}
+            {dosyalar.map((parca) => (
+              <DosyaSatiri
+                key={parca.id}
+                parca={parca}
+                bekleniyor={bekleniyor}
+                onIndir={() => indir(somutCiktiId, parca.id, onHata)}
+                onGorunurluk={(gorunur) =>
+                  calistir(() =>
+                    dosyaGorunurlugu(somutCiktiId, parca.id, gorunur),
+                  )
+                }
+                onKaldir={() =>
+                  calistir(() => kanitParcasiSil(somutCiktiId, parca.id))
+                }
+              />
+            ))}
           </ul>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Henüz kanıt eklemedin. Bir link ya da aşağıdan bir referans
-            ekleyebilirsin.
+            Henüz kanıt eklemedin. Bir link, PDF ya da görsel ekleyebilir ya da
+            aşağıdan bir referans isteyebilirsin.
           </p>
         )}
         <LinkEkleFormu
@@ -99,7 +134,14 @@ export function KanitBolumu({
           bekleniyor={bekleniyor}
           onEkle={(url) => calistir(() => kanitLinkiEkle(somutCiktiId, url))}
         />
-        {linkler.length > 0 && durum && !degerlendirildi ? (
+        <DosyaEkleFormu
+          kimlik={somutCiktiId}
+          bekleniyor={bekleniyor}
+          onEkle={(dosya) =>
+            calistir(() => kanitDosyasiEkle(somutCiktiId, dosya))
+          }
+        />
+        {kanitVar && durum && !degerlendirildi ? (
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="button"
@@ -185,26 +227,193 @@ function KanitSatiri({
       </li>
     );
   }
+  const secenekler = okunamayanSecenekleri(parca);
   return (
-    <li className="flex flex-wrap items-center justify-between gap-2">
-      <a
-        href={kanitAdresi(parca.url)}
-        target="_blank"
-        rel="noreferrer noopener"
-        className="min-w-0 text-sm break-all text-baglanti underline underline-offset-4"
-      >
-        {parca.url}
-      </a>
+    <li className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <a
+          href={kanitAdresi(parca.url)}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="min-w-0 text-sm break-all text-baglanti underline underline-offset-4"
+        >
+          {parca.url}
+        </a>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={bekleniyor}
+          onClick={() => setOnay(true)}
+        >
+          Kaldır
+        </Button>
+      </div>
+      {secenekler ? <SecenekKutusu kutu={secenekler} /> : null}
+    </li>
+  );
+}
+
+/** Okunamayan link için açıklama ve gencin yapabilecekleri (plan § 3). */
+function SecenekKutusu({ kutu }: { kutu: SecenekKutusuVerisi }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-sm border border-kenar bg-muted/40 px-3 py-2 text-sm">
+      <p className="text-pretty">{kutu.mesaj}</p>
+      <p className="text-xs text-muted-foreground">
+        Bunlardan birini yapabilirsin:
+      </p>
+      <ul className="flex list-disc flex-col gap-0.5 pl-5 text-xs text-muted-foreground">
+        {kutu.hesapBagla ? (
+          <li>
+            <Link href="/profil#hesaplar" className="text-baglanti underline">
+              Hesabını bağla
+            </Link>
+          </li>
+        ) : null}
+        {kutu.secenekler.map((secenek) => (
+          <li key={secenek}>{secenek}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** İndirme adresi kısa ömürlü: tıklanınca alınır, dosya indirme olarak açılır. */
+async function indir(
+  somutCiktiId: string,
+  parcaId: string,
+  onHata: (hata: Hata | null) => void,
+) {
+  onHata(null);
+  try {
+    const { adres } = await kanitDosyasiAdresi(somutCiktiId, parcaId);
+    window.location.assign(adres);
+  } catch (sebep) {
+    onHata(hatayaCevir(sebep));
+  }
+}
+
+function DosyaSatiri({
+  parca,
+  bekleniyor,
+  onIndir,
+  onGorunurluk,
+  onKaldir,
+}: {
+  parca: KanitParcasi;
+  bekleniyor: boolean;
+  onIndir: () => void;
+  onGorunurluk: (gorunur: boolean) => Promise<boolean>;
+  onKaldir: () => Promise<boolean>;
+}) {
+  const [onay, setOnay] = useState(false);
+  const kutu = `gorunur-${parca.id}`;
+  const inceleme = girvakIncelemesiMetni(parca.girvak_incelemesi);
+  const boyut = dosyaBoyutu(parca.dosya_boyutu);
+
+  if (onay) {
+    return (
+      <li>
+        <OnayAlani
+          soru="Bu dosya kaldırılsın mı? Dosya silinir ve çalışman kalan kanıtla yeniden değerlendirilir."
+          onayEtiketi="Kaldır"
+          bekleniyor={bekleniyor}
+          bekleniyorEtiketi="Kaldırılıyor…"
+          onOnayla={() => void onKaldir().then(() => setOnay(false))}
+          onVazgec={() => setOnay(false)}
+        />
+      </li>
+    );
+  }
+  return (
+    <li className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={onIndir}
+          className="min-w-0 text-left text-sm break-all text-baglanti underline underline-offset-4"
+        >
+          {parca.dosya_adi ?? (parca.tur === "gorsel" ? "Görsel" : "Dosya")}
+        </button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={bekleniyor}
+          onClick={() => setOnay(true)}
+        >
+          Kaldır
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {parca.tur === "gorsel" ? "Görsel" : "PDF"}
+        {boyut ? ` · ${boyut}` : ""}
+        {parca.uretim_araci ? ` · Oluşturan araç: ${parca.uretim_araci}` : ""}
+      </p>
+      {inceleme ? <p className="text-xs text-pretty">{inceleme}</p> : null}
+      <label htmlFor={kutu} className="flex w-fit items-center gap-2 text-xs">
+        <input
+          id={kutu}
+          type="checkbox"
+          checked={parca.gorunur_firmaya ?? false}
+          disabled={bekleniyor}
+          onChange={(olay) => void onGorunurluk(olay.target.checked)}
+        />
+        Firmalar görebilir
+      </label>
+    </li>
+  );
+}
+
+function DosyaEkleFormu({
+  kimlik,
+  bekleniyor,
+  onEkle,
+}: {
+  kimlik: string;
+  bekleniyor: boolean;
+  onEkle: (dosya: File) => Promise<boolean>;
+}) {
+  const [dosya, setDosya] = useState<File | null>(null);
+  const girdi = useRef<HTMLInputElement>(null);
+
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(olay) => {
+        olay.preventDefault();
+        if (!dosya) return;
+        void onEkle(dosya).then((tamam) => {
+          if (!tamam) return;
+          setDosya(null);
+          if (girdi.current) girdi.current.value = "";
+        });
+      }}
+    >
+      <FormAlani etiket="PDF ya da görsel ekle" htmlFor={`dosya-${kimlik}`}>
+        <Input
+          ref={girdi}
+          id={`dosya-${kimlik}`}
+          type="file"
+          accept={KABUL_EDILEN_DOSYALAR}
+          onChange={(olay) => setDosya(olay.target.files?.[0] ?? null)}
+        />
+      </FormAlani>
+      <p className="text-xs text-pretty text-muted-foreground">
+        Sertifika, rapor, sonuç listesi ya da çalışmanın ekran görüntüsü. PDF en
+        çok 20 MB, görsel en çok 10 MB. Dosyayı yalnızca sen ve GİRVAK görür;
+        istersen firmalara açabilirsin.
+      </p>
       <Button
-        type="button"
+        type="submit"
         size="sm"
         variant="outline"
-        disabled={bekleniyor}
-        onClick={() => setOnay(true)}
+        className="w-fit"
+        disabled={bekleniyor || !dosya}
       >
-        Kaldır
+        {bekleniyor ? "Değerlendiriliyor…" : "Yükle ve değerlendir"}
       </Button>
-    </li>
+    </form>
   );
 }
 

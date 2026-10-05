@@ -32,6 +32,8 @@ export function kararEtiketleri(tur: string): {
     return { kapandi: "Onayla", dogrulanamadi: "Reddet" };
   if (tur === "profil_kodu_elle")
     return { kapandi: "Kod profilde, bağla", dogrulanamadi: "Kod yok" };
+  if (tur === "edevlet_barkodu")
+    return { kapandi: "Belge doğrulandı", dogrulanamadi: "Doğrulanamadı" };
   return { kapandi: "Sorun yok", dogrulanamadi: "Doğrulanamadı" };
 }
 
@@ -41,11 +43,30 @@ function metinListesi(deger: unknown): string[] {
     : [];
 }
 
+function nesneListesi(deger: unknown): Record<string, unknown>[] {
+  return Array.isArray(deger)
+    ? deger.filter(
+        (d): d is Record<string, unknown> =>
+          typeof d === "object" && d !== null,
+      )
+    : [];
+}
+
+/** İşaretin indirilecek belgeleri (e-Devlet barkodu: GİRVAK belgeyi açıp barkodu okur). */
+export function incelenecekBelgeler(satir: IncelemeSatiri): string[] {
+  if (satir.tur !== "edevlet_barkodu") return [];
+  return nesneListesi(satir.ayrinti.parcalar)
+    .map((p) => p.parca_id)
+    .filter((id): id is string => typeof id === "string");
+}
+
 /** Ayrıntının GİRVAK'a gösterilen satırları (türe göre). */
 export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
   const a = satir.ayrinti;
   if (satir.tur === "ad_degisikligi") {
-    const satirlar = [`${String(a.eski_ad ?? "—")} → ${String(a.yeni_ad ?? "—")}`];
+    const satirlar = [
+      `${String(a.eski_ad ?? "—")} → ${String(a.yeni_ad ?? "—")}`,
+    ];
     if (typeof a.gerekce === "string" && a.gerekce)
       satirlar.push(`Gerekçe: ${a.gerekce}`);
     return satirlar;
@@ -58,6 +79,20 @@ export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
       `Profil: ${String(a.profil_adresi ?? "—")}`,
       `Aranacak kod: ${String(a.kod ?? "—")}`,
     ];
+  }
+  if (satir.tur === "edevlet_barkodu") {
+    // Barkod turkiye.gov.tr/belge-dogrulama'da, belgedeki T.C. kimlik no ile
+    // sorgulanır; numara saklanmaz, belgenin kendisinden okunur (§ 4.2).
+    return nesneListesi(a.parcalar).map(
+      (p) =>
+        `Barkod: ${String(p.barkod ?? "—")} (turkiye.gov.tr/belge-dogrulama)`,
+    );
+  }
+  if (satir.tur === "ayni_belge_iki_hesapta") {
+    return nesneListesi(a.eslesmeler).map(
+      (e) =>
+        `Doğrulama adresi başka bir hesapta da var: ${String(e.adres ?? "—")}`,
+    );
   }
   if (satir.tur === "itiraz_siniri") {
     return metinListesi(a.itiraz_notlari).map((n) => `İtiraz notu: ${n}`);

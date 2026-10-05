@@ -1,6 +1,7 @@
 import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
 import { baslikGosterimi, gostergeDoluMu } from "@/lib/guven-gostergesi";
-import { kanitAdresi, kanitLinkleri } from "@/lib/kanit";
+import { kartDosyasiAdresi } from "@/lib/api";
+import { dosyaParcalari, kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
 /**
@@ -129,8 +130,11 @@ export function CiktiOzeti({
   eylem,
   sahibiBakiyor = false,
   referansVar = false,
+  kartId,
 }: {
   cikti: SomutCiktiYaniti;
+  /** Dosya indirme adresi kart üzerinden alınır (firma yalnızca açılan dosyayı). */
+  kartId?: string;
   eylem?: React.ReactNode;
   /** Genç kendi kartına bakıyor: "Payın" (firma gencin payını okur: "Payı"). */
   sahibiBakiyor?: boolean;
@@ -142,6 +146,7 @@ export function CiktiOzeti({
   referansVar?: boolean;
 }) {
   const linkler = kanitLinkleri(cikti.kanitlar);
+  const dosyalar = dosyaParcalari(cikti.kanitlar);
   return (
     <div className="flex flex-col gap-2 rounded-sm border border-kenar">
       <div className="flex flex-col gap-1 px-4 py-3">
@@ -171,6 +176,34 @@ export function CiktiOzeti({
             {sahibiBakiyor ? "Payın" : "Payı"}: {cikti.kendi_rolu}
           </p>
         ) : null}
+        {dosyalar.length > 0 ? (
+          <ul className="flex flex-col gap-1">
+            {dosyalar.map((parca) =>
+              parca.dosya_adi && kartId ? (
+                <li key={parca.id}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void kartDosyasiAdresi(kartId, parca.id)
+                        .then(({ adres }) => window.location.assign(adres))
+                        .catch(() => undefined)
+                    }
+                    className="w-fit text-left text-sm break-all text-baglanti underline underline-offset-4"
+                  >
+                    {parca.dosya_adi}
+                  </button>
+                </li>
+              ) : (
+                <li key={parca.id} className="text-sm text-muted-foreground">
+                  {parca.tur === "gorsel"
+                    ? "Yüklenmiş bir görsel"
+                    : "Yüklenmiş bir belge"}
+                  ; içeriği paylaşılmadı, değerlendirme sonucu aşağıda.
+                </li>
+              ),
+            )}
+          </ul>
+        ) : null}
         {linkler.length > 0 ? (
           <ul className="flex flex-col gap-1">
             {linkler.map((parca) => (
@@ -186,7 +219,7 @@ export function CiktiOzeti({
               </li>
             ))}
           </ul>
-        ) : (
+        ) : dosyalar.length > 0 ? null : (
           <p className="text-sm text-muted-foreground">
             {referansVar
               ? "Kanıt linki yok; referansın aşağıda."

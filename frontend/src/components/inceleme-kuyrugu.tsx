@@ -11,9 +11,15 @@ import {
   type IncelemeSatiri,
   girvakIncelemeKarari,
   girvakIncelemeler,
+  kanitDosyasiAdresi,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
-import { ayrintiSatirlari, kararEtiketleri, turEtiketi } from "@/lib/inceleme";
+import {
+  ayrintiSatirlari,
+  incelenecekBelgeler,
+  kararEtiketleri,
+  turEtiketi,
+} from "@/lib/inceleme";
 
 /**
  * GİRVAK: inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9).
@@ -90,6 +96,27 @@ export function IncelemeKuyrugu() {
                     {satir}
                   </p>
                 ))}
+                {isaret.somut_cikti_id
+                  ? incelenecekBelgeler(isaret).map((parcaId, i) => (
+                      <Button
+                        key={parcaId}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="w-fit"
+                        onClick={() =>
+                          void kanitDosyasiAdresi(
+                            isaret.somut_cikti_id!,
+                            parcaId,
+                          )
+                            .then(({ adres }) => window.location.assign(adres))
+                            .catch((sebep) => setHata(hatayaCevir(sebep)))
+                        }
+                      >
+                        {i === 0 ? "Belgeyi indir" : `${i + 1}. belgeyi indir`}
+                      </Button>
+                    ))
+                  : null}
                 {isaret.kart_id ? (
                   <Link
                     href={`/kart/${isaret.kart_id}`}

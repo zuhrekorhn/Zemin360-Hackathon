@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { IncelemeSatiri } from "@/lib/api";
-import { ayrintiSatirlari, kararEtiketleri, turEtiketi } from "@/lib/inceleme";
+import {
+  ayrintiSatirlari,
+  incelenecekBelgeler,
+  kararEtiketleri,
+  turEtiketi,
+} from "@/lib/inceleme";
 
 function satir(tur: string, ayrinti: Record<string, unknown>): IncelemeSatiri {
   return {
@@ -67,5 +72,24 @@ describe("inceleme metinleri", () => {
     expect(kararEtiketleri("profil_kodu_elle").kapandi).toBe(
       "Kod profilde, bağla",
     );
+  });
+});
+
+describe("e-Devlet barkodu ve aynı belge", () => {
+  it("barkodu ve indirilecek belgeleri gösterir", () => {
+    const s = satir("edevlet_barkodu", {
+      parcalar: [{ parca_id: "p1", barkod: "YOK-ABCD-1234" }],
+    });
+    expect(ayrintiSatirlari(s)[0]).toContain("YOK-ABCD-1234");
+    expect(incelenecekBelgeler(s)).toEqual(["p1"]);
+    expect(kararEtiketleri("edevlet_barkodu").kapandi).toBe("Belge doğrulandı");
+    expect(incelenecekBelgeler(satir("itiraz_siniri", {}))).toEqual([]);
+  });
+
+  it("aynı doğrulama adresinin hangi adres olduğunu yazar", () => {
+    const s = satir("ayni_belge_iki_hesapta", {
+      eslesmeler: [{ adres: "https://credly.com/badges/1" }],
+    });
+    expect(ayrintiSatirlari(s)[0]).toContain("https://credly.com/badges/1");
   });
 });

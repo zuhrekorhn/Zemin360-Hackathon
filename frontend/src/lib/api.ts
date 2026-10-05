@@ -37,10 +37,12 @@ export async function apiIstek<T>(
 
   try {
     const token = tokenOku();
+    // Dosya yüklemede tarayıcı multipart sınırını kendisi yazar.
+    const formMu = secenekler.body instanceof FormData;
     yanit = await fetch(`${API_URL}${yol}`, {
       ...secenekler,
       headers: {
-        "Content-Type": "application/json",
+        ...(formMu ? {} : { "Content-Type": "application/json" }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...secenekler.headers,
       },
@@ -788,6 +790,16 @@ export type KanitParcasi = {
   url: string | null;
   platform?: string | null;
   erisim?: string | null;
+  /** duzenleyen | platform | kamuya_acik | beyan */
+  seviye?: string | null;
+  /** Yüklenen dosyanın adı; firma, genç açmadıysa null görür. */
+  dosya_adi?: string | null;
+  dosya_boyutu?: number | null;
+  gorunur_firmaya?: boolean;
+  /** e-Devlet belgesi: bekliyor | onaylandi | reddedildi */
+  girvak_incelemesi?: string | null;
+  /** C2PA bilgisindeki üretim aracı */
+  uretim_araci?: string | null;
 };
 
 /** Referans formunun (2)-(4). sorularına yanıt (dogrulama-iyilestirme § 7). */
@@ -872,6 +884,53 @@ export function kanitLinkiEkle(
     method: "POST",
     body: JSON.stringify({ url }),
   });
+}
+
+/** POST /dogrulama/kalem/{id}/dosya — PDF ya da görsel yükler, çalışmayı değerlendirir. */
+export function kanitDosyasiEkle(
+  somutCiktiId: string,
+  dosya: File,
+): Promise<KanitDurumu> {
+  const govde = new FormData();
+  govde.append("dosya", dosya);
+  return apiIstek<KanitDurumu>(`${kalemYolu(somutCiktiId)}/dosya`, {
+    method: "POST",
+    body: govde,
+  });
+}
+
+/** GET /dogrulama/kalem/{id}/kanit/{parca}/indir — birkaç dakika geçerli indirme adresi. */
+export function kanitDosyasiAdresi(
+  somutCiktiId: string,
+  parcaId: string,
+): Promise<{ adres: string }> {
+  return apiIstek<{ adres: string }>(
+    `${kalemYolu(somutCiktiId)}/kanit/${parcaId}/indir`,
+    { cache: "no-store" },
+  );
+}
+
+/** PATCH /dogrulama/kalem/{id}/kanit/{parca} — "Firmalar görebilir". */
+export function dosyaGorunurlugu(
+  somutCiktiId: string,
+  parcaId: string,
+  gorunurFirmaya: boolean,
+): Promise<KanitDurumu> {
+  return apiIstek<KanitDurumu>(`${kalemYolu(somutCiktiId)}/kanit/${parcaId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ gorunur_firmaya: gorunurFirmaya }),
+  });
+}
+
+/** GET /yetenek-kartlari/{kart}/kanit/{parca}/indir — kart görünümünden indirme. */
+export function kartDosyasiAdresi(
+  kartId: string,
+  parcaId: string,
+): Promise<{ adres: string }> {
+  return apiIstek<{ adres: string }>(
+    `/yetenek-kartlari/${kartId}/kanit/${parcaId}/indir`,
+    { cache: "no-store" },
+  );
 }
 
 /** DELETE /dogrulama/kalem/{id}/kanit/{parca} — kanıtı kaldırır. */

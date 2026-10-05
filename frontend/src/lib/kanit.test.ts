@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
+import type { GuvenSkoru, KanitParcasi, SomutCiktiYaniti } from "@/lib/api";
 
 import {
   degerlendirildiMi,
+  dosyaBoyutu,
+  dosyaParcalari,
+  girvakIncelemesiMetni,
   kanitAdresi,
   kanitLinkleri,
   kayitliCiktiTaslagi,
+  okunamayanSecenekleri,
 } from "./kanit";
 
 const skor = (degisiklik: Partial<GuvenSkoru> = {}): GuvenSkoru => ({
@@ -65,5 +69,60 @@ describe("kayitliCiktiTaslagi", () => {
     expect(
       kayitliCiktiTaslagi({ ...cikti, kanitlar: [] }).kanit_linki,
     ).toBeNull();
+  });
+});
+
+describe("dosya parçaları", () => {
+  const parca = (
+    tur: string,
+    ek: Partial<KanitParcasi> = {},
+  ): KanitParcasi => ({
+    id: tur,
+    tur,
+    url: tur === "link" ? "github.com/x" : null,
+    ...ek,
+  });
+
+  it("dosya ve görseli ayırır, boyutu okunur yazar", () => {
+    expect(
+      dosyaParcalari([parca("link"), parca("dosya"), parca("gorsel")]).map(
+        (p) => p.tur,
+      ),
+    ).toEqual(["dosya", "gorsel"]);
+    expect(dosyaBoyutu(512)).toBe("1 KB");
+    expect(dosyaBoyutu(340 * 1024)).toBe("340 KB");
+    expect(dosyaBoyutu(1.25 * 1024 * 1024)).toBe("1,3 MB");
+    expect(dosyaBoyutu(null)).toBeNull();
+  });
+
+  it("okunamayan linke duruma göre seçenek kutusu, okunana hiçbir şey", () => {
+    expect(okunamayanSecenekleri(parca("link", { erisim: "acik" }))).toBeNull();
+    expect(
+      okunamayanSecenekleri(parca("dosya", { erisim: "icerik_yok" })),
+    ).toBeNull();
+    const drive = okunamayanSecenekleri(
+      parca("link", {
+        erisim: "giris_gerekli",
+        url: "https://docs.google.com/d/1",
+      }),
+    );
+    expect(drive?.mesaj).toContain("Bağlantıya sahip olan herkes");
+    const linkedin = okunamayanSecenekleri(
+      parca("link", { erisim: "giris_gerekli", url: "linkedin.com/in/x" }),
+    );
+    expect(linkedin?.secenekler).toContain("PDF olarak yükle");
+    expect(
+      okunamayanSecenekleri(parca("link", { erisim: "engellendi" }))
+        ?.hesapBagla,
+    ).toBe(true);
+    expect(
+      okunamayanSecenekleri(parca("link", { erisim: "bulunamadi" }))?.mesaj,
+    ).toBe("Bu adreste bir sayfa yok.");
+  });
+
+  it("e-Devlet incelemesi cümlesi", () => {
+    expect(girvakIncelemesiMetni("bekliyor")).toContain("incelemesinde");
+    expect(girvakIncelemesiMetni("onaylandi")).toContain("doğruladı");
+    expect(girvakIncelemesiMetni(null)).toBeNull();
   });
 });

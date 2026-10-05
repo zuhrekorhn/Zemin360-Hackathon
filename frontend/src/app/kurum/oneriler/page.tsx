@@ -395,7 +395,7 @@ function OneriKarti({
           </p>
         ) : (
           kart.somut_ciktilar.map((cikti) => (
-            <CiktiOzeti key={cikti.id} cikti={cikti} />
+            <CiktiOzeti key={cikti.id} cikti={cikti} kartId={kart.id} />
           ))
         )}
       </section>
