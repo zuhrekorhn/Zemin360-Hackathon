@@ -18,12 +18,15 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
+import httpx
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.agents.dogrulama.dosya_cikarimi import dosyayi_oku
+from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu, dosyayi_oku
 from app.agents.dogrulama.kurallar import OkunanKanit
 from app.core.config import get_settings
 from app.core.dis_servisler import kurulum
@@ -60,32 +63,74 @@ class DosyaIcerigi:
     okuyan: str  # "metin_katmani" | "model"
 
 
-async def icerigi_oku(hazir: HazirDosya) -> DosyaIcerigi:
-    """Model hatası (hız sınırı, sağlayıcı) çağırana çıkar: yükleme düşer, genç yeniden dener."""
+DosyaOkuyucu = Callable[[bytes, str], Awaitable[DosyaOkunusu]]
+
+
+async def icerigi_oku(hazir: HazirDosya, oku: DosyaOkuyucu | None = None) -> DosyaIcerigi:
+    """Model hatası (hız sınırı, sağlayıcı) çağırana çıkar: yükleme düşer, genç yeniden dener.
+    `oku`: modelin okuması (değerlendirme seti kayıtlı yanıtı verir)."""
     if hazir.parca_turu is ParcaTuru.DOSYA:
         metin, sayfa = pdf_metni(hazir.veri)
         if not model_okumali_mi(metin, sayfa):
             return DosyaIcerigi(maskele(metin), None, None, sayfa, "metin_katmani")
     else:
         sayfa = None
-    okunus = await dosyayi_oku(hazir.veri, hazir.icerik_turu)
+    okunus = await (oku or dosyayi_oku)(hazir.veri, hazir.icerik_turu)
     gorulen = maskele(okunus.gorsel_metni.strip())
     return DosyaIcerigi(gorulen, gorulen, okunus.betim.strip() or None, sayfa, "model")
 
 
-async def _capa_girdisi(
-    oturum: AsyncSession, kullanici_id: uuid.UUID, hazir: HazirDosya, icerik: DosyaIcerigi
-) -> CapaGirdisi:
+@dataclass(frozen=True)
+class IslenmisDosya:
+    hazir: HazirDosya
+    icerik: DosyaIcerigi
+    # `kanit_parcasi.belge`: dosya bilgisi, betim, ön okuma, çapalar
+    belge: dict[str, Any]
+
+
+async def dosyayi_isle(
+    hazir: HazirDosya,
+    ham_ad: str | None,
+    *,
+    ad: str | None,
+    eposta: str | None,
+    oku: DosyaOkuyucu | None = None,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> IslenmisDosya:
+    """İçerik okuma + çapa doğrulaması + belge kaydı. Uygulama (`dosya_ekle`) ve
+    değerlendirme seti aynı yoldan geçer; veritabanı yok."""
+    icerik = await icerigi_oku(hazir, oku)
+    capalar = await capalari_dogrula(
+        CapaGirdisi(
+            ham=hazir.ham,
+            icerik_turu=hazir.icerik_turu,
+            metin=icerik.tam_metin,
+            on_bilgi=hazir.on_bilgi,
+            ad=ad,
+            eposta=eposta,
+            transport=transport,
+        )
+    )
+    belge = {
+        "dosya": {
+            "ad": gorunen_ad(ham_ad, hazir.icerik_turu),
+            "icerik_turu": hazir.icerik_turu,
+            "boyut": len(hazir.veri),
+            "tarama": hazir.tarama.value,
+            "sayfa": icerik.sayfa_sayisi,
+            "okuyan": icerik.okuyan,
+        },
+        **({"betim": icerik.betim} if icerik.betim else {}),
+        **hazir.on_bilgi,
+        "capalar": capalar,
+    }
+    return IslenmisDosya(hazir, icerik, belge)
+
+
+async def _kimlik(oturum: AsyncSession, kullanici_id: uuid.UUID) -> tuple[str, str]:
     kullanici = await oturum.get(Kullanici, kullanici_id)
     hesap = await oturum.get(Hesap, kullanici.hesap_id) if kullanici.hesap_id else None
-    return CapaGirdisi(
-        ham=hazir.ham,
-        icerik_turu=hazir.icerik_turu,
-        metin=icerik.tam_metin,
-        on_bilgi=hazir.on_bilgi,
-        ad=kullanici.ad,
-        eposta=hesap.email if hesap else kullanici.email,
-    )
+    return kullanici.ad, (hesap.email if hesap else kullanici.email)
 
 
 async def gunluk_yukleme_sayisi(oturum: AsyncSession, kullanici_id: uuid.UUID) -> int:
@@ -118,22 +163,10 @@ async def dosya_ekle(
         raise DosyaReddedildi("Bugünlük dosya yükleme sınırına ulaştın; yarın yeniden dene.")
     hazir = await dosyayi_hazirla(ham, kurulum.virus_tarayici())
     dosya_eklenebilir_mi(cikti, hazir.ozet)  # model ve depodan önce
-    icerik = await icerigi_oku(hazir)
-    capalar = await capalari_dogrula(await _capa_girdisi(oturum, kullanici_id, hazir, icerik))
+    ad, eposta = await _kimlik(oturum, kullanici_id)
+    islenmis = await dosyayi_isle(hazir, ham_ad, ad=ad, eposta=eposta)
+    icerik = islenmis.icerik
     anahtar = f"kanit/{uuid.uuid4().hex}"
-    belge = {
-        "dosya": {
-            "ad": gorunen_ad(ham_ad, hazir.icerik_turu),
-            "icerik_turu": hazir.icerik_turu,
-            "boyut": len(hazir.veri),
-            "tarama": hazir.tarama.value,
-            "sayfa": icerik.sayfa_sayisi,
-            "okuyan": icerik.okuyan,
-        },
-        **({"betim": icerik.betim} if icerik.betim else {}),
-        **hazir.on_bilgi,
-        "capalar": capalar,
-    }
     depo = kurulum.depo()
     await depo.koy(anahtar, hazir.veri, hazir.icerik_turu)
     parca = dosya_parcasi_ekle(
@@ -141,7 +174,7 @@ async def dosya_ekle(
         tur=hazir.parca_turu,
         dosya_anahtari=anahtar,
         dosya_ozeti=hazir.ozet,
-        belge=belge,
+        belge=islenmis.belge,
         tam_metin=icerik.tam_metin,
         gorsel_metni=icerik.gorsel_metni,
     )

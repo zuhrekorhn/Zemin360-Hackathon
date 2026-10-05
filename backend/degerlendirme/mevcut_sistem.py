@@ -1,25 +1,33 @@
 """Uygulamadaki Doğrulama'nın adaptörü (plan § 15): karne her adımda bununla ölçer.
 
-Uygulamanın yolunu izler: okuyucu zinciri (`okuma.kanit_oku`), uzun metinde
+Uygulamanın yolunu izler: okuyucu zinciri (`okuma.kanit_oku`), dosya hattı
+(`dosya_hatti` → `dosyalar.dosyayi_isle` → `okuma.dosya_okunusu`), uzun metinde
 parça seçimi ve çekirdek (`cekirdek.kalemi_degerlendir`). Ağ, model ve embedding
-yanıtları kasetten gelir. Uygulamanın henüz bilmediği girdiler kullanılmaz:
-bağlı hesap (adım 8), dosya kanıtı (adım 9) ve referansın yapılandırılmış
-yanıtları (adım 7).
+yanıtları kasetten gelir. Kanıtlar vakadaki sırayla okunur (link ve dosya).
 """
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 from app.agents.dogrulama import ucuncu_taraf_onayi_hesapla
+from app.agents.dogrulama.capalar import KimlikDurumu, dosya_seviyesi
 from app.agents.dogrulama.cekirdek import DegerlendirmeGirdisi, kalemi_degerlendir
 from app.agents.dogrulama.cikarim import KanitCikarimi, cikar
+from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu, dosyayi_oku
 from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi
-from app.agents.dogrulama.okuma import kanit_oku
+from app.agents.dogrulama.kurallar import OkunanKanit
+from app.agents.dogrulama.okuma import dosya_okunusu, kanit_oku
+from app.core.dis_servisler.virus import KapaliTarayici
+from app.core.dosya_hatti import dosyayi_hazirla
 from app.core.embeddings import embedding_listesi_uret
+from app.servisler.dogrulama.dosyalar import dosyayi_isle
 from degerlendirme.degerlendirici import Degerlendirme
 from degerlendirme.kaset import AgKaseti, ModelKaseti
-from degerlendirme.vaka import ReferansGirdisi, Vaka
+from degerlendirme.vaka import SETI_KLASORU, ReferansGirdisi, Vaka
+
+DOSYA_KLASORU = SETI_KLASORU / "dosyalar"
 
 # 4 soruluk yanıtın bugünkü 1-5 ölçeğe çevrimi (adaptör varsayımı): yanıtlanan
 # soruların ortalaması; hepsi "bilmiyorum" ise ölçeğin ortası.
@@ -60,16 +68,24 @@ class MevcutSistemDegerlendirici:
             BagliHesapBilgisi(h.saglayici, h.kullanici_adi, h.yontem)
             for h in vaka.kimlik.bagli_hesaplar
         )
-        okunanlar = [
-            await kanit_oku(
-                link,
-                sorgular,
-                bagli_hesaplar=bagli,
-                transport=self._ag.transport(),
-                gom=self._gom,
-            )
-            for link in vaka.linkler
-        ]
+        kimlik = KimlikDurumu(
+            eposta_dogrulandi=vaka.kimlik.eposta_dogrulandi,
+            ad_kilitli=vaka.kimlik.eposta_dogrulandi,
+        )
+        okunanlar = []
+        for kanit in vaka.kanitlar:
+            if kanit.tur == "link" and kanit.url:
+                okunanlar.append(
+                    await kanit_oku(
+                        kanit.url,
+                        sorgular,
+                        bagli_hesaplar=bagli,
+                        transport=self._ag.transport(),
+                        gom=self._gom,
+                    )
+                )
+            elif kanit.dosya:
+                okunanlar.append(await self._dosya_okunusu(vaka, kanit.dosya, sorgular, kimlik))
         sonuc = await kalemi_degerlendir(girdi, okunanlar, self._cikar)
         okunan = okunanlar[0] if okunanlar else None
         return Degerlendirme(
@@ -83,6 +99,37 @@ class MevcutSistemDegerlendirici:
                 "platform": okunan.platform if okunan else None,
                 "seviye": okunan.seviye.value if okunan else None,
             },
+        )
+
+    async def _dosya_okunusu(
+        self, vaka: Vaka, yol: str, sorgular: list[str], kimlik: KimlikDurumu
+    ) -> OkunanKanit:
+        hazir = await dosyayi_hazirla((DOSYA_KLASORU / yol).read_bytes(), KapaliTarayici())
+        islenmis = await dosyayi_isle(
+            hazir,
+            yol,
+            ad=vaka.kimlik.ad,
+            eposta=vaka.kimlik.eposta,
+            oku=self._dosya_oku,
+            transport=self._ag.transport(),
+        )
+        return await dosya_okunusu(
+            tur=hazir.parca_turu.value,
+            dosya_adi=yol,
+            tam_metin=islenmis.icerik.tam_metin,
+            betim=islenmis.icerik.betim,
+            capa=dosya_seviyesi(islenmis.belge, kimlik),
+            iddia_sorgulari=sorgular,
+            gom=self._gom,
+        )
+
+    async def _dosya_oku(self, veri: bytes, icerik_turu: str) -> DosyaOkunusu:
+        async def gercek() -> dict[str, Any]:
+            return (await dosyayi_oku(veri, icerik_turu)).model_dump()
+
+        girdi = {"ozet": hashlib.sha256(veri).hexdigest(), "tur": icerik_turu}
+        return DosyaOkunusu.model_validate(
+            await self._model.cagir("dogrulama_dosya_okuma", girdi, gercek)
         )
 
     async def _cikar(self, alanlar: dict[str, str]) -> KanitCikarimi:

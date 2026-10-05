@@ -28,7 +28,7 @@ from app.agents.dogrulama.not_sablonu import not_yaz
 from app.core.kanit_okuma.belge import KaynakSeviyesi
 
 # Kural ya da istem değişince artar: eski göstergeler ayırt edilir, önbellek tazelenir.
-KURAL_SURUMU = "2026-10-adim8"
+KURAL_SURUMU = "2026-10-adim9"
 
 ISARET_ALAKASIZ = "alakasiz_kanit"
 

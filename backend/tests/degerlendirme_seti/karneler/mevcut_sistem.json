@@ -85,7 +85,7 @@
  },
  "muhendislik-pdf-capasiz": {
   "hata": null,
-  "kanit": null,
+  "kanit": 1,
   "referans": null,
   "rol": 2,
   "sonuc": 2
@@ -113,7 +113,7 @@
  },
  "sertifika-pdf-capasiz": {
   "hata": null,
-  "kanit": null,
+  "kanit": 1,
   "referans": null,
   "rol": 0,
   "sonuc": 0

@@ -1,18 +1,18 @@
 {
- "dogrulama_cikarim:0b11c77fedc2b2c2f29feb1140a54ad7": {
+ "dogrulama_cikarim:00ab39d38ccb77d378dab70727b9b2f3": {
   "destekler": [
    {
-    "alinti": "So this talk is actually going to be about learning hard things and understanding complicated systems.",
+    "alinti": "Yaya Koprusu Tasiyici Sistem Analiz Raporu",
     "durum": "destekleniyor",
     "iddia": "is"
    },
    {
-    "alinti": null,
-    "durum": "kanitta_yok",
+    "alinti": "Tasarim yuku 12 tondan 15 tona cikarildi.",
+    "durum": "destekleniyor",
     "iddia": "sonuc"
    },
    {
-    "alinti": "Yazarlar: Julia Evans",
+    "alinti": "Statik hesaplar ve sonlu elemanlar modeli Ayse Demir tarafindan yapildi.",
     "durum": "destekleniyor",
     "iddia": "pay"
    }
@@ -21,16 +21,16 @@
   "ilgili_mi": true,
   "kanitlanan_yetenekler": [
    {
-    "alinti": "Here’s the video, talk abstract, then the slides & a rough transcript.",
-    "yetenek": "Teknik yazarlık"
+    "alinti": "Statik hesaplar ve sonlu elemanlar modeli Ayse Demir tarafindan yapildi.",
+    "yetenek": "Statik analiz"
    }
   ],
-  "oneri": "Çalışmanın ulaştığı okuyucu sayısı ya da konuşmanın izlenme oranı gibi ölçülebilir sonuçları ekleyerek iddianı güçlendirebilirsin.",
+  "oneri": "Analizde kullandığın yazılımları ve hesap adımlarını gösteren ekran görüntülerini rapora ekleyerek çalışmanı daha da güçlendirebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
+  "sonuc_olcut_acik": true,
+  "sonuc_sayisal": true,
+  "sonuc_var": true
  },
  "dogrulama_cikarim:0b959b02218c888ef76123eced115460": {
   "destekler": [
@@ -93,6 +93,39 @@
   "sonuc_sayisal": true,
   "sonuc_var": true
  },
+ "dogrulama_cikarim:2b75c1e9feabb1637b67dcf67e845894": {
+  "destekler": [
+   {
+    "alinti": "Veri Bilimine Giris egitimini basariyla tamamlamistir.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "Veri Bilimine Giris egitimini basariyla tamamlamistir.",
+    "yetenek": "Veri bilimi"
+   }
+  ],
+  "oneri": "Eğitim kapsamında tamamladığın uygulamaları, elde ettiğin sonuçları ve bu süreçteki rolünü somut detaylarla açıklayarak çalışmanı güçlendirebilirsin.",
+  "pay_ozgul": false,
+  "pay_var": false,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
  "dogrulama_cikarim:2ec5df43741bbd06815a21b18d67043b": {
   "destekler": [
    {
@@ -120,34 +153,6 @@
   "sonuc_olcut_acik": false,
   "sonuc_sayisal": false,
   "sonuc_var": false
- },
- "dogrulama_cikarim:2ee38e6a68394869cef8116352f522d9": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Yaptığın statik hesapları ve ulaştığın sonucu gösteren teknik raporu veya analiz belgelerini kanıt olarak ekleyebilirsin.",
-  "pay_ozgul": true,
-  "pay_var": true,
-  "sonuc_olcut_acik": true,
-  "sonuc_sayisal": true,
-  "sonuc_var": true
  },
  "dogrulama_cikarim:379ad129f6e662dc7f0497171c9a04ec": {
   "destekler": [
@@ -653,34 +658,6 @@
   "sonuc_sayisal": false,
   "sonuc_var": false
  },
- "dogrulama_cikarim:a5ec387f06a0dda8265cfda0839361bd": {
-  "destekler": [
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "is"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "sonuc"
-   },
-   {
-    "alinti": null,
-    "durum": "kanitta_yok",
-    "iddia": "pay"
-   }
-  ],
-  "ekip_ortakligi_belirtilmis": false,
-  "ilgili_mi": false,
-  "kanitlanan_yetenekler": [],
-  "oneri": "Eğitimi tamamladığını gösteren bir sertifika veya belge bağlantısı ekleyerek bu süreçte geliştirdiğin çalışmaları ve elde ettiğin sonuçları belirtebilirsin.",
-  "pay_ozgul": false,
-  "pay_var": false,
-  "sonuc_olcut_acik": false,
-  "sonuc_sayisal": false,
-  "sonuc_var": false
- },
  "dogrulama_cikarim:a80d720fcf078e377f7433b4c161836c": {
   "destekler": [
    {
@@ -942,6 +919,39 @@
   "ilgili_mi": false,
   "kanitlanan_yetenekler": [],
   "oneri": "Çalışmanı güçlendirmek için tasarımlarını ve rolünü açıkça gösteren geçerli bir kanıt bağlantısı ekleyebilir, elde ettiğin sonuçları belirtebilirsin.",
+  "pay_ozgul": true,
+  "pay_var": true,
+  "sonuc_olcut_acik": false,
+  "sonuc_sayisal": false,
+  "sonuc_var": false
+ },
+ "dogrulama_cikarim:cfa8262fff788754fa4d6295c42612f6": {
+  "destekler": [
+   {
+    "alinti": "Here’s the video, talk abstract, then the slides & a rough transcript.",
+    "durum": "destekleniyor",
+    "iddia": "is"
+   },
+   {
+    "alinti": null,
+    "durum": "kanitta_yok",
+    "iddia": "sonuc"
+   },
+   {
+    "alinti": "Yazarlar: Julia Evans",
+    "durum": "destekleniyor",
+    "iddia": "pay"
+   }
+  ],
+  "ekip_ortakligi_belirtilmis": false,
+  "ilgili_mi": true,
+  "kanitlanan_yetenekler": [
+   {
+    "alinti": "I wrote a whole zine about debugging tools that have helped me answer questions.",
+    "yetenek": "Teknik yazarlık"
+   }
+  ],
+  "oneri": "Yazının ve konuşmanın kaç kişiye ulaştığı veya nasıl geri bildirimler aldığı gibi ölçülebilir sonuçları ekleyerek çalışmanı güçlendirebilirsin.",
   "pay_ozgul": true,
   "pay_var": true,
   "sonuc_olcut_acik": false,
