@@ -1,0 +1,6 @@
+# Yalnızca yedek okuyucu servisinin bağımlılıkları (backend'in bütün yığını gerekmiyor).
+# playwright sürümü Dockerfile'daki imaj etiketiyle aynı olmalı.
+fastapi>=0.115
+uvicorn>=0.30
+httpx>=0.27
+playwright==1.63.0

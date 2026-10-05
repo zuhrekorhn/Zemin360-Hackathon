@@ -134,6 +134,7 @@ python scripts/eslestirme_e2e.py <kurum_id> --tohum   # Eşleştirme pipeline'i 
 python scripts/yerel_sifirla.py              # yerel DB'yi boşaltır (onay sorar; production'da çalışmaz)
 python scripts/demo_hesaplari.py             # genç/kurum/GİRVAK demo hesapları + birer kart (.env: DEMO_SIFRESI)
 python scripts/girvak_hesabi.py --email …    # GİRVAK hesabı açar (açık kayıtla açılamaz)
+python -m yedek_okuyucu                      # yedek okuyucu (Playwright) servisi, :8100 (kurulum: yedek_okuyucu/README.md)
 ruff check . && ruff format .                 # lint + format
 alembic revision --autogenerate -m "mesaj"    # model değişikliğinden yeni migration
 alembic check                                 # modeller ile migration arasında fark var mı?

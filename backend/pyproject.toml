@@ -45,6 +45,10 @@ dev = [
     # Doğrulama değerlendirme seti: vaka dosyaları (degerlendirme/vaka.py)
     "pyyaml>=6.0",
 ]
+# Yedek okuyucu servisi (backend/yedek_okuyucu/; yayında ayrı imaj, kendi requirements.txt'si)
+yedek-okuyucu = [
+    "playwright>=1.48",
+]
 
 [build-system]
 requires = ["hatchling"]
