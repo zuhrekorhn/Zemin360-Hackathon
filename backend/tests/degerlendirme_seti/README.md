@@ -28,6 +28,16 @@ python -m scripts.karne --ag kaydet --model kaydet   # yeni vaka: gerçek ağ + 
 - **Ağ kaydı** sıfırdan başlar ve bütün sayfaları yeniden çeker. Sayfalar zamanla değiştiği için yalnızca yeni vaka eklenince kullanılır.
 - **Model kaydı** daha önce görülmüş girdiyi yeniden çağırmaz. Dosyaya yalnızca o çalıştırmada kullanılan kayıtları yazar.
 
+## Haftalık canlı karne
+
+```bash
+python -m scripts.canli_karne                  # canlı ağ ve model; kayıtlı karneyle karşılaştırır
+python -m scripts.canli_karne --taslak         # etiket yoksa önerilen etiketle
+python -m scripts.canli_karne --alan yazilim   # tek alan (maliyet düşük)
+```
+
+Seti bugünün sayfaları ve bugünün modeliyle ölçer (ücretli model çağrısı yapar). Kayıtlı kasetler ve karneler değişmez: canlı tur geçici klasöre kaydeder ve siler. Rapor `karneler/canli/` altına yazılır; "Kayıttan sapma" bölümü vaka başına hangi başlığın kayıttan farklı çıktığını gösterir (link çürümesi, sayfa değişimi, model kayması). Çıkış kodu: kabul eşikleri geçiyorsa 0, geçmiyorsa 1; sapma tek başına çıkış kodunu değiştirmez. Zamanlayıcı kurulmaz: haftada bir çalıştırmak platform cron'unun (Railway) ya da elin işi. Yedek okuyucu servisi (`YEDEK_OKUYUCU=playwright`) açık değilse o yoldaki vakalar "sonuç üretemedi" görünür.
+
 ## Adalet
 
 Karne, alan başına adalet tablosunu da yazar (`degerlendirme/adalet.py`, plan § 10.2): ortalama Kanıt, "—" oranı, Kanıt 3'e giden vakalar ve sorun işaretleri. Her alanda 3'e giden en az bir yol olmalı; işaret varsa vaka ya da yol eklenir (tavan düşürülmez). Etiketsiz vaka bu tabloya da girmez.

@@ -807,6 +807,8 @@ Her adım kendi belgesini güncelledi. Bu adım yalnızca çapraz denetimdir: RE
 | Zarif düşüş | Her servis kapalı ve hatalı iken değerlendirme tamamlanır, ilgili sinyal "—" olur |
 | Canlı | `scripts/dogrulama_e2e.py` ve haftalık canlı karne |
 
+**Haftalık canlı karne (adım 12):** `python -m scripts.canli_karne` seti gerçek ağ ve modelle ölçer, kayıtlı (kasetli) karneyle karşılaştırıp vaka başına sapmayı yazar (`degerlendirme/canli.py`); kasetlere dokunmaz, rapor `karneler/canli/` altına gider; çıkış kodu kabul eşiklerine bağlı. Zamanlayıcı kurulmaz (CLAUDE.md): çalıştırmak platform cron'unun işi.
+
 ---
 
 ## 17. Kararlar (kapandı)
