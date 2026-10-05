@@ -166,3 +166,17 @@ describe("belge, çelişki ve başka sayfadaki görsel", () => {
     expect(incelenecekBelgeler(gorsel)).toEqual(["g1"]);
   });
 });
+
+describe("karara itiraz", () => {
+  it("türe özel satırların ardına itiraz notlarını koyar", () => {
+    const s = satir("belge_tutarsiz", {
+      bulgular: [{ neden: "bozuk_imza", dosya_adi: "a.pdf" }],
+      itiraz_notlari: ["İmza yenilendi"],
+    });
+    expect(ayrintiSatirlari(s)).toEqual([
+      "E-imza geçersiz ya da belge imzadan sonra değişmiş: a.pdf",
+      "Genç önceki “doğrulanamadı” kararına itiraz etti.",
+      "İtiraz notu: İmza yenilendi",
+    ]);
+  });
+});

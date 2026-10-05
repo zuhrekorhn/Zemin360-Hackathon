@@ -36,7 +36,7 @@ from fastapi import (
     Response,
     UploadFile,
 )
-from sqlalchemy import exists, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -47,7 +47,6 @@ from app.agents.dogrulama import (
     yanitlanabilir_mi,
 )
 from app.agents.dogrulama.kurallar import OkunanKanit
-from app.agents.inceleme_durumu import ACIK
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
 from app.core import istek_izi
@@ -59,7 +58,6 @@ from app.core.kanit_okuma.belge import ErisimDurumu
 from app.core.llm import HizSinirHatasi
 from app.db.session import get_session
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, Hesap
-from app.models.inceleme_isareti import TUR_ITIRAZ_SINIRI, IncelemeIsareti
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
@@ -79,7 +77,7 @@ from app.schemas.dogrulama import (
     ReferansYenidenIsteIstegi,
 )
 from app.servisler import dogrulama as dogrulama_servisi
-from app.servisler import kart_duzenleme, kart_hazirlama
+from app.servisler import inceleme, kart_duzenleme, kart_hazirlama
 from app.servisler.dogrulama import (
     CiktiBulunamadi,
     FormYaniti,
@@ -547,6 +545,7 @@ async def _durum_yaniti(
 
     kart = await oturum.get(YetenekKarti, cikti.yetenek_karti_id)
     skor = cikti.guven_skoru
+    kararlar = await inceleme.kalem_kararlari(oturum, cikti.id)
     return KanitDurumuYaniti(
         somut_cikti_id=cikti.id,
         baslik=cikti.baslik,
@@ -573,15 +572,7 @@ async def _durum_yaniti(
             for referans in cikti.referans_istekleri
         ],
         kart_kanit_bekleyen=bool(kart and kart.kanit_bekleyen),
-        inceleme_bekliyor=bool(
-            await oturum.scalar(
-                select(
-                    exists().where(
-                        IncelemeIsareti.tur == TUR_ITIRAZ_SINIRI,
-                        IncelemeIsareti.somut_cikti_id == cikti.id,
-                        IncelemeIsareti.durum == ACIK,
-                    )
-                )
-            )
-        ),
+        inceleme_bekliyor=await inceleme.itiraz_bekliyor_mu(oturum, cikti.id),
+        dogrulanamadi=bool(kararlar),
+        girvak_notlari=[k.girvak_notu for k in kararlar if k.girvak_notu],
     )

@@ -57,7 +57,7 @@ def algisal_ozet(veri: bytes) -> str | None:
     except (UnidentifiedImageError, OSError):
         logger.warning("algisal ozet hesaplanamadi", exc_info=True)
         return None
-    degerler = list(kucuk.getdata())
+    degerler = list(kucuk.tobytes())  # "L" kipi: piksel başına bir bayt
     pikseller = [[float(d) for d in degerler[i * _BOYUT : (i + 1) * _BOYUT]] for i in range(_BOYUT)]
     blok = _dusuk_frekanslar(pikseller)
     sirali = sorted(blok)

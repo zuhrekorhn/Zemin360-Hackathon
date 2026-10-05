@@ -13,6 +13,10 @@ bir işaretle yeniden bakar.
 
 from __future__ import annotations
 
+import datetime as dt
+from collections.abc import Iterable
+from typing import Protocol
+
 ACIK = "acik"
 KAPANDI = "kapandi"
 DOGRULANAMADI = "dogrulanamadi"
@@ -33,3 +37,24 @@ def inceleme_gecisi(durum: str, karar: str) -> str | None:
     if durum == karar:
         return None
     raise GecersizKarar("Bu işaret başka bir kararla kapandı; karar değiştirilemez.")
+
+
+class _Karar(Protocol):
+    tur: str
+    durum: str
+    kapanma_tarihi: dt.datetime | None
+
+
+def gecerli_dogrulanamadilar(isaretler: Iterable[_Karar]) -> list[_Karar]:
+    """Kalemin "Doğrulanamadı" etiketi (plan § 9): türünün SON kararı "doğrulanamadı"
+    olan işaretler. Açık işaret etiketi kaldırmaz (karar inceleme bitene dek
+    geçerli); gencin itirazı aynı türden yeni bir işaret açar, GİRVAK onu "sorun
+    yok" diye kapatırsa etiket kalkar. Puan değişmez (İ1)."""
+    son: dict[str, _Karar] = {}
+    for isaret in isaretler:
+        if isaret.durum == ACIK or isaret.kapanma_tarihi is None:
+            continue
+        onceki = son.get(isaret.tur)
+        if onceki is None or isaret.kapanma_tarihi > onceki.kapanma_tarihi:
+            son[isaret.tur] = isaret
+    return [i for i in son.values() if i.durum == DOGRULANAMADI]

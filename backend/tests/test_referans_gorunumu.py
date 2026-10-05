@@ -57,6 +57,7 @@ class SahteReferans:
     somut_cikti_id: uuid.UUID | None = None
     olusturma_tarihi: dt.datetime = field(default_factory=lambda: dt.datetime.now(dt.UTC))
     somut_cikti: SahteCikti = field(default_factory=SahteCikti)
+    yanit_isareti: dict | None = None
 
 
 class SahteOturum:
@@ -381,3 +382,14 @@ def test_destek_degismezse_yalnizca_kart_hazirlanir(
 
     assert kalem_yeniden_puanlama_arka_plani_yok == []
     assert kart_hazirlama_arka_plani_yok == [(cikti.yetenek_karti_id, 2, False)]
+
+
+@pytest.fixture(autouse=True)
+def supheli_yanit_sinyali_yok(monkeypatch):
+    """Bu dosya DB'siz sahte oturumla çalışır; şüphe sinyalleri gerçek veritabanıyla
+    tests/test_kotuye_kullanim.py'de sınanır."""
+
+    async def yok(*_args, **_kwargs):
+        return ()
+
+    monkeypatch.setattr(referans_servisi.referans_suphesi, "yanit_sinyalleri", yok)

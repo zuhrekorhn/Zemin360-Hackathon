@@ -187,11 +187,16 @@ export function KanitBolumu({
         />
       </section>
 
-      {degerlendirildi ? (
+      {durum?.dogrulanamadi ? (
+        <DogrulanamadiEtiketi notlar={durum.girvak_notlari} />
+      ) : null}
+
+      {degerlendirildi || durum?.dogrulanamadi ? (
         <Degerlendirme
           kimlik={somutCiktiId}
           not={durum?.guven_skoru?.gerekce_metni ?? null}
           incelemeBekliyor={durum?.inceleme_bekliyor ?? false}
+          kararaItiraz={durum?.dogrulanamadi ?? false}
           bekleniyor={bekleniyor}
           onItiraz={(aciklama) =>
             calistir(() => itirazEt(somutCiktiId, aciklama))
@@ -509,16 +514,45 @@ function ReferansFormu({
   );
 }
 
+/**
+ * GİRVAK'ın "doğrulanamadı" kararı (plan § 9). Puanı değiştirmez; genç kararı
+ * görür ve itiraz edebilir. GİRVAK "sorun yok" derse etiket kalkar.
+ */
+function DogrulanamadiEtiketi({ notlar }: { notlar: string[] }) {
+  return (
+    <section
+      className="flex flex-col gap-1.5 rounded-sm border border-kenar px-3 py-2"
+      aria-label="GİRVAK kararı"
+    >
+      <span className="w-fit rounded-sm border border-kenar px-2 py-0.5 text-xs font-medium">
+        Doğrulanamadı
+      </span>
+      <p className="text-sm text-pretty">
+        GİRVAK bu çalışmayı inceledi ve şimdilik doğrulayamadı. Güven göstergen
+        bu yüzden değişmedi; karara aşağıdan itiraz edebilirsin.
+      </p>
+      {notlar.map((not, i) => (
+        <p key={i} className="text-sm text-pretty">
+          <span className="text-muted-foreground">GİRVAK’ın notu: </span>
+          {not}
+        </p>
+      ))}
+    </section>
+  );
+}
+
 function Degerlendirme({
   kimlik,
   not,
   incelemeBekliyor,
+  kararaItiraz,
   bekleniyor,
   onItiraz,
 }: {
   kimlik: string;
   not: string | null;
   incelemeBekliyor: boolean;
+  kararaItiraz: boolean;
   bekleniyor: boolean;
   onItiraz: (aciklama: string) => Promise<boolean>;
 }) {
@@ -563,8 +597,9 @@ function Degerlendirme({
             />
           </FormAlani>
           <p className="text-xs text-muted-foreground">
-            Neyin gözden kaçtığını yaz; yeni bir kanıtın varsa yukarıdan ekle.
-            Güven göstergesi yeniden hesaplanır, referans yanıtı korunur.
+            {kararaItiraz
+              ? "Neyin gözden kaçtığını yaz; itirazın GİRVAK’a gider ve sonucu sana bildirilir."
+              : "Neyin gözden kaçtığını yaz; yeni bir kanıtın varsa yukarıdan ekle. Güven göstergesi yeniden hesaplanır, referans yanıtı korunur."}
           </p>
           <div className="flex flex-wrap gap-3">
             <Button
@@ -592,10 +627,12 @@ function Degerlendirme({
             size="sm"
             onClick={() => setAcik(true)}
           >
-            Değerlendirmeye itiraz et
+            {kararaItiraz ? "Karara itiraz et" : "Değerlendirmeye itiraz et"}
           </Button>
           <span className="text-xs text-muted-foreground">
-            Değerlendirmeyi eksik buluyorsan yeniden bakılmasını isteyebilirsin.
+            {kararaItiraz
+              ? "GİRVAK’ın yeniden bakmasını isteyebilirsin."
+              : "Değerlendirmeyi eksik buluyorsan yeniden bakılmasını isteyebilirsin."}
           </span>
         </div>
       )}

@@ -127,8 +127,14 @@ class KanitDurumuYaniti(BaseModel):
     # Kartın "Kanıt bekliyor" rozeti: kanıt ya da referans eklenince arayüz
     # sayfayı yenilemeden günceller (bulgu 28).
     kart_kanit_bekleyen: bool
-    # Hak dolduktan sonraki itiraz GİRVAK'ta bekliyor (plan § 9); arayüz itirazı kapatır.
+    # Gencin itirazı GİRVAK'ta bekliyor (hak doldu ya da karara itiraz; plan § 9);
+    # arayüz itirazı kapatır.
     inceleme_bekliyor: bool = False
+    # GİRVAK'ın geçerli "doğrulanamadı" kararı (kalemin etiketi; puan değişmez, İ1).
+    # Genç görür ve itiraz edebilir; GİRVAK "sorun yok" derse kalkar.
+    dogrulanamadi: bool = False
+    # Kararlardaki GİRVAK notları (boş olanlar atlanır)
+    girvak_notlari: list[str] = []
 
 
 class ReferansIstegiYaniti(BaseModel):

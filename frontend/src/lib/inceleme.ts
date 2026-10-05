@@ -108,8 +108,22 @@ function referansSinyali(sinyal: string, r: Record<string, unknown>): string {
   }
 }
 
-/** Ayrıntının GİRVAK'a gösterilen satırları (türe göre). */
+/**
+ * Ayrıntının GİRVAK'a gösterilen satırları: türe özel satırlar, ardından gencin
+ * itiraz notları ("doğrulanamadı" kararına itiraz aynı türden yeni işaret açar).
+ */
 export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
+  const notlar = metinListesi(satir.ayrinti.itiraz_notlari).map(
+    (n) => `İtiraz notu: ${n}`,
+  );
+  if (satir.tur === "itiraz_siniri") return notlar;
+  const itiraz = notlar.length
+    ? ["Genç önceki “doğrulanamadı” kararına itiraz etti.", ...notlar]
+    : [];
+  return [...turSatirlari(satir), ...itiraz];
+}
+
+function turSatirlari(satir: IncelemeSatiri): string[] {
   const a = satir.ayrinti;
   if (satir.tur === "ad_degisikligi") {
     const satirlar = [
@@ -174,9 +188,6 @@ export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
       (g) =>
         `${String(g.dosya_adi ?? "Görsel")} şu sayfada da var: ${String(g.adres ?? "—")}`,
     );
-  }
-  if (satir.tur === "itiraz_siniri") {
-    return metinListesi(a.itiraz_notlari).map((n) => `İtiraz notu: ${n}`);
   }
   return [];
 }

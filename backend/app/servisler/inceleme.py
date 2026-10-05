@@ -23,9 +23,9 @@ from typing import Any, Protocol
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.agents.inceleme_durumu import ACIK, inceleme_gecisi
+from app.agents.inceleme_durumu import ACIK, gecerli_dogrulanamadilar, inceleme_gecisi
 from app.api.bildirimler import bildirim_ekle
-from app.models.inceleme_isareti import IncelemeIsareti
+from app.models.inceleme_isareti import KALEM_KARARI_TURLERI, IncelemeIsareti
 from app.models.kullanici import Kullanici
 
 
@@ -141,6 +141,33 @@ async def sinyal_ekle(
         birlestir=_sinyalleri_birlestir(alan),
     )
     return isaret
+
+
+async def kalem_kararlari(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> list[IncelemeIsareti]:
+    """Kalemin geçerli "doğrulanamadı" kararları (etiket; kural `gecerli_dogrulanamadilar`)."""
+    isaretler = await oturum.scalars(
+        select(IncelemeIsareti).where(
+            IncelemeIsareti.somut_cikti_id == somut_cikti_id,
+            IncelemeIsareti.tur.in_(KALEM_KARARI_TURLERI),
+        )
+    )
+    return gecerli_dogrulanamadilar(isaretler)
+
+
+async def itiraz_bekliyor_mu(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> bool:
+    """Gencin itiraz notu taşıyan açık bir işaret var mı (hak dolan itiraz ya da
+    "doğrulanamadı" kararına itiraz)? Arayüz itirazı kapatır."""
+    return bool(
+        await oturum.scalar(
+            select(IncelemeIsareti.id)
+            .where(
+                IncelemeIsareti.somut_cikti_id == somut_cikti_id,
+                IncelemeIsareti.durum == ACIK,
+                IncelemeIsareti.ayrinti.has_key("itiraz_notlari"),
+            )
+            .limit(1)
+        )
+    )
 
 
 async def karar_ver(

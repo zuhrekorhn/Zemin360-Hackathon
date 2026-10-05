@@ -42,6 +42,18 @@ TURLER = (
     TUR_PROFIL_KODU_ELLE,
     TUR_EDEVLET_BARKODU,
 )
+# Kararı kalemin üzerinde "Doğrulanamadı" etiketi olarak görünen türler (kalem
+# işaretleri; etkisi `KalemIsleyici`). Talepler (ad, doğrulama kodu, e-Devlet)
+# kendi sonucunu kendi yerinde gösterir.
+KALEM_KARARI_TURLERI = (
+    TUR_AYNI_IDDIA_COK_HESAPTA,
+    TUR_AYNI_BELGE_IKI_HESAPTA,
+    TUR_GORSEL_BASKASINDA,
+    TUR_REFERANS_SUPHELI,
+    TUR_BELGE_TUTARSIZ,
+    TUR_KANIT_CELISIYOR,
+    TUR_ITIRAZ_SINIRI,
+)
 
 
 def _liste(degerler: tuple[str, ...]) -> str:

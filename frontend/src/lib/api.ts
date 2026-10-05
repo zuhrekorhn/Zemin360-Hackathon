@@ -866,8 +866,11 @@ export type KanitDurumu = {
   referanslar: ReferansDurumu[];
   /** Kartın "Kanıt bekliyor" rozeti (sayfa yenilenmeden güncellenir). */
   kart_kanit_bekleyen: boolean;
-  /** Hak dolduktan sonraki itiraz GİRVAK'ta bekliyor (yanıt 202). */
+  /** Gencin itirazı GİRVAK'ta bekliyor: hak doldu ya da karara itiraz (yanıt 202). */
   inceleme_bekliyor: boolean;
+  /** GİRVAK'ın geçerli "doğrulanamadı" kararı (kalemin etiketi; puan değişmez). */
+  dogrulanamadi: boolean;
+  girvak_notlari: string[];
 };
 
 /** Referans kişinin yanıt vermeden önce gördüğü bilgi — iletişim bilgisi yok. */

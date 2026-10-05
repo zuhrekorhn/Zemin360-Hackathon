@@ -2,6 +2,7 @@
 puan değişmez (İ1); aynı sinyal bir kez düşer."""
 
 import asyncio
+import datetime as dt
 import io
 
 import pytest
@@ -615,5 +616,78 @@ def test_bozuk_imzali_belge_isaret_acar(monkeypatch):
             [isaret] = await _isaretler(oturum, TUR_BELGE_TUTARSIZ, [kalem_id])
             [bulgu] = isaret.ayrinti["bulgular"]
             assert (bulgu["neden"], bulgu["dosya_adi"]) == ("bozuk_imza", "sertifika.pdf")
+
+    asyncio.run(senaryo())
+
+
+# --- "Doğrulanamadı" etiketi ve karara itiraz -------------------------------------------------
+
+
+def test_dogrulanamadi_etiketi_son_karara_gore():
+    import datetime as dt
+    from types import SimpleNamespace as N
+
+    from app.agents.inceleme_durumu import gecerli_dogrulanamadilar
+
+    def k(tur, durum, gun):
+        return N(
+            tur=tur,
+            durum=durum,
+            kapanma_tarihi=None if durum == "acik" else dt.datetime(2026, 10, gun, tzinfo=dt.UTC),
+        )
+
+    assert gecerli_dogrulanamadilar([]) == []
+    assert [i.tur for i in gecerli_dogrulanamadilar([k("a", "dogrulanamadi", 1)])] == ["a"]
+    # Açık işaret etiketi kaldırmaz; yeni "sorun yok" kararı kaldırır
+    assert len(gecerli_dogrulanamadilar([k("a", "dogrulanamadi", 1), k("a", "acik", 2)])) == 1
+    assert gecerli_dogrulanamadilar([k("a", "dogrulanamadi", 1), k("a", "kapandi", 2)]) == []
+    assert len(gecerli_dogrulanamadilar([k("a", "kapandi", 1), k("b", "dogrulanamadi", 2)])) == 1
+
+
+@pytest.mark.usefixtures("sahte_degerlendirme", "celisen_degerlendirme")
+def test_dogrulanamadi_gorunur_itiraz_girvaka_gider_sorun_yok_etiketi_kaldirir():
+    from app.models.inceleme_isareti import TUR_KANIT_CELISIYOR
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            baslik, _, kalem_id = await _genc_ve_kalem(oturum)
+            yanit = await istemci.post(
+                f"/dogrulama/kalem/{kalem_id}/kanit", headers=baslik, json={"url": LINK}
+            )
+            puan = yanit.json()["guven_skoru"]["kanit_orijinalligi"]
+            assert yanit.json()["dogrulanamadi"] is False
+            [isaret] = await _isaretler(oturum, TUR_KANIT_CELISIYOR, [kalem_id])
+
+            isaret.durum = "dogrulanamadi"
+            isaret.girvak_notu = "Kaynak başka birine ait görünüyor"
+            isaret.kapanma_tarihi = dt.datetime.now(dt.UTC)
+            await oturum.commit()
+            durum = (await istemci.get(f"/dogrulama/kalem/{kalem_id}", headers=baslik)).json()
+            assert durum["dogrulanamadi"] is True
+            assert durum["girvak_notlari"] == ["Kaynak başka birine ait görünüyor"]
+            assert durum["guven_skoru"]["kanit_orijinalligi"] == puan  # puan değişmedi (İ1)
+
+            # İtiraz modeli çağırmaz, hak harcamaz; aynı türden yeni işaret GİRVAK'a gider
+            yanit = await istemci.post(
+                f"/dogrulama/kalem/{kalem_id}/itiraz",
+                headers=baslik,
+                json={"aciklama": "Proje benim, hesabı bağladım"},
+            )
+            assert yanit.status_code == 202, yanit.text
+            assert yanit.json()["inceleme_bekliyor"] is True
+            assert yanit.json()["dogrulanamadi"] is True  # karar sürüyor
+            acik = [
+                i
+                for i in await _isaretler(oturum, TUR_KANIT_CELISIYOR, [kalem_id])
+                if i.durum == "acik"
+            ]
+            assert [i.ayrinti["itiraz_notlari"] for i in acik] == [["Proje benim, hesabı bağladım"]]
+
+            # GİRVAK itirazı "sorun yok" diye kapatınca etiket kalkar
+            acik[0].durum = "kapandi"
+            acik[0].kapanma_tarihi = dt.datetime.now(dt.UTC) + dt.timedelta(seconds=5)
+            await oturum.commit()
+            durum = (await istemci.get(f"/dogrulama/kalem/{kalem_id}", headers=baslik)).json()
+            assert durum["dogrulanamadi"] is False and durum["inceleme_bekliyor"] is False
 
     asyncio.run(senaryo())

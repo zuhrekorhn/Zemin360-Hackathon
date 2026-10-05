@@ -136,3 +136,19 @@ olarak duruyor. Son onay Zühre'de (rehber § 8).
 - "Neden uygun?" açıklaması firmaya hitaben 3. şahısla yazılıyor ve gence de aynen gösteriliyor (§ 9.2).
 - "Pilot uygulama" firma kartında bir iş birliği türünün adı; rehber yalnızca tek başına "pilot"u yasaklıyor.
 - Kart sayfasındaki "kart no · sürüm" satırı teknik ama kullanıcıyı yanıltmıyor; kaldırılması ayrıca konuşulabilir.
+
+## Doğrulama adım 11 — kötüye kullanım işaretleri (5 Eki)
+
+Kalemin etiketi ve itirazı (gence "sen"); kuyruk satırları GİRVAK'a ("siz" gerektiren cümle yok, olgu cümleleri).
+
+| Yer | Metin |
+|---|---|
+| Kalem etiketi | "Doğrulanamadı" |
+| Etiket açıklaması | "GİRVAK bu çalışmayı inceledi ve şimdilik doğrulayamadı. Güven göstergen bu yüzden değişmedi; karara aşağıdan itiraz edebilirsin." |
+| GİRVAK notu | "GİRVAK’ın notu: …" |
+| İtiraz düğmesi (karar varken) | "Karara itiraz et"; yardım: "GİRVAK’ın yeniden bakmasını isteyebilirsin." |
+| İtiraz formu yardımı (karar varken) | "Neyin gözden kaçtığını yaz; itirazın GİRVAK’a gider ve sonucu sana bildirilir." |
+| İtiraz iletildi | "İtirazın GİRVAK'a iletildi; inceleyip sonucu sana bildirecek. Çalışmanı ya da kanıtını değiştirirsen yeniden değerlendirilir." |
+| KVKK (ne için) | "Kötüye kullanımı fark etmek: referans istediğinde ve referansın yanıt verdiğinde IP adresinin ve tarayıcı bilgisinin geri çevrilemez bir özeti 90 gün saklanır; ham adres saklanmaz. Şüpheli bir durum GİRVAK'ın incelemesine gider, puanını kendiliğinden değiştirmez." |
+| KVKK (hizmet sağlayıcı) | "Google Cloud Vision: tasarım ya da fotoğraf alanındaysan, yüklediğin görselin küçültülmüş bir kopyası internette başka bir sayfada yayımlanmış mı diye aranabilir." |
+| GİRVAK kuyruğu | Aynı çalışma / dosya / görsel başka hesapta, şüpheli referans yanıtı, belge tutarsız, kanıt çelişiyor satırları (`lib/inceleme.ts`) |
