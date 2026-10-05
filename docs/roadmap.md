@@ -185,6 +185,37 @@ eksikliği görülen profil işleri ile arayüz düzeltmeleri. Akşam özellik d
 - [ ] Profil düzenleme sayfası (genç ve kurum). *Genç `/profil` hazır; firma kaldı.*
 - [ ] Arayüz düzeltmeleri (C ve D'den biriken küçük işler).
 
+## Tanımlama incelemesi (5 Eki)
+
+Ajan inceleme sırasının 3. adımı. Kötü girdi senaryo seti
+(`backend/scripts/tanimlama_senaryolari.py`, gerçek modelle): mevcut durum 19/23, düzeltmeler sonrası 42/42
+(`backend/tests/tanimlama_senaryolari/karne_*.json`). Kod 7 Ekim akşamı donar, 8 Ekim prova.
+
+- [x] Senaryo seti: 10 kötü girdi (tek cümle, rol tarifi, ölçülemez kriter, "yarıya insin",
+      hep "bilmiyorum", alakasız yıl, İngilizce, ortak tarifi, istem enjeksiyonu, uzun metin).
+- [x] A: zorunlu alan tavanı 2 → 4; "belirtilmedi" yer tutucusu yok; onay boş alanı reddeder;
+      taslakta problem / kriter / kısıtlar düzenlenebilir; çalışma modeli ve müsaitlik zorunlu
+      seçim ("Fark etmez" = filtre yok).
+- [x] B: yapılandırılmış başarı ölçütü (`ihtiyac_karti.basari_olcutu`), hedef yoksa bir ek soru,
+      "ölçüm yöntemi belirlenecek" işareti.
+- [x] D: sayfa yenilenince sohbet geri gelir (`GET /tanimlama/sohbet/{id}`, `sessionStorage`).
+- [x] C: kapatma nedeni `hatali_girildi`; GİRVAK sayılarında ayrı.
+- [ ] **"Düzelt" düğmesi ve ilgi aktarımı:** açık ilanı önceden doldurulmuş formla düzeltip yeniden
+      açmak; eski ilana gösterilmiş ilgiler yeni ilana aktarılır (aktarılmazsa yazım hatası
+      düzeltmek bütün ilgileri düşürür). Ayrı bir düzenleme ucu da bu başlıkta.
+- [ ] Genç kapısında firmanın kayıt bilgileri bağlam olarak gitmiyor (bulgu 5): örnek sorular
+      sektöre uyarlanamıyor. Firma kartı sohbetinde de örnekler sektöre uyarlanmıyor.
+- [ ] Sohbet ilk mesajda kapanabiliyor; kısıtlar ve şehir sohbette sorulmuyor (bulgu 6'nın
+      kalanı; çalışma modeli ve müsaitlik onay formunda zorunlu yapıldı).
+- [ ] Küçükler (bulgu 7): kayıtlı kartta "kart no" satırı teknik; talimatlarda "kurum" kelimesi.
+- [ ] İlan metni "Neden uygun?" isteminde veri olarak işaretlenmiyor (istem enjeksiyonuna karşı
+      sınır işareti); senaryo setinde sohbet tarafı temiz çıktı, gerekçe tarafı denenmedi.
+- [ ] "Bilmiyorum" diyen firma 7 tura kadar soru görüyor: açıklama turları tur hakkından
+      düşmüyor. Gerekirse "bilmiyorum"u açıklama isteğinden ayırmak.
+- [ ] Mimari borç: `servisler/kart_hazirlama` API katmanından (`api.yetenek_kartlari`) import
+      ediyor; döngü edevlet'te tembel importla kırıldı, `embedding_hesapla` servis katmanına
+      taşınmalı.
+
 ## Faz E — Yayına alma + tohum veri (4 Eki)
 
 - [ ] Frontend: Vercel. Backend: Railway ya da Render. Postgres: pgvector
