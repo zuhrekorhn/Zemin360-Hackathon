@@ -23,7 +23,7 @@ from app.models.inceleme_isareti import TUR_EDEVLET_BARKODU, IncelemeIsareti
 from app.models.kanit_parcasi import KanitParcasi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
-from app.servisler import inceleme, kart_hazirlama
+from app.servisler import inceleme
 from app.servisler.dogrulama.capalar.temel import CapaGirdisi
 
 ONAYLANDI = "onaylandi"
@@ -93,6 +93,11 @@ class EdevletIsleyici:
                 .where(GuvenSkoru.somut_cikti_id == cikti.id)
                 .values(degerlendirme_tarihi=None)
             )
+            # Tembel import: kart_hazirlama → api.yetenek_kartlari → dosyalar →
+            # capalar zinciri modül yüklenirken döngü kuruyordu (test dosyası tek
+            # başına çalışınca ImportError).
+            from app.servisler import kart_hazirlama
+
             kart = await oturum.get(YetenekKarti, cikti.yetenek_karti_id)
             arka_plan = (
                 inceleme.ArkaPlanIsi(kart_hazirlama.karti_hazirla, (kart.id, kart.versiyon)),
