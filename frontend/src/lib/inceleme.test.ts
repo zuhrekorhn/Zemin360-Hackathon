@@ -4,6 +4,7 @@ import type { IncelemeSatiri } from "@/lib/api";
 import {
   ayrintiSatirlari,
   incelenecekBelgeler,
+  karsilastirilacakKartlar,
   kararEtiketleri,
   turEtiketi,
 } from "@/lib/inceleme";
@@ -91,5 +92,24 @@ describe("e-Devlet barkodu ve aynı belge", () => {
       eslesmeler: [{ adres: "https://credly.com/badges/1" }],
     });
     expect(ayrintiSatirlari(s)[0]).toContain("https://credly.com/badges/1");
+  });
+});
+
+describe("aynı çalışma başka hesapta", () => {
+  it("eşleşmenin nedenini ve öteki kartı verir", () => {
+    const s = satir("ayni_iddia_cok_hesapta", {
+      eslesmeler: [
+        { neden: "adres", adres: "https://github.com/a/b", diger_kart_id: "k2" },
+        { neden: "gorsel", dosya_adi: "afis.png", diger_kart_id: "k2" },
+        { neden: "dosya", dosya_adi: "rapor.pdf", diger_kart_id: "k3" },
+      ],
+    });
+    expect(ayrintiSatirlari(s)).toEqual([
+      "Aynı link başka bir hesapta da var: https://github.com/a/b",
+      "Benzer görsel başka bir hesapta da var: afis.png",
+      "Aynı dosya başka bir hesapta da var: rapor.pdf",
+    ]);
+    expect(karsilastirilacakKartlar(s)).toEqual(["k2", "k3"]);
+    expect(karsilastirilacakKartlar(satir("itiraz_siniri", {}))).toEqual([]);
   });
 });

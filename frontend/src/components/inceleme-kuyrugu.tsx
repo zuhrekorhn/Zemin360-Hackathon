@@ -17,6 +17,7 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
 import {
   ayrintiSatirlari,
   incelenecekBelgeler,
+  karsilastirilacakKartlar,
   kararEtiketleri,
   turEtiketi,
 } from "@/lib/inceleme";
@@ -125,6 +126,15 @@ export function IncelemeKuyrugu() {
                     Kartı aç
                   </Link>
                 ) : null}
+                {karsilastirilacakKartlar(isaret).map((kartId, i) => (
+                  <Link
+                    key={kartId}
+                    href={`/kart/${kartId}`}
+                    className="w-fit text-sm text-baglanti underline"
+                  >
+                    {i === 0 ? "Öteki kartı aç" : `${i + 1}. öteki kartı aç`}
+                  </Link>
+                ))}
                 <label htmlFor={notAlani} className="sr-only">
                   Gence not (isteğe bağlı)
                 </label>

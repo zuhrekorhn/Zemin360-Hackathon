@@ -174,6 +174,7 @@ async def dosya_ekle(
         tur=hazir.parca_turu,
         dosya_anahtari=anahtar,
         dosya_ozeti=hazir.ozet,
+        phash=hazir.phash,
         belge=islenmis.belge,
         tam_metin=icerik.tam_metin,
         gorsel_metni=icerik.gorsel_metni,

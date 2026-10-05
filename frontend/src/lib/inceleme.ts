@@ -60,6 +60,20 @@ export function incelenecekBelgeler(satir: IncelemeSatiri): string[] {
     .filter((id): id is string => typeof id === "string");
 }
 
+/** Eşleşmedeki öteki gençlerin kartları (aynı çalışma başka hesapta): GİRVAK karşılaştırır. */
+export function karsilastirilacakKartlar(satir: IncelemeSatiri): string[] {
+  const kartlar = nesneListesi(satir.ayrinti.eslesmeler)
+    .map((e) => e.diger_kart_id)
+    .filter((id): id is string => typeof id === "string");
+  return [...new Set(kartlar)];
+}
+
+const TEKRAR_NEDENLERI: Record<string, string> = {
+  adres: "Aynı link başka bir hesapta da var",
+  dosya: "Aynı dosya başka bir hesapta da var",
+  gorsel: "Benzer görsel başka bir hesapta da var",
+};
+
 /** Ayrıntının GİRVAK'a gösterilen satırları (türe göre). */
 export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
   const a = satir.ayrinti;
@@ -92,6 +106,12 @@ export function ayrintiSatirlari(satir: IncelemeSatiri): string[] {
     return nesneListesi(a.eslesmeler).map(
       (e) =>
         `Doğrulama adresi başka bir hesapta da var: ${String(e.adres ?? "—")}`,
+    );
+  }
+  if (satir.tur === "ayni_iddia_cok_hesapta") {
+    return nesneListesi(a.eslesmeler).map(
+      (e) =>
+        `${TEKRAR_NEDENLERI[String(e.neden)] ?? "Başka bir hesapta da var"}: ${String(e.adres ?? e.dosya_adi ?? "—")}`,
     );
   }
   if (satir.tur === "itiraz_siniri") {

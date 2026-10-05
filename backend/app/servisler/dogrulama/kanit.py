@@ -39,6 +39,7 @@ from app.models.kullanici import Kullanici
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_kaniti import YetenekKaniti
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler.dogrulama import isaretler
 from app.servisler.dogrulama.parcalar import link_parcasi_ekle, okunabilir_mi, parca_sil
 from app.servisler.dogrulama.referans import referans_destegi_hesapla, ucuncu_taraf_puani
 from app.servisler.dogrulama.sorgular import bagli_hesap_bilgileri
@@ -54,6 +55,8 @@ class Hazirlik:
     parcalar: tuple[KanitParcasi, ...]
     okunanlar: tuple[OkunanKanit, ...]
     girdi: DegerlendirmeGirdisi
+    # Kalemin sahibi (kötüye kullanım sinyallerinde kendi parçaları ayrılır)
+    kullanici_id: uuid.UUID | None = None
 
     @property
     def okunan(self) -> OkunanKanit | None:
@@ -75,14 +78,15 @@ async def hazirla(
         .where(YetenekKarti.id == cikti.yetenek_karti_id)
     )
     girdi = _girdi(kart, cikti, itiraz_notu)
+    kullanici_id = kart.kullanici_id if kart else None
     parcalar = tuple(p for p in cikti.kanit_parcalari if okunabilir_mi(p))
     if not parcalar:
-        return Hazirlik((), (), girdi)
+        return Hazirlik((), (), girdi, kullanici_id)
     bagli = await bagli_hesap_bilgileri(oturum, kart.kullanici_id) if kart else ()
     sorgular = _iddia_sorgulari(girdi)
     kimlik = _kimlik_durumu(kart)
     okunanlar = tuple([await _parcayi_oku(p, sorgular, bagli, kimlik) for p in parcalar])
-    return Hazirlik(parcalar, okunanlar, girdi)
+    return Hazirlik(parcalar, okunanlar, girdi, kullanici_id)
 
 
 def _kimlik_durumu(kart: YetenekKarti | None) -> KimlikDurumu:
@@ -129,10 +133,14 @@ def onbellekte_mi(cikti: SomutCikti, hazirlik: Hazirlik) -> bool:
 
 
 async def uygula(oturum: AsyncSession, cikti: SomutCikti, hazirlik: Hazirlik) -> None:
-    """Modeli çağırır, kuralla puanlar ve göstergeyi yazar."""
+    """Modeli çağırır, kuralla puanlar, göstergeyi yazar ve kötüye kullanım
+    sinyallerini inceleme kuyruğuna bırakır (puanı değiştirmezler, İ1)."""
     sonuc = await kalemi_degerlendir(hazirlik.girdi, hazirlik.okunanlar, cikar)
     _sonucu_yaz(cikti, sonuc, hazirlik)
     await _yetenek_kanitlarini_yaz(oturum, cikti, sonuc, hazirlik)
+    if hazirlik.kullanici_id is not None:
+        await oturum.flush()  # yeni parçaların kimliği sinyallere yazılır
+        await isaretler.degerlendirme_isaretleri(oturum, cikti, hazirlik.kullanici_id)
 
 
 async def degerlendir(
@@ -224,7 +232,7 @@ def _sonucu_yaz(cikti: SomutCikti, sonuc: DegerlendirmeSonucu, hazirlik: Hazirli
     skor.kanit_ozeti = {**sonuc.kanit_ozeti, "destekler": list(sonuc.destekler)}
     skor.degerlendirme_tarihi = simdi
 
-    for parca, okunan, isaretler in zip(
+    for parca, okunan, kalem_isaretleri in zip(
         hazirlik.parcalar, hazirlik.okunanlar, sonuc.parca_isaretleri, strict=True
     ):
         parca.erisim = okunan.erisim.value
@@ -232,7 +240,7 @@ def _sonucu_yaz(cikti: SomutCikti, sonuc: DegerlendirmeSonucu, hazirlik: Hazirli
         parca.sahiplik_kaynagi = okunan.sahiplik_kaynagi.value
         parca.platform = okunan.platform
         parca.okuma_tarihi = simdi
-        parca.isaretler = list(isaretler)
+        parca.isaretler = list(kalem_isaretleri)
 
 
 async def _yetenek_kanitlarini_yaz(

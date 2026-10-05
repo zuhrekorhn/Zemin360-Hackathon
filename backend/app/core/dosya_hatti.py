@@ -11,7 +11,8 @@ Sıra tek yerde, her adım tek iş yapar:
   5. Temizlik: PDF'te JavaScript, otomatik eylemler ve gömülü dosyalar
      (`pikepdf`); görsel Pillow ile yeniden kodlanır, meta veri ve çok biçimli
      (polyglot) içerik düşer.
-Depoya konan temizlenmiş dosyadır; tekrar denetimi için özet ham dosyadan alınır.
+Depoya konan temizlenmiş dosyadır; tekrar denetimi için özet ham dosyadan, görselin
+algısal özeti (pHash) temizlenmiş piksellerden alınır.
 Veritabanı ve ağ yok (virüs tarayıcı dışarıdan verilir).
 """
 
@@ -30,6 +31,7 @@ from typing import Any
 import filetype
 
 from app.core.dis_servisler.virus import TaramaSonucu, VirusTarayici
+from app.core.gorsel_ozeti import algisal_ozet
 from app.core.kanit_okuma.belge import ParcaTuru
 
 logger = logging.getLogger("zemin360.dosya_hatti")
@@ -73,6 +75,8 @@ class HazirDosya:
     tarama: TaramaSonucu
     # Ön okuyucuların çıktısı: {"exif": {...}, "c2pa": {...}, ...}
     on_bilgi: dict[str, Any] = field(default_factory=dict)
+    # Görselin algısal özeti (temizlenmiş, yönü düzeltilmiş piksellerden); PDF'te None
+    phash: str | None = None
 
 
 # Ön okuyucu: (ham veri, içerik türü) → JSON'a yazılabilir sözlük ya da None.
@@ -230,8 +234,10 @@ async def dosyayi_hazirla(ham: bytes, tarayici: VirusTarayici) -> HazirDosya:
     on_bilgi = await asyncio.to_thread(on_oku, ham, tur.icerik_turu)
     if tur.parca_turu is ParcaTuru.DOSYA:
         veri, icerik_turu = await asyncio.to_thread(pdf_temizle, ham), tur.icerik_turu
+        phash = None
     else:
         veri, icerik_turu = await asyncio.to_thread(gorsel_temizle, ham, tur.icerik_turu)
+        phash = await asyncio.to_thread(algisal_ozet, veri)
     return HazirDosya(
         veri=veri,
         ham=ham,
@@ -240,4 +246,5 @@ async def dosyayi_hazirla(ham: bytes, tarayici: VirusTarayici) -> HazirDosya:
         ozet=hashlib.sha256(ham).hexdigest(),
         tarama=tarama,
         on_bilgi=on_bilgi,
+        phash=phash,
     )

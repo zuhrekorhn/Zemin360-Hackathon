@@ -95,6 +95,54 @@ async def isaret_ac(
     return isaret, True
 
 
+def _sinyalleri_birlestir(alan: str) -> Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]]:
+    def birlestir(eski: dict[str, Any], yeni: dict[str, Any]) -> dict[str, Any]:
+        return {**eski, alan: [*eski.get(alan, []), *yeni[alan]]}
+
+    return birlestir
+
+
+async def sinyal_ekle(
+    oturum: AsyncSession,
+    tur: str,
+    kullanici_id: uuid.UUID,
+    somut_cikti_id: uuid.UUID,
+    alan: str,
+    sinyaller: Sequence[dict[str, Any]],
+) -> IncelemeIsareti | None:
+    """Kanıt sinyallerini (eşleşme, çelişki…) kalemin işaretine ekler.
+
+    Her sinyalin bir `anahtar`'ı vardır. Bu kalemde aynı türden HERHANGİ bir
+    işarette (açık ya da kararlı) görülmüş anahtar yeniden eklenmez: GİRVAK'ın
+    "sorun yok" dediği eşleşme her değerlendirmede kuyruğa dönmesin. Yeni
+    sinyal yoksa işaret açılmaz (`None`).
+    """
+    onceki = await oturum.scalars(
+        select(IncelemeIsareti.ayrinti).where(
+            IncelemeIsareti.tur == tur,
+            IncelemeIsareti.kullanici_id == kullanici_id,
+            IncelemeIsareti.somut_cikti_id == somut_cikti_id,
+        )
+    )
+    gorulen = {s.get("anahtar") for ayrinti in onceki for s in (ayrinti or {}).get(alan, [])}
+    yeniler: list[dict[str, Any]] = []
+    for sinyal in sinyaller:
+        if sinyal["anahtar"] not in gorulen:
+            gorulen.add(sinyal["anahtar"])
+            yeniler.append(sinyal)
+    if not yeniler:
+        return None
+    isaret, _ = await isaret_ac(
+        oturum,
+        tur,
+        kullanici_id,
+        somut_cikti_id=somut_cikti_id,
+        ayrinti={alan: yeniler},
+        birlestir=_sinyalleri_birlestir(alan),
+    )
+    return isaret
+
+
 async def karar_ver(
     oturum: AsyncSession,
     isaret: IncelemeIsareti,

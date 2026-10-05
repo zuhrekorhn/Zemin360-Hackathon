@@ -79,6 +79,7 @@ def dosya_parcasi_ekle(
     belge: dict,
     tam_metin: str | None = None,
     gorsel_metni: str | None = None,
+    phash: str | None = None,
 ) -> KanitParcasi:
     """Çalışmaya dosya ya da görsel parçası ekler; aynı dosya (ham özet) ikinci kez 409."""
     dosya_eklenebilir_mi(cikti, dosya_ozeti)
@@ -86,6 +87,7 @@ def dosya_parcasi_ekle(
         tur=tur.value,
         dosya_anahtari=dosya_anahtari,
         dosya_ozeti=dosya_ozeti,
+        phash=phash,
         belge=belge,
         tam_metin=tam_metin,
         gorsel_metni=gorsel_metni,
