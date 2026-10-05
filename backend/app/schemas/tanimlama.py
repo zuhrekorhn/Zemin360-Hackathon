@@ -6,7 +6,7 @@ docs/api-contracts.md § Tanımlama, docs/data-schema.md § IHTIYAC_KARTI.
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
@@ -108,6 +108,19 @@ class TanimlamaSohbetYaniti(BaseModel):
     soru: str | None = None
     taslak: IhtiyacTaslagi
     taslak_hazir: bool
+
+
+class SohbetMesaji(BaseModel):
+    """Geri yüklenen sohbetin bir mesajı: ajan ya da kullanıcı."""
+
+    kim: Literal["ajan", "kullanici"]
+    metin: str
+
+
+class TanimlamaSohbetDurumu(TanimlamaSohbetYaniti):
+    """Sayfa yenilenince sohbet olduğu yerden sürer (checkpointer'daki durum)."""
+
+    mesajlar: list[SohbetMesaji]
 
 
 class KurumProfili(BaseModel):

@@ -40,7 +40,9 @@ from app.schemas.tanimlama import (
     IhtiyacKartiOnaylaIstegi,
     IhtiyacKartiYaniti,
     IhtiyacTaslagi,
+    SohbetMesaji,
     TanimlamaBaslatIstegi,
+    TanimlamaSohbetDurumu,
     TanimlamaSohbetYaniti,
 )
 from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
@@ -89,6 +91,32 @@ async def sohbet_baslat(
         baslangic, config={"configurable": {"thread_id": str(oturum_id)}}
     )
     return _yanit(oturum_id, durum)
+
+
+def _mesajlar(durum: dict) -> list[SohbetMesaji]:
+    """Checkpoint'teki mesajlar, arayüzün gösterdiği hâliyle."""
+    return [
+        SohbetMesaji(kim="kullanici" if mesaj.type == "human" else "ajan", metin=mesaj.content)
+        for mesaj in durum.get("mesajlar") or []
+        if mesaj.type in ("human", "ai") and isinstance(mesaj.content, str) and mesaj.content
+    ]
+
+
+@router.get("/sohbet/{oturum_id}", response_model=TanimlamaSohbetDurumu)
+async def sohbet_durumu(
+    oturum_id: uuid.UUID, request: Request, hesap: Hesap = Depends(rol_gerekli(ROL_KURUM))
+) -> TanimlamaSohbetDurumu:
+    """Sohbeti geri yükler: sayfa yenilenince firma kaldığı yerden devam eder.
+
+    Durum zaten checkpointer'da (Postgres); arayüz yalnızca oturum kimliğini
+    hatırlıyor. Başkasının ya da olmayan sohbet 404.
+    """
+    mevcut = await _grafik(request).aget_state({"configurable": {"thread_id": str(oturum_id)}})
+    if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
+        raise HTTPException(status_code=404, detail=SOHBET_YOK)
+    return TanimlamaSohbetDurumu(
+        **_yanit(oturum_id, mevcut.values).model_dump(), mesajlar=_mesajlar(mevcut.values)
+    )
 
 
 @router.post("/sohbet/cevap", response_model=TanimlamaSohbetYaniti)

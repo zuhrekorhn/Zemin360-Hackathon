@@ -237,3 +237,37 @@ def test_ortak_ilanina_genc_onerilmez():
         assert sayi is None
 
     senaryo(adimlar)
+
+
+def test_sohbet_geri_yuklenir_baskasina_404():
+    """Sayfa yenilenince sohbet checkpointer'dan geri gelir (mesajlar, kapı, taslak)."""
+    from langchain_core.messages import AIMessage, HumanMessage
+
+    def degerler(d):
+        return {
+            "sahip_hesap_id": str(d.kurum1.hesap.id),
+            "aranan": "firma",
+            "mesajlar": [AIMessage(content="Soru?"), HumanMessage(content="Cevap.")],
+            "sonraki_soru": "Soru?",
+            "taslak": {"problem_tanimi": "Bozulma yüksek"},
+            "taslak_hazir": False,
+        }
+
+    async def adimlar(istemci, d):
+        oturum_id = str(uuid.uuid4())
+        yanit = await istemci.get(f"/tanimlama/sohbet/{oturum_id}", headers=d.kurum1.baslik)
+        assert yanit.status_code == 200
+        govde = yanit.json()
+        assert govde["aranan"] == "firma"
+        assert govde["mesajlar"] == [
+            {"kim": "ajan", "metin": "Soru?"},
+            {"kim": "kullanici", "metin": "Cevap."},
+        ]
+        assert govde["taslak"]["problem_tanimi"] == "Bozulma yüksek"
+
+        baskasi = await istemci.get(f"/tanimlama/sohbet/{oturum_id}", headers=d.kurum2.baslik)
+        assert baskasi.status_code == 404
+        genc = await istemci.get(f"/tanimlama/sohbet/{oturum_id}", headers=d.genc1.baslik)
+        assert genc.status_code == 403
+
+    _iki_grafikle(degerler, adimlar)

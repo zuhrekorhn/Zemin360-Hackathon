@@ -24,11 +24,18 @@ import {
   type IhtiyacKartiYaniti,
   type IhtiyacTaslagi,
   type KurumProfili,
+  ApiHatasi,
   ihtiyacKartiHazirla,
   ihtiyacKartiOnayla,
   tanimlamaBaslat,
   tanimlamaCevap,
+  tanimlamaSohbetDurumu,
 } from "@/lib/api";
+import {
+  sohbetOturumuOku,
+  sohbetOturumuSil,
+  sohbetOturumuYaz,
+} from "@/lib/sohbet-oturumu";
 import { ISBIRLIGI_TURLERI, isbirligiTuruEtiketi } from "@/lib/firma-karti";
 import { FIRMA_TURLERI, onaydaFirmaBilgisiSorulmali } from "@/lib/firma-profil";
 import { hatayaCevir } from "@/lib/hata";
@@ -87,11 +94,33 @@ function TanimlamaSohbeti() {
     [],
   );
 
+  // Kapı başına bir açık sohbet: yenilenen sayfa onu sürdürür.
+  const oturumAnahtari = `tanimlama-oturumu:${aranan}`;
+
   const sohbetiBaslat = useCallback(async () => {
     setHata(null);
     setBekleniyor(true);
     try {
+      const kayitli = sohbetOturumuOku(oturumAnahtari);
+      if (kayitli) {
+        try {
+          const durum = await tanimlamaSohbetDurumu(kayitli);
+          setOturumId(durum.oturum_id);
+          setMesajlar(durum.mesajlar);
+          setTaslak(durum.taslak);
+          if (durum.taslak_hazir) setAsama("taslak");
+          return;
+        } catch (sebep) {
+          // Sohbet yok (silinmiş, başka hesap): yenisi açılır. Diğer hatalar
+          // gösterilir; "Tekrar dene" aynı sohbeti yeniden ister.
+          if (!(sebep instanceof ApiHatasi && sebep.durumKodu === 404)) {
+            throw sebep;
+          }
+          sohbetOturumuSil(oturumAnahtari);
+        }
+      }
       const yanit = await tanimlamaBaslat(aranan);
+      sohbetOturumuYaz(oturumAnahtari, yanit.oturum_id);
       setOturumId(yanit.oturum_id);
       setMesajlar(yanit.soru ? [{ kim: "ajan", metin: yanit.soru }] : []);
       setTaslak(yanit.taslak);
@@ -100,7 +129,7 @@ function TanimlamaSohbeti() {
     } finally {
       setBekleniyor(false);
     }
-  }, [hatayiYaz, aranan]);
+  }, [hatayiYaz, aranan, oturumAnahtari]);
 
   useEffect(() => {
     // StrictMode efekti iki kez çalıştırıyor; ikinci oturum açılmasın.
@@ -207,6 +236,8 @@ function TanimlamaSohbeti() {
               );
               setKart(kayitli);
               setAsama("kaydedildi");
+              // Kaydedilen ihtiyacın sohbeti kapandı; yenileme yeni sohbet açar.
+              sohbetOturumuSil(oturumAnahtari);
             } catch (sebep) {
               hatayiYaz(sebep);
             } finally {

@@ -755,6 +755,17 @@ export function tanimlamaBaslat(
 }
 
 /** POST /tanimlama/sohbet/cevap */
+export type TanimlamaSohbetDurumu = TanimlamaSohbetYaniti & {
+  mesajlar: { kim: "ajan" | "kullanici"; metin: string }[];
+};
+
+/** GET /tanimlama/sohbet/{id} — yenilenen sayfada sohbeti geri yükler; başkasının 404. */
+export function tanimlamaSohbetDurumu(
+  oturumId: string,
+): Promise<TanimlamaSohbetDurumu> {
+  return apiIstek<TanimlamaSohbetDurumu>(`/tanimlama/sohbet/${oturumId}`);
+}
+
 export function tanimlamaCevap(
   oturumId: string,
   cevap: string,
