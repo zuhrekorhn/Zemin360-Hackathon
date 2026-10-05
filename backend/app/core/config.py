@@ -116,6 +116,14 @@ class Settings(BaseSettings):
     uzak_okuyucu: Literal["jina", "kapali"] = "kapali"
     jina_api_anahtari: str = ""
     uzak_okuyucu_zaman_asimi_sn: float = 30
+    # Görsel kaynak araması (Cloud Vision Web Detection, plan § 4.3): yüklenen görselin
+    # birebir eşi başka sayfada var mı. Varsayılan kapalı: görsel yurt dışına gider
+    # (KVKK metninde listeli). Açıkken yalnızca tasarım / fotoğraf alanındaki
+    # görsellerde ve ayda en çok `gorsel_arama_aylik_tavan` çağrı.
+    gorsel_arayici: Literal["cloud_vision", "kapali"] = "kapali"
+    cloud_vision_api_anahtari: str = ""
+    gorsel_arama_aylik_tavan: int = 1000
+    gorsel_arayici_zaman_asimi_sn: float = 20
 
     @property
     def cors_origin_list(self) -> list[str]:

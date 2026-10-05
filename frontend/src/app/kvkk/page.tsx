@@ -54,6 +54,7 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
       "Cloudflare R2: yüklediğin dosyalar özel bir depoda saklanır.",
       "Resend: doğrulama ve referans e-postaları bu servisle gönderilir.",
       "Jina AI: bir kanıt linkini kendi yollarımızla açamazsak, sayfayı okumak için linkin adresi bu servise gönderilebilir.",
+      "Google Cloud Vision: tasarım ya da fotoğraf alanındaysan, yüklediğin görselin küçültülmüş bir kopyası internette başka bir sayfada yayımlanmış mı diye aranabilir.",
       "Bu sağlayıcıların sunucuları yurt dışındadır; veriler yalnızca yukarıdaki amaçlarla aktarılır.",
     ],
   },

@@ -21,6 +21,11 @@ from app.core.dis_servisler.eposta import (
     LogGonderici,
     ResendGonderici,
 )
+from app.core.dis_servisler.gorsel_arayici import (
+    CloudVisionArayici,
+    GorselArayici,
+    KapaliGorselArayici,
+)
 from app.core.dis_servisler.oauth import (
     GithubOAuth,
     GitlabOAuth,
@@ -156,6 +161,19 @@ def uzak_okuyucu() -> UzakOkuyucu:
     return KapaliUzakOkuyucu()
 
 
+@lru_cache
+def gorsel_arayici() -> GorselArayici:
+    ayar = get_settings()
+    if ayar.gorsel_arayici == "cloud_vision":
+        if ayar.cloud_vision_api_anahtari:
+            return CloudVisionArayici(
+                ayar.cloud_vision_api_anahtari, ayar.gorsel_arayici_zaman_asimi_sn
+            )
+        # Eksik ayarla açılış durmaz (İ9): kaynak araması yalnızca yapılmaz.
+        logger.warning("GORSEL_ARAYICI=cloud_vision ama CLOUD_VISION_API_ANAHTARI bos; kapali")
+    return KapaliGorselArayici()
+
+
 def servis_kipleri() -> dict[str, str]:
     """Servis adı → o an kullanılan kip (sağlık ucu için)."""
     return {
@@ -165,4 +183,5 @@ def servis_kipleri() -> dict[str, str]:
         "virus": virus_tarayici().kip,
         "yedek_okuyucu": yedek_okuyucu().kip,
         "uzak_okuyucu": uzak_okuyucu().kip,
+        "gorsel_arayici": gorsel_arayici().kip,
     }

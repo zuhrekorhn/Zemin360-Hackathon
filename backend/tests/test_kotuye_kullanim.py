@@ -144,3 +144,161 @@ def _pdf() -> bytes:
     from tests import dosya_ornekleri
 
     return dosya_ornekleri.metinli_pdf(["Proje raporu", "Kutuphane takip sistemi"])
+
+
+# --- Görsel başka bir sayfada (Cloud Vision, kapalı bayrak) ---------------------------------
+
+
+def test_gorsel_alani_rol_alanindan_ve_araclardan():
+    from app.agents.dogrulama.gorsel_kaynagi import gorsel_alani_mi
+
+    assert gorsel_alani_mi("UI/UX Tasarımcı")
+    assert gorsel_alani_mi("Fotoğrafçı")
+    assert gorsel_alani_mi("Grafik tasarım")
+    assert gorsel_alani_mi("Frontend geliştirici", ["React", "Figma"])
+    assert not gorsel_alani_mi("Backend geliştirici", ["Python", "PostgreSQL"])
+    assert not gorsel_alani_mi("Veri analisti (Quartz)")  # "art" kelime başı değil
+    assert not gorsel_alani_mi(None)
+
+
+def test_baskasindaki_sayfalar_yalnizca_birebir_ve_baskasinin():
+    from app.agents.dogrulama.gorsel_kaynagi import baskasindaki_sayfalar
+    from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi
+    from app.core.dis_servisler.gorsel_arayici import EslesenSayfa
+
+    sayfalar = [
+        EslesenSayfa("https://www.behance.net/baskasi/proje", "Afiş", True),
+        EslesenSayfa("https://www.behance.net/elif/afis", "Afişim", True),
+        EslesenSayfa("https://dribbble.com/elifd", "Dribbble", True),
+        EslesenSayfa("https://stok.example.com/doku", None, False),
+    ]
+    bagli = [BagliHesapBilgisi("dribbble", "ElifD", "profil_kodu")]
+    sonuc = baskasindaki_sayfalar(sayfalar, bagli, ["https://behance.net/elif"])
+    assert [s.adres for s in sonuc] == ["https://www.behance.net/baskasi/proje"]
+
+
+def test_cloud_vision_istegi_ve_yaniti():
+    import httpx
+
+    from app.core.dis_servisler.gorsel_arayici import CloudVisionArayici
+
+    giden = {}
+
+    def isle(istek: httpx.Request) -> httpx.Response:
+        import json
+
+        giden["anahtar"] = istek.headers.get("x-goog-api-key")
+        giden["adres"] = str(istek.url)
+        giden["govde"] = json.loads(istek.content)
+        return httpx.Response(
+            200,
+            json={
+                "responses": [
+                    {
+                        "webDetection": {
+                            "pagesWithMatchingImages": [
+                                {
+                                    "url": "https://ornek.com/a",
+                                    "pageTitle": "<b>Afiş</b>",
+                                    "fullMatchingImages": [{"url": "https://ornek.com/a.png"}],
+                                },
+                                {"url": "https://ornek.com/b", "partialMatchingImages": [{}]},
+                                {"url": "javascript:alert(1)", "fullMatchingImages": [{}]},
+                            ]
+                        }
+                    }
+                ]
+            },
+        )
+
+    arayici = CloudVisionArayici("gizli", 5, transport=httpx.MockTransport(isle))
+    sonuc = asyncio.run(arayici.ara(_desenli(boyut=(2000, 1500))))
+    assert giden["anahtar"] == "gizli" and "gizli" not in giden["adres"]
+    istek = giden["govde"]["requests"][0]
+    assert istek["features"][0]["type"] == "WEB_DETECTION"
+    gonderilen = Image.open(io.BytesIO(__import__("base64").b64decode(istek["image"]["content"])))
+    assert max(gonderilen.size) == 1024
+    assert [(s.adres, s.tam_eslesme) for s in sonuc.sayfalar] == [
+        ("https://ornek.com/a", True),
+        ("https://ornek.com/b", False),
+    ]
+
+    yasak = httpx.MockTransport(lambda _: httpx.Response(403))
+    hatali = CloudVisionArayici("x", 5, transport=yasak)
+    assert asyncio.run(hatali.ara(_desenli())) is None
+
+
+def test_aylik_tavan_kalici_sayacla():
+    from app.servisler import servis_kullanimi
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum:
+            servis = "deneme_servisi"
+            assert await servis_kullanimi.hak_al(oturum, servis, 2)
+            assert await servis_kullanimi.hak_al(oturum, servis, 2)
+            assert not await servis_kullanimi.hak_al(oturum, servis, 2)
+            assert not await servis_kullanimi.hak_al(oturum, "baska", 0)
+
+    asyncio.run(senaryo())
+
+
+class _SahteArayici:
+    kip = "sahte"
+
+    def __init__(self, sayfalar):
+        self.sayfalar = sayfalar
+        self.cagri = 0
+
+    async def ara(self, veri):
+        from app.core.dis_servisler.gorsel_arayici import AramaSonucu
+
+        self.cagri += 1
+        return AramaSonucu(tuple(self.sayfalar))
+
+
+@pytest.mark.usefixtures("sahte_degerlendirme", "dosya_modele_okutulmaz", "depo")
+def test_tasarimcinin_gorseli_baska_portfolyoda_isaret(monkeypatch):
+    from app.core.dis_servisler import kurulum
+    from app.core.dis_servisler.gorsel_arayici import EslesenSayfa
+    from app.models.inceleme_isareti import TUR_GORSEL_BASKASINDA
+    from app.models.yetenek_karti import YetenekKarti
+
+    arayici = _SahteArayici(
+        [
+            EslesenSayfa("https://www.behance.net/baskasi/afis", "Afiş", True),
+            EslesenSayfa("https://www.behance.net/elif/afis", "Afişim", True),
+        ]
+    )
+    monkeypatch.setattr(kurulum, "gorsel_arayici", lambda: arayici)
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            # Yazılımcının görseli aranmaz (alan dışında)
+            b0, _, k0 = await _genc_ve_kalem(oturum)
+            yanit = await istemci.post(
+                f"/dogrulama/kalem/{k0}/dosya", headers=b0, files={"dosya": ("a.png", _desenli())}
+            )
+            assert yanit.status_code == 201, yanit.text
+            assert arayici.cagri == 0
+
+            b1, kart_id, k1 = await _genc_ve_kalem(oturum, link="https://behance.net/elif/x")
+            kart = await oturum.get(YetenekKarti, kart_id)
+            kart.rol_alani = "Grafik tasarımcı"
+            await oturum.commit()
+            yanit = await istemci.post(
+                f"/dogrulama/kalem/{k1}/dosya",
+                headers=b1,
+                files={"dosya": ("afis.png", _baska_desen())},
+            )
+            assert yanit.status_code == 201, yanit.text
+            assert yanit.json()["guven_skoru"] is not None  # akış sürdü, puan sinyalden bağımsız
+            assert arayici.cagri == 1
+            [isaret] = await _isaretler(oturum, TUR_GORSEL_BASKASINDA, [k1])
+            [sayfa] = isaret.ayrinti["sayfalar"]
+            assert sayfa["adres"] == "https://www.behance.net/baskasi/afis"
+            assert sayfa["dosya_adi"] == "afis.png"
+            kalem = await _kalemi_oku(oturum, k1)
+            [gorsel] = [p for p in kalem.kanit_parcalari if p.tur == "gorsel"]
+            assert gorsel.belge["kaynak_aramasi"]["tam_eslesen_sayfa"] == 2
+
+    asyncio.run(senaryo())

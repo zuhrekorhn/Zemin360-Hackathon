@@ -17,6 +17,7 @@ from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.milestone import Milestone
 from app.models.referans_istegi import ReferansIstegi
+from app.models.servis_kullanimi import ServisKullanimi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_kaniti import YetenekKaniti
 from app.models.yetenek_karti import YetenekKarti
@@ -41,6 +42,7 @@ __all__ = [
     "Milestone",
     "ProfilKodu",
     "ReferansIstegi",
+    "ServisKullanimi",
     "SomutCikti",
     "YetenekKaniti",
     "YetenekKarti",

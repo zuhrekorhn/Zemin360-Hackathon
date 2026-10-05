@@ -110,5 +110,6 @@ def test_saglik_ucu_yalnizca_girvak():
         "virus",
         "yedek_okuyucu",
         "uzak_okuyucu",
+        "gorsel_arayici",
     ]
     assert yanit.json()[0]["kip"] == "sahte"

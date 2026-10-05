@@ -181,14 +181,17 @@ def dosya_modele_okutulmaz(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def yedek_okuyucu_yok(monkeypatch):
-    """Testler yerelde çalışan bir Playwright servisine ya da Jina'ya bağlı kalmaz:
+    """Testler yerelde çalışan bir Playwright servisine, Jina'ya ya da Cloud Vision'a bağlı kalmaz:
     yedek ve uzak okuyucu kapalı, ekran görüntüsü okunuş önbelleği her testte boş.
     Yedek yolu sınayan test kanıt okumaya sahte bir yedek okuyucu verir."""
     from app.agents.dogrulama import okuma
     from app.core.dis_servisler import kurulum
+    from app.core.dis_servisler.gorsel_arayici import KapaliGorselArayici
     from app.core.dis_servisler.uzak_okuyucu import KapaliUzakOkuyucu
     from app.core.dis_servisler.yedek_okuyucu import KapaliYedekOkuyucu
 
     monkeypatch.setattr(kurulum, "yedek_okuyucu", lambda: KapaliYedekOkuyucu())
     monkeypatch.setattr(kurulum, "uzak_okuyucu", lambda: KapaliUzakOkuyucu())
+    # Görsel kaynak araması (Cloud Vision) da kapalı; sınayan test sahtesini verir.
+    monkeypatch.setattr(kurulum, "gorsel_arayici", lambda: KapaliGorselArayici())
     okuma.EKRAN_OKUNUSLARI.temizle()
