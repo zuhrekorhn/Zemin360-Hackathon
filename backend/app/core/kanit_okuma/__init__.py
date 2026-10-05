@@ -2,9 +2,10 @@
 
 `kaniti_oku(adres)` adresi tanıyan ilk platform okuyucusunu dener; okuyamazsa
 (`None`) sıradakine, en sonunda genel okuyucuya geçer. Sonuç engel ya da boş
-sayfaysa, ya da platform görsel ağırlıklıysa yedek okuyucu (tarayıcı) dener
-(`yedek.py`). Her istek güvenli istek katmanından geçer. Yeni platform:
-`okuyucular/` altında bir sınıf ve aşağıdaki listeye bir satır.
+sayfaysa, ya da platform görsel ağırlıklıysa yedek okuyucu (tarayıcı) dener;
+o da okuyamazsa ve bayrak açıksa üçüncü taraf servis (Jina) (`yedek.py`). Her
+istek güvenli istek katmanından geçer. Yeni platform: `okuyucular/` altında bir
+sınıf ve aşağıdaki listeye bir satır.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from __future__ import annotations
 import httpx
 
 from app.core.config import get_settings
+from app.core.dis_servisler.uzak_okuyucu import KapaliUzakOkuyucu, UzakOkuyucu
 from app.core.dis_servisler.yedek_okuyucu import KapaliYedekOkuyucu, YedekOkuyucu
 from app.core.kanit_okuma.belge import ErisimDurumu, KanitBelgesi
 from app.core.kanit_okuma.istek import adresi_hazirla
@@ -39,9 +41,10 @@ async def kaniti_oku(
     *,
     transport: httpx.AsyncBaseTransport | None = None,
     yedek: YedekOkuyucu | None = None,
+    uzak: UzakOkuyucu | None = None,
 ) -> KanitBelgesi:
-    """`yedek`: tarayıcıyla okuma (kurulum noktasından değerlendirme katmanı verir);
-    verilmezse zincir genel okuyucuda biter."""
+    """`yedek` (tarayıcı) ve `uzak` (Jina) kurulum noktasından değerlendirme katmanınca
+    verilir; verilmezse zincir genel okuyucuda biter."""
     try:
         url = httpx.URL(adresi_hazirla(adres))
     except (httpx.InvalidURL, ValueError):
@@ -50,8 +53,9 @@ async def kaniti_oku(
         transport=transport,
         github_token=get_settings().github_token,
         yedek=yedek or KapaliYedekOkuyucu(),
+        uzak=uzak or KapaliUzakOkuyucu(),
     )
-    return await yedekle(url, await _zincir(url, baglam), baglam.yedek)
+    return await yedekle(url, await _zincir(url, baglam), baglam.yedek, baglam.uzak)
 
 
 async def _zincir(url: httpx.URL, baglam: OkumaBaglami) -> KanitBelgesi:

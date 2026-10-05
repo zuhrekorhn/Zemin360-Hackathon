@@ -28,6 +28,11 @@ from app.core.dis_servisler.oauth import (
     OAuthSaglayici,
     OrcidOAuth,
 )
+from app.core.dis_servisler.uzak_okuyucu import (
+    JinaOkuyucu,
+    KapaliUzakOkuyucu,
+    UzakOkuyucu,
+)
 from app.core.dis_servisler.virus import ClamavTarayici, KapaliTarayici, VirusTarayici
 from app.core.dis_servisler.yedek_okuyucu import (
     KapaliYedekOkuyucu,
@@ -143,6 +148,14 @@ def yedek_okuyucu() -> YedekOkuyucu:
     return KapaliYedekOkuyucu()
 
 
+@lru_cache
+def uzak_okuyucu() -> UzakOkuyucu:
+    ayar = get_settings()
+    if ayar.uzak_okuyucu == "jina":
+        return JinaOkuyucu(ayar.jina_api_anahtari, ayar.uzak_okuyucu_zaman_asimi_sn)
+    return KapaliUzakOkuyucu()
+
+
 def servis_kipleri() -> dict[str, str]:
     """Servis adı → o an kullanılan kip (sağlık ucu için)."""
     return {
@@ -151,4 +164,5 @@ def servis_kipleri() -> dict[str, str]:
         "depo": depo().kip,
         "virus": virus_tarayici().kip,
         "yedek_okuyucu": yedek_okuyucu().kip,
+        "uzak_okuyucu": uzak_okuyucu().kip,
     }

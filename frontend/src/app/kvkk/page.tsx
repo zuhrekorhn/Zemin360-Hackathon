@@ -53,6 +53,7 @@ const BOLUMLER: { baslik: string; maddeler: string[] }[] = [
       "Voyage AI: kartının ve kanıtlarının metni eşleştirme için sayısal temsile çevrilir.",
       "Cloudflare R2: yüklediğin dosyalar özel bir depoda saklanır.",
       "Resend: doğrulama ve referans e-postaları bu servisle gönderilir.",
+      "Jina AI: bir kanıt linkini kendi yollarımızla açamazsak, sayfayı okumak için linkin adresi bu servise gönderilebilir.",
       "Bu sağlayıcıların sunucuları yurt dışındadır; veriler yalnızca yukarıdaki amaçlarla aktarılır.",
     ],
   },

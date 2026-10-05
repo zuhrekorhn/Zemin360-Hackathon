@@ -5,6 +5,8 @@ Platform okuyucusu ya da genel okuyucu bir sonuç verdikten sonra çalışır:
     (bot engeli, JavaScript ile çizilen sayfa).
   - Görsel ağırlıklı platformda (Behance, Dribbble, ArtStation, portfolyo
     siteleri) sayfa açık okunsa bile ekran görüntüsü alınır: çalışma görseldir.
+  - Tarayıcı da okuyamadıysa (servis yok, yine engel, yine boş ve görüntüsüz)
+    ve bayrak açıksa üçüncü taraf servis (Jina Reader) denenir.
 Giriş duvarı, "bulunamadı" ve "güvensiz" yedeğe gitmez (tarayıcı da aşamaz ya da
 sonuç zaten kesindir). PDF dosya hattının işidir.
 
@@ -19,9 +21,10 @@ import logging
 
 import httpx
 
+from app.core.dis_servisler.uzak_okuyucu import UzakOkuyucu, UzakSayfa
 from app.core.dis_servisler.yedek_okuyucu import EkranKurali, TarayiciSayfasi, YedekOkuyucu
 from app.core.kanit_okuma.belge import ErisimDurumu, KanitBelgesi
-from app.core.kanit_okuma.erisim import EN_AZ_METIN
+from app.core.kanit_okuma.erisim import EN_AZ_METIN, erisim_durumu
 from app.core.kanit_okuma.istek import Sayfa
 from app.core.kanit_okuma.okuyucular.genel import sayfadan_belge
 
@@ -103,13 +106,32 @@ def birlestir(url: str, onceki: KanitBelgesi, sayfa: TarayiciSayfasi) -> KanitBe
     return dataclasses.replace(temel, ekran_goruntuleri=goruntuler)
 
 
-async def yedekle(url: httpx.URL, belge: KanitBelgesi, yedek: YedekOkuyucu) -> KanitBelgesi:
+def uzak_birlestir(onceki: KanitBelgesi, sayfa: UzakSayfa) -> KanitBelgesi:
+    """Üçüncü taraf servisin metni: açık okunduysa onunla, değilse önceki okunuş."""
+    erisim = erisim_durumu(
+        durum=200, son_url=sayfa.son_url, baslik=sayfa.baslik, metin_uzunlugu=len(sayfa.metin)
+    )
+    if erisim is not ErisimDurumu.ACIK:
+        return onceki
+    metin = f"Başlık: {sayfa.baslik}\n\n{sayfa.metin}" if sayfa.baslik else sayfa.metin
+    return dataclasses.replace(onceki, erisim=erisim, baslik=sayfa.baslik, metin=metin)
+
+
+def _okundu_mu(belge: KanitBelgesi) -> bool:
+    return belge.erisim is ErisimDurumu.ACIK or bool(belge.ekran_goruntuleri)
+
+
+async def yedekle(
+    url: httpx.URL, belge: KanitBelgesi, yedek: YedekOkuyucu, uzak: UzakOkuyucu
+) -> KanitBelgesi:
     if not yedek_gerekli_mi(url, belge):
         return belge
     sayfa = await yedek.ac(str(url), ekran=ekran_kurali(url), en_az_metin=EN_AZ_METIN)
-    if sayfa is None:
-        return belge
-    sonuc = birlestir(str(url), belge, sayfa)
+    sonuc = birlestir(str(url), belge, sayfa) if sayfa is not None else belge
+    if not _okundu_mu(sonuc):
+        uzak_sayfa = await uzak.oku(str(url))
+        if uzak_sayfa is not None:
+            sonuc = uzak_birlestir(sonuc, uzak_sayfa)
     logger.info(
         "yedek okuyucu url_host=%s once=%s sonra=%s ekran=%d",
         url.host,

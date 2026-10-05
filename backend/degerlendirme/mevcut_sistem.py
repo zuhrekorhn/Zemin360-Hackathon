@@ -20,6 +20,7 @@ from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu, dosyayi_oku, ekran
 from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi
 from app.agents.dogrulama.kurallar import OkunanKanit
 from app.agents.dogrulama.okuma import dosya_okunusu, kanit_oku
+from app.core.dis_servisler.uzak_okuyucu import KapaliUzakOkuyucu
 from app.core.dis_servisler.virus import KapaliTarayici
 from app.core.dosya_hatti import dosyayi_hazirla
 from app.core.embeddings import embedding_listesi_uret
@@ -91,6 +92,8 @@ class MevcutSistemDegerlendirici:
                         transport=self._ag.transport(),
                         gom=self._gom,
                         yedek=self._yedek,
+                        # Üçüncü taraf okuma karnede yok (bayrak varsayılan kapalı).
+                        uzak=KapaliUzakOkuyucu(),
                         ekran_oku=self._ekranlari_oku,
                     )
                 )

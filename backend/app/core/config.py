@@ -111,6 +111,11 @@ class Settings(BaseSettings):
     yedek_okuyucu_adresi: str = "http://localhost:8100"
     yedek_okuyucu_anahtari: str = ""
     yedek_okuyucu_zaman_asimi_sn: float = 60
+    # Üçüncü taraf okuma servisi (Jina Reader): yalnızca yedek okuyucu da okuyamazsa.
+    # Varsayılan kapalı: linkin adresi yurt dışına gider (KVKK metninde listeli).
+    uzak_okuyucu: Literal["jina", "kapali"] = "kapali"
+    jina_api_anahtari: str = ""
+    uzak_okuyucu_zaman_asimi_sn: float = 30
 
     @property
     def cors_origin_list(self) -> list[str]:

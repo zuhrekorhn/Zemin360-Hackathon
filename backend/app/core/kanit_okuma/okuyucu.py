@@ -12,6 +12,7 @@ from typing import Protocol
 
 import httpx
 
+from app.core.dis_servisler.uzak_okuyucu import KapaliUzakOkuyucu, UzakOkuyucu
 from app.core.dis_servisler.yedek_okuyucu import KapaliYedekOkuyucu, YedekOkuyucu
 from app.core.kanit_okuma.belge import HesapIzi, KanitBelgesi
 
@@ -23,6 +24,8 @@ class OkumaBaglami:
     github_token: str = ""
     # Yedek okuyucu (Playwright servisi, § 5.5)
     yedek: YedekOkuyucu = field(default_factory=KapaliYedekOkuyucu)
+    # Üçüncü taraf okuma (Jina; bayrakla, yedek de okuyamazsa)
+    uzak: UzakOkuyucu = field(default_factory=KapaliUzakOkuyucu)
 
 
 class Okuyucu(Protocol):

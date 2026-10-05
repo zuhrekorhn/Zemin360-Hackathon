@@ -25,6 +25,7 @@ from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu, ekranlari_oku
 from app.agents.dogrulama.hesap_sahipligi import BagliHesapBilgisi, sahiplik_belirle
 from app.agents.dogrulama.kurallar import OkunanKanit
 from app.core.dis_servisler import kurulum
+from app.core.dis_servisler.uzak_okuyucu import UzakOkuyucu
 from app.core.dis_servisler.yedek_okuyucu import YedekOkuyucu
 from app.core.embeddings import embedding_listesi_uret
 from app.core.kanit_okuma import kaniti_oku
@@ -48,12 +49,16 @@ async def kanit_oku(
     transport: httpx.AsyncBaseTransport | None = None,
     gom: Gomucu = embedding_listesi_uret,
     yedek: YedekOkuyucu | None = None,
+    uzak: UzakOkuyucu | None = None,
     ekran_oku: EkranOkuyucu = ekranlari_oku,
 ) -> OkunanKanit:
-    """`yedek` verilmezse kurulum noktasındaki yedek okuyucu kullanılır (değerlendirme
-    seti kayıtlı olanı verir)."""
+    """`yedek` ve `uzak` verilmezse kurulum noktasındakiler kullanılır (değerlendirme
+    seti kayıtlı yedek okuyucuyu ve kapalı uzak okuyucuyu verir)."""
     belge = await kaniti_oku(
-        url, transport=transport, yedek=yedek if yedek is not None else kurulum.yedek_okuyucu()
+        url,
+        transport=transport,
+        yedek=yedek if yedek is not None else kurulum.yedek_okuyucu(),
+        uzak=uzak if uzak is not None else kurulum.uzak_okuyucu(),
     )
     ekran = await _ekran_okunusu(belge, ekran_oku)
     erisim, metin, alinti = _ekranla_birlestir(belge, ekran)

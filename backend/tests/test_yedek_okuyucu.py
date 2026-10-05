@@ -1,6 +1,6 @@
 """Yedek okuyucu (plan § 5.1, § 5.5): zincirdeki kuralları, ekran görüntüsü okunuşu,
-servis adaptörü ve profil kodu okuması. Ağ yok: sayfalar MockTransport'tan, yedek
-okuyucu sahte.
+servis adaptörü, profil kodu okuması ve üçüncü taraf okuma (Jina, bayrakla). Ağ yok:
+sayfalar MockTransport'tan, yedek okuyucu sahte.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import pytest
 from app.agents.dogrulama import okuma
 from app.agents.dogrulama.dosya_cikarimi import DosyaOkunusu
 from app.core import guvenli_istek
+from app.core.dis_servisler.uzak_okuyucu import JinaOkuyucu, UzakSayfa
 from app.core.dis_servisler.yedek_okuyucu import (
     EkranKurali,
     PlaywrightYedekOkuyucu,
@@ -319,3 +320,77 @@ def test_profil_tarayici_da_acamazsa_engel_kalir():
         sayfayi_oku("https://dribbble.com/elif", _engel_transport(), SahteYedek(None))
     )
     assert okuma_.erisim is E.ENGELLENDI
+
+
+# --- Üçüncü taraf okuma (Jina) ---------------------------------------------------------
+
+
+class SahteUzak:
+    kip = "sahte"
+
+    def __init__(self, sayfa: UzakSayfa | None) -> None:
+        self.sayfa = sayfa
+        self.istekler: list[str] = []
+
+    async def oku(self, url):
+        self.istekler.append(url)
+        return self.sayfa
+
+
+def _engelli_oku(yedek, uzak):
+    return asyncio.run(
+        kaniti_oku("https://ornek.org/proje", transport=_engel_transport(), yedek=yedek, uzak=uzak)
+    )
+
+
+def test_tarayici_okuyamazsa_uzak_okuyucu_denenir():
+    uzak = SahteUzak(UzakSayfa("Ödünç Takip", GOVDE, "https://ornek.org/proje"))
+    sonuc = _engelli_oku(SahteYedek(None), uzak)
+    assert sonuc.erisim is E.ACIK and sonuc.metin.startswith("Başlık: Ödünç Takip")
+    assert uzak.istekler == ["https://ornek.org/proje"]
+
+
+def test_uzak_okuyucu_de_engele_takilirsa_onceki_kalir():
+    uzak = SahteUzak(UzakSayfa("Just a moment...", "Bekleyin", "https://ornek.org/proje"))
+    assert _engelli_oku(SahteYedek(sayfa(ENGEL_HTML, 403)), uzak).erisim is E.ENGELLENDI
+
+
+def test_tarayici_okuduysa_uzak_okuyucu_cagrilmaz():
+    uzak = SahteUzak(UzakSayfa("x", GOVDE, "https://x"))
+    assert _engelli_oku(SahteYedek(sayfa(ACIK_HTML)), uzak).erisim is E.ACIK
+    # Görüntü de okunmuş sayılır (model okuyacak).
+    _engelli_oku(SahteYedek(sayfa(BOS_HTML, ekran=(JPEG,))), uzak)
+    assert uzak.istekler == []
+
+
+def _jina(isleyici, anahtar="j-anahtar") -> JinaOkuyucu:
+    return JinaOkuyucu(anahtar, 5, transport=httpx.MockTransport(isleyici))
+
+
+def test_jina_istegi_ve_yaniti():
+    gelen: list[httpx.Request] = []
+
+    def isleyici(istek: httpx.Request) -> httpx.Response:
+        gelen.append(istek)
+        veri = {"title": "Proje", "url": "https://ornek.org/proje", "content": GOVDE}
+        return httpx.Response(200, json={"code": 200, "data": veri})
+
+    sonuc = asyncio.run(_jina(isleyici).oku("https://ornek.org/proje"))
+    assert sonuc == UzakSayfa("Proje", GOVDE.strip(), "https://ornek.org/proje")
+    istek = gelen[0]
+    # Sabit API ucu da güvenli istek katmanından (IP'ye sabitlenmiş, Host özgün ad).
+    assert istek.headers["host"] == "r.jina.ai"
+    assert istek.url.raw_path == b"/https://ornek.org/proje"
+    assert istek.headers["authorization"] == "Bearer j-anahtar"
+
+
+@pytest.mark.parametrize(
+    "yanit",
+    [
+        httpx.Response(422, json={"code": 422, "data": None}),
+        httpx.Response(200, json={"code": 200, "data": {"title": "x", "content": "  "}}),
+        httpx.Response(200, text="json değil"),
+    ],
+)
+def test_jina_okuyamazsa_none(yanit):
+    assert asyncio.run(_jina(lambda istek: yanit).oku("https://x.org")) is None
