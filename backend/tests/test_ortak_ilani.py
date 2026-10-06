@@ -123,10 +123,14 @@ def test_baslat_kapiya_gore_grafik_ve_baglam():
         assert girdi["aranan"] == "firma"
         assert "Perakende" in girdi["profil_baglami"]
 
-        # Eski istemci gövdesi ({}) genç kapısı, bağlam eklenmez (davranış değişmedi).
+        # Eski istemci gövdesi ({}) genç kapısı. cf60c8a'dan beri (bilinçli) genç kapısı da
+        # firmanın profilini bağlam olarak alır: örnek sorular sektöre uyarlansın,
+        # kayıt bilgileri sorulmasın. Eski beklenti "bağlam yok"tu.
         genc = await istemci.post("/tanimlama/sohbet/baslat", headers=d.kurum1.baslik, json={})
         assert genc.json()["soru"] == "genc sorusu"
-        assert "profil_baglami" not in app.state.tanimlama_grafigi.cagrilar[0]
+        genc_girdi = app.state.tanimlama_grafigi.cagrilar[0]
+        assert genc_girdi["aranan"] == "genc"
+        assert "Perakende" in genc_girdi["profil_baglami"]
 
         gecersiz = await istemci.post(
             "/tanimlama/sohbet/baslat", headers=d.kurum1.baslik, json={"aranan": "herkes"}
