@@ -33,6 +33,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.takip_durumu import ISBIRLIGI_TAMAMLANDI
+from app.agents.uygunluk import UygunlukKarari, karari_dogrula
 from app.core.calisma_modeli import sehir_eslesmeli_mi
 from app.core.firma_dogrulama import DOGRULANDI
 from app.core.firma_karti import ISBIRLIGI_TURU_ETIKETLERI
@@ -245,14 +246,16 @@ def benzerlik_yeterli_mi(benzerlik: float, alt_sinir: float = BENZERLIK_ALT_SINI
     return benzerlik >= alt_sinir
 
 
-def siralayip_ele(adaylar: Sequence[Aday | FirmaAdayi]) -> list[Aday | FirmaAdayi]:
-    """Alakasızları eler, skora göre sıralar, TOP_N'i döner.
+def siralayip_ele(adaylar: Sequence[Aday | FirmaAdayi], n: int = TOP_N) -> list[Aday | FirmaAdayi]:
+    """Alakasızları eler, skora göre sıralar, ilk `n`'i döner (varsayılan TOP_N).
 
     Giriş kararı yalnızca benzerlikle (adayın türüne göre taban); skor yalnızca
     sıralar. Aynı benzerlikteki iki aday bonusları farklı olsa da aynı kararı alır.
+    Firma–firma'da `n` = YARGI_N: bu aday penceresi yargılanır, listeyi yapay zekâ
+    kararından sonra `uygunluk.listelenecekler` keser (§ 8).
     """
     uygunlar = [aday for aday in adaylar if benzerlik_yeterli_mi(aday.benzerlik, aday.alt_sinir)]
-    return sorted(uygunlar, key=lambda aday: aday.skor, reverse=True)[:TOP_N]
+    return sorted(uygunlar, key=lambda aday: aday.skor, reverse=True)[:n]
 
 
 class EslesmeGorunumu(Protocol):
@@ -812,6 +815,97 @@ async def firma_gerekce_uret(ihtiyac: IhtiyacKarti, aday: FirmaAdayi) -> str | N
         return metin
     logger.warning("Firma gerekçesi iki denemede de 'doğrulanmış' dedi; gerekçesiz bırakılıyor")
     return None
+
+
+# --- Firma adayı uygunluk kararı (docs/matching-algorithm.md § 8) ------------------------
+#
+# Gerekçeyi yazan çağrı aynı çağrıda uygunluk kararını da verir (gerekçe önce, karar
+# sonra). Ölçümde kullanılan istem: gerekçe talimatı + aşağıdaki kural; insan
+# mesajı üretim şablonunun aynısı, yalnızca son cümle "gerekçeyi ve kararı ver".
+
+UYGUNLUK_EK_KURALI = """
+
+UYGUNLUK KARARI (gerekçeden sonra, ayrı alan):
+Bu aday listeye girmiş olsa da gerçekten uygun olmayabilir: gerekçeyi, adayın ilanın temel
+ihtiyacına gerçekte ne kadar karşılık verdiğini dürüstçe anlatarak yaz; olumlu görünmeye çalışma.
+- "uygun": ilanın temel ihtiyacına karşılık gelen somut bir yetkinlik ya da iş kartta yazıyor.
+- "kismen": ilanın temel ihtiyacına komşu bir yetkinlik ya da iş var ama ihtiyacın kendisini
+  karşıladığı kartta görünmüyor; ya da emin değilsin.
+- "uygun_degil": ilanın temel ihtiyacına karşılık gelen bir yetkinlik yazamıyorsan (aday yalnızca
+  aynı alanda çalışıyor, aynı sorunu yaşıyor ya da konuyla ilgisiz).
+Emin değilsen "kismen" seç. Gerekçede temel ihtiyaca karşılık gelen bir yetkinliğin kartta
+olmadığını yazdıysan karar "uygun" olamaz.
+"""
+
+_FIRMA_INSAN_SABLONU = FIRMA_GEREKCE_SABLONU.messages[1].prompt.template
+assert "Bu eşleşmenin gerekçesini yaz." in _FIRMA_INSAN_SABLONU
+FIRMA_UYGUNLUK_SABLONU = ChatPromptTemplate.from_messages(
+    [
+        ("system", FIRMA_GEREKCE_TALIMATI + UYGUNLUK_EK_KURALI),
+        (
+            "human",
+            _FIRMA_INSAN_SABLONU.replace(
+                "Bu eşleşmenin gerekçesini yaz.",
+                "Bu eşleşmenin gerekçesini ve uygunluk kararını ver.",
+            ),
+        ),
+    ]
+)
+
+
+@dataclass(frozen=True)
+class Yargi:
+    """Bir adayın gerekçesi ve uygunluk kararı. İkisi birlikte dolu ya da birlikte None."""
+
+    gerekce: str | None
+    uygunluk: str | None
+
+
+BILINMIYOR = Yargi(gerekce=None, uygunluk=None)
+
+
+@lru_cache
+def _firma_uygunluk_zinciri() -> Runnable:
+    return yedekli_zincir(
+        "guclu",
+        "eslestirme_firma_uygunluk",
+        lambda m: FIRMA_UYGUNLUK_SABLONU | m.with_structured_output(UygunlukKarari),
+    )
+
+
+async def _firma_uygunluk_cagir(girdiler: dict) -> Yargi:
+    """Tek çağrı. Boş gerekçe ya da geçersiz etiket "bilinmiyor" sayılır."""
+    try:
+        cikti = await _firma_uygunluk_zinciri().ainvoke(girdiler)
+    except Exception as hata:
+        cevrilmis = llm_hatasini_cevir(hata)
+        raise cevrilmis from hata
+    gerekce = (getattr(cikti, "gerekce", None) or "").strip()
+    uygunluk = karari_dogrula(getattr(cikti, "uygunluk", None))
+    if not gerekce or uygunluk is None:
+        return BILINMIYOR
+    return Yargi(gerekce=gerekce, uygunluk=uygunluk)
+
+
+async def firma_uygunluk_yargila(ihtiyac: IhtiyacKarti, aday: FirmaAdayi) -> Yargi:
+    """Gerekçe + uygunluk kararı tek çağrıda; "doğrulanmış" koruması gerekçeye aynen uygulanır.
+
+    Doğrulanmamış firma "doğrulanmış" diye anlatılırsa bir kez düzeltme notuyla
+    yeniden denenir; yine olursa gerekçe de karar da bilinmiyor kalır (hatalı
+    metne dayanan karara güvenilmez; öneri gerekçesiz listelenir, sonraki hesapta
+    yeniden denenir). Model hatası (hız sınırı, arıza, geçersiz çıktı) çağırana çıkar.
+    """
+    dogrulandi = aday.firma_karti.kurum.dogrulama_durumu == DOGRULANDI
+    yargi = await _firma_uygunluk_cagir(firma_gerekce_girdileri(ihtiyac, aday))
+    if dogrulandi or yargi.gerekce is None or not dogrulama_iddiasi_var_mi(yargi.gerekce):
+        return yargi
+    yargi = await _firma_uygunluk_cagir(
+        firma_gerekce_girdileri(ihtiyac, aday, ek_not=FIRMA_DUZELTME_NOTU)
+    )
+    if yargi.gerekce is None or not dogrulama_iddiasi_var_mi(yargi.gerekce):
+        return yargi
+    logger.warning("Firma gerekçesi iki denemede de 'doğrulanmış' dedi; karar bilinmiyor kalıyor")
+    return BILINMIYOR
 
 
 async def ihtiyac_kartini_getir(oturum: AsyncSession, kurum_id: uuid.UUID) -> IhtiyacKarti | None:

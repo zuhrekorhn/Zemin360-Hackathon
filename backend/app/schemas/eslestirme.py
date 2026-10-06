@@ -68,6 +68,9 @@ class OneriYaniti(BaseModel):
     skor: float
     durum: str
     gerekce_metni: str | None
+    # Yapay zekâ kararı: "uygun" | "kismen" | None (bilinmiyor). `uygun_degil` hiçbir
+    # yanıtta yer almaz (kayıt saklanır ama okunmaz, app/agents/uygunluk.py).
+    uygunluk: Literal["uygun", "kismen"] | None = None
     # Aday türü ilanın kapısına göre: genç ilanında yetenek kartı, ortak
     # ilanında firma kartı (tam biri dolu; docs/plans/firma-akisi.md § 4).
     aday_turu: Literal["genc", "firma"] = "genc"
@@ -150,6 +153,8 @@ class FirmaAdayEslesmesi(BaseModel):
     durum: str
     uyum: float
     gerekce_metni: str | None
+    # "uygun" | "kismen" | None (bilinmiyor); `uygun_degil` hiçbir yanıtta yer almaz.
+    uygunluk: Literal["uygun", "kismen"] | None = None
     son_aktivite_tarihi: dt.datetime
     baslatan: str | None
     ihtiyac_karti: IhtiyacKartiYaniti

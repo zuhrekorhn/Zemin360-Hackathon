@@ -20,6 +20,7 @@ from fastapi import HTTPException
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.uygunluk import gorunur_kosulu
 from app.models.eslesme import Eslesme
 from app.models.firma_karti import FirmaKarti
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
@@ -102,6 +103,7 @@ async def yetenek_kartini_gorebilir_mi(
                     Eslesme.yetenek_karti_id == kart.id,
                     Eslesme.ihtiyac_karti_id == IhtiyacKarti.id,
                     IhtiyacKarti.kurum_id == kurumu,
+                    gorunur_kosulu(),
                 )
             )
         )
@@ -176,6 +178,7 @@ async def ihtiyac_kartini_gorebilir_mi(
                         Eslesme.ihtiyac_karti_id == kart.id,
                         Eslesme.firma_karti_id == FirmaKarti.id,
                         FirmaKarti.kurum_id == kurumu,
+                        gorunur_kosulu(),
                     )
                 )
             )
@@ -191,6 +194,7 @@ async def ihtiyac_kartini_gorebilir_mi(
                     Eslesme.yetenek_karti_id == YetenekKarti.id,
                     YetenekKarti.kullanici_id == gencin,
                     Eslesme.durum.in_(GENCE_ACIK_DURUMLAR),
+                    gorunur_kosulu(),
                 )
             )
         )

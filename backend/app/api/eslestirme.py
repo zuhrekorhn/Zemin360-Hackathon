@@ -37,6 +37,7 @@ from app.agents.eslestirme import (
     firma_tamamlanan_isbirligi_sayilari,
     ihtiyac_kartini_getir,
 )
+from app.agents.uygunluk import gorunur_kosulu
 from app.api import takip
 from app.api.bildirimler import bildirim_ekle
 from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
@@ -142,11 +143,12 @@ async def oneriler(
     kurum_id = _hedef_kurum(hesap, kurum_id)
     ihtiyac = await _ihtiyac_karti(oturum, kurum_id, ihtiyac_karti_id)
 
-    mevcut = await eslesmeleri_oku(oturum, ihtiyac.id)
-    if not mevcut:
+    # Hiç kayıt yoksa hesaplanır. Yalnızca gizli kayıt varsa hesaplanmış demektir:
+    # her açılışta yeniden hesaplanıp yargı çağrısı yapılmasın.
+    if not await eslesmeleri_oku(oturum, ihtiyac.id, gizliler_dahil=True):
         return await _pipeline_calistir(oturum, ihtiyac, hesap)
 
-    return await _yanit_kur(oturum, ihtiyac.id, mevcut, hesap)
+    return await _yanit_kur(oturum, ihtiyac.id, await eslesmeleri_oku(oturum, ihtiyac.id), hesap)
 
 
 @router.get("/onerilerim", response_model=list[KurumOnerisi])
@@ -163,7 +165,7 @@ async def onerilerim(
     eslesmeler = await oturum.scalars(
         iliskileriyle(select(Eslesme))
         .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
-        .where(IhtiyacKarti.kurum_id == hesabin_kurumu(hesap))
+        .where(IhtiyacKarti.kurum_id == hesabin_kurumu(hesap), gorunur_kosulu())
         .order_by(Eslesme.son_aktivite_tarihi.desc(), Eslesme.skor.desc())
     )
     return [
@@ -377,6 +379,7 @@ async def bana_gelenler(
         .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
         .where(
             YetenekKarti.kullanici_id == kullanici_id(hesap),
+            gorunur_kosulu(),
             or_(
                 Eslesme.baslatan == TARAF_ILAN,
                 # Başlatanı bilinmeyen (alan eklenmeden yazılmış) kurum ilgisi.
@@ -405,7 +408,7 @@ async def _gencin_satirlari(oturum: AsyncSession, hesap: Hesap, *kosullar) -> li
         iliskileriyle(select(Eslesme))
         .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
         .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
-        .where(YetenekKarti.kullanici_id == kullanici_id(hesap), *kosullar)
+        .where(YetenekKarti.kullanici_id == kullanici_id(hesap), gorunur_kosulu(), *kosullar)
         .order_by(Eslesme.skor.desc(), Eslesme.son_aktivite_tarihi.desc())
     )
     return [
@@ -468,7 +471,8 @@ async def _eslesmeyi_kilitle(oturum: AsyncSession, eslesme_id: uuid.UUID) -> Esl
     """
     return await oturum.scalar(
         iliskileriyle(select(Eslesme))
-        .where(Eslesme.id == eslesme_id)
+        # Gizli (`uygun_degil`) kayıt hiçbir uçtan açılamaz: varlığı sızmasın, 404.
+        .where(Eslesme.id == eslesme_id, gorunur_kosulu())
         .with_for_update(of=Eslesme)
         .execution_options(populate_existing=True)
     )
@@ -575,6 +579,7 @@ async def _yanit_kur(
             skor=round(eslesme.skor, 4),
             durum=eslesme.durum,
             gerekce_metni=eslesme.gerekce_metni,
+            uygunluk=eslesme.uygunluk,
             aday_turu="firma" if eslesme.firma_karti_id else "genc",
             yetenek_karti=(
                 await kart_yaniti(oturum, eslesme.yetenek_karti_id)
@@ -766,6 +771,7 @@ async def firma_eslesmelerim(
         .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
         .where(
             FirmaKarti.kurum_id == hesabin_kurumu(hesap),
+            gorunur_kosulu(),
             # Fırsat yalnızca açık ilanda (gencin fırsatlarındaki kural);
             # ilgi gösterilmiş ya da karar verilmiş kayıtlar her durumda listede.
             or_(
@@ -781,6 +787,7 @@ async def firma_eslesmelerim(
             durum=eslesme.durum,
             uyum=round(eslesme.skor, 4),
             gerekce_metni=eslesme.gerekce_metni,
+            uygunluk=eslesme.uygunluk,
             son_aktivite_tarihi=eslesme.son_aktivite_tarihi,
             baslatan=eslesme.baslatan,
             ihtiyac_karti=await ihtiyac_karti_yaniti(oturum, eslesme.ihtiyac_karti_id),

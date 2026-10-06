@@ -30,6 +30,7 @@ from app.agents.takip_durumu import (
     ISBIRLIGI_PLAN_BEKLIYOR,
     ISBIRLIGI_TAMAMLANDI,
 )
+from app.agents.uygunluk import gorunur_kosulu
 from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi
@@ -65,8 +66,8 @@ async def _say(oturum: AsyncSession, model) -> int:
     return await oturum.scalar(select(func.count()).select_from(model))
 
 
-async def _gruplu(oturum: AsyncSession, kolon) -> dict[str, int]:
-    satirlar = await oturum.execute(select(kolon, func.count()).group_by(kolon))
+async def _gruplu(oturum: AsyncSession, kolon, *kosullar) -> dict[str, int]:
+    satirlar = await oturum.execute(select(kolon, func.count()).where(*kosullar).group_by(kolon))
     return {deger: sayi for deger, sayi in satirlar.all()}
 
 
@@ -76,7 +77,7 @@ async def sayilar(
     oturum: AsyncSession = Depends(get_session),
 ) -> Sayilar:
     roller = await _gruplu(oturum, Hesap.rol)
-    durumlar = await _gruplu(oturum, Eslesme.durum)
+    durumlar = await _gruplu(oturum, Eslesme.durum, gorunur_kosulu())
     isbirlikleri = await _gruplu(oturum, Isbirligi.durum)
     return Sayilar(
         hesap=HesapSayilari(
@@ -110,7 +111,9 @@ async def eslesme_kirilimi(oturum: AsyncSession) -> EslesmeKirilimi:
     """Genç–firma ve firma–firma ayrı sayılır (docs/plans/firma-akisi.md § 0 karar 19)."""
     firma_mi = Eslesme.firma_karti_id.isnot(None).label("firma_mi")
     eslesmeler = await oturum.execute(
-        select(firma_mi, Eslesme.durum, func.count()).group_by(firma_mi, Eslesme.durum)
+        select(firma_mi, Eslesme.durum, func.count())
+        .where(gorunur_kosulu())
+        .group_by(firma_mi, Eslesme.durum)
     )
     isbirlikleri = await oturum.execute(
         select(firma_mi, Isbirligi.durum, func.count())
