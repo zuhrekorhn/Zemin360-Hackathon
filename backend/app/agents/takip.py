@@ -1,19 +1,22 @@
-"""Takip Ajanı — plan önerisi (docs/faz-c-takip.md § 4).
+"""Takip Ajanı — süreç kişiselleştirme ve durum özeti (docs/faz-c-takip.md § 4-5).
 
 Sohbet ajanı değil: tek seferlik hesap (kartlar → istem → tek LLM çağrısı),
-Eşleştirme gerekçesi ve Doğrulama rubriğiyle aynı desen. Ajan plan önerir;
-onaylamaz, adım kapatmaz, iş birliğini bitirmez.
+Eşleştirme gerekçesiyle aynı desen. Ajan karar vermez.
 
-Çıktı kurala uymazsa (3-5 adım, 1-12 hafta, haftalar artan) düzeltme notuyla
-bir kez yeniden istenir; yine uymazsa None döner ve plan boş kalır — taraflar
-adımları elle ekleyebilir, çıkmaz sokak yok.
+Süreç adımlarını ajan UYDURMAZ (docs/plans/takip-surecleri.md): adımlar
+eşleşmenin türüne göre sabit şablondan gelir (app/agents/takip_surecleri.py).
+Ajan her adımın "ne olunca tamam sayılır" cümlesini ve hazırlık önerisini
+ilana ve karta göre kişiselleştirir. Kural kodda: model hata verirse, zaman
+aşımına uğrarsa ya da geçersiz çıktı dönerse o adımda şablonun kendi metni
+kalır. `plan_hazirla` hiçbir zaman hata fırlatmaz ve boş plan dönmez.
 """
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 
 from langchain_core.output_parsers import StrOutputParser
@@ -21,8 +24,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
 
+from app.agents.takip_surecleri import PlanAdimi, SurecSablonu, sablon_adimlari
 from app.core import calisma_modeli, musaitlik
 from app.core.firma_karti import ISBIRLIGI_TURU_ETIKETLERI
+from app.core.istem_guvenligi import veri_kurali, veri_temizle
 from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 from app.models.firma_karti import FirmaKarti
@@ -31,231 +36,196 @@ from app.models.yetenek_karti import YetenekKarti
 
 logger = logging.getLogger("zemin360.takip")
 
-EN_AZ_ADIM = 3
-EN_COK_ADIM = 5
-EN_COK_HAFTA = 12
+EN_UZUN_TANIM = 300
+EN_UZUN_ONERI = 600
+# Arka plan işi takılı kalmasın; süre dolarsa şablon metni yazılır.
+PLAN_ZAMAN_ASIMI_SN = 90
+# Kullanıcıya gösterilmeyen kelime (docs/icerik-rehberi.md: "deneme işi").
+YASAK_KELIMELER = ("pilot",)
+
+ISTEM_ETIKETLERI = ("ilan", "aday")
 
 
-class AdimOnerisi(BaseModel):
-    baslik: str = Field(description="Kısa, eylem bildiren başlık (en çok 8 kelime).")
-    aciklama: str = Field(
-        description="Ne olunca tamam sayılır: gözlemlenebilir, ölçülebilir tek cümle."
+class KisiselAdim(BaseModel):
+    anahtar: str = Field(description="Verilen adımın anahtarı, değiştirmeden.")
+    tamam_tanimi: str = Field(
+        description="Ne olunca tamam sayılır: gözlemlenebilir tek cümle, bu ilana özgü."
     )
-    hafta: int = Field(description="Başlangıçtan itibaren kaçıncı haftanın sonunda biter (1-12).")
-
-
-class PlanOnerisi(BaseModel):
-    adimlar: list[AdimOnerisi] = Field(
-        description="3-5 adım, zaman sırasıyla; son adım başarı kriterine bağlanır."
+    oneri: str = Field(
+        description="Hazırlık önerisi: 1-3 kısa cümle, bu ilana ve adaya özgü, somut."
     )
 
 
-SISTEM_TALIMATI = """Sen Zemin360'ın Takip Ajanı'sın. Bir kurum ile genç bir yetenek arasında
-yeni açılan bir pilot iş birliği için 3-5 adımlık (milestone) bir plan ÖNERİYORSUN.
-Planı iki taraf gözden geçirip düzenleyecek ve onaylayacak; sen karar vermiyorsun.
+class KisiselPlan(BaseModel):
+    adimlar: list[KisiselAdim] = Field(description="Verilen her adım için bir kayıt, aynı sırayla.")
+
+
+SISTEM_TALIMATI = """Sen Zemin360'ın Takip Ajanı'sın. Bir eşleşmeden sonra açılan iş birliği
+sürecinin SABİT adımları sana verilecek. Adım ekleme, çıkarma, birleştirme ya da sırasını
+değiştirme; adımlar ve başlıkları değişmez. Görevin her adımı bu ilana ve bu adaya göre
+kişiselleştirmek. Taraflar planı gözden geçirip düzenleyecek; sen karar vermiyorsun.
+
+Her adım için, adımın anahtarını değiştirmeden:
+- tamam_tanimi: "Bu adım ne olunca tamam sayılır?" sorusunun gözlemlenebilir, tek cümlelik
+  yanıtı. Son adım ilandaki başarı kriterine doğrudan bağlanır.
+- oneri: tarafların bu adıma nasıl hazırlanacağı, 1-3 kısa cümle. Görüşme adımında ilana
+  uygun iki üç soru; deneme görevi ya da deneme işi adımında ilandaki problemin küçük, somut
+  bir parçası; kapsam adımında yazılması gereken maddeler.
 
 Kurallar:
-- 3 ile 5 arasında adım yaz, zaman sırasıyla.
-- Her adımın "hafta" değeri başlangıçtan itibaren kaçıncı haftanın sonunda bittiğidir:
-  1 ile 12 arası, her adımda bir öncekinden BÜYÜK.
-- Son adım, ihtiyaç kartındaki başarı kriterine doğrudan bağlanmalı.
-- Her adımın açıklaması "ne olunca tamam sayılır" sorusunu tek cümleyle, gözlemlenebilir
-  biçimde yanıtlamalı (ör. "Kayıt ekranı gönüllülerle denendi, 10 kayıt hatasız girildi").
 - Kartlarda OLMAYAN bir sayı, araç, kişi ya da tarih UYDURMA. Başarı kriterindeki sayıları
   kullanabilirsin; başka sayı gerekiyorsa sayı yazma.
-- Müsaitliği ve çalışma modelini hesaba kat: yarı zamanlı bir gence 2 haftada büyük iş verme.
-- Teknik rol ve araç adlarını Türkçeleştirme (backend, API, FastAPI gibi yaygın adları koru).
-- Düz, sade Türkçe; başlıklar kısa ve eylem bildiren."""
-SISTEM_TALIMATI += KULLANICI_DILI_KURALLARI
+- Metinleri iki taraf da okuyacak: çoğul ve kişisiz yaz ("konuşun", "belirleyin").
+- "Pilot" kelimesini kullanma; "deneme işi" de.
+- Teknik rol ve araç adlarını Türkçeleştirme (backend, API gibi yaygın adları koru).
+- Düz, sade Türkçe."""
+SISTEM_TALIMATI += veri_kurali(*ISTEM_ETIKETLERI) + KULLANICI_DILI_KURALLARI
 
 PLAN_SABLONU = ChatPromptTemplate.from_messages(
     [
         ("system", SISTEM_TALIMATI),
         (
             "human",
-            """İhtiyaç kartı (kurum: {kurum_adi})
-- Problem: {problem_tanimi}
-- Başarı kriteri: {basari_kriteri}
-- Kısıtlar: {kisitlar}
-- Müsaitlik tercihi: {musaitlik}
-- Çalışma modeli: {calisma_modeli}
+            """Süreç: {surec_adi}
+Adımlar (anahtar: başlık):
+{adimlar}
 
-Yetenek kartı
-- Rol: {rol_alani} ({deneyim_seviyesi})
-- Araçlar: {araclar}
-- Daha önce yaptığı somut işler: {ciktilar}
-{ek_not}""",
+İLAN (ilanı açan firma: {kurum_adi})
+<ilan>
+{ilan}
+</ilan>
+
+{aday_basligi}
+<aday>
+{aday}
+</aday>""",
         ),
     ]
 )
 
-DUZELTME_NOTU = (
-    "\nÖNCEKİ DENEME KURALA UYMADI: tam olarak 3-5 adım yaz, her adımın haftası 1-12 arası "
-    "ve bir öncekinden büyük olsun, başlık ve açıklama boş kalmasın."
-)
+
+def _ilan_metni(ihtiyac: IhtiyacKarti, aday_firma: bool) -> str:
+    satirlar = [
+        f"Problem: {ihtiyac.problem_tanimi}",
+        f"Başarı kriteri: {ihtiyac.basari_kriteri or '(yazılmamış)'}",
+        f"Kısıtlar: {ihtiyac.kisitlar or '(yok)'}",
+    ]
+    if aday_firma:
+        tur = ISBIRLIGI_TURU_ETIKETLERI.get(ihtiyac.isbirligi_turu or "", "(belirtilmemiş)")
+        satirlar.append(f"İş birliği türü: {tur}")
+    else:
+        satirlar += [
+            "Müsaitlik: "
+            + musaitlik.ETIKETLER.get(ihtiyac.musaitlik_tercihi or "", "(belirtilmemiş)"),
+            "Çalışma modeli: "
+            + calisma_modeli.ETIKETLER.get(ihtiyac.calisma_modeli or "", "(belirtilmemiş)"),
+        ]
+    return "\n".join(satirlar)
+
+
+def _genc_metni(kart: YetenekKarti) -> str:
+    return "\n".join(
+        [
+            f"Rol: {kart.rol_alani} ({kart.deneyim_seviyesi})",
+            "Araçlar: " + (", ".join(kart.araclar_teknolojiler or []) or "(belirtilmemiş)"),
+            "Daha önce yaptığı işler: "
+            + ("; ".join(c.baslik for c in kart.somut_ciktilar) or "(yok)"),
+        ]
+    )
+
+
+def _firma_metni(kart: FirmaKarti) -> str:
+    return "\n".join(
+        [
+            f"Ne yapıyor: {kart.ne_yapiyoruz}",
+            "Yetkinlikler: " + (", ".join(kart.yetkinlikler or []) or "(belirtilmemiş)"),
+            f"Önceki işler: {kart.onceki_isler or '(yazılmamış)'}",
+        ]
+    )
 
 
 def plan_girdileri(
-    ihtiyac: IhtiyacKarti, kart: YetenekKarti, kurum_adi: str, ek_not: str = ""
+    sablon: SurecSablonu,
+    ihtiyac: IhtiyacKarti,
+    kurum_adi: str,
+    *,
+    yetenek_karti: YetenekKarti | None = None,
+    firma_karti: FirmaKarti | None = None,
 ) -> dict:
-    """İstem girdileri. İletişim bilgisi (e-posta) hiç girmez."""
-    return {
+    """İstem girdileri; aday ya genç ya ortak firma. İletişim bilgisi (e-posta) hiç girmez."""
+    aday_firma = firma_karti is not None
+    girdiler = {
+        "surec_adi": sablon.ad,
+        "adimlar": "\n".join(f"- {a.anahtar}: {a.baslik}" for a in sablon.adimlar),
         "kurum_adi": kurum_adi,
-        "problem_tanimi": ihtiyac.problem_tanimi,
-        "basari_kriteri": ihtiyac.basari_kriteri or "(yazılmamış)",
-        "kisitlar": ihtiyac.kisitlar or "(yok)",
-        "musaitlik": musaitlik.ETIKETLER.get(ihtiyac.musaitlik_tercihi or "", "(belirtilmemiş)"),
-        "calisma_modeli": calisma_modeli.ETIKETLER.get(
-            ihtiyac.calisma_modeli or "", "(belirtilmemiş)"
+        "ilan": _ilan_metni(ihtiyac, aday_firma),
+        "aday_basligi": (
+            f"ORTAK FİRMA ({firma_karti.kurum.ad})" if aday_firma else "ADAY (genç yetenek)"
         ),
-        "rol_alani": kart.rol_alani,
-        "deneyim_seviyesi": kart.deneyim_seviyesi,
-        "araclar": ", ".join(kart.araclar_teknolojiler or []) or "(belirtilmemiş)",
-        "ciktilar": "; ".join(c.baslik for c in kart.somut_ciktilar) or "(yok)",
-        "ek_not": ek_not,
+        "aday": _firma_metni(firma_karti) if aday_firma else _genc_metni(yetenek_karti),
     }
+    return veri_temizle(girdiler, ISTEM_ETIKETLERI)
 
 
-def plan_gecerli_mi(oneri: PlanOnerisi) -> bool:
-    """Kural: 3-5 adım, dolu başlık ve açıklama, hafta 1-12 ve kesin artan."""
-    adimlar = oneri.adimlar
-    if not EN_AZ_ADIM <= len(adimlar) <= EN_COK_ADIM:
-        return False
-    onceki = 0
+def _kullanilabilir(metin: str | None, en_uzun: int) -> str | None:
+    """Modelin metni kurala uyuyorsa kırpılmış hali, uymuyorsa None (şablon metni kalır)."""
+    metin = " ".join((metin or "").split())
+    if not metin or len(metin) > en_uzun:
+        return None
+    if any(kelime in metin.casefold() for kelime in YASAK_KELIMELER):
+        return None
+    return metin
+
+
+def kisisellestir(adimlar: list[PlanAdimi], oneri: KisiselPlan | None) -> list[PlanAdimi]:
+    """Şablon adımlarına modelin metnini işler (saf). Eşleşmeyen, boş, uzun ya da
+    yasak kelimeli metin şablondakiyle kalır; adım sayısı ve sırası değişmez."""
+    if oneri is None:
+        return list(adimlar)
+    kisisel = {a.anahtar: a for a in oneri.adimlar}
+    sonuc = []
     for adim in adimlar:
-        if not adim.baslik.strip() or not adim.aciklama.strip():
-            return False
-        if not onceki < adim.hafta <= EN_COK_HAFTA:
-            return False
-        onceki = adim.hafta
-    return True
-
-
-def hedef_tarihi(baslangic: dt.date, hafta: int) -> dt.date:
-    return baslangic + dt.timedelta(weeks=hafta)
+        gelen = kisisel.get(adim.anahtar)
+        if gelen is None:
+            sonuc.append(adim)
+            continue
+        sonuc.append(
+            replace(
+                adim,
+                tamam_tanimi=_kullanilabilir(gelen.tamam_tanimi, EN_UZUN_TANIM)
+                or adim.tamam_tanimi,
+                oneri=_kullanilabilir(gelen.oneri, EN_UZUN_ONERI) or adim.oneri,
+            )
+        )
+    return sonuc
 
 
 @lru_cache
 def _plan_zinciri() -> Runnable:
-    # Güçlü katman: tek seferlik, nüans önemli (başarı kriterine bağlı,
-    # ölçülebilir ara hedefler, uydurma yok).
+    # Güçlü katman: tek seferlik, nüans önemli (ilana özgü, uydurma yok).
     return yedekli_zincir(
-        "guclu", "takip_plan", lambda m: PLAN_SABLONU | m.with_structured_output(PlanOnerisi)
+        "guclu", "takip_plan", lambda m: PLAN_SABLONU | m.with_structured_output(KisiselPlan)
     )
 
 
-async def _plan_cagir(girdiler: dict) -> PlanOnerisi:
-    try:
-        return await _plan_zinciri().ainvoke(girdiler)
-    except Exception as hata:
-        raise llm_hatasini_cevir(hata) from hata
+async def plan_hazirla(sablon: SurecSablonu, baslangic: dt.date, girdiler: dict) -> list[PlanAdimi]:
+    """Süreç planı: şablon adımları, model başarılıysa kişiselleştirilmiş.
 
-
-async def plan_oner(
-    ihtiyac: IhtiyacKarti, kart: YetenekKarti, kurum_adi: str
-) -> list[AdimOnerisi] | None:
-    """3-5 adımlık plan; kurala uymayan çıktı bir kez düzeltme notuyla yeniden istenir.
-
-    LLM hataları (hız sınırı 429, arıza 503) çağırana çıkar; kurala iki kez
-    uymayan çıktıda None döner.
+    Hiçbir zaman hata fırlatmaz ve boş dönmez: hız sınırı, arıza, zaman aşımı
+    ya da kurala uymayan çıktıda şablonun kendi metni kullanılır.
     """
-    oneri = await _plan_cagir(plan_girdileri(ihtiyac, kart, kurum_adi))
-    if plan_gecerli_mi(oneri):
-        return oneri.adimlar
-    logger.info("Plan önerisi kurala uymadı; düzeltme notuyla yeniden isteniyor")
-    oneri = await _plan_cagir(plan_girdileri(ihtiyac, kart, kurum_adi, ek_not=DUZELTME_NOTU))
-    if plan_gecerli_mi(oneri):
-        return oneri.adimlar
-    logger.warning("Plan önerisi iki denemede de kurala uymadı; plan boş bırakılıyor: %s", oneri)
-    return None
-
-
-# --- Firma–firma plan önerisi (docs/plans/firma-akisi.md § 9) ------------------------------
-#
-# Aynı kurallar ve aynı geçerlilik kontrolü; istem iki firma arasındaki iş birliğine
-# göre (genç istemi değişmedi). Aday tarafı firma kartıyla anlatılır.
-
-SISTEM_TALIMATI_FIRMA = SISTEM_TALIMATI.replace(
-    "Bir kurum ile genç bir yetenek arasında\nyeni açılan bir pilot iş birliği",
-    "İki firma arasında (ilanı açan firma ile\nortak firma) yeni açılan bir iş birliği",
-).replace(
-    "- Müsaitliği ve çalışma modelini hesaba kat: "
-    "yarı zamanlı bir gence 2 haftada büyük iş verme.\n",
-    "- İki firmanın ayrı ekipleri olduğunu hesaba kat: "
-    "her adımda kimin ne teslim edeceği açık olsun.\n",
-)
-
-PLAN_SABLONU_FIRMA = ChatPromptTemplate.from_messages(
-    [
-        ("system", SISTEM_TALIMATI_FIRMA),
-        (
-            "human",
-            """İlan (ilanı açan firma: {kurum_adi})
-- Problem: {problem_tanimi}
-- Başarı kriteri: {basari_kriteri}
-- Kısıtlar: {kisitlar}
-- İş birliği türü: {isbirligi_turu}
-
-Ortak firma ({ortak_adi})
-- Ne yapıyor: {ne_yapiyoruz}
-- Yetkinlikler: {yetkinlikler}
-- Önceki işler: {onceki_isler}
-{ek_not}""",
-        ),
-    ]
-)
-
-
-def firma_plan_girdileri(
-    ihtiyac: IhtiyacKarti, kart: FirmaKarti, kurum_adi: str, ek_not: str = ""
-) -> dict:
-    """İstem girdileri; iletişim bilgisi (e-posta) hiç girmez."""
-    return {
-        "kurum_adi": kurum_adi,
-        "problem_tanimi": ihtiyac.problem_tanimi,
-        "basari_kriteri": ihtiyac.basari_kriteri or "(yazılmamış)",
-        "kisitlar": ihtiyac.kisitlar or "(yok)",
-        "isbirligi_turu": ISBIRLIGI_TURU_ETIKETLERI.get(
-            ihtiyac.isbirligi_turu or "", "(belirtilmemiş)"
-        ),
-        "ortak_adi": kart.kurum.ad,
-        "ne_yapiyoruz": kart.ne_yapiyoruz,
-        "yetkinlikler": ", ".join(kart.yetkinlikler or []) or "(belirtilmemiş)",
-        "onceki_isler": kart.onceki_isler or "(yazılmamış)",
-        "ek_not": ek_not,
-    }
-
-
-@lru_cache
-def _firma_plan_zinciri() -> Runnable:
-    return yedekli_zincir(
-        "guclu",
-        "takip_plan_firma",
-        lambda m: PLAN_SABLONU_FIRMA | m.with_structured_output(PlanOnerisi),
-    )
-
-
-async def _firma_plan_cagir(girdiler: dict) -> PlanOnerisi:
+    adimlar = sablon_adimlari(sablon, baslangic)
     try:
-        return await _firma_plan_zinciri().ainvoke(girdiler)
-    except Exception as hata:
-        raise llm_hatasini_cevir(hata) from hata
-
-
-async def firma_plan_oner(
-    ihtiyac: IhtiyacKarti, kart: FirmaKarti, kurum_adi: str
-) -> list[AdimOnerisi] | None:
-    """`plan_oner`'in firma–firma karşılığı: aynı kural, bir kez düzeltme, sonra None."""
-    oneri = await _firma_plan_cagir(firma_plan_girdileri(ihtiyac, kart, kurum_adi))
-    if plan_gecerli_mi(oneri):
-        return oneri.adimlar
-    oneri = await _firma_plan_cagir(
-        firma_plan_girdileri(ihtiyac, kart, kurum_adi, ek_not=DUZELTME_NOTU)
-    )
-    if plan_gecerli_mi(oneri):
-        return oneri.adimlar
-    logger.warning("Firma planı iki denemede de kurala uymadı; plan boş bırakılıyor: %s", oneri)
-    return None
+        oneri = await asyncio.wait_for(
+            _plan_zinciri().ainvoke(girdiler), timeout=PLAN_ZAMAN_ASIMI_SN
+        )
+    except Exception:
+        logger.warning("Plan kişiselleştirilemedi; şablon metni kullanılıyor", exc_info=True)
+        return adimlar
+    if not isinstance(oneri, KisiselPlan):
+        logger.warning("Plan kişiselleştirmesi beklenmeyen tipte döndü: %r", type(oneri))
+        return adimlar
+    return kisisellestir(adimlar, oneri)
 
 
 # --- Durum özeti (docs/faz-c-takip.md § 5) — kesilebilir iş --------------------------------
@@ -266,8 +236,8 @@ async def firma_plan_oner(
 
 OZET_EN_UZUN = 400
 
-OZET_TALIMATI = """Sen Zemin360'ın Takip Ajanı'sın. Bir kurum ile bir genç arasındaki pilot iş
-birliğinin durumunu EN FAZLA İKİ CÜMLEYLE özetliyorsun; iki taraf da bu özeti görecek.
+OZET_TALIMATI = """Sen Zemin360'ın Takip Ajanı'sın. Eşleşmeden sonra açılan bir iş birliği
+sürecinin durumunu EN FAZLA İKİ CÜMLEYLE özetliyorsun; iki taraf da bu özeti görecek.
 
 Kurallar:
 - Yalnızca verilen bilgileri kullan; sayı, tarih ya da olay UYDURMA.
@@ -275,6 +245,7 @@ Kurallar:
 - Gecikmiş adım varsa adını söyle; karşı tarafın onayını bekleyen adım varsa kimin onayı
   beklendiğini söyle.
 - İş birliği tamamlandıysa bunu ve kaç adımda tamamlandığını söyle.
+- "Pilot" kelimesini kullanma; "deneme işi" de.
 - Madde işareti, başlık ya da emoji kullanma; düz, sade Türkçe."""
 OZET_TALIMATI += KULLANICI_DILI_KURALLARI
 

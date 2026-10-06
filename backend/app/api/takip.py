@@ -41,6 +41,7 @@ from app.agents.takip_durumu import (
     isbirligi_tamamlandi_mi,
     plan_gecisi,
 )
+from app.agents.takip_surecleri import PlanAdimi, SurecSablonu, surec_sec
 from app.api import sahiplik
 from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import mevcut_hesap, rol_gerekli
@@ -79,9 +80,6 @@ router = APIRouter(prefix="/isbirligi", tags=["takip"])
 ISBIRLIGI_BULUNAMADI = "İş birliği bulunamadı"
 ADIM_BULUNAMADI = "Adım bulunamadı"
 KANIT_ONAYDAN_SONRA = "Kanıt linki, plan iki tarafça onaylandıktan sonra eklenir."
-PLAN_ONERILEMEDI = (
-    "Plan önerisi şu an alınamadı. Adımlar elle eklenebilir ya da biraz sonra yeniden denenebilir."
-)
 
 
 # --- Okuma ve yetki ---------------------------------------------------------------------
@@ -197,17 +195,16 @@ def plan_gecisini_uygula(isbirligi: Isbirligi, olay: str, rol: str) -> PlanSonuc
     return sonuc
 
 
-def plani_yaz(isbirligi: Isbirligi, adimlar: list[takip.AdimOnerisi]) -> None:
-    """Ajanın önerisini plan yapar: eski adımlar silinir, onaylar sıfırlanır."""
-    baslangic = isbirligi.baslangic_tarihi or dt.date.today()
+def plani_yaz(isbirligi: Isbirligi, adimlar: list[PlanAdimi]) -> None:
+    """Süreç planını yazar: eski adımlar silinir, onaylar sıfırlanır."""
     isbirligi.milestonelar.clear()
     for sira, adim in enumerate(adimlar):
         isbirligi.milestonelar.append(
             Milestone(
-                baslik=adim.baslik.strip(),
-                aciklama=adim.aciklama.strip(),
+                baslik=adim.baslik,
+                aciklama=adim.tamam_tanimi,
                 sira=sira,
-                hedef_tarih=takip.hedef_tarihi(baslangic, adim.hafta),
+                hedef_tarih=adim.hedef_tarih,
                 durum=MILESTONE_BEKLIYOR,
             )
         )
@@ -325,16 +322,30 @@ async def _duzenle(oturum: AsyncSession, isbirligi: Isbirligi, rol: str) -> None
     )
 
 
-async def _ajana_sor(isbirligi: Isbirligi) -> list[takip.AdimOnerisi] | None:
+def isbirliginin_sureci(isbirligi: Isbirligi) -> SurecSablonu:
+    """Eşleşmenin türüne göre süreç şablonu (genç ilanında müsaitlik, ortakta tür)."""
     eslesme = isbirligi.eslesme
-    if eslesme.firma_karti is not None:
-        # Firma–firma (docs/plans/firma-akisi.md § 9): ayrı istem, aynı kurallar.
-        return await takip.firma_plan_oner(
-            eslesme.ihtiyac_karti, eslesme.firma_karti, eslesme.ihtiyac_karti.kurum.ad
-        )
-    return await takip.plan_oner(
-        eslesme.ihtiyac_karti, eslesme.yetenek_karti, eslesme.ihtiyac_karti.kurum.ad
+    ihtiyac = eslesme.ihtiyac_karti
+    return surec_sec(
+        aday_firma=eslesme.firma_karti is not None,
+        musaitlik=ihtiyac.musaitlik_tercihi,
+        isbirligi_turu=ihtiyac.isbirligi_turu,
     )
+
+
+async def _plani_hazirla(isbirligi: Isbirligi) -> list[PlanAdimi]:
+    """Şablon adımları + ajanın kişiselleştirmesi; hiçbir zaman boş dönmez."""
+    eslesme = isbirligi.eslesme
+    sablon = isbirliginin_sureci(isbirligi)
+    girdiler = takip.plan_girdileri(
+        sablon,
+        eslesme.ihtiyac_karti,
+        eslesme.ihtiyac_karti.kurum.ad,
+        yetenek_karti=eslesme.yetenek_karti,
+        firma_karti=eslesme.firma_karti,
+    )
+    baslangic = isbirligi.baslangic_tarihi or dt.date.today()
+    return await takip.plan_hazirla(sablon, baslangic, girdiler)
 
 
 # --- Uç noktalar ----------------------------------------------------------------------
@@ -346,15 +357,12 @@ async def plan_oner(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> IsbirligiDetayi:
-    """Ajandan (yeniden) plan ister. Yalnızca `plan_bekliyor`'da; mevcut adımları
-    siler ve iki onayı sıfırlar (arayüz önce sorar). LLM yanıt vermezse plan
-    olduğu gibi kalır: 429 hız sınırı / 503 arıza, kurala uymayan çıktıda 503."""
+    """Süreç planını yeniden hazırlar. Yalnızca `plan_bekliyor`'da; mevcut adımları
+    siler ve iki onayı sıfırlar (arayüz önce sorar). Model yanıt vermezse şablonun
+    kendi metni yazılır: plan hiçbir zaman boş kalmaz."""
     isbirligi, rol = await yazilabilir_isbirligi(oturum, hesap, isbirligi_id)
     plan_gecisini_uygula(isbirligi, PLAN_DUZENLE, rol)
-    adimlar = await _ajana_sor(isbirligi)
-    if adimlar is None:
-        raise HTTPException(status_code=503, detail=PLAN_ONERILEMEDI)
-    plani_yaz(isbirligi, adimlar)
+    plani_yaz(isbirligi, await _plani_hazirla(isbirligi))
     aktivite(isbirligi)
     await plan_duzenlendi_bildir(
         oturum,
@@ -370,8 +378,7 @@ async def plani_arka_planda_oner(isbirligi_id: uuid.UUID) -> None:
     """Genç kabul edince planı yanıt gönderildikten sonra önerir (§ 4).
 
     Eşleştirme'nin arka plan işiyle aynı desen: kendi oturumu, hata yutulur.
-    Plan önerilmediyse (LLM yok ya da çıktı kurala uymadı) iş birliği planı
-    boş kalır; taraflar sayfadan "Plan öner" diyebilir ya da elle ekleyebilir.
+    Model yanıt vermese de şablon adımları yazılır (`takip.plan_hazirla`).
     Tarafların eline geçmiş bir planı ezmez.
     """
     async with get_sessionmaker()() as oturum:
@@ -384,10 +391,7 @@ async def plani_arka_planda_oner(isbirligi_id: uuid.UUID) -> None:
                 or isbirligi.milestonelar
             ):
                 return
-            adimlar = await _ajana_sor(isbirligi)
-            if adimlar is None:
-                return
-            plani_yaz(isbirligi, adimlar)
+            plani_yaz(isbirligi, await _plani_hazirla(isbirligi))
             for rol in (ROL_GENC, ROL_KURUM):
                 bildirim_ekle(
                     oturum,
