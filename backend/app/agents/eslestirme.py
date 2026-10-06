@@ -38,6 +38,7 @@ from app.core.firma_dogrulama import DOGRULANDI
 from app.core.firma_karti import ISBIRLIGI_TURU_ETIKETLERI
 from app.core.firma_profili import FIRMA_TURU_ETIKETLERI
 from app.core.is_kalemi import is_kalemi_metni
+from app.core.istem_guvenligi import veri_kurali, veri_temizle
 from app.core.kullanici_dili import KULLANICI_DILI_KURALLARI
 from app.core.llm import llm_hatasini_cevir, yedekli_zincir
 from app.core.metin import turkce_kucult
@@ -84,7 +85,10 @@ DURUM_GENC_ILGILENDI = "genc_ilgilendi"
 # Kurum "şimdilik değil" dedi ya da ihtiyaç kapandı. Gence "Kapandı" görünür.
 DURUM_KAPANDI = "kapandi"
 
-GEREKCE_TALIMATI = """Sen Zemin360'ın Eşleştirme Ajanı'sın. Bir kurumun ihtiyaç kartı ile
+# Gerekçe istemlerinde kullanıcı metninin durduğu etiketler (app/core/istem_guvenligi.py).
+GEREKCE_ETIKETLERI = ("ilan", "aday")
+
+GEREKCE_TALIMATI = """Sen Zemin360'ın Eşleştirme Ajanı'sın. Bir firmanın ihtiyaç kartı ile
 bir gencin yetenek kartının neden eşleştiğini açıklıyorsun.
 
 Kurallar:
@@ -99,26 +103,26 @@ Kurallar:
   özetinin "Genel" satırı güçlü kanıt olduğunu söylüyorsa kullan. Aksi halde
   kanıtın ne durumda olduğunu özetteki ifadelerle anlat ("kanıt linki var ama
   iddiayla ilişkisi zayıf" gibi). Puanları rakamla verme.
-- Türkçe, sade, abartısız. Karar kurumun; sen sadece neden bu kartın önerildiğini
+- Türkçe, sade, abartısız. Karar firmanın; sen sadece neden bu kartın önerildiğini
   anlat.
 """
-GEREKCE_TALIMATI += KULLANICI_DILI_KURALLARI
+GEREKCE_TALIMATI += veri_kurali(*GEREKCE_ETIKETLERI) + KULLANICI_DILI_KURALLARI
 
 GEREKCE_SABLONU = ChatPromptTemplate.from_messages(
     [
         ("system", GEREKCE_TALIMATI),
         (
             "human",
-            "İHTİYAÇ KARTI\n"
+            "İHTİYAÇ KARTI\n<ilan>\n"
             "Problem: {problem}\n"
             "Başarı kriteri: {basari_kriteri}\n"
-            "Kısıtlar: {kisitlar}\n\n"
-            "YETENEK KARTI\n"
+            "Kısıtlar: {kisitlar}\n</ilan>\n\n"
+            "YETENEK KARTI\n<aday>\n"
             "Rol: {rol}\n"
             "Deneyim: {deneyim}\n"
             "Sektör ilgisi: {sektorler}\n"
             "Araçlar: {araclar}\n"
-            "Somut çıktılar: {ciktilar}\n\n"
+            "Somut çıktılar: {ciktilar}\n</aday>\n\n"
             "DOĞRULAMA ÖZETİ (Doğrulama Ajanı'nın rubrik puanlarından)\n"
             "{dogrulama}\n\n"
             "{ek_not}Bu eşleşmenin gerekçesini yaz.",
@@ -562,18 +566,21 @@ def gerekce_girdileri(
         )
         or "yok"
     )
-    return {
-        "problem": ihtiyac.problem_tanimi,
-        "basari_kriteri": ihtiyac.basari_kriteri or "belirtilmedi",
-        "kisitlar": ihtiyac.kisitlar or "belirtilmedi",
-        "rol": kart.rol_alani,
-        "deneyim": kart.deneyim_seviyesi,
-        "sektorler": ", ".join(kart.sektor_ilgi_alani) or "belirtilmedi",
-        "araclar": ", ".join(kart.araclar_teknolojiler) or "belirtilmedi",
-        "ciktilar": ciktilar,
-        "dogrulama": f"{dogrulama_ozeti(kart)}\n{pilot_ozeti(tamamlanan_pilot)}",
-        "ek_not": ek_not,
-    }
+    return veri_temizle(
+        {
+            "problem": ihtiyac.problem_tanimi,
+            "basari_kriteri": ihtiyac.basari_kriteri or "belirtilmedi",
+            "kisitlar": ihtiyac.kisitlar or "belirtilmedi",
+            "rol": kart.rol_alani,
+            "deneyim": kart.deneyim_seviyesi,
+            "sektorler": ", ".join(kart.sektor_ilgi_alani) or "belirtilmedi",
+            "araclar": ", ".join(kart.araclar_teknolojiler) or "belirtilmedi",
+            "ciktilar": ciktilar,
+            "dogrulama": f"{dogrulama_ozeti(kart)}\n{pilot_ozeti(tamamlanan_pilot)}",
+            "ek_not": ek_not,
+        },
+        GEREKCE_ETIKETLERI,
+    )
 
 
 async def _gerekce_cagir(girdiler: dict) -> str:
@@ -694,23 +701,23 @@ Kurallar:
 - Türkçe, sade, abartısız. Karar ilanı açan firmanın; sen yalnızca neden bu
   firmanın önerildiğini anlat.
 """
-FIRMA_GEREKCE_TALIMATI += KULLANICI_DILI_KURALLARI
+FIRMA_GEREKCE_TALIMATI += veri_kurali(*GEREKCE_ETIKETLERI) + KULLANICI_DILI_KURALLARI
 
 FIRMA_GEREKCE_SABLONU = ChatPromptTemplate.from_messages(
     [
         ("system", FIRMA_GEREKCE_TALIMATI),
         (
             "human",
-            "İLAN (iş birliği ortağı aranıyor)\n"
+            "İLAN (iş birliği ortağı aranıyor)\n<ilan>\n"
             "Problem: {problem}\n"
             "Başarı kriteri: {basari_kriteri}\n"
             "Kısıtlar: {kisitlar}\n"
-            "İş birliği türü: {isbirligi_turu}\n\n"
-            "ADAY FİRMA\n"
+            "İş birliği türü: {isbirligi_turu}\n</ilan>\n\n"
+            "ADAY FİRMA\n<aday>\n"
             "Tür ve sektör: {firma_turu}, {sektor}\n"
             "Ne yapıyor: {ne_yapiyoruz}\n"
             "Yetkinlikler: {yetkinlikler}\n"
-            "Önceki işler: {onceki_isler}\n\n"
+            "Önceki işler: {onceki_isler}\n</aday>\n\n"
             "GÜVEN BİLGİSİ\n"
             "{guven}\n\n"
             "{ek_not}Bu eşleşmenin gerekçesini yaz.",
@@ -738,21 +745,26 @@ def firma_guven_ozeti(dogrulandi: bool, tamamlanan_isbirligi: int) -> str:
 def firma_gerekce_girdileri(ihtiyac: IhtiyacKarti, aday: FirmaAdayi, ek_not: str = "") -> dict:
     kart = aday.firma_karti
     kurum = kart.kurum
-    return {
-        "problem": ihtiyac.problem_tanimi,
-        "basari_kriteri": ihtiyac.basari_kriteri or "belirtilmedi",
-        "kisitlar": ihtiyac.kisitlar or "belirtilmedi",
-        "isbirligi_turu": ISBIRLIGI_TURU_ETIKETLERI.get(
-            ihtiyac.isbirligi_turu or "", "belirtilmedi"
-        ),
-        "firma_turu": FIRMA_TURU_ETIKETLERI.get(kurum.tur or "", "türü belirtilmemiş"),
-        "sektor": kurum.sektor or "sektörü belirtilmemiş",
-        "ne_yapiyoruz": kart.ne_yapiyoruz,
-        "yetkinlikler": ", ".join(kart.yetkinlikler) or "belirtilmedi",
-        "onceki_isler": kart.onceki_isler or "belirtilmedi",
-        "guven": firma_guven_ozeti(kurum.dogrulama_durumu == DOGRULANDI, aday.tamamlanan_isbirligi),
-        "ek_not": ek_not,
-    }
+    return veri_temizle(
+        {
+            "problem": ihtiyac.problem_tanimi,
+            "basari_kriteri": ihtiyac.basari_kriteri or "belirtilmedi",
+            "kisitlar": ihtiyac.kisitlar or "belirtilmedi",
+            "isbirligi_turu": ISBIRLIGI_TURU_ETIKETLERI.get(
+                ihtiyac.isbirligi_turu or "", "belirtilmedi"
+            ),
+            "firma_turu": FIRMA_TURU_ETIKETLERI.get(kurum.tur or "", "türü belirtilmemiş"),
+            "sektor": kurum.sektor or "sektörü belirtilmemiş",
+            "ne_yapiyoruz": kart.ne_yapiyoruz,
+            "yetkinlikler": ", ".join(kart.yetkinlikler) or "belirtilmedi",
+            "onceki_isler": kart.onceki_isler or "belirtilmedi",
+            "guven": firma_guven_ozeti(
+                kurum.dogrulama_durumu == DOGRULANDI, aday.tamamlanan_isbirligi
+            ),
+            "ek_not": ek_not,
+        },
+        GEREKCE_ETIKETLERI,
+    )
 
 
 @lru_cache
