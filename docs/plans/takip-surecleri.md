@@ -1,6 +1,6 @@
 # Takip: gerçekçi süreçler (6 Eki)
 
-Durum: **taslak, onay bekliyor.** Takip incelemesi (`ajan-inceleme-sirasi`: Eşleştirme → Takip → Canlılık).
+Durum: **uygulandı (6 Eki), altı adım altı commit; elle deneme kullanıcıda.** Takip incelemesi (`ajan-inceleme-sirasi`: Eşleştirme → Takip → Canlılık).
 Eşleştirme incelemesi paralel oturumda; bu plan pilot bonusuna (`tamamlanan_pilot_sayilari`,
 `matching-algorithm.md` § 4) dokunmaz.
 

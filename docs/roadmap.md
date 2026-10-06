@@ -222,6 +222,17 @@ Ajan inceleme sırasının 3. adımı. Kötü girdi senaryo seti
       ediyor; döngü edevlet'te tembel importla kırıldı, `embedding_hesapla` servis katmanına
       taşınmalı.
 
+## Takip incelemesi (6 Eki)
+
+Ajan inceleme sırasının Eşleştirme'den sonraki adımı (`plans/takip-surecleri.md`).
+
+- [x] Adımlar sabit süreç şablonlarından (işe alım, staj, proje; deneme işi, tedarik, iş
+      birliği); ajan yalnızca kişiselleştirir, model hatasında şablon metni (plan boş kalmaz).
+- [x] Süreç çizgisi ve açılır hazırlık önerisi; "pilot" kullanıcıya gösterilmez.
+- [x] Erken sonlanma (`sonlandi`, geri açılmaz, nedensiz bildirim).
+- [ ] Elle deneme (kullanıcı): kabulden sonra plan, hazırlık önerisi, "Süreci sonlandır".
+- [ ] Tohum veride iş birlikleri şablonlu yazılmalı (`surec`, `asama`, `oneri`).
+
 ## Doğrulama incelemesi (1-5 Eki) ✓
 
 Ajan inceleme sırasının 2. adımı. Plan ve adım adım durum: `plans/dogrulama-iyilestirme.md`

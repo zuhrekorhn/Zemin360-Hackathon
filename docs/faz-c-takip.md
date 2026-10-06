@@ -106,22 +106,31 @@ Faz B'deki `gecis()` deseni: kural tek yerde, uç noktalar yalnızca uygular.
 yazılır. Ajan değil kural karar verir; iki taraf her milestone'u zaten ayrı
 ayrı onayladı. → **Karar 1** (§ 9).
 
-## 4. Plan önerisi
+## 4. Plan önerisi (süreç şablonları, 6 Eki)
 
-- **Ne zaman:** Genç kabul edince (Faz B'nin `kabul` ucu) arka plan işi olarak başlar; Eşleştirme'deki `eslestirmeyi_arka_planda_calistir` deseni, zamanlayıcı yok. Yanıt beklenmez. Arka plan işi çalışmadıysa ya da LLM hata verdiyse taraflar sayfadan "Plan öner" diyebilir.
-- **Girdi:**
-  - İhtiyaç kartı: problem tanımı, başarı kriteri, kısıtlar, müsaitlik tercihi, çalışma modeli.
-  - Yetenek kartı: rol alanı, araçlar, somut çıktı başlıkları.
-  - İletişim bilgisi girmez.
-- **Çıktı (yapılandırılmış):** 3-5 milestone; her biri `{baslik, aciklama, hafta}`.
-  - `hafta`: başlangıçtan kaçıncı haftada bittiği. 1-12 arası, artan.
-  - Hedef tarih `baslangic_tarihi + hafta`'dan hesaplanır.
-  - Son milestone başarı kriterine bağlanmalı.
-- **İstem kuralları:**
-  - Kartlarda olmayan bir sayı ya da araç uydurulmaz.
-  - Her milestone "ne olunca tamam" sorusunu yanıtlar.
-  - Sonuç 3'ten az ya da 5'ten fazla milestone ise ya da haftalar artmıyorsa çıktı reddedilir ve yedek modele gidilir. Eşleştirme gerekçesindeki doğrulama deseni.
-- **Yeniden öner:** Yalnızca `plan_bekliyor`'da çalışır. Mevcut milestone'ları siler, yenilerini yazar, iki onayı sıfırlar. Arayüz önce onay sorar.
+> 6 Eki'de değişti (`plans/takip-surecleri.md`). Eski hali: ajan 3-5 adımı serbest yazıyordu,
+> kurala uymayan çıktıda plan boş kalıyordu.
+
+- **Adımlar kodda, kişiselleştirme ajanda.** Eşleşmenin türü sabit bir süreç şablonu seçer
+  (`app/agents/takip_surecleri.py` › `surec_sec`): genç ilanında müsaitliğe göre işe alım,
+  staj ya da proje; ortak ilanında iş birliği türüne göre deneme işi (`pilot`), tedarik ya da
+  genel iş birliği. Her şablon beş adım ve varsayılan hafta taşır.
+- **Ajanın işi:** her adım için "ne olunca tamam sayılır" (`aciklama`) ve hazırlık önerisi
+  (`oneri`), ilana ve adaya göre. Adım eklemez, çıkarmaz, sırasını değiştirmez.
+- **Kritik kural (kodda, `takip.kisisellestir` / `plan_hazirla`):** model hata verirse, zaman
+  aşımına uğrarsa ya da geçersiz çıktı dönerse (boş, çok uzun, tanınmayan anahtar, "pilot"
+  kelimesi) o adımda şablonun kendi metni kalır. Plan hiçbir zaman boş kalmaz; "Plan öner"
+  503 dönmez.
+- **Ne zaman:** genç kabul edince arka planda (`plani_arka_planda_oner`, değişmedi) ve
+  taraflar "Plan önerisi al" dediğinde. Girdi: ilan (problem, kriter, kısıtlar; genç ilanında
+  müsaitlik ve çalışma modeli, ortakta iş birliği türü) ve aday (genç kartı ya da firma kartı);
+  kullanıcı metni `<ilan>`/`<aday>` veri etiketlerinde. İletişim bilgisi girmez.
+- **Yeniden öner:** yalnızca `plan_bekliyor`'da; mevcut adımları siler, iki onayı sıfırlar.
+- **Eski kayıtlar:** `isbirligi.surec` ve `milestone.asama` / `oneri` boş; sayfa onları bugünkü
+  gibi gösterir, kurallar etkilenmez.
+- **Erken sonlanma:** taraflardan biri `plan_bekliyor` ya da `aktif` iken süreci nedenle
+  sonlandırır (`sonlandi`, geri açılmaz; `takip_durumu.sonlanma_gecisi`). Karşı tarafa nötr
+  bildirim, neden yazılmaz. Tamamlanmış sayılmaz.
 
 ## 5. Durum özeti
 

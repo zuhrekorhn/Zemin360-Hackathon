@@ -14,6 +14,7 @@ from sqlalchemy import select
 from app.agents import takip
 from app.agents.eslestirme import firma_tamamlanan_isbirligi_sayilari
 from app.models.isbirligi import Isbirligi
+from tests.takip_dunyasi import sahte_plan
 from tests.test_firma_eslestirme import gerekce_sahte as gerekce_sahte  # noqa: F401
 from tests.test_firma_ilgi import ONAY, _kurulum
 from tests.test_sahiplik import durumlar, senaryo
@@ -44,11 +45,9 @@ def test_ozet_girdisi_aday_etiketi():
     assert girdi.startswith("Taraflar: ortak firma Aday Firma, kurum Koop Bir.")
 
 
-def test_firma_plan_istemi_gence_degil():
-    assert "İki firma arasında" in takip.SISTEM_TALIMATI_FIRMA
-    assert "genç" not in takip.SISTEM_TALIMATI_FIRMA
-    # Genç istemi değişmedi.
-    assert "genç bir yetenek" in takip.SISTEM_TALIMATI
+def test_istem_adimlari_uydurmaz_pilot_kelimesini_yasaklar():
+    assert "SABİT adımları" in takip.SISTEM_TALIMATI
+    assert '"Pilot" kelimesini kullanma' in takip.SISTEM_TALIMATI
 
 
 # --- Gerçek veritabanı -------------------------------------------------------------------
@@ -88,27 +87,19 @@ def test_detay_ve_liste_iki_firmaya_acik():
 
 
 def test_plan_onerisi_firma_istemini_kullanir(monkeypatch):
-    cagrilar = []
-
-    async def firma_plani(ihtiyac, kart, kurum_adi):
-        cagrilar.append((kart.kurum.ad, kurum_adi))
-        return [
-            takip.AdimOnerisi(baslik=f"Adım {i}", aciklama="Tamam sayılır.", hafta=i)
-            for i in (1, 2, 3)
-        ]
-
-    async def genc_plani(*_):
-        raise AssertionError("firma iş birliğinde genç istemi çağrıldı")
-
-    monkeypatch.setattr(takip, "firma_plan_oner", firma_plani)
-    monkeypatch.setattr(takip, "plan_oner", genc_plani)
+    cagrilar = sahte_plan(monkeypatch, sonuc=RuntimeError("model yok"))
 
     async def adimlar(istemci, d):
         aday, ilan, eid, isb = await _karsilikli(istemci, d)
         yanit = await istemci.post(f"/isbirligi/{isb}/plan-oner", headers=aday.baslik)
         assert yanit.status_code == 200
-        assert len(yanit.json()["milestonelar"]) == 3
-        assert cagrilar == [("Aday Firma", "Koop Bir")]
+        govde = yanit.json()
+        # Firma ilanı: firma–firma şablonlarından biri, model hatasında şablon metniyle dolu.
+        assert govde["surec"] in ("pilot", "tedarik", "isbirligi")
+        assert len(govde["milestonelar"]) == 5
+        assert cagrilar[0]["aday_basligi"] == "ORTAK FİRMA (Aday Firma)"
+        assert cagrilar[0]["kurum_adi"] == "Koop Bir"
+        assert "Müsaitlik" not in cagrilar[0]["ilan"]
 
     senaryo(adimlar)
 

@@ -67,6 +67,7 @@ Her kavramın **tek** adı var. "Kullanma" sütunundaki karşılıklar kullanıc
 | Tarafların ilgisi | **ilgileniyorum** / **karşılıklı ilgi** | talep, başvuru, beğeni | Platform bir "başvuru" sistemi değil |
 | Eşleşme sonrası çalışma | **iş birliği** | proje, pilot (tek başına), işbirliği (bitişik) | TDK: ayrı yazılır |
 | İş birliğinin aşamaları | **plan** ve **adım** | milestone, görev, kilometre taşı | |
+| Firmalar arası küçük deneme çalışması | **deneme işi** | pilot, pilot uygulama | Süreç adı "Deneme işi süreci" |
 | Tamamlanmış iş birliği rozeti | **tamamlanan iş birliği** | pilot, pilot iş birliği, tamamlanmış pilot | Genç ve firma için aynı. Sayıyla: "2 tamamlanan iş birliği" |
 | Sohbetle kart oluşturma | **kısa bir sohbet** | Keşif Ajanı, Keşif, ajan | Sayfa başlığı: "Yetenek kartını oluştur" |
 | Sohbetle ihtiyaç tanımlama | **kısa bir sohbet** | Tanımlama Ajanı, Tanımlama | Sayfa başlığı: "İhtiyacınızı tanımlayın" |
@@ -112,6 +113,7 @@ ajan · pipeline · embedding · vektör · rubrik · skor · eşik · token · 
 ### 5.7 Bildirimler
 - **Kim + ne oldu + ne yapabilirsin:** "Kooperatif A profilinle ilgileniyor. Kabul edersen iletişim bilgileriniz paylaşılır."
 - Olumsuz durumlar nötr: "Kooperatif A'nın ihtiyacı kapandı." Neden kapandığı yazılmaz.
+- Süreç sonlandırılınca karşı tarafa: "Elif ile sürecin sonlandı." / "Koop Bir ile süreciniz sonlandı." Nedeni yazılmaz.
 - Firma ilanı düzenleyince ilgilenmiş adaya: "İlgilendiğin bir fırsatın ayrıntıları güncellendi." (aday firmaysa "İlgilendiğiniz…"). Neyin değiştiği yazılmaz; ayrıntı fırsatın kendisinde.
 
 ### 5.8 Bekleme ve arka plan işleri

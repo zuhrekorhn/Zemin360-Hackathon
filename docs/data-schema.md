@@ -170,12 +170,17 @@ erDiagram
     text durum_ozeti
     timestamp ozet_tarihi
     bool plan_onerildi_mi
+    string surec
+    string sonlanma_nedeni
+    timestamp sonlanma_tarihi
   }
   MILESTONE {
     uuid id PK
     uuid isbirligi_id FK
     string baslik
     text aciklama
+    string asama
+    text oneri
     int sira
     date hedef_tarih
     string durum
