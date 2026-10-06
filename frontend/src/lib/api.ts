@@ -1113,8 +1113,6 @@ export type Oneriler = {
   oneriler: Oneri[];
   /** Havuz küçükken gizlenmez, açıkça söylenir (matching-algorithm.md § 5). */
   az_sonuc_uyarisi: boolean;
-  /** Eşik backend'den gelir; arayüzde sabitlenmez. */
-  skor_esigi: number;
 };
 
 /** İlgileniyorum / kabul / red sonrası eşleşme. İş birliği gencin

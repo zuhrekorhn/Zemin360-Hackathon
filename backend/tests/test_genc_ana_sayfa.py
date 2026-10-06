@@ -62,20 +62,23 @@ ONAY = {"iletisim_onayi": True}
 
 def test_firsatlar_ve_ilgiler():
     async def adimlar(istemci, d):
-        # K1 için I2'de eşik altı bir kayıt: fırsat olarak görünmez.
+        # K1 için I2'de düşük skorlu (0.3) bir kayıt. Eskiden skor eşiğinin altında
+        # kalıp görünmezdi; eşik kalktı, skor yalnızca sıralar: fırsat olarak görünür, sonda.
         d.oturum.add(
             Eslesme(ihtiyac_karti_id=d.I2.id, yetenek_karti_id=d.K1.id, skor=0.3, durum="onerildi")
         )
         await d.oturum.commit()
 
         firsatlar = (await istemci.get("/eslestirme/firsatlarim", headers=d.genc1.baslik)).json()
-        assert [(f["eslesme_id"], f["uyum"]) for f in firsatlar] == [(str(d.E1.id), 0.6)]
+        assert [f["uyum"] for f in firsatlar] == [0.6, 0.3]
+        assert firsatlar[0]["eslesme_id"] == str(d.E1.id)
         assert firsatlar[0]["ihtiyac_karti"]["kurum"]["ad"] == "Koop Bir"
         assert firsatlar[0]["iletisim"] is None
         assert d.kurum1.hesap.email not in str(firsatlar)
 
         await istemci.post(f"/eslestirme/{d.E1.id}/genc-ilgi", headers=d.genc1.baslik, json=ONAY)
-        assert (await istemci.get("/eslestirme/firsatlarim", headers=d.genc1.baslik)).json() == []
+        kalan = (await istemci.get("/eslestirme/firsatlarim", headers=d.genc1.baslik)).json()
+        assert [f["uyum"] for f in kalan] == [0.3]
         ilgiler = (await istemci.get("/eslestirme/ilgilerim", headers=d.genc1.baslik)).json()
         assert [(i["eslesme_id"], i["durum"]) for i in ilgiler] == [
             (str(d.E1.id), "genc_ilgilendi")
@@ -87,6 +90,7 @@ def test_firsatlar_ve_ilgiler():
         # Kapalı ihtiyaçtaki öneri fırsat değildir.
         d.E1.durum = "onerildi"
         d.I1.durum = "kapandi"
+        d.I2.durum = "kapandi"
         await d.oturum.commit()
         assert (await istemci.get("/eslestirme/firsatlarim", headers=d.genc1.baslik)).json() == []
 

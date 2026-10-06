@@ -184,12 +184,13 @@ def test_yetki_ve_kurallar():
         )
         assert genc_eslesmesi.status_code == 404
 
-        # Eşik altı öneriye ilgi gösterilemez.
+        # Skor eşiği kalktı: düşük skorlu öneriye de ilgi gösterilir (giriş kararı
+        # benzerlik tabanında, ilgiyi yalnızca kapalı ilan engeller).
         eslesme = await _eslesme(d, eid)
         eslesme.skor = 0.1
         await d.oturum.commit()
-        esik_alti = await istemci.post(yol, headers=aday.baslik, json=ONAY)
-        assert esik_alti.status_code == 409
+        dusuk_skor = await istemci.post(yol, headers=aday.baslik, json=ONAY)
+        assert dusuk_skor.status_code == 200
 
     senaryo(adimlar)
 
@@ -207,19 +208,20 @@ def test_aday_firma_ilani_gorur_baskasi_gormez():
     senaryo(adimlar)
 
 
-def test_firsat_listesi_esik_alti_ve_kapali_ilani_gostermez():
+def test_firsat_listesi_dusuk_skoru_gosterir():
     async def adimlar(istemci, d):
         aday, ilan, eid = await _kurulum(d)
         liste = (await istemci.get("/eslestirme/firma-eslesmelerim", headers=aday.baslik)).json()
         assert [s["eslesme_id"] for s in liste] == [str(eid)]
 
+        # Eskiden skor 0.1 listeden düşerdi; eşik kalktı, skor listeye girmeyi belirlemez.
         eslesme = await _eslesme(d, eid)
         eslesme.skor = 0.1
         await d.oturum.commit()
         liste = (await istemci.get("/eslestirme/firma-eslesmelerim", headers=aday.baslik)).json()
-        assert liste == []
+        assert [s["eslesme_id"] for s in liste] == [str(eid)]
 
-        # İlgi gösterilmiş kayıt eşik değişse de listede kalır.
+        # İlgi gösterilmiş kayıt listede kalır.
         eslesme = await _eslesme(d, eid)
         eslesme.skor, eslesme.durum, eslesme.baslatan = 0.1, "genc_ilgilendi", "genc"
         await d.oturum.commit()

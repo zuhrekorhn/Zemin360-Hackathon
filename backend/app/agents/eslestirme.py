@@ -2,8 +2,8 @@
 
 **Bu bir sohbet ajanı değil.** Keşif ve Tanımlama çok turlu konuşma yürütür ve
 `sohbet_motoru.py`'yi paylaşır; burada konuşma yok: tek seferlik bir hesap
-(SQL filtre → pgvector benzerliği → skor → eşik) ve sonunda öneri başına bir
-LLM çağrısı (gerekçe metni). Bu yüzden grafik/checkpointer da yok.
+(SQL filtre → pgvector benzerliği → benzerlik tabanı → skorla sıralama → ilk N) ve
+sonunda öneri başına bir LLM çağrısı (gerekçe metni). Bu yüzden grafik/checkpointer da yok.
 
 Dosya `app/agents/` altında duruyor çünkü belgelerdeki altı ajandan biri
 (docs/agent-specs.md § 3) ve pipeline'ın tamamı — SQL'i, skoru, gerekçesi —
@@ -22,7 +22,7 @@ import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -59,17 +59,21 @@ logger = logging.getLogger("zemin360.eslestirme")
 BENZERLIK_AGIRLIGI = 0.75
 DOGRULAMA_AGIRLIGI = 0.25
 TOP_N = 5
-SKOR_ESIGI = 0.40
 # Tamamlanmış pilot (Faz C, docs/faz-c-takip.md § 6): doğrulama bonusuna
 # toplamsal eklenir, tavan 1.0. Pilotu olmayan kartın skoru değişmez; pilot
 # skora en çok 0.25 × 0.5 = +0.125 ekler. Alakayı yaratmaz: benzerlik alt
 # sınırı skordan önce uygulanmaya devam ediyor.
 PILOT_BONUSU = 0.5
-# Konu alakası için ayrı bir alt sınır (docs/matching-algorithm.md § 5).
-# Doğrulama bonusu sıralamayı etkiler, alakayı YARATMAZ: iyi doğrulanmış bir
-# kart tek başına +0.19 getirdiği için 0.34 benzerlikli alakasız bir aday
-# toplam eşiği geçebiliyordu. Bu sınır skordan ÖNCE uygulanır.
-BENZERLIK_ALT_SINIRI = 0.45
+# Listeye girme kararı YALNIZCA benzerliğe bağlı (docs/matching-algorithm.md § 5):
+# doğrulama bonusu sıralamayı etkiler, alakayı yaratmaz. Eskiden skor üzerinde
+# ayrıca %40'lık bir eşik vardı; bonusu olan kartın alakasız adayı listeye
+# sokmasına, bonusu olmayanı fiilen 0.533 benzerlikle kesmesine yol açıyordu
+# (sentetik havuz ölçümü, § 5). 0.48, 6 ihtiyaç / 30 aday / 180 çiftlik
+# sentetik havuzla seçildi; gerçek havuzla yeniden doğrulanmalı.
+BENZERLIK_ALT_SINIRI = 0.48
+# Firma–firma eşleşmesinin tabanı ayrı sabit: şimdilik genç tabanıyla aynı değer
+# (0.48) ama firma metinleri için ölçülmedi. Ölçüm gelince ayrı ayarlanır.
+FIRMA_BENZERLIK_ALT_SINIRI = 0.48
 # Güven göstergesinin her başlığı 0-3 (agent-specs.md § 4); NULL başlık = "—".
 GUVEN_BASLIK_TAVANI = 3
 
@@ -141,6 +145,8 @@ class Aday:
     # İki tarafın her adımı onayladığı, tamamlanmış iş birliği sayısı.
     tamamlanan_pilot: int = 0
 
+    alt_sinir: ClassVar[float] = BENZERLIK_ALT_SINIRI
+
     @property
     def skor(self) -> float:
         return skor_hesapla(self.benzerlik, self.dogrulama_bonus)
@@ -153,9 +159,9 @@ class Aday:
 # --- Firma adayı (docs/plans/firma-akisi.md § 0 kararlar 5, 13; § 4) -------------------
 #
 # Ortak ilanının adayları firma kartları. Aynı formül ve aynı iki sınır
-# (benzerlik alt sınırı, skor eşiği, ilk N); bonus firmaya göre: GİRVAK'ın
-# doğruladığı firma ve daha önce tamamlanmış bir iş birliği. Bonus alakayı
-# yaratmaz: alt sınır skordan önce (§ 5). Firma metinleri için 0.45'in ayarı
+# (benzerlik alt sınırı, ilk N); bonus firmaya göre: GİRVAK'ın doğruladığı firma
+# ve daha önce tamamlanmış bir iş birliği. Bonus alakayı yaratmaz, yalnızca
+# sıralar (§ 5). Firma metinleri için taban (FIRMA_BENZERLIK_ALT_SINIRI)
 # ölçülmedi (bilinen sınır).
 FIRMA_DOGRULAMA_BONUSU = 0.5
 FIRMA_ISBIRLIGI_BONUSU = 0.5
@@ -176,6 +182,8 @@ class FirmaAdayi:
     benzerlik: float
     dogrulama_bonus: float
     tamamlanan_isbirligi: int = 0
+
+    alt_sinir: ClassVar[float] = FIRMA_BENZERLIK_ALT_SINIRI
 
     @property
     def skor(self) -> float:
@@ -225,24 +233,23 @@ def skor_hesapla(benzerlik: float, dogrulama_bonus: float) -> float:
     return BENZERLIK_AGIRLIGI * benzerlik + DOGRULAMA_AGIRLIGI * dogrulama_bonus
 
 
-def benzerlik_yeterli_mi(benzerlik: float) -> bool:
-    """Aday konu olarak yeterince yakın mı? Skordan bağımsız bir ön koşul.
+def benzerlik_yeterli_mi(benzerlik: float, alt_sinir: float = BENZERLIK_ALT_SINIRI) -> bool:
+    """Aday konu olarak yeterince yakın mı? Listeye girmenin tek koşulu.
 
-    Doğrulama bonusu bu kararın dışında tutuluyor — güven, alakalı adaylar
-    arasında sıralamayı değiştirir; alakasız bir adayı alakalı yapmaz.
+    Doğrulama bonusu bu kararın dışında: güven, alakalı adaylar arasında
+    sıralamayı değiştirir; alakasız bir adayı alakalı yapmaz, alakalı bir
+    adayı da listeden düşürmez.
     """
-    return benzerlik >= BENZERLIK_ALT_SINIRI
+    return benzerlik >= alt_sinir
 
 
 def siralayip_ele(adaylar: Sequence[Aday | FirmaAdayi]) -> list[Aday | FirmaAdayi]:
-    """Alakasızları eler, skora göre sıralar, eşik altını atar, TOP_N'i döner.
+    """Alakasızları eler, skora göre sıralar, TOP_N'i döner.
 
-    Alaka elemesi skor hesabından önce: bir aday konuyla ilgisizse ne kadar
-    iyi doğrulanmış olduğu bu kararı değiştirmemeli.
+    Giriş kararı yalnızca benzerlikle (adayın türüne göre taban); skor yalnızca
+    sıralar. Aynı benzerlikteki iki aday bonusları farklı olsa da aynı kararı alır.
     """
-    uygunlar = [
-        aday for aday in adaylar if benzerlik_yeterli_mi(aday.benzerlik) and aday.skor >= SKOR_ESIGI
-    ]
+    uygunlar = [aday for aday in adaylar if benzerlik_yeterli_mi(aday.benzerlik, aday.alt_sinir)]
     return sorted(uygunlar, key=lambda aday: aday.skor, reverse=True)[:TOP_N]
 
 
@@ -486,7 +493,7 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
             )
         )
 
-    # Eşik ve Top-N skordan sonra uygulanıyor (doğrulama bonusu sıralamayı
+    # Top-N skordan sonra uygulanıyor (doğrulama bonusu sıralamayı
     # değiştirebilir), ama yine de makul bir üst sınırla getiriyoruz.
     satirlar = (await oturum.execute(sorgu.order_by("uzaklik").limit(50))).all()
     pilotlar = await tamamlanan_pilot_sayilari(oturum, [kart.id for kart, _ in satirlar])
@@ -628,7 +635,7 @@ async def firma_adaylarini_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) ->
     Kesin şartlar SQL'de: kartı ve hesabı olan firma, ilanı açan firma değil,
     ilan tür seçtiyse o türlerden, ilan şehir şartı koyduysa o şehirde (şehir
     varsayılan olarak fark etmez). Sektör şart değil. Sonra benzerlik alt
-    sınırı; eşik ve ilk N `siralayip_ele`'de.
+    sınırı ve ilk N `siralayip_ele`'de.
     """
     if ihtiyac.embedding is None:
         return []
@@ -641,7 +648,7 @@ async def firma_adaylarini_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) ->
             FirmaKarti.embedding.isnot(None),
             Kurum.hesap_id.isnot(None),
             FirmaKarti.kurum_id != ihtiyac.kurum_id,
-            uzaklik <= 1.0 - BENZERLIK_ALT_SINIRI,
+            uzaklik <= 1.0 - FIRMA_BENZERLIK_ALT_SINIRI,
         )
     )
     if ihtiyac.aranan_firma_turleri:

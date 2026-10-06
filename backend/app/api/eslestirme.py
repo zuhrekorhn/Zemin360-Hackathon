@@ -33,7 +33,6 @@ from app.agents.eslesme_durumu import (
 from app.agents.eslestirme import (
     DURUM_GENC_ILGILENDI,
     DURUM_ONERILDI,
-    SKOR_ESIGI,
     TOP_N,
     firma_tamamlanan_isbirligi_sayilari,
     ihtiyac_kartini_getir,
@@ -244,13 +243,13 @@ async def genc_ilgi(
 ) -> EslesmeDurumYaniti:
     """Genç bir fırsata ilgi gösterir: `onerildi` → `genc_ilgilendi`.
 
-    Yalnızca eşik üstü ve açık ihtiyaç (409, nedeniyle). İlgi skoru değiştirmez;
+    Yalnızca açık ihtiyaçta (409, nedeniyle). İlgi skoru değiştirmez;
     firma ekranında ayrı bir işaret. `iletisim_onayi` zorunlu: firma da
     ilgilenirse e-posta firmayla paylaşılır. Firmaya bildirim gider.
     """
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
     if eslesme.durum == DURUM_ONERILDI:
-        engel = ilgi_engeli(eslesme.skor, eslesme.ihtiyac_karti.durum)
+        engel = ilgi_engeli(eslesme.ihtiyac_karti.durum)
         if engel:
             raise HTTPException(status_code=409, detail=engel)
     if _gecisi_uygula(eslesme, OLAY_GENC_ILGI, TARAF_ADAY):
@@ -431,8 +430,9 @@ async def firsatlarim(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> list[GencEslesmesi]:
-    """Sana uygun fırsatlar: gencin kartlarının eşik üstü, açık ihtiyaçlardaki
-    henüz ilgi gösterilmemiş önerileri, uyum sırasıyla (plan § 7).
+    """Sana uygun fırsatlar: gencin kartlarının açık ihtiyaçlardaki henüz ilgi
+    gösterilmemiş önerileri, uyum sırasıyla (plan § 7). Öneri kaydı zaten
+    benzerlik tabanını geçmiş adaya yazılıyor; burada ayrıca skor süzülmez.
 
     Yalnızca okur, eşleştirme çalıştırmaz. Açık bir ilan panosu değil: genç
     yalnızca kendi kartına önerilmiş ihtiyaçları görür.
@@ -441,7 +441,6 @@ async def firsatlarim(
         oturum,
         hesap,
         Eslesme.durum == DURUM_ONERILDI,
-        Eslesme.skor >= SKOR_ESIGI,
         IhtiyacKarti.durum == IHTIYAC_ACIK,
     )
 
@@ -597,7 +596,6 @@ async def _yanit_kur(
         oneriler=oneriler,
         # Cold start: havuz küçükken bunu arayüzde gizleme (matching-algorithm.md § 5)
         az_sonuc_uyarisi=len(oneriler) < TOP_N,
-        skor_esigi=SKOR_ESIGI,
     )
 
 
@@ -665,12 +663,12 @@ async def firma_ilgi(
 ) -> EslesmeDurumYaniti:
     """Aday firma bir ortak ilanına ilgi gösterir: `onerildi` → `genc_ilgilendi`.
 
-    Gençtekiyle aynı kural: yalnızca eşik üstü ve açık ilan; `iletisim_onayi`
+    Gençtekiyle aynı kural: yalnızca açık ilan; `iletisim_onayi`
     zorunlu (ilan sahibi de ilgilenirse e-posta paylaşılır).
     """
     eslesme = await _aday_firmanin_eslesmesi(oturum, hesap, eslesme_id)
     if eslesme.durum == DURUM_ONERILDI:
-        engel = ilgi_engeli(eslesme.skor, eslesme.ihtiyac_karti.durum, siz=True)
+        engel = ilgi_engeli(eslesme.ihtiyac_karti.durum)
         if engel:
             raise HTTPException(status_code=409, detail=engel)
     if _gecisi_uygula(eslesme, OLAY_GENC_ILGI, TARAF_ADAY):
@@ -758,7 +756,7 @@ async def firma_eslesmelerim(
 ) -> list[FirmaAdayEslesmesi]:
     """Firmanın aday olduğu bütün eşleşmeler, uyum sırasıyla (yalnızca okur).
 
-    Fırsatlar (önerilmiş; eşik altı ve kapalı ilan burada süzülür), gelen
+    Fırsatlar (önerilmiş; kapalı ilan burada süzülür), gelen
     ilgiler ve kendi ilgileri arayüzde ayrılır (`lib/firma-ilgi.ts`). Açık ilan panosu değil:
     firma yalnızca kendi kartına önerilmiş ilanları görür.
     """
@@ -768,11 +766,11 @@ async def firma_eslesmelerim(
         .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
         .where(
             FirmaKarti.kurum_id == hesabin_kurumu(hesap),
-            # Fırsat yalnızca eşik üstü ve açık ilanda (gencin fırsatlarındaki kural);
+            # Fırsat yalnızca açık ilanda (gencin fırsatlarındaki kural);
             # ilgi gösterilmiş ya da karar verilmiş kayıtlar her durumda listede.
             or_(
                 Eslesme.durum != DURUM_ONERILDI,
-                and_(Eslesme.skor >= SKOR_ESIGI, IhtiyacKarti.durum == IHTIYAC_ACIK),
+                IhtiyacKarti.durum == IHTIYAC_ACIK,
             ),
         )
         .order_by(Eslesme.skor.desc(), Eslesme.son_aktivite_tarihi.desc())

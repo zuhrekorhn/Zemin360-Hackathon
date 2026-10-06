@@ -31,7 +31,6 @@ from sqlalchemy import select
 
 from app.agents.eslestirme import (
     BENZERLIK_ALT_SINIRI,
-    SKOR_ESIGI,
     benzerlik_yeterli_mi,
     firma_bonusu,
     skor_hesapla,
@@ -121,18 +120,15 @@ def benzerlik(a: list[float], b: list[float]) -> float:
 
 
 def oneri_durumu(deger: float, dogrulama_bonus: float = 0.0) -> str:
-    """Kurum demo kartı önerilerde görecek mi? İki sınırın ikisi de geçilmeli.
+    """Kurum demo kartı önerilerde görecek mi? Tek koşul benzerlik tabanı.
 
-    Genç kartı kanıtsız, doğrulama bonusu 0: skor = 0.75 × benzerlik. Demo
-    girişimi doğrulanmış (firma bonusu 0.5). Alt sınırı (0.45) geçip skor
-    eşiğine (0.40) takılan kart da listede görünmez.
+    Genç kartı kanıtsız, doğrulama bonusu 0: skor = 0.75 × benzerlik. Skor
+    yalnızca sıralar, listeye girmeyi belirlemez.
     """
     skor = skor_hesapla(deger, dogrulama_bonus)
     baslik = f"İki demo kartın benzerliği {deger:.3f}, skoru {skor:.3f}"
     if not benzerlik_yeterli_mi(deger):
         return f"{baslik} — UYARI: alt sınırın ({BENZERLIK_ALT_SINIRI}) altında, öneri çıkmaz"
-    if skor < SKOR_ESIGI:
-        return f"{baslik} — UYARI: skor eşiğinin ({SKOR_ESIGI}) altında, öneri çıkmaz"
     return f"{baslik} — kurum bu kartı önerilerde görecek"
 
 

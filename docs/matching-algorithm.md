@@ -109,15 +109,28 @@ Skora etkisi en çok `0,25 × bonus` kadardır; yukarıdaki örnekte (a) kartı 
 >
 > **Bilinen sınır:** ilk 5 (`TOP_N`) ihtiyaç başınadır; sıralamada 6. ve sonrası olan genç o ihtiyacı fırsat olarak görmez (`plans/genc-akisi.md` § 0 karar 3).
 
-Mutlak bir eşik yerine (havuz küçükken saçmalar) **Top-N** yaklaşımı: en yüksek skorlu **5 sonuç** gösterilir. Ek güvenlik: skor %40'ın altındaysa hiç gösterilmez (tamamen alakasız sonuçları filtrelemek için).
+**Top-N** yaklaşımı: benzerlik tabanını geçen adaylar arasından skoru en yüksek **5 sonuç** gösterilir.
 
-### Benzerlik alt sınırı: 0.45 (skordan önce uygulanır)
+> **Karar değişti (6 Eki 2026): skor eşiği (%40) kaldırıldı.** Listeye girme kararı yalnızca vektör benzerliğine bağlı; skor yalnızca sıralar. Gerekçe (aşağıdaki ölçüm): %40 eşiği bonusa bağlı davranıyordu. Bonusu 0 olan kartta fiilen `benzerlik ≥ 0.533` isteniyordu (`0.75 × b ≥ 0.40`), bonusu olan kartta ise yalnızca alt sınır geçerliydi. Sonuç: bonusu olan kart 0.45–0.53 bandındaki alakasız adayı listeye sokuyor, bonusu olmayan kart aynı bantta kısmen uygun adayı bile kaybediyordu. Eşiğe bağlı tüm kapılar da kalktı: gencin "fırsatlar" listesi, firmanın ortak fırsatları ve ilgi gösterme (eskiden skor < 0.40 ise 409) artık skora bakmaz; API'deki `skor_esigi` alanı kaldırıldı. Kayıt zaten tabanı geçmiş adaya yazıldığı için bu kapılara ayrıca gerek yok.
 
-Skor eşiği tek başına yetmiyor. Formül gereği tam doğrulanmış bir kart, benzerliği sıfır olsa bile `0.25 × 1.0 = 0.25` taşıyor; 0.34 benzerlikli alakasız bir aday `0.75 × 0.34 + 0.25 × 0.75 ≈ 0.44` ile %40 eşiğini geçiyordu. Sonuç: konuyla ilgisi olmayan bir kart öneri listesine giriyor, üstüne LLM ona bir gerekçe yazmaya çalışıyordu.
+### Benzerlik alt sınırı: 0.48 (listeye girmenin tek koşulu)
 
-**Kural:** doğrulama bonusu **alakalı adaylar arasında sıralamayı** etkiler; alakasız bir adayı alakalı yapmaz. Bu yüzden `benzerlik < 0.45` olan adaylar **skor hesaplanmadan** elenir (`BENZERLIK_ALT_SINIRI`, `app/agents/eslestirme.py`). İki sınır farklı şeyleri ölçüyor ve biri diğerinin yerine geçmiyor: 0.45 "bu aday konuyla ilgili mi", %40 "ilgili adaylar arasında gösterilmeye değer mi".
+Doğrulama bonusu **alakalı adaylar arasında sıralamayı** etkiler; alakasız bir adayı alakalı yapmaz, alakalı bir adayı da listeden düşürmez. Bu yüzden `benzerlik < 0.48` olan adaylar elenir, kalanlar skora göre sıralanır (`BENZERLIK_ALT_SINIRI`, `app/agents/eslestirme.py`). Aynı benzerlikteki iki aday, bonusları farklı olsa da aynı kararı alır (`tests/test_eslestirme_skor.py`).
 
-Değer mevcut kartların ham benzerlikleriyle kalibre edildi (Voyage `voyage-4`, Türkçe metin):
+**0.45'ten 0.48'e (6 Eki 2026).** Sentetik havuz ölçümünde (6 ihtiyaç, 30 aday, 180 çift, gerçek `voyage-4` vektörleri, elle etiket) 0.45 üstünde alakasız adaylar geçti (SEO ihtiyacına dijital pazarlama uzmanı 0.515, mobil uygulamaya backend geliştirici 0.512, …); güçlü adayların hepsi 0.537 ve üstündeydi:
+
+| Taban | Geçen | Güçlü (12) | Kısmen (18) | Alakasız (150) |
+|---|---|---|---|---|
+| 0.44 | 40 | 12 | 14 | 14 |
+| 0.46 | 29 | 12 | 11 | 6 |
+| **0.48** | **24** | **12** | **8** | **4** |
+| 0.50 | 21 | 12 | 5 | 4 |
+| 0.52 | 16 | 12 | 4 | 0 |
+| 0.54 | 14 | 10 | 4 | 0 |
+
+0.48, güçlü adayların tamamını tutarken alakasız geçişi 14'ten 4'e indiriyor; 0.52 alakasızı sıfırlıyor ama kısmen uygunları daha çok kaybediyor. Bu bir değiş tokuş ve gerçek havuzla yeniden bakılmalı.
+
+İlk kalibrasyon (0.45), mevcut kartların ham benzerlikleriyle yapılmıştı (Voyage `voyage-4`, Türkçe metin; güncel değer yukarıda 0.48):
 
 | Çift | Benzerlik |
 |---|---|
@@ -129,6 +142,16 @@ Değer mevcut kartların ham benzerlikleriyle kalibre edildi (Voyage `voyage-4`,
 Alakasız küme 0.27–0.36 bandında toplanıyor, gerçek eşleşme 0.66'da duruyor. 0.45, gürültü bandının ~0.09 üstünde ve gerçek eşleşmenin ~0.21 altında — iki tarafa da pay bırakıyor. Kısmen alakalı adaylar (aynı beceri, farklı alan) bu bandın neresine düşer, havuz büyüyünce yeniden bakılmalı; dört kartlık bir örneklemle kalibre edildiğini unutma.
 
 Alt sınır ayrıca SQL sorgusunda da uygulanıyor (havuz Python'a taşınmadan daralsın diye), ama kuralın tek doğruluk kaynağı `siralayip_ele`.
+
+### Bilinen sınırlar
+
+- **Taban sentetik havuzla ölçüldü.** 0.48, 6 ihtiyaç / 30 aday / 180 çiftlik sentetik havuzla (elle etiket) seçildi; gerçek havuzla yeniden doğrulanmalı.
+- **Serbest metindeki kısıtlar skora girmiyor.** "2 yıl deneyim", "Python şart" gibi `kisitlar` yazısı ne SQL'de ne skorda uygulanıyor, yalnızca gerekçe istemine gidiyor.
+- **Yeniden sıralama (reranking) yok.** Sıralama tek vektör benzerliği ve bonusla; cross-encoder ya da LLM sıralayıcı yok.
+- **Tek yönlü eşleşme.** Genç tarafının tercihleri (sektör, çalışma biçimi vb.) skora girmiyor; skor yalnızca "ilan gence uyuyor mu"yu ölçüyor.
+- **İlk 5 sınırı** (`TOP_N`) büyüyen havuzda gençleri görünmez yapabilir: ihtiyaçta 6. ve sonraki sıradaki genç o ihtiyacı fırsat olarak görmez.
+- **Bonus çevrimiçi kanıtı ödüllendiriyor.** Çevrimiçi (link, depo) kanıtı olan genç, çevrimdışı kanıtlı olandan daha yüksek bonus alır; çevrimdışı kanıtlı gençler sıralamada dezavantajlı olabilir. Bonus artık listeye girmeyi belirlemiyor, yalnızca sırayı.
+- **query/document geçişi ölçüldü, yapılmadı.** İhtiyaç kartını `query` göndermek ayrımı artırıyor (güçlü−alakasız ortalama farkı 0.263 → 0.310) ama tüm benzerlikleri ~0.10 aşağı çekiyor; aynı 0.45 tabanıyla 12 güçlü adaydan 3'ü düşüyor. Taban birlikte yeniden kalibre edilmeden geçiş yapılmamalı (`app/core/embeddings.py`).
 
 **Cold start:** havuzda az kart varken bu doğal bir sınırlama — arayüzde gizlenmez, açıkça belirtilir: *"Şu an sınırlı sayıda eşleşme var."*
 
@@ -148,11 +171,11 @@ Plan: `plans/firma-akisi.md` § 0 kararlar 5, 11-14; § 4. Aynı pipeline (`app/
 
 - **Temsil metni:** firma kartı firmanın **ne yaptığını** anlatır: ne yapıyoruz, yetkinlikler, önceki işler, sektör (`firma_temsil_metni`). Aradığı ortak ve iş birliği türü girmez. İlan tarafı aynı: problem + başarı kriteri.
 - **Kesin şartlar (SQL, benzerlikten önce):** kartı ve hesabı olan firma; ilanı açan firma değil; ilan tür seçtiyse `kurum.tur` o türlerden; ilan şehir şartı koyduysa `kurum.sehir` eşit (varsayılan "fark etmez"). Sektör şart değil.
-- **Skor:** aynı formül, `0.75 × benzerlik + 0.25 × bonus`; aynı benzerlik alt sınırı (0.45), eşik (%40) ve ilk 5. Bonus: GİRVAK'ın doğruladığı firma +0.5, aday olarak en az bir tamamlanmış iş birliği +0.5, tavan 1.0. Bonus alakayı yaratmaz.
+- **Skor:** aynı formül, `0.75 × benzerlik + 0.25 × bonus`; benzerlik alt sınırı ayrı sabit (`FIRMA_BENZERLIK_ALT_SINIRI`, şimdilik 0.48) ve ilk 5; skor eşiği yok (genç akışıyla aynı kural). Bonus: GİRVAK'ın doğruladığı firma +0.5, aday olarak en az bir tamamlanmış iş birliği +0.5, tavan 1.0. Bonus alakayı yaratmaz.
 - **Gerekçe:** ayrı istem (`FIRMA_GEREKCE_SABLONU`), ilanı açan firmaya hitaben, aday firmadan üçüncü şahısla. Doğrulanmamış firmayı "doğrulanmış" diye anlatırsa bir kez düzeltme notuyla yeniden üretilir; yine olursa gerekçesiz kalır (genç gerekçesindeki koruma).
 - **Ne zaman çalışır:** ortak ilanı onaylanınca (o ilan için) ve firma kartı onaylanınca/içeriği değişince (kartla ilgili açık ortak ilanları için; `servisler/firma_karti.py`). Kart içeriği değişince bekleyen önerilerin gerekçesi boşaltılır.
 - **Ayrım:** gençler ortak ilanına, firmalar genç ilanına önerilmez.
-- **Bilinen sınırlar:** 0.45 alt sınırı firma metinleri için ölçülmedi. Firma profili (tür, şehir, doğrulama) değişince mevcut öneriler kendiliğinden yeniden hesaplanmaz; bir sonraki pipeline çalışmasında güncellenir.
+- **Bilinen sınırlar:** firma tabanı (`FIRMA_BENZERLIK_ALT_SINIRI`) genç tabanıyla aynı değerde (0.48) ama firma metinleri için ölçülmedi; ayrı sabit olması, ölçüm gelince bağımsız ayarlanabilsin diye. Firma profili (tür, şehir, doğrulama) değişince mevcut öneriler kendiliğinden yeniden hesaplanmaz; bir sonraki pipeline çalışmasında güncellenir.
 
 ## İsteğe Bağlı Geliştirme — ESCO Taksonomi Eşleme
 

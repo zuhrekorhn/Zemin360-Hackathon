@@ -10,7 +10,6 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from app.agents.eslestirme import SKOR_ESIGI
 from app.schemas.dogrulama import GuvenSkoruYaniti
 from app.schemas.eslestirme import OnerilerYaniti
 from app.schemas.kesif import SomutCiktiYaniti, YetenekKartiYaniti
@@ -70,9 +69,7 @@ def test_kurum_kimligi_zorunlu():
         KurumYaniti(ad="Örnek Kooperatif", sektor=None, sehir=None)
 
 
-def test_oneriler_yaniti_esigi_tasir():
-    """Eşik arayüzde sabitlenmesin: tek kaynak ajan modülündeki sabit."""
-    yanit = OnerilerYaniti(
-        ihtiyac_karti_id=uuid.uuid4(), oneriler=[], az_sonuc_uyarisi=True, skor_esigi=SKOR_ESIGI
-    )
-    assert yanit.skor_esigi == pytest.approx(SKOR_ESIGI)
+def test_oneriler_yaniti_skor_esigi_tasimaz():
+    """Skor eşiği kalktı: giriş kararı benzerlik tabanında, yanıtta eşik alanı yok."""
+    yanit = OnerilerYaniti(ihtiyac_karti_id=uuid.uuid4(), oneriler=[], az_sonuc_uyarisi=True)
+    assert "skor_esigi" not in yanit.model_dump()

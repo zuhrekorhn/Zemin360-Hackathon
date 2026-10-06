@@ -23,7 +23,7 @@ from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.agents.eslestirme import BENZERLIK_ALT_SINIRI, DURUM_ONERILDI
+from app.agents.eslestirme import DURUM_ONERILDI, FIRMA_BENZERLIK_ALT_SINIRI
 from app.core.embeddings import EmbeddingHatasi, embedding_uret, firma_temsil_metni
 from app.core.firma_karti import EMBEDDING_ALANLARI
 from app.core.ilan import ARANAN_FIRMA
@@ -143,7 +143,7 @@ async def ilgili_ortak_ilanlari(oturum: AsyncSession, kart_id: uuid.UUID) -> lis
             IhtiyacKarti.durum == eslestirme_servisi.IHTIYAC_ACIK,
             IhtiyacKarti.aranan == ARANAN_FIRMA,
             IhtiyacKarti.kurum_id != kartin_firmasi.scalar_subquery(),
-            or_(uzaklik <= 1.0 - BENZERLIK_ALT_SINIRI, IhtiyacKarti.id.in_(onerildigi)),
+            or_(uzaklik <= 1.0 - FIRMA_BENZERLIK_ALT_SINIRI, IhtiyacKarti.id.in_(onerildigi)),
         )
     )
     return list(satirlar)

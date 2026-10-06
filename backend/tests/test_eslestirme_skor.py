@@ -1,6 +1,6 @@
 """Eşleştirme Ajanı'nın skor ve eleme mantığı — LLM ve veritabanı olmadan.
 
-Formül ve eşikler docs/matching-algorithm.md § 4-5'ten geliyor.
+Formül ve benzerlik tabanı docs/matching-algorithm.md § 4-5'ten geliyor.
 """
 
 import uuid
@@ -14,8 +14,9 @@ from app.agents.eslestirme import (
     DURUM_KABUL_EDILDI,
     DURUM_ONERILDI,
     DURUM_REDDEDILDI,
-    SKOR_ESIGI,
+    FIRMA_BENZERLIK_ALT_SINIRI,
     TOP_N,
+    FirmaAdayi,
     benzerlik_yeterli_mi,
     dogrulama_bonusu,
     siralayip_ele,
@@ -31,6 +32,7 @@ class SahteAday:
     ad: str
     benzerlik: float
     dogrulama_bonus: float = 0.0
+    alt_sinir: float = BENZERLIK_ALT_SINIRI
 
     @property
     def skor(self) -> float:
@@ -80,9 +82,10 @@ def test_dogrulanmis_kart_esit_benzerlikte_one_gecer():
     assert siralayip_ele([ham, dogrulanmis])[0].ad == "dogrulanmis"
 
 
-def test_esik_altindaki_aday_hic_gosterilmez():
-    zayif = SahteAday("zayif", benzerlik=0.30)  # 0.225 < 0.40
-    assert zayif.skor < SKOR_ESIGI
+def test_benzerlik_tabaninin_altindaki_aday_hic_gosterilmez():
+    """Eskiden bu test skor eşiğini (%40) sınıyordu; eşik kalktı, giriş kararı
+    yalnızca benzerlik tabanında. Aynı aday (0.30) hâlâ elenir, sebebi artık tabandır."""
+    zayif = SahteAday("zayif", benzerlik=0.30)
     assert siralayip_ele([zayif]) == []
 
 
@@ -102,11 +105,12 @@ def test_alakasiz_aday_ne_kadar_dogrulanmis_olursa_olsun_elenir():
     """Güven bonusu alakayı yaratmaz (docs/matching-algorithm.md § 5).
 
     Gerçek veride görülen durum: 0.34 benzerlikli, tam doğrulanmış bir kart
-    0.75*0.34 + 0.25*0.75 = 0.44 ile eşiği geçiyordu — konuyla ilgisi yokken.
+    0.75*0.34 + 0.25*0.75 = 0.44 skor alıyordu — konuyla ilgisi yokken. Skor
+    eşiği kalktı; bonus giriş kararına hiç karışmıyor.
     """
     alakasiz = SahteAday("alakasiz", benzerlik=0.34, dogrulama_bonus=0.75)
-    assert alakasiz.skor >= SKOR_ESIGI  # eski davranışta listeye giriyordu
-    assert siralayip_ele([alakasiz]) == []
+    assert alakasiz.skor > skor_hesapla(BENZERLIK_ALT_SINIRI, 0.0)  # skoru yüksek…
+    assert siralayip_ele([alakasiz]) == []  # …ama alaka tabanında elenir
 
 
 def test_alt_sinirin_ustundeki_aday_kalir():
@@ -121,12 +125,47 @@ def test_alaka_elemesi_bonustan_bagimsiz():
     assert siralayip_ele([ham, dogrulanmis]) == []
 
 
-def test_alaka_alt_siniri_esikten_bagimsiz_bir_kural():
-    """İki sınır farklı şeyleri ölçüyor; biri diğerinin yerine geçmemeli."""
+def test_listeye_girme_karari_yalnizca_benzerlige_baglidir():
+    """Aynı benzerlikte, bonusu 0 ve 1 olan iki kart aynı kararı alır; bonus yalnızca sıralar.
+
+    Eski kuralda bonusu 0 olan kart 0.45-0.53 bandında %40 eşiğine takılıp
+    düşüyor, bonusu 1 olan aynı benzerlikteki kart giriyordu.
+    """
+    for benzerlik in (BENZERLIK_ALT_SINIRI - 0.01, BENZERLIK_ALT_SINIRI, 0.50, 0.65):
+        ham = SahteAday("ham", benzerlik=benzerlik, dogrulama_bonus=0.0)
+        tam = SahteAday("tam", benzerlik=benzerlik, dogrulama_bonus=1.0)
+        girdi_ham = siralayip_ele([ham]) == [ham]
+        girdi_tam = siralayip_ele([tam]) == [tam]
+        assert girdi_ham == girdi_tam == (benzerlik >= BENZERLIK_ALT_SINIRI)
+
+
+def test_bonus_yalnizca_siralamayi_degistirir():
+    ham = SahteAday("ham", benzerlik=0.50, dogrulama_bonus=0.0)
+    tam = SahteAday("tam", benzerlik=0.50, dogrulama_bonus=1.0)
+    # Tabanın hemen üstündeki kanıtsız aday artık listeden düşmüyor (skoru 0.375 < 0.40 idi).
+    assert [a.ad for a in siralayip_ele([ham, tam])] == ["tam", "ham"]
+
+
+def test_alaka_tabani_belgedeki_degerde_ve_gurultunun_ustunde():
     assert benzerlik_yeterli_mi(BENZERLIK_ALT_SINIRI) is True
     assert benzerlik_yeterli_mi(BENZERLIK_ALT_SINIRI - 0.01) is False
+    assert BENZERLIK_ALT_SINIRI == 0.48
     # Gözlenen alakasız küme 0.27-0.36 bandındaydı; sınır onun üstünde kalmalı.
     assert BENZERLIK_ALT_SINIRI > 0.36
+
+
+def test_firma_tabani_ayri_sabit_ve_firma_adayina_o_uygulanir():
+    """Firma tabanı şimdilik 0.48 ama ayrı sabit (firma metinleri için ölçülmedi)."""
+    assert FIRMA_BENZERLIK_ALT_SINIRI == 0.48
+    tabanda = FirmaAdayi(
+        firma_karti=None, benzerlik=FIRMA_BENZERLIK_ALT_SINIRI, dogrulama_bonus=0.0
+    )
+    assert siralayip_ele([tabanda]) == [tabanda]
+    # Bonus ne kadar yüksek olursa olsun tabanın altındaki firma adayı elenir.
+    altinda = FirmaAdayi(
+        firma_karti=None, benzerlik=FIRMA_BENZERLIK_ALT_SINIRI - 0.01, dogrulama_bonus=1.0
+    )
+    assert siralayip_ele([altinda]) == []
 
 
 @dataclass

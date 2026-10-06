@@ -168,10 +168,10 @@ def test_demo_hesaplari_acilir_tekrar_calismasi_guvenli_ve_kartlar_eslesir(monke
     asyncio.run(senaryo())
 
 
-def test_oneri_durumu_iki_siniri_da_kontrol_eder():
-    """0.52 benzerlik alt sınırı geçer ama kanıtsız kartın skoru 0.39: öneri çıkmaz."""
+def test_oneri_durumu_yalnizca_benzerlik_tabanini_kontrol_eder():
+    """Skor eşiği kalktı: 0.52 benzerlikli kanıtsız kart (skor 0.39) artık önerilerde görünür."""
     assert "alt sınırın" in demo_hesaplari.oneri_durumu(0.40)
-    assert "skor eşiğinin" in demo_hesaplari.oneri_durumu(0.52)
+    assert "görecek" in demo_hesaplari.oneri_durumu(0.52)
     assert "görecek" in demo_hesaplari.oneri_durumu(0.60)
 
 

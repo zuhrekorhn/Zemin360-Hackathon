@@ -64,7 +64,7 @@ def test_pilot_skora_en_cok_0125_ekler(guven):
 
 
 def test_demo_kalibrasyonu_bozulmadi():
-    """Kanıtsız, pilotsuz demo kartı: skor 0.75 × 0.589 = 0.442, eşiğin üstünde."""
+    """Kanıtsız, pilotsuz demo kartı: benzerlik 0.589, tabanın (0.48) üstünde."""
     assert "görecek" in demo_hesaplari.oneri_durumu(0.589)
 
 
@@ -77,7 +77,7 @@ def test_pilot_alakayi_yaratmaz():
         dogrulama_bonus=dogrulama_bonusu([(3, 3, 3, 3)], 1),
         tamamlanan_pilot=1,
     )
-    assert alakasiz.skor >= 0.40  # skor eşiğini geçerdi…
+    assert alakasiz.skor > skor_hesapla(BENZERLIK_ALT_SINIRI, 0.0)  # skoru tabandakinden yüksek…
     assert siralayip_ele([alakasiz]) == []  # …ama alaka elemesi skordan önce
 
 

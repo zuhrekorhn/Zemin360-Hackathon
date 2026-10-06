@@ -32,7 +32,6 @@ from app.agents.eslestirme import (
     DURUM_KAPANDI,
     DURUM_ONERILDI,
     DURUM_REDDEDILDI,
-    SKOR_ESIGI,
 )
 from app.models.hesap import ROL_GENC, ROL_KURUM
 
@@ -132,23 +131,18 @@ def _tekrar_mi(durum: str, olay: str, baslatan: str | None) -> bool:
     return any(o == olay and hedef == durum for (o, _), (_, hedef) in GECISLER.items())
 
 
-# --- Gençten ilgi: eşik ve açıklık (backend'de de uygulanır) ------------------------------
+# --- Gençten ilgi: açıklık (backend'de de uygulanır) ---------------------------------------
 
 IHTIYAC_ACIK = "acik"
-ESIK_ALTI = "Bu fırsat için ilgi gösterilemiyor; uyumun yeterli değil."
-# Aday firmaya "siz" (docs/plans/firma-akisi.md § 8).
-ESIK_ALTI_SIZ = "Bu fırsat için ilgi gösterilemiyor; uyumunuz yeterli değil."
 IHTIYAC_KAPALI = "Bu fırsat kapandı."
 
 
-def ilgi_engeli(skor: float, ihtiyac_durumu: str, *, siz: bool = False) -> str | None:
-    """Genç bu eşleşmeye ilgi gösterebilir mi? Gösteremiyorsa nedeni (409).
+def ilgi_engeli(ihtiyac_durumu: str) -> str | None:
+    """Aday bu eşleşmeye ilgi gösterebilir mi? Gösteremiyorsa nedeni (409).
 
-    Yalnızca eşik üstü ve açık ihtiyaç. Eşik altı bir aday için zaten öneri
-    kaydı yazılmıyor; kural yine de burada, kayıt eskimiş olabilir.
+    Yalnızca açık ihtiyaç. Alakasız aday için zaten öneri kaydı yazılmıyor
+    (giriş kararı benzerlik tabanında); skor ilgiyi engellemez.
     """
     if ihtiyac_durumu != IHTIYAC_ACIK:
         return IHTIYAC_KAPALI
-    if skor < SKOR_ESIGI:
-        return ESIK_ALTI_SIZ if siz else ESIK_ALTI
     return None

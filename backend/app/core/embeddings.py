@@ -17,8 +17,12 @@ from app.db.base import EMBEDDING_DIM
 
 VOYAGE_URL = "https://api.voyageai.com/v1/embeddings"
 
-# Voyage, arama tarafıyla belge tarafını ayrı kodluyor. Kartlar "document",
-# eşleştirmede karşıya sorulan metin "query" olarak gönderilir.
+# Voyage, arama tarafıyla belge tarafını ayrı kodluyor ("document" / "query").
+# Bugün BÜTÜN kartlar (yetenek, firma ve ihtiyaç) "document" olarak gönderiliyor;
+# "query" kullanılmıyor. Ölçüm: ihtiyacı "query" göndermek benzerlikleri ~0.10
+# aşağı çekiyor, bu yüzden benzerlik tabanı (eslestirme.BENZERLIK_ALT_SINIRI)
+# birlikte yeniden kalibre edilmeden geçiş yapılmamalı
+# (docs/matching-algorithm.md § Bilinen sınırlar).
 GirdiTuru = Literal["document", "query"]
 
 

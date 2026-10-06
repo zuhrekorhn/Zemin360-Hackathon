@@ -16,7 +16,6 @@ import pytest
 from sqlalchemy import func, select
 
 from app.agents.eslesme_durumu import (
-    ESIK_ALTI,
     GECISLER,
     IHTIYAC_KAPALI,
     OLAY_GENC_ILGI,
@@ -33,7 +32,6 @@ from app.agents.eslesme_durumu import (
     gecis,
     ilgi_engeli,
 )
-from app.agents.eslestirme import SKOR_ESIGI
 from app.api.auth import hesap_olustur
 from app.db.base import EMBEDDING_DIM
 from app.models.bildirim import TUR_FIRSAT_KAPANDI, TUR_GENC_ILGI, Bildirim
@@ -131,16 +129,15 @@ def test_karsilikli_ilgiden_sonra_geri_cekilemez():
 
 
 @pytest.mark.parametrize(
-    "skor,ihtiyac_durumu,engel",
+    "ihtiyac_durumu,engel",
     [
-        (SKOR_ESIGI, "acik", None),
-        (0.9, "acik", None),
-        (SKOR_ESIGI - 0.01, "acik", ESIK_ALTI),
-        (0.9, "kapandi", IHTIYAC_KAPALI),
+        ("acik", None),
+        ("kapandi", IHTIYAC_KAPALI),
     ],
 )
-def test_ilgi_engeli(skor, ihtiyac_durumu, engel):
-    assert ilgi_engeli(skor, ihtiyac_durumu) == engel
+def test_ilgi_engeli(ihtiyac_durumu, engel):
+    """Skor eşiği kalktı (giriş kararı benzerlik tabanında); engel yalnızca kapalı ihtiyaç."""
+    assert ilgi_engeli(ihtiyac_durumu) == engel
 
 
 # --- Uçlar (gerçek veritabanı; dünya tests/test_sahiplik.py) --------------------------------
@@ -241,15 +238,12 @@ def test_geri_cekme_ve_simdilik_degil():
     senaryo(adimlar)
 
 
-def test_esik_alti_ve_kapali_ihtiyaca_ilgi_gosterilemez():
+def test_kapali_ihtiyaca_ilgi_gosterilemez_skor_engellemez():
+    """Eskiden skor eşiğinin altı 409'du; eşik kalktı, düşük skor ilgiyi engellemez."""
+
     async def adimlar(istemci, d):
         yol = f"/eslestirme/{d.E1.id}/genc-ilgi"
-        d.E1.skor = SKOR_ESIGI - 0.05
-        await d.oturum.commit()
-        esik = await istemci.post(yol, headers=d.genc1.baslik, json=ONAY)
-        assert (esik.status_code, esik.json()["detail"]) == (409, ESIK_ALTI)
-
-        d.E1.skor = 0.6
+        d.E1.skor = 0.2
         d.I1.durum = "kapandi"
         await d.oturum.commit()
         kapali = await istemci.post(yol, headers=d.genc1.baslik, json=ONAY)
