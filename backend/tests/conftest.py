@@ -140,6 +140,25 @@ def firma_yeniden_eslestirme_arka_plani_yok(monkeypatch):
     return cagrilar
 
 
+@pytest.fixture(autouse=True)
+def genc_uygunluk_yargisi_sahte(monkeypatch):
+    """Genç ilanının öneri gerekçesini artık yargı çağrısı yazıyor (§ 8; gerçek LLM).
+    Testlerde model yok: gerekçe testin kendi `gerekce_uret` sahtesinden gelir (çağrı
+    anında aranır, test onu değiştirebilir), karar "uygun"; gerekçe alınamazsa "bilinmiyor".
+    Kararı sınayan test `servis.genc_uygunluk_yargila`'yı kendisi değiştirir."""
+    from app.agents.eslestirme import BILINMIYOR, Yargi
+    from app.servisler import eslestirme as servis
+
+    async def yargila(ihtiyac, aday):
+        try:
+            gerekce = await servis.gerekce_uret(ihtiyac, aday)
+        except Exception:
+            return BILINMIYOR
+        return BILINMIYOR if gerekce is None else Yargi(gerekce=gerekce, uygunluk="uygun")
+
+    monkeypatch.setattr(servis, "genc_uygunluk_yargila", yargila)
+
+
 class SahteEpostaGonderici:
     kip = "sahte"
 

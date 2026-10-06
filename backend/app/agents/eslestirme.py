@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 import re
 import uuid
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import ClassVar, Protocol
@@ -817,11 +817,12 @@ async def firma_gerekce_uret(ihtiyac: IhtiyacKarti, aday: FirmaAdayi) -> str | N
     return None
 
 
-# --- Firma adayı uygunluk kararı (docs/matching-algorithm.md § 8) ------------------------
+# --- Uygunluk kararı (docs/matching-algorithm.md § 8) --------------------------------------
 #
 # Gerekçeyi yazan çağrı aynı çağrıda uygunluk kararını da verir (gerekçe önce, karar
-# sonra). Ölçümde kullanılan istem: gerekçe talimatı + aşağıdaki kural; insan
-# mesajı üretim şablonunun aynısı, yalnızca son cümle "gerekçeyi ve kararı ver".
+# sonra). Firma ve genç adayı aynı mekanizmayı kullanır; ayrı olan yalnızca gerekçe
+# talimatı ve girdilerdir. Ölçümde kullanılan istem: gerekçe talimatı + aşağıdaki kural;
+# insan mesajı üretim şablonunun aynısı, yalnızca son cümle "gerekçeyi ve kararı ver".
 
 UYGUNLUK_EK_KURALI = """
 
@@ -837,20 +838,26 @@ Emin değilsen "kismen" seç. Gerekçede temel ihtiyaca karşılık gelen bir ye
 olmadığını yazdıysan karar "uygun" olamaz.
 """
 
-_FIRMA_INSAN_SABLONU = FIRMA_GEREKCE_SABLONU.messages[1].prompt.template
-assert "Bu eşleşmenin gerekçesini yaz." in _FIRMA_INSAN_SABLONU
-FIRMA_UYGUNLUK_SABLONU = ChatPromptTemplate.from_messages(
-    [
-        ("system", FIRMA_GEREKCE_TALIMATI + UYGUNLUK_EK_KURALI),
-        (
-            "human",
-            _FIRMA_INSAN_SABLONU.replace(
-                "Bu eşleşmenin gerekçesini yaz.",
-                "Bu eşleşmenin gerekçesini ve uygunluk kararını ver.",
+
+def _uygunluk_sablonu(talimat: str, uretim_sablonu: ChatPromptTemplate) -> ChatPromptTemplate:
+    insan = uretim_sablonu.messages[1].prompt.template
+    assert "Bu eşleşmenin gerekçesini yaz." in insan
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", talimat + UYGUNLUK_EK_KURALI),
+            (
+                "human",
+                insan.replace(
+                    "Bu eşleşmenin gerekçesini yaz.",
+                    "Bu eşleşmenin gerekçesini ve uygunluk kararını ver.",
+                ),
             ),
-        ),
-    ]
-)
+        ]
+    )
+
+
+FIRMA_UYGUNLUK_SABLONU = _uygunluk_sablonu(FIRMA_GEREKCE_TALIMATI, FIRMA_GEREKCE_SABLONU)
+GENC_UYGUNLUK_SABLONU = _uygunluk_sablonu(GEREKCE_TALIMATI, GEREKCE_SABLONU)
 
 
 @dataclass(frozen=True)
@@ -873,10 +880,19 @@ def _firma_uygunluk_zinciri() -> Runnable:
     )
 
 
-async def _firma_uygunluk_cagir(girdiler: dict) -> Yargi:
+@lru_cache
+def _genc_uygunluk_zinciri() -> Runnable:
+    return yedekli_zincir(
+        "guclu",
+        "eslestirme_genc_uygunluk",
+        lambda m: GENC_UYGUNLUK_SABLONU | m.with_structured_output(UygunlukKarari),
+    )
+
+
+async def _uygunluk_cagir(zincir: Runnable, girdiler: dict) -> Yargi:
     """Tek çağrı. Boş gerekçe ya da geçersiz etiket "bilinmiyor" sayılır."""
     try:
-        cikti = await _firma_uygunluk_zinciri().ainvoke(girdiler)
+        cikti = await zincir.ainvoke(girdiler)
     except Exception as hata:
         cevrilmis = llm_hatasini_cevir(hata)
         raise cevrilmis from hata
@@ -887,25 +903,62 @@ async def _firma_uygunluk_cagir(girdiler: dict) -> Yargi:
     return Yargi(gerekce=gerekce, uygunluk=uygunluk)
 
 
-async def firma_uygunluk_yargila(ihtiyac: IhtiyacKarti, aday: FirmaAdayi) -> Yargi:
-    """Gerekçe + uygunluk kararı tek çağrıda; "doğrulanmış" koruması gerekçeye aynen uygulanır.
+async def _firma_uygunluk_cagir(girdiler: dict) -> Yargi:
+    return await _uygunluk_cagir(_firma_uygunluk_zinciri(), girdiler)
 
-    Doğrulanmamış firma "doğrulanmış" diye anlatılırsa bir kez düzeltme notuyla
-    yeniden denenir; yine olursa gerekçe de karar da bilinmiyor kalır (hatalı
-    metne dayanan karara güvenilmez; öneri gerekçesiz listelenir, sonraki hesapta
-    yeniden denenir). Model hatası (hız sınırı, arıza, geçersiz çıktı) çağırana çıkar.
+
+async def _genc_uygunluk_cagir(girdiler: dict) -> Yargi:
+    return await _uygunluk_cagir(_genc_uygunluk_zinciri(), girdiler)
+
+
+async def _iddia_korumali_yargi(
+    uret: Callable[[str], Awaitable[Yargi]],
+    *,
+    iddia_serbest: bool,
+    duzeltme_notu: str,
+    kimlik: uuid.UUID,
+) -> Yargi:
+    """ "Doğrulanmış" koruması: `uret(ek_not)` bir çağrıdır, gerekçe ve kararı birlikte döner.
+
+    Adayın kanıtı güçlü değilken (`iddia_serbest` False) gerekçe onu "doğrulanmış" diye
+    anlatırsa bir kez düzeltme notuyla yeniden denenir; yine olursa gerekçe de karar da
+    bilinmiyor kalır (hatalı metne dayanan karara güvenilmez; öneri gerekçesiz listelenir,
+    sonraki hesapta yeniden denenir). Model hatası çağırana çıkar.
     """
-    dogrulandi = aday.firma_karti.kurum.dogrulama_durumu == DOGRULANDI
-    yargi = await _firma_uygunluk_cagir(firma_gerekce_girdileri(ihtiyac, aday))
-    if dogrulandi or yargi.gerekce is None or not dogrulama_iddiasi_var_mi(yargi.gerekce):
+    yargi = await uret("")
+    if iddia_serbest or yargi.gerekce is None or not dogrulama_iddiasi_var_mi(yargi.gerekce):
         return yargi
-    yargi = await _firma_uygunluk_cagir(
-        firma_gerekce_girdileri(ihtiyac, aday, ek_not=FIRMA_DUZELTME_NOTU)
-    )
+    logger.info("Gerekçe güçlü kanıt yokken 'doğrulanmış' dedi; yeniden yargılanıyor (%s)", kimlik)
+    yargi = await uret(duzeltme_notu)
     if yargi.gerekce is None or not dogrulama_iddiasi_var_mi(yargi.gerekce):
         return yargi
-    logger.warning("Firma gerekçesi iki denemede de 'doğrulanmış' dedi; karar bilinmiyor kalıyor")
+    logger.warning(
+        "Gerekçe iki denemede de 'doğrulanmış' dedi; karar bilinmiyor kalıyor (%s)", kimlik
+    )
     return BILINMIYOR
+
+
+async def firma_uygunluk_yargila(ihtiyac: IhtiyacKarti, aday: FirmaAdayi) -> Yargi:
+    """Firma adayı: gerekçe + uygunluk kararı tek çağrıda; koruma `_iddia_korumali_yargi`'de."""
+    return await _iddia_korumali_yargi(
+        lambda ek_not: _firma_uygunluk_cagir(firma_gerekce_girdileri(ihtiyac, aday, ek_not=ek_not)),
+        iddia_serbest=aday.firma_karti.kurum.dogrulama_durumu == DOGRULANDI,
+        duzeltme_notu=FIRMA_DUZELTME_NOTU,
+        kimlik=aday.aday_kimligi,
+    )
+
+
+async def genc_uygunluk_yargila(ihtiyac: IhtiyacKarti, aday: Aday) -> Yargi:
+    """Genç adayı: aynı mekanizma, genç gerekçe talimatıyla (§ 8; yalnızca gizleme için)."""
+    kart = aday.yetenek_karti
+    return await _iddia_korumali_yargi(
+        lambda ek_not: _genc_uygunluk_cagir(
+            gerekce_girdileri(ihtiyac, kart, ek_not=ek_not, tamamlanan_pilot=aday.tamamlanan_pilot)
+        ),
+        iddia_serbest=kart_guclu_kanitli_mi(kart),
+        duzeltme_notu=DUZELTME_NOTU,
+        kimlik=kart.id,
+    )
 
 
 async def ihtiyac_kartini_getir(oturum: AsyncSession, kurum_id: uuid.UUID) -> IhtiyacKarti | None:

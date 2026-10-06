@@ -60,6 +60,12 @@ def gorunur_mu(uygunluk: str | None) -> bool:
     return uygunluk != UYGUN_DEGIL
 
 
+def gosterilecek_karar(uygunluk: str | None, firma_adayi: bool) -> str | None:
+    """Yanıtta rozet için dönen karar. Genç adayında hiçbir zaman: gençler için karar yalnızca
+    listeden gizlemeye yarar (ölçümde iyi adaylara sık "kısmen" dedi; rozet gürültü olurdu)."""
+    return uygunluk if firma_adayi else None
+
+
 def gorunur_kosulu() -> ColumnElement[bool]:
     """Eşleşme okuyan her sorgunun kullandığı tek filtre: `uygun_degil` hiçbir yerde görünmez.
 

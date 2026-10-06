@@ -110,7 +110,8 @@ def test_gecerli_cikti_kirpilarak_doner(monkeypatch):
 
 def _aday(dogrulandi: bool):
     kurum = SimpleNamespace(dogrulama_durumu="dogrulandi" if dogrulandi else "dogrulanmadi")
-    return SimpleNamespace(firma_karti=SimpleNamespace(kurum=kurum))
+    # aday_kimligi: ortak koruma onu günlüğe yazıyor.
+    return SimpleNamespace(firma_karti=SimpleNamespace(kurum=kurum), aday_kimligi="f1")
 
 
 def test_dogrulanmis_iddiasi_korumasi_gerekceye_aynen_uygulanir(monkeypatch):
@@ -421,8 +422,9 @@ def test_hepsi_elenince_bildirim_yok(yargici):
     senaryo(adimlar)
 
 
-def test_genc_ilani_yargilanmaz(yargici, monkeypatch):
-    """Kapsam yalnızca firma–firma: genç ilanında yargı çağrısı hiç yapılmaz."""
+def test_genc_ilaninda_firma_yargicisi_calismaz(yargici, monkeypatch):
+    """Genç ilanı da artık yargılanıyor (tests/test_genc_uygunluk.py) ama kendi genç
+    istemiyle: firma yargıcı genç adayına hiç çağrılmaz (eskiden "genç yargılanmaz" idi)."""
 
     async def adimlar(istemci, d):
         y = yargici.kur(varsayilan=UYGUN_DEGIL)

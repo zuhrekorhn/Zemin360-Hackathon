@@ -89,9 +89,10 @@ async def kart_degisti(oturum: AsyncSession, kart: YetenekKarti) -> int:
 
     - Versiyon artar (kart hazırlamanın idempotentlik anahtarı).
     - `kanit_bekleyen` ve "potansiyel" kuralı iş kalemleriyle tutarlı kalır.
-    - Bu kartın yalnızca `onerildi` önerilerinin gerekçesi boşaltılır; pipeline
-      yenisini yazar. Karar verilmiş kayıtlara (genç ilgi gösterdi, kurum
-      ilgilendi, kabul, red) dokunulmaz (plan § 0, karar 14).
+    - Bu kartın yalnızca `onerildi` önerilerinin gerekçesi ve uygunluk kararı
+      boşaltılır (karar gerekçeye dayanır); pipeline ikisini yeniden yazar. Gizli
+      (`uygun_degil`) kayıt da yeniden yargılanır. Karar verilmiş kayıtlara (genç ilgi
+      gösterdi, kurum ilgilendi, kabul, red) dokunulmaz (plan § 0, karar 14).
     """
     kart.versiyon += 1
     # Bayrağın hesabı için kalemlerin parçaları ve referans istekleri yüklü olmalı.
@@ -100,7 +101,7 @@ async def kart_degisti(oturum: AsyncSession, kart: YetenekKarti) -> int:
     await oturum.execute(
         update(Eslesme)
         .where(Eslesme.yetenek_karti_id == kart.id, Eslesme.durum == DURUM_ONERILDI)
-        .values(gerekce_metni=None)
+        .values(gerekce_metni=None, uygunluk=None)
     )
     return kart.versiyon
 

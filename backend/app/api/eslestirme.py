@@ -37,7 +37,7 @@ from app.agents.eslestirme import (
     firma_tamamlanan_isbirligi_sayilari,
     ihtiyac_kartini_getir,
 )
-from app.agents.uygunluk import gorunur_kosulu
+from app.agents.uygunluk import gorunur_kosulu, gosterilecek_karar
 from app.api import takip
 from app.api.bildirimler import bildirim_ekle
 from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
@@ -579,7 +579,7 @@ async def _yanit_kur(
             skor=round(eslesme.skor, 4),
             durum=eslesme.durum,
             gerekce_metni=eslesme.gerekce_metni,
-            uygunluk=eslesme.uygunluk,
+            uygunluk=gosterilecek_karar(eslesme.uygunluk, eslesme.firma_karti_id is not None),
             aday_turu="firma" if eslesme.firma_karti_id else "genc",
             yetenek_karti=(
                 await kart_yaniti(oturum, eslesme.yetenek_karti_id)

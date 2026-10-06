@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
+from collections.abc import Sequence
 
 from fastapi import HTTPException
 from sqlalchemy import select, text
@@ -34,6 +35,7 @@ from app.agents.eslestirme import (
     firma_adaylarini_getir,
     firma_gerekce_uret,
     firma_uygunluk_yargila,
+    genc_uygunluk_yargila,
     gerekce_uret,
     kilit_anahtari,
     siralayip_ele,
@@ -189,19 +191,15 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
 
     # Aday kaynağı ilana göre (docs/plans/firma-akisi.md § 4): genç ilanında
     # yetenek kartları, ortak ilanında firma kartları. Gençler ortak ilanına,
-    # firmalar genç ilanına önerilmez. Firma–firma'da benzerlik tabanını geçen
-    # ilk YARGI_N aday yapay zekâ tarafından yargılanır (docs/matching-algorithm.md
-    # § 8); genç tarafı eskisi gibi doğrudan ilk TOP_N.
+    # firmalar genç ilanına önerilmez. İki yolda da benzerlik tabanını geçen ilk
+    # YARGI_N aday yapay zekâ tarafından yargılanır (docs/matching-algorithm.md § 8).
     firma_ilani = ihtiyac.aranan == ARANAN_FIRMA
     aday_kaynagi = firma_adaylarini_getir if firma_ilani else adaylari_getir
     adaylar = await aday_kaynagi(oturum, ihtiyac)
     # Gizli (`uygun_degil`) kayıtlar da okunur: yeniden yargılanmasınlar diye.
     eskiler = await eslesmeleri_oku(oturum, ihtiyac.id, gizliler_dahil=True)
     mevcutlar = {aday_kimligi(e): e for e in eskiler}
-    if firma_ilani:
-        secilenler, yargilar = await _firma_adaylarini_yargila(ihtiyac, adaylar, mevcutlar)
-    else:
-        secilenler, yargilar = siralayip_ele(adaylar), {}
+    secilenler, yargilar = await _adaylari_yargila(ihtiyac, adaylar, mevcutlar)
 
     # Kural ya da kart değişmiş olabilir: artık seçilmeyen öneriler listede
     # kalmasın. Kurumun karar verdiği kayıtlara dokunulmuyor.
@@ -243,10 +241,10 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
         and guncel[aday.aday_kimligi].gerekce_metni is None
         # Adayın ilgi gösterdiği kaydın gerekçesi değiştirilmez (karar 14).
         and guncel[aday.aday_kimligi].durum != DURUM_GENC_ILGILENDI
-        # Firma–firma'da öneri gerekçesini yargı çağrısı yazar (başarısızsa sonraki
-        # hesapta yeniden denenir); burada yalnızca karar verilmiş kayıtların
-        # eksik gerekçesi eski yoldan tamamlanır, yargılanmaz.
-        and not (firma_ilani and guncel[aday.aday_kimligi].durum == DURUM_ONERILDI)
+        # Öneri gerekçesini yargı çağrısı yazar (başarısızsa sonraki hesapta yeniden
+        # denenir); burada yalnızca karar verilmiş kayıtların eksik gerekçesi eski
+        # yoldan tamamlanır, yargılanmaz.
+        and guncel[aday.aday_kimligi].durum != DURUM_ONERILDI
     ]
 
     # Gerekçeler birbirinden bağımsız: sırayla beklemek Top-5'te kullanıcıyı
@@ -289,11 +287,11 @@ def yargilanmali_mi(eslesme: Eslesme | None) -> bool:
     return eslesme.durum == DURUM_ONERILDI and eslesme.uygunluk is None
 
 
-async def _firma_adaylarini_yargila(
+async def _adaylari_yargila(
     ihtiyac: IhtiyacKarti,
-    adaylar: list[FirmaAdayi],
+    adaylar: Sequence[Aday | FirmaAdayi],
     mevcutlar: dict[uuid.UUID, Eslesme],
-) -> tuple[list[FirmaAdayi], dict[uuid.UUID, Yargi]]:
+) -> tuple[list[Aday | FirmaAdayi], dict[uuid.UUID, Yargi]]:
     """Skora göre ilk YARGI_N adaydan `uygun_degil` olmayan ilk TOP_N'i seçer.
 
     Adaylar skor sırasıyla dalgalar halinde yargılanır: listelenecek ilk TOP_N'in
@@ -339,14 +337,16 @@ async def _firma_adaylarini_yargila(
     return [adaya[kimlik] for kimlik in kimlikler if kimlik in saklanacak], yargilar
 
 
-async def _yargila(ihtiyac: IhtiyacKarti, aday: FirmaAdayi) -> Yargi:
+async def _yargila(ihtiyac: IhtiyacKarti, aday: Aday | FirmaAdayi) -> Yargi:
     """Yargı çağrısı; her hata "bilinmiyor". `uygun_degil` hiçbir hatada üretilmez.
 
     Skor ve sıralama modelden bağımsız: model erişilemezse, zaman aşımına uğrarsa ya da
     geçersiz çıktı verirse öneri bugünkü gibi listelenir.
     """
     try:
-        return await firma_uygunluk_yargila(ihtiyac, aday)
+        if isinstance(aday, FirmaAdayi):
+            return await firma_uygunluk_yargila(ihtiyac, aday)
+        return await genc_uygunluk_yargila(ihtiyac, aday)
     except Exception:
         logger.warning(
             "Uygunluk yargısı alınamadı; karar bilinmiyor sayıldı (%s)",
