@@ -197,9 +197,9 @@ Plan: `plans/firma-akisi.md` § 0 kararlar 5, 11-14; § 4. Aynı pipeline (`app/
 
 Benzerlik dağılımı: çözüm ortağı ort. 0.679 (en düşük **0.570**), kısmen 0.512, alakasız 0.433 (en yüksek 0.580). Çözüm ortağı adayların hiçbiri 0.56'ya kadar kaybolmuyor; 0.52'de kaybedilen yalnızca kısmen uygunlar (20'den 8'i kalıyor). Genç havuzuyla fark: alakasız ortalama 0.365 (firma metinleri birbirine daha çok benziyor), bu yüzden firma tabanı genç tabanından (0.48) yüksek.
 
-## 8. Uygunluk kararı (yalnızca firma–firma)
+## 8. Uygunluk kararı (firma–firma ve genç–ilan)
 
-> **Karar (6 Eki 2026): giriş ilkesi değişti.** Eskiden "listeye girme kararı yalnızca benzerliğe bağlı" idi. Yeni ilke: **benzerlik aday bulur, yapay zekâ doğrular, puanı kod verir.** Benzerlik tabanı (§ 5) adayı bulmaya devam eder; ortak ilanında (firma–firma) o adayın gerçekten uygun olup olmadığını gerekçeyi yazan model söyler; skor ve sıralama yine yalnızca kodda (`0.75 × benzerlik + 0.25 × bonus`). **Genç–ilan tarafı değişmedi** (aşağıda nedeni).
+> **Karar (6 Eki 2026): giriş ilkesi değişti.** Eskiden "listeye girme kararı yalnızca benzerliğe bağlı" idi. Yeni ilke: **benzerlik aday bulur, yapay zekâ doğrular, puanı kod verir.** Benzerlik tabanı (§ 5) adayı bulmaya devam eder; ortak ilanında (firma–firma) o adayın gerçekten uygun olup olmadığını gerekçeyi yazan model söyler; skor ve sıralama yine yalnızca kodda (`0.75 × benzerlik + 0.25 × bonus`). **Genç–ilan tarafında da aynı mekanizma çalışır, ama yalnızca gizleme için: rozet yok** (aşağıda).
 
 **Neden.** Benzerlik "aynı konudan mı" sorusunu yanıtlar, "ihtiyacı karşılıyor mu" sorusunu değil. Canlı örnek: Anadolu Market'in meyve-sebze fire ilanına soğuk zincir lojistik firması %42 benzerlikle öneriliyordu; aynı ihtiyaç alanı, ama ilanın istediği (satış verisinden sipariş tahmini) kartında yok.
 
@@ -236,7 +236,7 @@ Demo: Anadolu↔Soğuk Lojistik, Soğuk Lojistik ilanı↔Tazele / Yolgüç / Vi
 
 ### Sınırlar
 
-- **Genç tarafına uygulanmadı.** Neden: ölçümde genç havuzunda hiç eleme yapmadı (alakasız adaylar 0/12 elendi, "kısmen" kaldı) ve iyi adaylara da sık "kısmen" dedi (19/36); kazanç küçük, rozet gürültüsü büyük olurdu. Genç tarafı eskisi gibi yalnızca benzerlik tabanı + ilk 5.
+- **Genç tarafı: aynı mekanizma, rozetsiz (6 Eki 2026).** Genç–ilan eşleşmesi de aynı kodu kullanır (`genc_uygunluk_yargila`; yargı penceresi 8, `gorunur_kosulu`, hata → bilinmiyor, karar verilmiş kayda dokunmama, kart ya da ilan düzenlenince karar ve gerekçe birlikte sıfırlanır). İstem: genç gerekçe talimatı + aynı `UYGUNLUK_EK_KURALI` (ölçümdeki genç istemi). Ölçümde genç havuzunda hiç eleme yapmadı (alakasız 0/12 elendi) ve iyi adaylara sık "kısmen" dedi (19/36); bu yüzden genç adayında **"Kısmen uygun" rozeti gösterilmez**: API'de `uygunluk` genç adayı için hep null (`uygunluk.gosterilecek_karar`), yalnızca `uygun_degil` gizlemeye yarar. Gerçek model, demo gıda bankası ilanı: Selin, Burak, Elif `uygun`; Emre `kismen` (listede, rozetsiz); Zeynep `uygun_degil` (gizli). Sosyal medya ilanında Defne `uygun` kaldı.
 - **Pencere 8.** İlk 8 adayın hepsi elenirse liste boş kalır; 9. ve sonrası yargılanmaz.
 - **Elenen aday pencereden düşünce silinir** (kayıt `onerildi`ydi); geri dönerse yeniden yargılanır.
 - **Etiket yumuşak, sert değil.** Ölçümde 5 çift model etiketten sert çıktı (`kismen` etiketlileri eledi: firma tarafında 11/24); gerçek havuzla yeniden bakılmalı.
