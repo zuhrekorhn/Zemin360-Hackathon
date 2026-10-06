@@ -18,6 +18,7 @@ from sqlalchemy.orm import selectinload
 
 from app.agents.eslestirme import (
     FirmaAdayi,
+    Yargi,
     eslesme_ekle_ifadesi,
     firma_bonusu,
     firma_guven_ozeti,
@@ -88,10 +89,19 @@ def test_guven_ozeti_dogrulanmamisi_soyler():
 
 @pytest.fixture(autouse=True)
 def gerekce_sahte(monkeypatch):
+    """Model çağrısı yok. Öneri gerekçesini artık yargı çağrısı yazıyor
+    (`firma_uygunluk_yargila`, hepsi "uygun"); karar verilmiş kaydın eksik gerekçesi
+    eski yoldan (`firma_gerekce_uret`) tamamlanıyor, ikisi de sahte. Sahte olmasa
+    gerçek model sentetik kartlara "uygun_degil" der ve öneri listeden kaybolurdu."""
+
     async def uret(ihtiyac, aday):
         return f"{aday.firma_karti.kurum.ad} uygun."
 
+    async def yargila(ihtiyac, aday):
+        return Yargi(gerekce=await uret(ihtiyac, aday), uygunluk="uygun")
+
     monkeypatch.setattr(servis, "firma_gerekce_uret", uret)
+    monkeypatch.setattr(servis, "firma_uygunluk_yargila", yargila)
 
 
 async def _firma(d, ad, tur="girisim", sehir="İstanbul", vektor=V, dogrulandi=False):
@@ -281,6 +291,8 @@ def test_kart_icerigi_degisince_bekleyen_onerinin_gerekcesi_bosalir():
             .execution_options(populate_existing=True)
         )
         assert eslesme.gerekce_metni is None
+        # Karar gerekçeye dayanır: birlikte sıfırlanır, sonraki hesapta yeniden yargılanır.
+        assert eslesme.uygunluk is None
 
     senaryo(adimlar)
 

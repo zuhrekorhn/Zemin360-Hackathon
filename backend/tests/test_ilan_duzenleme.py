@@ -124,12 +124,14 @@ def test_duzenleme_ilgiyi_korur_gerekceyi_sifirlar_bildirir(eslestirme_kaydi):
         e1 = await d.oturum.get(Eslesme, d.E1.id)
         e1.durum = "genc_ilgilendi"
         e1.gerekce_metni = "eski gerekçe (genç)"
+        e1.uygunluk = "uygun"
         e3 = Eslesme(
             ihtiyac_karti_id=d.I1.id,
             yetenek_karti_id=d.K2.id,
             skor=0.5,
             durum="ilgileniliyor",
             gerekce_metni="eski gerekçe",
+            uygunluk="kismen",
         )
         d.oturum.add(e3)
         await d.oturum.commit()
@@ -146,13 +148,15 @@ def test_duzenleme_ilgiyi_korur_gerekceyi_sifirlar_bildirir(eslestirme_kaydi):
         assert eslestirme_kaydi == [ilan_id]
 
         e1 = await _taze(d.oturum, Eslesme, d.E1.id)
-        assert (e1.durum, e1.skor, e1.gerekce_metni) == (
+        assert (e1.durum, e1.skor, e1.gerekce_metni, e1.uygunluk) == (
             "genc_ilgilendi",
             0.6,
             "eski gerekçe (genç)",
+            "uygun",
         )
         e3 = await _taze(d.oturum, Eslesme, e3.id)
-        assert (e3.durum, e3.gerekce_metni) == ("ilgileniliyor", None)
+        # Gerekçe sıfırlanınca karar da sıfırlanır (karar gerekçeye dayanır).
+        assert (e3.durum, e3.gerekce_metni, e3.uygunluk) == ("ilgileniliyor", None, None)
 
         genc1 = await _bildirimler(d.oturum, genc1_hesap)
         genc2 = await _bildirimler(d.oturum, genc2_hesap)
