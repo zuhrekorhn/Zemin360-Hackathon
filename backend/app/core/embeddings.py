@@ -7,6 +7,8 @@ docs/matching-algorithm.md § 1-2. Kart onaylandığında ve her güncellemede
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from collections.abc import Sequence
 from typing import Literal
 
@@ -15,7 +17,21 @@ import httpx
 from app.core.config import get_settings
 from app.db.base import EMBEDDING_DIM
 
+logger = logging.getLogger("zemin360.embeddings")
+
 VOYAGE_URL = "https://api.voyageai.com/v1/embeddings"
+
+# Hız sınırı (429) geçicidir: üstel geri çekilmeyle en fazla 3 kez yeniden denenir
+# (1, 2, 4 sn). Başka hata (401, 400, 5xx…) yeniden denenmez; sonunda hâlâ
+# başarısızsa `EmbeddingHatasi` aynen fırlar ve kart sonraki hazırlamada yeniden denenir.
+HIZ_SINIRI_DURUMU = 429
+YENIDEN_DENEME_BEKLEMELERI = (1.0, 2.0, 4.0)
+
+
+async def _bekle(saniye: float) -> None:
+    """Testlerde gerçek bekleme olmasın diye ayrı bir fonksiyon (monkeypatch)."""
+    await asyncio.sleep(saniye)
+
 
 # Voyage, arama tarafıyla belge tarafını ayrı kodluyor ("document" / "query").
 # Bugün BÜTÜN kartlar (yetenek, firma ve ihtiyaç) "document" olarak gönderiliyor;
@@ -58,11 +74,16 @@ async def embedding_listesi_uret(
     }
 
     async with httpx.AsyncClient(timeout=30) as istemci:
-        yanit = await istemci.post(
-            VOYAGE_URL,
-            json=govde,
-            headers={"Authorization": f"Bearer {ayarlar.voyage_api_key}"},
-        )
+        for bekleme in (*YENIDEN_DENEME_BEKLEMELERI, None):
+            yanit = await istemci.post(
+                VOYAGE_URL,
+                json=govde,
+                headers={"Authorization": f"Bearer {ayarlar.voyage_api_key}"},
+            )
+            if yanit.status_code != HIZ_SINIRI_DURUMU or bekleme is None:
+                break
+            logger.warning("Voyage hız sınırı (429); %.0f sn sonra yeniden denenecek", bekleme)
+            await _bekle(bekleme)
 
     if yanit.status_code != 200:
         raise EmbeddingHatasi(f"Voyage {yanit.status_code}: {yanit.text[:300]}")
