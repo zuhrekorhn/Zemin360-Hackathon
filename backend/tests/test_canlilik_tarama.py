@@ -337,3 +337,75 @@ def test_firsat_kosulu_disinda_bildirim_yok(kart_gun, ihtiyac_gun):
         assert await _olaylar(d, d.E1) == []
 
     senaryo(adimlar)
+
+
+async def _oneri(d, ad, uygunluk, gun=8):
+    """I1'e, yeni bir gencin kartından önerilmiş eşleşme; `gun` gündür hareketsiz."""
+    genc = Kullanici(ad=ad, email=f"{ad.lower()}-gizli-test@ornek.com")
+    d.oturum.add(genc)
+    await d.oturum.flush()
+    kart = YetenekKarti(kullanici_id=genc.id, rol_alani="r", deneyim_seviyesi="orta")
+    d.oturum.add(kart)
+    await d.oturum.flush()
+    e = Eslesme(
+        ihtiyac_karti_id=d.I1.id,
+        yetenek_karti_id=kart.id,
+        skor=0.5,
+        durum="onerildi",
+        uygunluk=uygunluk,
+    )
+    d.oturum.add(e)
+    await d.oturum.flush()
+    await _gecmise(d, e, gun)
+    return e
+
+
+def test_oneri_bildirimi_yalnizca_gorunur_adaylari_sayar():
+    async def adimlar(istemci, d):
+        d.E1.uygunluk = "uygun"
+        await _gecmise(d, d.E1, 8)
+        gorunurler = [d.E1, await _oneri(d, "Ayse", "kismen"), await _oneri(d, "Mert", None)]
+        gizliler = [
+            await _oneri(d, "Gizli1", "uygun_degil"),
+            await _oneri(d, "Gizli2", "uygun_degil"),
+        ]
+
+        await _tara(d)
+        [bildirim] = await bildirimleri(d, d.kurum1)
+        assert bildirim.tur == "oneri_bekliyor"
+        assert "3 aday" in bildirim.metin
+        assert len(await _olaylar(d, *gorunurler)) == 3
+        assert await _olaylar(d, *gizliler) == []
+
+    senaryo(adimlar)
+
+
+def test_yalnizca_gizli_oneri_varsa_kuruma_bildirim_gitmez():
+    async def adimlar(istemci, d):
+        d.E1.uygunluk = "uygun_degil"
+        await _gecmise(d, d.E1, 8)
+        gizli = await _oneri(d, "Gizli3", "uygun_degil")
+
+        await _tara(d)
+        assert await bildirimleri(d, d.kurum1) == []
+        assert await _olaylar(d, d.E1, gizli) == []
+
+    senaryo(adimlar)
+
+
+def test_gizli_eslesme_icin_firsat_gitmez_gorunur_icin_gider():
+    async def adimlar(istemci, d):
+        await _firsat_dunyasi(d, kart_gun=20, ihtiyac_gun=2)
+        d.E1.uygunluk = "uygun_degil"
+        await d.oturum.commit()
+        await _tara(d)
+        assert await _olaylar(d, d.E1) == []
+        assert await bildirimleri(d, d.genc1) == []
+
+        d.E1.uygunluk = "kismen"
+        await d.oturum.commit()
+        await _tara(d)
+        assert [o.tur for o in await _olaylar(d, d.E1)] == ["yeni_firsat"]
+        assert [b.tur for b in await bildirimleri(d, d.genc1)] == ["yeni_firsat"]
+
+    senaryo(adimlar)

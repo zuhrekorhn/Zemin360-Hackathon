@@ -25,7 +25,7 @@ from dataclasses import dataclass
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select, text, true
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -53,6 +53,7 @@ from app.agents.takip_durumu import (
     ISBIRLIGI_PLAN_BEKLIYOR,
     MILESTONE_TAMAMLANDI,
 )
+from app.agents.uygunluk import gorunur_kosulu
 from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import _bearer, _yetkisiz, mevcut_hesap, rol_gerekli
 from app.api.sahiplik import karsi_taraf, taraf_adi, taraf_hesabi
@@ -191,11 +192,15 @@ async def _son_olaylar(oturum: AsyncSession, eslesme_idler: set) -> dict[tuple, 
 Aday = tuple[Eslesme, Hatirlatma, "canlilik.HatirlatmaBaglami"]
 
 
-async def pasif_adaylar(oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date) -> list[Aday]:
+async def pasif_adaylar(
+    oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date, *, yalniz_gorunur: bool = False
+) -> list[Aday]:
     """Şu an eşiği aşmış kayıtlar ve kime ne hatırlatılmalı — tekrar kuralından ÖNCE.
 
     Hiçbir şey yazmaz: hem tarama hem GİRVAK'ın "pasifleşen bağlantılar"
-    listesi bunu kullanır; ikisi aynı kuralı görür.
+    listesi bunu kullanır; ikisi aynı kuralı görür. `yalniz_gorunur` yalnızca
+    tarama içindir: gizli (`uygun_degil`) öneri kimseye hatırlatılmaz ve kuruma
+    giden öneri sayısına girmez.
     """
     esik = simdi - dt.timedelta(
         days=min(ESIKLER[ILGI_YANITSIZ_1], ESIKLER[ONERI_BEKLIYOR], ESIKLER[GENC_ILGISI_YANITSIZ])
@@ -209,6 +214,7 @@ async def pasif_adaylar(oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date
                 Eslesme.son_aktivite_tarihi <= esik,
                 # Firma–firma eşleşmeleri taranmaz (docs/plans/firma-akisi.md § 0 karar 18).
                 Eslesme.yetenek_karti_id.isnot(None),
+                gorunur_kosulu() if yalniz_gorunur else true(),
             )
         )
     )
@@ -294,7 +300,7 @@ async def adaylari_topla(
     oturum: AsyncSession, simdi: dt.datetime, bugun: dt.date
 ) -> list[_Yazilacak]:
     """Kurallara göre hatırlatılması gerekenler, tekrar kuralından geçirilmiş."""
-    adaylar = await pasif_adaylar(oturum, simdi, bugun)
+    adaylar = await pasif_adaylar(oturum, simdi, bugun, yalniz_gorunur=True)
     adaylar.extend(await firsat_adaylari(oturum, simdi))
 
     son_olaylar = await _son_olaylar(oturum, {e.id for e, _, _ in adaylar})
@@ -337,6 +343,7 @@ async def firsat_adaylari(oturum: AsyncSession, simdi: dt.datetime) -> list[Aday
         .join(YetenekKarti, Eslesme.yetenek_karti_id == YetenekKarti.id)
         .where(
             Eslesme.durum == DURUM_ONERILDI,
+            gorunur_kosulu(),
             IhtiyacKarti.olusturma_tarihi > simdi - dt.timedelta(days=FIRSAT_YENI_IHTIYAC_GUN),
             YetenekKarti.olusturma_tarihi <= simdi - dt.timedelta(days=FIRSAT_ESKI_KART_GUN),
         )
