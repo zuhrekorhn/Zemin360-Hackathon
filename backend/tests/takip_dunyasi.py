@@ -20,7 +20,8 @@ from app.models.bildirim import Bildirim
 from app.models.isbirligi import Isbirligi
 from app.models.milestone import Milestone
 
-BASLANGIC = dt.date(2026, 9, 29)
+# Bugüne göre göreli: sabit tarih zamanla ilk adımı "gecikmiş" yapıp testleri bozuyordu.
+BASLANGIC = dt.date.today() - dt.timedelta(days=3)
 
 # E1'in ilanında müsaitlik yok: işe alım süreci. Model iki adımı kişiselleştirir,
 # biri tanınmayan anahtar (yok sayılır); diğer adımlar şablon metniyle kalır.
