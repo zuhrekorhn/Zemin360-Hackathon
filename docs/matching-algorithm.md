@@ -111,6 +111,8 @@ Skora etkisi en çok `0,25 × bonus` kadardır; yukarıdaki örnekte (a) kartı 
 
 **Top-N** yaklaşımı: benzerlik tabanını geçen adaylar arasından skoru en yüksek **5 sonuç** gösterilir.
 
+> **Firma–firma'da (6 Eki 2026) giriş kararı yalnızca benzerlik değildir:** benzerlik tabanını geçen ilk 8 aday yapay zekâ tarafından yargılanır, `uygun_degil` olmayanlardan ilk 5 listelenir (§ 8). Aşağıdaki "yalnızca benzerlik" kuralı **genç–ilan tarafında** geçerlidir.
+
 > **Karar değişti (6 Eki 2026): skor eşiği (%40) kaldırıldı.** Listeye girme kararı yalnızca vektör benzerliğine bağlı; skor yalnızca sıralar. Gerekçe (aşağıdaki ölçüm): %40 eşiği bonusa bağlı davranıyordu. Bonusu 0 olan kartta fiilen `benzerlik ≥ 0.533` isteniyordu (`0.75 × b ≥ 0.40`), bonusu olan kartta ise yalnızca alt sınır geçerliydi. Sonuç: bonusu olan kart 0.45–0.53 bandındaki alakasız adayı listeye sokuyor, bonusu olmayan kart aynı bantta kısmen uygun adayı bile kaybediyordu. Eşiğe bağlı tüm kapılar da kalktı: gencin "fırsatlar" listesi, firmanın ortak fırsatları ve ilgi gösterme (eskiden skor < 0.40 ise 409) artık skora bakmaz; API'deki `skor_esigi` alanı kaldırıldı. Kayıt zaten tabanı geçmiş adaya yazıldığı için bu kapılara ayrıca gerek yok.
 
 ### Benzerlik alt sınırı: 0.48 (listeye girmenin tek koşulu)
@@ -193,6 +195,51 @@ Plan: `plans/firma-akisi.md` § 0 kararlar 5, 11-14; § 4. Aynı pipeline (`app/
 | 0.56 | 15 | 8 | 5 | 2 | 0.87 |
 
 Benzerlik dağılımı: çözüm ortağı ort. 0.679 (en düşük **0.570**), kısmen 0.512, alakasız 0.433 (en yüksek 0.580). Çözüm ortağı adayların hiçbiri 0.56'ya kadar kaybolmuyor; 0.52'de kaybedilen yalnızca kısmen uygunlar (20'den 8'i kalıyor). Genç havuzuyla fark: alakasız ortalama 0.365 (firma metinleri birbirine daha çok benziyor), bu yüzden firma tabanı genç tabanından (0.48) yüksek.
+
+## 8. Uygunluk kararı (yalnızca firma–firma)
+
+> **Karar (6 Eki 2026): giriş ilkesi değişti.** Eskiden "listeye girme kararı yalnızca benzerliğe bağlı" idi. Yeni ilke: **benzerlik aday bulur, yapay zekâ doğrular, puanı kod verir.** Benzerlik tabanı (§ 5) adayı bulmaya devam eder; ortak ilanında (firma–firma) o adayın gerçekten uygun olup olmadığını gerekçeyi yazan model söyler; skor ve sıralama yine yalnızca kodda (`0.75 × benzerlik + 0.25 × bonus`). **Genç–ilan tarafı değişmedi** (aşağıda nedeni).
+
+**Neden.** Benzerlik "aynı konudan mı" sorusunu yanıtlar, "ihtiyacı karşılıyor mu" sorusunu değil. Canlı örnek: Anadolu Market'in meyve-sebze fire ilanına soğuk zincir lojistik firması %42 benzerlikle öneriliyordu; aynı ihtiyaç alanı, ama ilanın istediği (satış verisinden sipariş tahmini) kartında yok.
+
+**Akış** (`app/servisler/eslestirme.py` › `_firma_adaylarini_yargila`, saf kurallar `app/agents/uygunluk.py`):
+
+1. SQL kesin şartları → pgvector → firma benzerlik tabanı (0.52) → skora göre ilk **8** aday (`YARGI_N`), yargı penceresi.
+2. Gerekçe çağrısı aynı çağrıda bir de karar döner: `{gerekce, uygunluk}`, alan sırası **gerekçe önce, karar sonra** (karar yazdığı metne dayansın). `uygunluk`: `uygun` | `kismen` | `uygun_degil`. İstem: mevcut firma gerekçe talimatı + "emin değilsen `kismen`; temel ihtiyaca karşılık gelen bir yetkinlik yazamıyorsan `uygun_degil`; gerekçede eksik yazdıysan karar `uygun` olamaz" (`UYGUNLUK_EK_KURALI`). "Doğrulanmış" iddiası koruması (§ 6) gerekçeye aynen uygulanır; iki denemede de iddia varsa gerekçe de karar da bilinmiyor kalır.
+3. `uygun_degil` olmayanlardan ilk **5** (`TOP_N`) listelenir. Adaylar skor sırasıyla dalgalar halinde yargılanır (önce ilk 5; elenen çıkarsa sıradaki), böylece sonuç "ilk 8'i yargıla"yla aynı ama yalnızca gereken çağrılar yapılır. Aynı ilanda her aday en çok bir kez yargılanır.
+4. `kismen` listelenir ve arayüzde rozetle gösterilir; `uygun_degil` listelenmez.
+
+**`uygun_degil` saklanır ama hiçbir yerde görünmez.** Kayıt veritabanında durur (`eslesme.uygunluk`): sonraki hesap onu yeniden yargılamaz (aynı kararlı ilanda ikinci hesap model çağırmaz). Görünmezlik tek bir filtredir (`uygunluk.gorunur_kosulu()`); kurum önerileri, `/onerilerim`, aday firmanın fırsatları (`/firma-eslesmelerim`), gencin fırsat / ilgi uçları, geçiş uçlarındaki kimlikle erişim (404), ilan görme hakkı (`sahiplik`) ve GİRVAK sayıları aynı filtreden geçer. Yeni bir eşleşme okuma ucu yazılırsa `.where(gorunur_kosulu())` eklenir. `uygun_degil` için "yeni aday var" bildirimi yazılmaz.
+
+**Hata → "bilinmiyor" (`uygunluk` NULL).** Model hatası, hız sınırı, zaman aşımı, geçersiz etiket ya da boş gerekçe: öneri bugünkü gibi listelenir, gerekçesiz kalır, karar yazılmaz ve sonraki hesapta yeniden denenir. `uygun_degil` hiçbir hata durumunda üretilmez. Aynı hesapta başarısız çağrı bir daha denenmez.
+
+**Karar verilmiş kayıtlar yargılanmaz.** `ilgileniliyor`, `genc_ilgilendi`, `kabul_edildi`, `reddedildi`, `kapandi` kayıtlarına karar yazılmaz, yeniden yargılanmaz, silinmez (karar 14). Eksik gerekçesi eski yoldan (kararsız düz gerekçe) tamamlanır. Yeniden hesap yalnızca kararsız `onerildi` kayıtları yargılar: yeni adaylar, migration öncesi kayıtlar, hata almış çağrılar, içeriği değişmiş kartlar.
+
+**Sıfırlama.** Kart ya da ilan içeriği değişince gerekçenin sıfırlandığı yerlerde (`ilan_duzenleme.ilani_duzenle`, `firma_karti.onerilerin_gerekcesini_bosalt`) karar da sıfırlanır; kayıt sonraki hesapta yeniden yargılanır.
+
+### Ölçüm (6 Eki 2026, `tests/degerlendirme_seti/eslestirme_uygunluk/`)
+
+Gerçek model (`gemini-3.8-flash`, güçlü katman), 57 çift × 3 çalıştırma = 171 çağrı; çiftler: 24 genç havuzu, 21 firma havuzu, 12 demo vakası. **Etiketler bağımsız değil** (kartları ve etiketleri aynı kişi yazdı); küçük örneklem.
+
+| Ölçü | Sonuç |
+|---|---|
+| Güçlü adayın yanlışlıkla elenmesi (hedef 0) | **0 / 78** (genç 0/36, firma 0/24, demo 0/18) |
+| Alakasızın elenmesi | 18 / 39: demo 12/12, firma 6/15, **genç 0/12** |
+| Alakasıza "uygun" denmesi | 0 / 39 |
+| Güçlü adaya "kısmen" denmesi | 25 / 78 (genç 19/36) |
+| Etiketle uyum | %65 (demo %92, firma %59, genç %57) |
+| Kararın çalıştırmalar arasında değişmesi | 2 / 57 çift |
+| Token | ≈1.080 girdi + ≈690 çıktı (düşünme dahil) çağrı başına |
+
+Demo: Anadolu↔Soğuk Lojistik, Soğuk Lojistik ilanı↔Tazele / Yolgüç / Vitrinpark üç turda da `uygun_degil`; Tazele↔Anadolu ve Ayaz↔Soğuk Lojistik `uygun`.
+
+### Sınırlar
+
+- **Genç tarafına uygulanmadı.** Neden: ölçümde genç havuzunda hiç eleme yapmadı (alakasız adaylar 0/12 elendi, "kısmen" kaldı) ve iyi adaylara da sık "kısmen" dedi (19/36); kazanç küçük, rozet gürültüsü büyük olurdu. Genç tarafı eskisi gibi yalnızca benzerlik tabanı + ilk 5.
+- **Pencere 8.** İlk 8 adayın hepsi elenirse liste boş kalır; 9. ve sonrası yargılanmaz.
+- **Elenen aday pencereden düşünce silinir** (kayıt `onerildi`ydi); geri dönerse yeniden yargılanır.
+- **Etiket yumuşak, sert değil.** Ölçümde 5 çift model etiketten sert çıktı (`kismen` etiketlileri eledi: firma tarafında 11/24); gerçek havuzla yeniden bakılmalı.
+- Model adı ve istem değişirse ölçüm yeniden koşulmalı (`python -m scripts.uygunluk_olcumu`; gerçek model çağrısı yapar).
 
 ## İsteğe Bağlı Geliştirme — ESCO Taksonomi Eşleme
 

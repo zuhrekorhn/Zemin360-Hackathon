@@ -155,6 +155,7 @@ erDiagram
     uuid ihtiyac_karti_id FK
     float skor
     string gerekce_metni
+    string uygunluk "uygun | kismen | uygun_degil; NULL = bilinmiyor (genç eşleşmeleri dahil); uygun_degil hiçbir okumada görünmez"
     string durum
     timestamp son_aktivite_tarihi
   }
