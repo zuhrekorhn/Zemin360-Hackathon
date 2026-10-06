@@ -150,9 +150,24 @@ async def ihtiyac_kilidi(oturum: AsyncSession, ihtiyac_karti_id: uuid.UUID) -> N
     )
 
 
+async def _embedding_tamamla(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> bool:
+    """Embedding'i boş açık ilan için bir kez dener (Voyage o an kapalıydı, kart sonradan
+    düzelmedi). Döner: embedding artık dolu mu. Başarısızlık hata değil: pipeline bugünkü
+    gibi 409 döner. Kapalı ilan için Voyage'a gidilmez."""
+    if ihtiyac.durum != IHTIYAC_ACIK:
+        return False
+    # api modülü bu servisi içe aktarıyor; döngü olmasın.
+    from app.api.ihtiyac_kartlari import embedding_hesapla
+
+    return await embedding_hesapla(oturum, ihtiyac)
+
+
 async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Eslesme]:
-    """Adayları seçer, eşleşmeleri yazar, gerekçeleri üretir; güncel eşleşmeleri döner."""
-    if ihtiyac.embedding is None:
+    """Adayları seçer, eşleşmeleri yazar, gerekçeleri üretir; güncel eşleşmeleri döner.
+
+    İlanın embedding'i boşsa bir kez hesaplanır; hesaplanamazsa 409.
+    """
+    if ihtiyac.embedding is None and not await _embedding_tamamla(oturum, ihtiyac):
         raise HTTPException(status_code=409, detail=IHTIYAC_HAZIR_DEGIL)
     if ihtiyac.durum != IHTIYAC_ACIK:
         # Kapalı ihtiyaç için aday aranmaz; mevcut kayıtlar okunabilir kalır.

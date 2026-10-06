@@ -341,3 +341,95 @@ def test_oneriler_ucu_firma_karti_doner_eposta_yok():
         assert satir["genc_adi"] is None
 
     senaryo(adimlar)
+
+
+# --- Boş embedding'li ilan: pipeline bir kez tamamlamayı dener -------------------------
+
+
+def _voyage_sayaci(monkeypatch, *, basarili: bool):
+    """İlan embedding'i için Voyage çağrılarını sayar; gerçek çağrı yok."""
+    from app.api import ihtiyac_kartlari
+    from app.core.embeddings import EmbeddingHatasi
+
+    cagrilar: list[str] = []
+
+    async def embedding(metin, girdi_turu="document"):
+        cagrilar.append(metin)
+        if not basarili:
+            raise EmbeddingHatasi("kapalı")
+        return V
+
+    monkeypatch.setattr(ihtiyac_kartlari, "embedding_uret", embedding)
+    return cagrilar
+
+
+def test_bos_embedding_ilan_pipeline_icinde_tamamlanir(monkeypatch):
+    cagrilar = _voyage_sayaci(monkeypatch, basarili=True)
+
+    async def adimlar(istemci, d):
+        ilan = await _ortak_ilan(d)
+        await _firma(d, "Aday Firma")
+        ilan.embedding = None
+        await d.oturum.commit()
+
+        eslesmeler = await servis.pipeline_calistir(d.oturum, ilan)
+
+        assert len(cagrilar) == 1
+        assert ilan.embedding is not None
+        assert [e.firma_karti.kurum.ad for e in eslesmeler] == ["Aday Firma"]
+
+    senaryo(adimlar)
+
+
+def test_embedding_tamamlanamazsa_409_ayni_kalir(monkeypatch):
+    from fastapi import HTTPException
+
+    cagrilar = _voyage_sayaci(monkeypatch, basarili=False)
+
+    async def adimlar(istemci, d):
+        ilan = await _ortak_ilan(d)
+        ilan.embedding = None
+        await d.oturum.commit()
+
+        with pytest.raises(HTTPException) as hata:
+            await servis.pipeline_calistir(d.oturum, ilan)
+
+        assert hata.value.status_code == 409
+        assert hata.value.detail == servis.IHTIYAC_HAZIR_DEGIL
+        assert len(cagrilar) == 1  # bir kez denendi, tekrarlanmadı
+        assert ilan.embedding is None
+
+    senaryo(adimlar)
+
+
+def test_dolu_embedding_ilanda_ek_voyage_cagrisi_olmaz(monkeypatch):
+    cagrilar = _voyage_sayaci(monkeypatch, basarili=True)
+
+    async def adimlar(istemci, d):
+        ilan = await _ortak_ilan(d)
+        await _firma(d, "Aday Firma")
+
+        await servis.pipeline_calistir(d.oturum, ilan)
+
+        assert cagrilar == []
+
+    senaryo(adimlar)
+
+
+def test_kapali_bos_embedding_ilan_icin_voyage_cagrilmaz(monkeypatch):
+    from fastapi import HTTPException
+
+    cagrilar = _voyage_sayaci(monkeypatch, basarili=True)
+
+    async def adimlar(istemci, d):
+        ilan = await _ortak_ilan(d)
+        ilan.embedding, ilan.durum = None, "kapandi"
+        await d.oturum.commit()
+
+        with pytest.raises(HTTPException) as hata:
+            await servis.pipeline_calistir(d.oturum, ilan)
+
+        assert hata.value.status_code == 409
+        assert cagrilar == []
+
+    senaryo(adimlar)

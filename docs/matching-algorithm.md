@@ -35,6 +35,7 @@ Başarı kriteri: {basari_kriteri}
 - Temsil metni, Voyage AI'nin `voyage-4` modeline gönderilir (1024 boyut) — Anthropic'in Claude ile kullanım için resmi önerdiği sağlayıcı, ilk 200M token ücretsiz.
 - Sonuç vektör, kartın `embedding` kolonuna yazılır (pgvector).
 - **Ne zaman yeniden hesaplanır:** kart onaylandığında (ilk oluşturma) ve her güncellemede (`versiyon` arttığında).
+- **Boş embedding'li ilan:** Voyage onay anında kapalıysa ilanın vektörü boş kalır. Açık ilan için pipeline başında bir kez hesaplanır; hesaplanamazsa eskisi gibi 409 (`pipeline_calistir`). Kapalı ilan için Voyage çağrılmaz. Yetenek ve firma kartlarında aynı kural yok: adaylar SQL'de embedding'i dolu kartlardan seçilir, eksik kartı tamamlamak havuz taraması demek olurdu; onlar kendi hazırlama yoluyla (`kart_hazirlama`, `firma_kartini_hazirla`) tamamlanır.
 
 ## 3. Sert Filtreler (embedding'den ÖNCE çalışır)
 
