@@ -149,41 +149,78 @@ def _brevo(isleyici, gonderen="Zemin360 <bildirim@ornek.org>") -> BrevoGonderici
     )
 
 
-def test_brevo_istegi_ve_basari_kaydi():
+def test_brevo_istegi_ve_basari_kaydi(caplog):
     istekler = []
 
     def isleyici(istek):
         istekler.append(istek)
-        return httpx.Response(201, json={"messageId": "<x>"})
+        return httpx.Response(201, json={"messageId": "<abc@smtp-relay>"})
 
     once = SAGLIK.oku("eposta").basari_sayisi
-    assert asyncio.run(dusmeden_gonder(_brevo(isleyici), EPOSTA)) is True
+    eposta = Eposta(alici="elif@ornek.com", konu="Konu", metin="Metin", alici_adi="Elif")
+    with caplog.at_level("INFO", logger="zemin360.eposta"):
+        assert asyncio.run(dusmeden_gonder(_brevo(isleyici), eposta)) is True
     (istek,) = istekler
-    assert str(istek.url) == BREVO_ADRESI
+    assert istek.method == "POST" and str(istek.url) == BREVO_ADRESI
     assert istek.headers["api-key"] == "brevo-test-anahtari"
+    assert istek.headers["content-type"] == "application/json"
+    assert istek.headers["accept"] == "application/json"
     assert json.loads(istek.content) == {
         "sender": {"email": "bildirim@ornek.org", "name": "Zemin360"},
-        "to": [{"email": "elif@ornek.com"}],
+        "to": [{"email": "elif@ornek.com", "name": "Elif"}],
         "subject": "Konu",
         "textContent": "Metin",
     }
     assert SAGLIK.oku("eposta").basari_sayisi == once + 1
+    # Başarıda log'a yalnızca messageId; anahtar ve alıcı yok.
+    assert "messageId=<abc@smtp-relay>" in caplog.text
+    assert "brevo-test-anahtari" not in caplog.text
+    assert "elif@ornek.com" not in caplog.text
+
+
+def test_brevo_alici_adi_yoksa_to_yalnizca_email():
+    istekler = []
+    gonderici = _brevo(lambda i: istekler.append(i) or httpx.Response(201, json={}))
+    asyncio.run(gonderici.gonder(EPOSTA))
+    assert json.loads(istekler[0].content)["to"] == [{"email": "elif@ornek.com"}]
 
 
 def test_brevo_gonderen_yalnizca_adresse_ad_alani_yok():
     istekler = []
-    gonderici = _brevo(lambda i: istekler.append(i) or httpx.Response(201), gonderen="a@ornek.org")
+    gonderici = _brevo(
+        lambda i: istekler.append(i) or httpx.Response(201, json={}), gonderen="a@ornek.org"
+    )
     asyncio.run(gonderici.gonder(EPOSTA))
     assert json.loads(istekler[0].content)["sender"] == {"email": "a@ornek.org"}
 
 
-def test_brevo_hatasi_akisi_dusurmez_ve_anahtar_hata_kaydina_sizmaz(caplog):
+def test_brevo_hatasi_mesaji_loglar_anahtari_ve_alici_adresini_yazmaz(caplog):
     once = SAGLIK.oku("eposta").hata_sayisi
-    gonderici = _brevo(lambda _i: httpx.Response(401, json={"message": "Key not found"}))
-    with caplog.at_level("ERROR"):
+    gonderici = _brevo(
+        lambda _i: httpx.Response(
+            400,
+            json={
+                "code": "invalid_parameter",
+                "message": "elif@ornek.com is not valid; api-key brevo-test-anahtari rejected",
+            },
+        )
+    )
+    with caplog.at_level("INFO", logger="zemin360.eposta"):
         assert asyncio.run(dusmeden_gonder(gonderici, EPOSTA)) is False
     assert SAGLIK.oku("eposta").hata_sayisi == once + 1
+    assert SAGLIK.oku("eposta").son_hata_turu == "BrevoHatasi"
+    assert "durum=400" in caplog.text
+    assert "[alici] is not valid" in caplog.text  # Brevo'nun mesajı görünür
     assert "brevo-test-anahtari" not in caplog.text
+    assert "elif@ornek.com" not in caplog.text
+
+
+def test_brevo_json_olmayan_hata_govdesi_de_guvenle_loglanir(caplog):
+    gonderici = _brevo(lambda _i: httpx.Response(502, text="Bad gateway elif@ornek.com"))
+    with caplog.at_level("INFO", logger="zemin360.eposta"):
+        assert asyncio.run(dusmeden_gonder(gonderici, EPOSTA)) is False
+    assert "Bad gateway [alici]" in caplog.text
+    assert "elif@ornek.com" not in caplog.text
 
 
 @pytest.mark.parametrize(

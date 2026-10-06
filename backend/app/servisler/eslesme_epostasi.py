@@ -33,6 +33,7 @@ def eslesme_epostasi(eslesme: Eslesme, alici_taraf: str) -> Eposta | None:
     adres = _alici_eposta(eslesme, alici_taraf)
     if not adres or eslesme.isbirligi is None:
         return None
+    alici_adi = taraf_adi(eslesme, alici_taraf)
     karsi_taraf = TARAF_ILAN if alici_taraf == TARAF_ADAY else TARAF_ADAY
     karsi = taraf_adi(eslesme, karsi_taraf)
     baglanti = f"{get_settings().uygulama_adresi.rstrip('/')}/isbirligi/{eslesme.isbirligi.id}"
@@ -54,7 +55,7 @@ def eslesme_epostasi(eslesme: Eslesme, alici_taraf: str) -> Eposta | None:
             f"ulaşabilirsiniz:\n{baglanti}"
         )
         konu = f"Zemin360: {karsi} ile eşleştiniz"
-    return Eposta(alici=adres, konu=konu, metin=metin)
+    return Eposta(alici=adres, konu=konu, metin=metin, alici_adi=alici_adi)
 
 
 async def eposta_gonder(eposta: Eposta) -> None:

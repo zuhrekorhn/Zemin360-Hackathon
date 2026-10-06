@@ -8,6 +8,7 @@ kullanılacağına `kurulum.py` karar verir. Gönderim hatası akışı düşür
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 from email.utils import parseaddr
 from typing import Protocol
@@ -27,6 +28,8 @@ class Eposta:
     alici: str
     konu: str
     metin: str
+    # İsteğe bağlı; Brevo "to" alanında `name` olarak gider.
+    alici_adi: str | None = None
 
 
 class EpostaGonderici(Protocol):
@@ -88,18 +91,52 @@ class BrevoGonderici:
         self.gonder = gozlemli("eposta")(zaman_asimli(zaman_asimi_sn)(self._gonder))
 
     async def _gonder(self, eposta: Eposta) -> None:
+        alici = {"email": eposta.alici, **({"name": eposta.alici_adi} if eposta.alici_adi else {})}
         async with httpx.AsyncClient(transport=self._tasima) as istemci:
             yanit = await istemci.post(
                 BREVO_ADRESI,
-                headers={"api-key": self._api_anahtari, "accept": "application/json"},
+                headers={
+                    "api-key": self._api_anahtari,
+                    "content-type": "application/json",
+                    "accept": "application/json",
+                },
                 json={
                     "sender": self._gonderen,
-                    "to": [{"email": eposta.alici}],
+                    "to": [alici],
                     "subject": eposta.konu,
                     "textContent": eposta.metin,
                 },
             )
-            yanit.raise_for_status()
+        if yanit.status_code >= 400:
+            # Brevo'nun hata mesajı log'a yazılır; api-key ve alıcı adresi yazılmaz.
+            mesaj = self._temiz_mesaj(yanit, eposta.alici)
+            logger.error("brevo hatasi durum=%s mesaj=%s", yanit.status_code, mesaj)
+            raise BrevoHatasi(f"brevo {yanit.status_code}")
+        # Başarıda log'a yalnızca messageId.
+        logger.info("eposta gonderildi kip=brevo messageId=%s", _mesaj_kimligi(yanit))
+
+    def _temiz_mesaj(self, yanit: httpx.Response, alici: str) -> str:
+        try:
+            govde = yanit.json()
+            metin = str(govde.get("message") or govde) if isinstance(govde, dict) else str(govde)
+        except ValueError:
+            metin = yanit.text
+        for gizli, yerine in ((self._api_anahtari, "[anahtar]"), (alici, "[alici]")):
+            if gizli:
+                metin = re.sub(re.escape(gizli), yerine, metin, flags=re.IGNORECASE)
+        return metin[:300]
+
+
+class BrevoHatasi(Exception):
+    """Brevo 4xx/5xx döndü. Mesaj yalnızca durum kodu: ayrıntı (Brevo'nun mesajı) log'da."""
+
+
+def _mesaj_kimligi(yanit: httpx.Response) -> str | None:
+    try:
+        govde = yanit.json()
+    except ValueError:
+        return None
+    return govde.get("messageId") if isinstance(govde, dict) else None
 
 
 class LogGonderici:
