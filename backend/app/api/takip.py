@@ -271,6 +271,7 @@ def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> I
         rol_alani=eslesme.yetenek_karti.rol_alani if eslesme.yetenek_karti else None,
         problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
         basari_kriteri=eslesme.ihtiyac_karti.basari_kriteri,
+        calisma_basligi=sahiplik.calisma_basligi(eslesme),
         genc_plan_onayi=isbirligi.genc_plan_onayi,
         kurum_plan_onayi=isbirligi.kurum_plan_onayi,
         plan_onerildi_mi=isbirligi.plan_onerildi_mi,

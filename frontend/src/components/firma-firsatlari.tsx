@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
+import { useGirisliHesap } from "@/components/giris-kapisi";
 import { KismenUygunRozeti } from "@/components/kart";
 import {
   BosDurum,
@@ -267,6 +268,7 @@ function IlgiSatiri({
   onGeriCek?: () => Promise<void>;
 }) {
   const [bekleniyor, setBekleniyor] = useState(false);
+  const hesap = useGirisliHesap();
   const eylemler = adayFirmaEylemleri(satir.durum);
 
   async function calistir(eylem?: () => Promise<void>) {
@@ -329,7 +331,17 @@ function IlgiSatiri({
         ) : null}
       </div>
       {satir.iletisim ? (
-        <IletisimSatiri iletisim={satir.iletisim} karsiTaraf="kurum" />
+        <IletisimSatiri
+          iletisim={satir.iletisim}
+          karsiTaraf="kurum"
+          taslak={{
+            adayTuru: "firma",
+            gonderenAdi: hesap.ad ?? "",
+            aliciAdi: satir.ihtiyac_karti.kurum.ad,
+            problem: satir.ihtiyac_karti.problem_tanimi,
+            basariKriteri: satir.ihtiyac_karti.basari_kriteri,
+          }}
+        />
       ) : null}
     </li>
   );

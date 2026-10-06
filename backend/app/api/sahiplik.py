@@ -152,6 +152,18 @@ def taraf_adi(eslesme: Eslesme, taraf: str) -> str:
     return eslesme.ihtiyac_karti.kurum.ad
 
 
+def calisma_basligi(eslesme: Eslesme) -> str | None:
+    """Genç adayın kartından e-posta taslağında anılacak çalışma: en yeni tarihli, yoksa ilki.
+
+    Yalnızca başlık döner; çalışmaların `somut_ciktilar` ilişkisi yüklü olmalı.
+    """
+    if eslesme.yetenek_karti is None or not eslesme.yetenek_karti.somut_ciktilar:
+        return None
+    ciktilar = eslesme.yetenek_karti.somut_ciktilar
+    secilen = max(ciktilar, key=lambda c: c.tarih.toordinal() if c.tarih else 0)
+    return secilen.baslik
+
+
 # --- İhtiyaç kartı ---------------------------------------------------------------------
 
 

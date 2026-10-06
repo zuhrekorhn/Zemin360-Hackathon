@@ -18,6 +18,7 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.agents.eslesme_durumu import (
     OLAY_GENC_ILGI,
@@ -47,6 +48,7 @@ from app.api.sahiplik import (
     TARAF_ADAY,
     TARAF_ILAN,
     bulunamadi,
+    calisma_basligi,
     eslesmedeki_taraf,
     girvak_mi,
     kullanici_id,
@@ -165,6 +167,7 @@ async def onerilerim(
     eslesmeler = await oturum.scalars(
         iliskileriyle(select(Eslesme))
         .join(IhtiyacKarti, Eslesme.ihtiyac_karti_id == IhtiyacKarti.id)
+        .options(selectinload(Eslesme.yetenek_karti).selectinload(YetenekKarti.somut_ciktilar))
         .where(IhtiyacKarti.kurum_id == hesabin_kurumu(hesap), gorunur_kosulu())
         .order_by(Eslesme.son_aktivite_tarihi.desc(), Eslesme.skor.desc())
     )
@@ -176,6 +179,8 @@ async def onerilerim(
             son_aktivite_tarihi=eslesme.son_aktivite_tarihi,
             ihtiyac_karti_id=eslesme.ihtiyac_karti_id,
             problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
+            basari_kriteri=eslesme.ihtiyac_karti.basari_kriteri,
+            calisma_basligi=calisma_basligi(eslesme),
             aday_turu="firma" if eslesme.firma_karti_id else "genc",
             aday_adi=taraf_adi(eslesme, TARAF_ADAY),
             yetenek_karti_id=eslesme.yetenek_karti_id,

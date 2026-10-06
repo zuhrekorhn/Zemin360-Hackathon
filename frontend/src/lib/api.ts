@@ -106,6 +106,7 @@ export type IhtiyacKartiOzeti = {
   durum: string;
   /** genc | firma: hangi kapıdan açıldı */
   aranan: "genc" | "firma";
+  basari_kriteri?: string | null;
 };
 
 /** Giriş yapmış hesap; kart ve kurum kimliği buradan okunur. */
@@ -1319,6 +1320,9 @@ export type KurumOnerisi = {
   son_aktivite_tarihi: string;
   ihtiyac_karti_id: string;
   problem_tanimi: string;
+  /** E-posta taslağı için; e-posta adresi değil. */
+  basari_kriteri: string | null;
+  calisma_basligi: string | null;
   aday_turu: "genc" | "firma";
   aday_adi: string;
   yetenek_karti_id: string | null;
@@ -1351,6 +1355,8 @@ export type IsbirligiOzeti = {
   /** İsteyenin tarafı (genc = aday, kurum = ilan); karşı tarafı seçmek için. */
   tarafim: "genc" | "kurum" | null;
   problem_tanimi: string;
+  basari_kriteri: string | null;
+  calisma_basligi: string | null;
   iletisim: Iletisim;
   ilerleme: Ilerleme;
 };
@@ -1575,6 +1581,7 @@ export type IsbirligiDetayi = {
   tarafim: "genc" | "kurum" | null;
   problem_tanimi: string;
   basari_kriteri: string | null;
+  calisma_basligi: string | null;
   genc_plan_onayi: string | null;
   kurum_plan_onayi: string | null;
   plan_onerildi_mi: boolean;

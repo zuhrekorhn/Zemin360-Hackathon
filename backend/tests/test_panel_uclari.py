@@ -8,6 +8,7 @@ import datetime as dt
 
 from app.models.eslesme import Eslesme
 from app.models.ihtiyac_karti import IhtiyacKarti
+from app.models.somut_cikti import SomutCikti
 from tests.test_sahiplik import durumlar, senaryo
 
 
@@ -73,6 +74,60 @@ def test_onerilerim_tum_kartlardan_gencin_adiyla_epostasiz():
         # kurum2 yalnızca kendininkini görür.
         kurum2 = (await istemci.get("/eslestirme/onerilerim", headers=d.kurum2.baslik)).json()
         assert [s["eslesme_id"] for s in kurum2] == [str(d.E2.id)]
+
+    senaryo(adimlar)
+
+
+def test_eposta_taslagi_alanlari_uc_yanitta_ve_adres_sizmaz():
+    """E-posta taslağı için başarı ölçütü ve çalışma başlığı gelir; adres yalnızca `iletisim`'de."""
+
+    async def adimlar(istemci, d):
+        d.I1.basari_kriteri = "Raporlar günde bir kez otomatik çıkmalı"
+        d.oturum.add(
+            SomutCikti(yetenek_karti_id=d.K1.id, baslik="Eski panel", tarih=dt.date(2023, 1, 1))
+        )
+        d.oturum.add(
+            SomutCikti(yetenek_karti_id=d.K1.id, baslik="Sensör paneli", tarih=dt.date(2025, 6, 1))
+        )
+        await d.oturum.commit()
+
+        await istemci.post(
+            "/eslestirme/ilgileniyorum",
+            headers=d.kurum1.baslik,
+            json={"eslesme_id": str(d.E1.id)},
+        )
+        kabul = await istemci.post(f"/eslestirme/{d.E1.id}/kabul", headers=d.genc1.baslik)
+        isbirligi_id = kabul.json()["isbirligi_id"]
+
+        oneri = next(
+            s
+            for s in (await istemci.get("/eslestirme/onerilerim", headers=d.kurum1.baslik)).json()
+            if s["eslesme_id"] == str(d.E1.id)
+        )
+        assert oneri["basari_kriteri"] == "Raporlar günde bir kez otomatik çıkmalı"
+        assert oneri["calisma_basligi"] == "Sensör paneli"  # en yeni tarihli
+
+        for taraf in (d.genc1, d.kurum1):
+            ozet = next(
+                s
+                for s in (await istemci.get("/isbirliklerim", headers=taraf.baslik)).json()
+                if s["isbirligi_id"] == isbirligi_id
+            )
+            assert ozet["calisma_basligi"] == "Sensör paneli"
+            assert ozet["basari_kriteri"] == "Raporlar günde bir kez otomatik çıkmalı"
+
+        detay = await istemci.get(f"/isbirligi/{isbirligi_id}", headers=d.genc1.baslik)
+        assert detay.json()["calisma_basligi"] == "Sensör paneli"
+
+        # GİRVAK: iletişim null; yeni alanlar adres taşımaz.
+        girvak = await istemci.get(f"/isbirligi/{isbirligi_id}", headers=d.girvak.baslik)
+        assert girvak.json()["iletisim"] is None
+        for kisi in (d.genc1, d.kurum1):
+            assert kisi.hesap.email not in girvak.text
+
+        # Kabul öncesi eşleşmede (kurum2'nin E2'si) adres yok.
+        oncesi = await istemci.get("/eslestirme/onerilerim", headers=d.kurum2.baslik)
+        assert all(s["iletisim"] is None for s in oncesi.json())
 
     senaryo(adimlar)
 

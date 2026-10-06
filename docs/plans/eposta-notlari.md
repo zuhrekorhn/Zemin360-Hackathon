@@ -32,6 +32,13 @@ Durum: **karar notu, plan değil.** Yeni bir sohbette bu dosyadan başlanır; pl
    Metinler `docs/icerik-rehberi.md`'ye uyar. Sıra: Eşleştirme incelemesi (paralel oturum)
    bittikten sonra, aynı ekranlara dokunmasınlar diye.
 
+**Durum (7 Eki):** "E-posta yaz" düğmesi yapıldı (`lib/eposta-taslagi.ts`, `IletisimSatiri`'nin
+`taslak` prop'u). Taslak dört yönde: firma→genç, genç→firma, firma→firma (iki yön). Bağlantı
+1500 karakteri geçmez; sığmazsa çalışma, sonra başarı ölçütü düşer, sonra problem kısalır.
+Uçlara e-posta içermeyen iki alan eklendi: `basari_kriteri` ve `calisma_basligi`
+(`/eslestirme/onerilerim`, `/isbirliklerim`, `/isbirligi/{id}`; `/me` ilan özetinde
+`basari_kriteri`). Brevo (karar 2-3) henüz yapılmadı.
+
 ## Örnek taslak (firma → genç)
 
 > Konu: Zemin360 eşleşmesi: {ilan_kisa}

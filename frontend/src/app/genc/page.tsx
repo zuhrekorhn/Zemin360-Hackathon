@@ -364,6 +364,14 @@ function GencPaneliIcerigi() {
                 <IletisimSatiri
                   iletisim={isbirligi.iletisim}
                   karsiTaraf="kurum"
+                  taslak={{
+                    adayTuru: "genc",
+                    gonderenAdi: isbirligi.aday_adi,
+                    aliciAdi: isbirligi.kurum_adi,
+                    problem: isbirligi.problem_tanimi,
+                    basariKriteri: isbirligi.basari_kriteri,
+                    calisma: isbirligi.calisma_basligi,
+                  }}
                 />
                 <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-2">
                   <DurumEtiketi
@@ -407,6 +415,7 @@ function IlgiKaydi({
 }) {
   const ihtiyac = ilgi.ihtiyac_karti;
   const [bekleniyor, setBekleniyor] = useState(false);
+  const hesap = useGirisliHesap();
 
   // Çift tıklamayı düğmede de kesiyoruz (backend zaten tekrarı yan etkisiz
   // karşılıyor); hata olursa düğmeler yeniden açılır.
@@ -493,7 +502,17 @@ function IlgiKaydi({
       </div>
 
       {ilgi.iletisim ? (
-        <IletisimSatiri iletisim={ilgi.iletisim} karsiTaraf="kurum" />
+        <IletisimSatiri
+          iletisim={ilgi.iletisim}
+          karsiTaraf="kurum"
+          taslak={{
+            adayTuru: "genc",
+            gonderenAdi: hesap.ad ?? "",
+            aliciAdi: ilgi.ihtiyac_karti.kurum.ad,
+            problem: ilgi.ihtiyac_karti.problem_tanimi,
+            basariKriteri: ilgi.ihtiyac_karti.basari_kriteri,
+          }}
+        />
       ) : null}
     </li>
   );

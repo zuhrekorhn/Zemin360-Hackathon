@@ -57,6 +57,8 @@ class IsbirligiDetayi(BaseModel):
     tarafim: Literal["genc", "kurum"] | None = None
     problem_tanimi: str
     basari_kriteri: str | None
+    # Genç adayın bir çalışmasının başlığı (e-posta taslağı için); firma adayında None.
+    calisma_basligi: str | None = None
     genc_plan_onayi: dt.datetime | None
     kurum_plan_onayi: dt.datetime | None
     plan_onerildi_mi: bool

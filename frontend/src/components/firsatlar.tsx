@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
+import { useGirisliHesap } from "@/components/giris-kapisi";
 import { OnayAlani } from "@/components/onay-alani";
 import { DurumEtiketi, IletisimSatiri } from "@/components/panel";
 import { Button } from "@/components/ui/button";
@@ -159,6 +160,7 @@ export function IlgiSatiri({
 }) {
   const [bekleniyor, setBekleniyor] = useState(false);
   const [onayAcik, setOnayAcik] = useState(false);
+  const hesap = useGirisliHesap();
   const ihtiyac = ilgi.ihtiyac_karti;
   const { geriCek } = gencEylemleri(ilgi.durum);
 
@@ -186,7 +188,17 @@ export function IlgiSatiri({
       </div>
       <IhtiyacOzeti ihtiyac={ihtiyac} />
       {ilgi.iletisim ? (
-        <IletisimSatiri iletisim={ilgi.iletisim} karsiTaraf="kurum" />
+        <IletisimSatiri
+          iletisim={ilgi.iletisim}
+          karsiTaraf="kurum"
+          taslak={{
+            adayTuru: "genc",
+            gonderenAdi: hesap.ad ?? "",
+            aliciAdi: ihtiyac.kurum.ad,
+            problem: ihtiyac.problem_tanimi,
+            basariKriteri: ihtiyac.basari_kriteri,
+          }}
+        />
       ) : null}
       {onayAcik ? (
         <OnayAlani

@@ -161,7 +161,20 @@ function IsbirligiIcerigi() {
           ) : null}
         </p>
         {detay.iletisim && karsiTaraf ? (
-          <IletisimSatiri iletisim={detay.iletisim} karsiTaraf={karsiTaraf} />
+          <IletisimSatiri
+            iletisim={detay.iletisim}
+            karsiTaraf={karsiTaraf}
+            taslak={{
+              adayTuru: detay.aday_turu,
+              // Aday tarafı yazıyorsa gönderen aday, alıcı ilanı açan firma.
+              gonderenAdi:
+                taraf === "genc" ? detay.aday_adi : detay.kurum_adi,
+              aliciAdi: taraf === "genc" ? detay.kurum_adi : detay.aday_adi,
+              problem: detay.problem_tanimi,
+              basariKriteri: detay.basari_kriteri,
+              calisma: detay.calisma_basligi,
+            }}
+          />
         ) : null}
       </SayfaBasligi>
 

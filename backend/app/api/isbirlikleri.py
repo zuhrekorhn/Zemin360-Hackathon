@@ -15,6 +15,7 @@ from sqlalchemy.orm import selectinload
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import (
     TARAF_ADAY,
+    calisma_basligi,
     eslesmedeki_taraf,
     kullanici_id,
     kurum_id,
@@ -67,6 +68,9 @@ async def isbirliklerim(
             .selectinload(Eslesme.yetenek_karti)
             .selectinload(YetenekKarti.kullanici),
             selectinload(Isbirligi.eslesme)
+            .selectinload(Eslesme.yetenek_karti)
+            .selectinload(YetenekKarti.somut_ciktilar),
+            selectinload(Isbirligi.eslesme)
             .selectinload(Eslesme.firma_karti)
             .selectinload(FirmaKarti.kurum),
             selectinload(Isbirligi.eslesme)
@@ -98,6 +102,8 @@ async def isbirliklerim(
                 rol_alani=eslesme.yetenek_karti.rol_alani if eslesme.yetenek_karti else None,
                 tarafim=eslesmedeki_taraf(hesap, eslesme),
                 problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
+                basari_kriteri=eslesme.ihtiyac_karti.basari_kriteri,
+                calisma_basligi=calisma_basligi(eslesme),
                 iletisim=acik,
                 ilerleme=ilerleme_hesapla(isbirligi.milestonelar),
             )

@@ -276,6 +276,14 @@ function KurumPaneliIcerigi() {
                     <IletisimSatiri
                       iletisim={oneri.iletisim}
                       karsiTaraf="genc"
+                      taslak={{
+                        adayTuru: oneri.aday_turu,
+                        gonderenAdi: hesap.ad ?? "",
+                        aliciAdi: oneri.aday_adi,
+                        problem: oneri.problem_tanimi,
+                        basariKriteri: oneri.basari_kriteri,
+                        calisma: oneri.calisma_basligi,
+                      }}
                     />
                   ) : null}
                 </li>
@@ -325,6 +333,20 @@ function KurumPaneliIcerigi() {
                 <IletisimSatiri
                   iletisim={isbirligi.iletisim}
                   karsiTaraf={isbirligi.tarafim === "genc" ? "kurum" : "genc"}
+                  taslak={{
+                    adayTuru: isbirligi.aday_turu,
+                    gonderenAdi:
+                      isbirligi.tarafim === "genc"
+                        ? isbirligi.aday_adi
+                        : isbirligi.kurum_adi,
+                    aliciAdi:
+                      isbirligi.tarafim === "genc"
+                        ? isbirligi.kurum_adi
+                        : isbirligi.aday_adi,
+                    problem: isbirligi.problem_tanimi,
+                    basariKriteri: isbirligi.basari_kriteri,
+                    calisma: isbirligi.calisma_basligi,
+                  }}
                 />
                 <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-2">
                   <DurumEtiketi

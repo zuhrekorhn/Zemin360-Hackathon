@@ -178,6 +178,9 @@ class KurumOnerisi(BaseModel):
     son_aktivite_tarihi: dt.datetime
     ihtiyac_karti_id: uuid.UUID
     problem_tanimi: str
+    # E-posta taslağı için (e-posta adresi değil): başarı ölçütü ve genç adayın bir çalışma başlığı.
+    basari_kriteri: str | None = None
+    calisma_basligi: str | None = None
     # Aday: genç (yetenek kartı) ya da firma (firma kartı); adı `aday_adi`'nda.
     aday_turu: Literal["genc", "firma"] = "genc"
     aday_adi: str
@@ -213,6 +216,8 @@ class IsbirligiOzeti(BaseModel):
     # İsteyenin tarafı (genc = aday, kurum = ilan); karşı tarafı seçmek için.
     tarafim: Literal["genc", "kurum"] | None = None
     problem_tanimi: str
+    basari_kriteri: str | None = None
+    calisma_basligi: str | None = None
     iletisim: Iletisim
     # Takip (Faz C): plan_bekliyor | aktif | tamamlandi ve adım ilerlemesi.
     ilerleme: Ilerleme

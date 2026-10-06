@@ -11,6 +11,11 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import type { Iletisim } from "@/lib/api";
+import {
+  epostaTaslagi,
+  taslakYonu,
+  type EpostaBaglami,
+} from "@/lib/eposta-taslagi";
 
 export function PanelBolumu({
   id,
@@ -70,9 +75,12 @@ export function BosDurum({
 export function IletisimSatiri({
   iletisim,
   karsiTaraf,
+  taslak,
 }: {
   iletisim: Iletisim;
   karsiTaraf: "genc" | "kurum";
+  /** Verilirse e-posta adresinin yanında hazır taslaklı "E-posta yaz" çıkar. */
+  taslak?: EpostaBaglami;
 }) {
   const satirlar =
     karsiTaraf === "kurum"
@@ -92,14 +100,33 @@ export function IletisimSatiri({
       {satirlar.map((satir) => (
         <div key={satir.etiket} className="contents">
           <dt className="text-muted-foreground">{satir.etiket}</dt>
-          <dd className="break-all">
+          <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
             {satir.eposta ? (
-              <a
-                className="text-baglanti underline"
-                href={`mailto:${satir.eposta}`}
-              >
-                {satir.eposta}
-              </a>
+              <>
+                <a
+                  className="break-all text-baglanti underline"
+                  href={`mailto:${satir.eposta}`}
+                >
+                  {satir.eposta}
+                </a>
+                {taslak ? (
+                  <Button asChild size="sm" variant="outline">
+                    <a
+                      href={
+                        epostaTaslagi(
+                          {
+                            ...taslak,
+                            yon: taslakYonu(karsiTaraf, taslak.adayTuru),
+                          },
+                          satir.eposta,
+                        ).href
+                      }
+                    >
+                      E-posta yaz
+                    </a>
+                  </Button>
+                ) : null}
+              </>
             ) : (
               <span className="text-muted-foreground">kayıtlı değil</span>
             )}

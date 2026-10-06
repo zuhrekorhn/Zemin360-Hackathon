@@ -197,6 +197,15 @@ function OnerilerIcerigi() {
       {!yukleniyor && veri ? (
         <OneriListesi
           veri={veri}
+          ilan={
+            gosterilenKart
+              ? {
+                  firmaAdi: hesap.ad ?? "",
+                  problem: gosterilenKart.problem_tanimi,
+                  basariKriteri: gosterilenKart.basari_kriteri ?? null,
+                }
+              : null
+          }
           ortak={ortak}
           onIlgileniyorum={ilgilendigimiSoyle}
           onSimdilikDegil={simdilikDegilDe}
@@ -242,13 +251,22 @@ function KurumYok() {
   );
 }
 
+/** E-posta taslağı için ilanın bağlamı (e-posta adresi içermez). */
+type IlanBaglami = {
+  firmaAdi: string;
+  problem: string;
+  basariKriteri: string | null;
+};
+
 function OneriListesi({
   veri,
+  ilan,
   ortak,
   onIlgileniyorum,
   onSimdilikDegil,
 }: {
   veri: Oneriler;
+  ilan: IlanBaglami | null;
   ortak: boolean;
   onIlgileniyorum: (oneri: Oneri) => void;
   onSimdilikDegil: (oneri: Oneri) => void;
@@ -309,6 +327,7 @@ function OneriListesi({
             <OneriKarti
               key={oneri.eslesme_id}
               oneri={oneri}
+              ilan={ilan}
               onIlgileniyorum={() => onIlgileniyorum(oneri)}
               onSimdilikDegil={() => onSimdilikDegil(oneri)}
             />
@@ -323,6 +342,7 @@ function OneriListesi({
         <OneriKarti
           key={oneri.eslesme_id}
           oneri={oneri}
+          ilan={ilan}
           onIlgileniyorum={() => onIlgileniyorum(oneri)}
           onSimdilikDegil={() => onSimdilikDegil(oneri)}
         />
@@ -333,10 +353,12 @@ function OneriListesi({
 
 function OneriKarti({
   oneri,
+  ilan,
   onIlgileniyorum,
   onSimdilikDegil,
 }: {
   oneri: Oneri;
+  ilan: IlanBaglami | null;
   onIlgileniyorum: () => void;
   onSimdilikDegil: () => void;
 }) {
@@ -344,6 +366,7 @@ function OneriKarti({
     return (
       <FirmaAdayiKarti
         oneri={oneri}
+        ilan={ilan}
         onIlgileniyorum={onIlgileniyorum}
         onSimdilikDegil={onSimdilikDegil}
       />
@@ -448,17 +471,22 @@ function OneriKarti({
       </div>
 
       {oneri.iletisim ? (
-        <dl className="grid gap-1 text-sm sm:grid-cols-[auto_1fr] sm:gap-x-4">
-          <dt className="text-muted-foreground">Gencin e-postası</dt>
-          <dd className="break-all">
-            <a
-              className="text-baglanti underline"
-              href={`mailto:${oneri.iletisim.genc_email}`}
-            >
-              {oneri.iletisim.genc_email}
-            </a>
-          </dd>
-        </dl>
+        <IletisimSatiri
+          iletisim={oneri.iletisim}
+          karsiTaraf="genc"
+          taslak={
+            ilan
+              ? {
+                  adayTuru: "genc",
+                  gonderenAdi: ilan.firmaAdi,
+                  aliciAdi: kart.genc_adi,
+                  problem: ilan.problem,
+                  basariKriteri: ilan.basariKriteri,
+                  calisma: kart.somut_ciktilar[0]?.baslik,
+                }
+              : undefined
+          }
+        />
       ) : null}
     </BelgeKarti>
   );
@@ -471,10 +499,12 @@ function OneriKarti({
  */
 function FirmaAdayiKarti({
   oneri,
+  ilan,
   onIlgileniyorum,
   onSimdilikDegil,
 }: {
   oneri: Oneri;
+  ilan: IlanBaglami | null;
   onIlgileniyorum: () => void;
   onSimdilikDegil: () => void;
 }) {
@@ -587,7 +617,21 @@ function FirmaAdayiKarti({
       </div>
 
       {oneri.iletisim ? (
-        <IletisimSatiri iletisim={oneri.iletisim} karsiTaraf="genc" />
+        <IletisimSatiri
+          iletisim={oneri.iletisim}
+          karsiTaraf="genc"
+          taslak={
+            ilan
+              ? {
+                  adayTuru: "firma",
+                  gonderenAdi: ilan.firmaAdi,
+                  aliciAdi: firma.firma_adi,
+                  problem: ilan.problem,
+                  basariKriteri: ilan.basariKriteri,
+                }
+              : undefined
+          }
+        />
       ) : null}
     </BelgeKarti>
   );

@@ -75,6 +75,8 @@ class IhtiyacKartiOzeti(BaseModel):
     durum: str = "acik"
     # genc | firma: hangi kapıdan açıldı
     aranan: str = "genc"
+    # E-posta taslağı için (kurum e-postası değil).
+    basari_kriteri: str | None = None
 
 
 class MeYaniti(BaseModel):
