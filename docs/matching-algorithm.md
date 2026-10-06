@@ -171,11 +171,28 @@ Plan: `plans/firma-akisi.md` § 0 kararlar 5, 11-14; § 4. Aynı pipeline (`app/
 
 - **Temsil metni:** firma kartı firmanın **ne yaptığını** anlatır: ne yapıyoruz, yetkinlikler, önceki işler, sektör (`firma_temsil_metni`). Aradığı ortak ve iş birliği türü girmez. İlan tarafı aynı: problem + başarı kriteri.
 - **Kesin şartlar (SQL, benzerlikten önce):** kartı ve hesabı olan firma; ilanı açan firma değil; ilan tür seçtiyse `kurum.tur` o türlerden; ilan şehir şartı koyduysa `kurum.sehir` eşit (varsayılan "fark etmez"). Sektör şart değil.
-- **Skor:** aynı formül, `0.75 × benzerlik + 0.25 × bonus`; benzerlik alt sınırı ayrı sabit (`FIRMA_BENZERLIK_ALT_SINIRI`, şimdilik 0.48) ve ilk 5; skor eşiği yok (genç akışıyla aynı kural). Bonus: GİRVAK'ın doğruladığı firma +0.5, aday olarak en az bir tamamlanmış iş birliği +0.5, tavan 1.0. Bonus alakayı yaratmaz.
+- **Skor:** aynı formül, `0.75 × benzerlik + 0.25 × bonus`; benzerlik alt sınırı ayrı sabit (`FIRMA_BENZERLIK_ALT_SINIRI`, **0.52**) ve ilk 5; skor eşiği yok (genç akışıyla aynı kural). Bonus: GİRVAK'ın doğruladığı firma +0.5, aday olarak en az bir tamamlanmış iş birliği +0.5, tavan 1.0. Bonus alakayı yaratmaz.
 - **Gerekçe:** ayrı istem (`FIRMA_GEREKCE_SABLONU`), ilanı açan firmaya hitaben, aday firmadan üçüncü şahısla. Doğrulanmamış firmayı "doğrulanmış" diye anlatırsa bir kez düzeltme notuyla yeniden üretilir; yine olursa gerekçesiz kalır (genç gerekçesindeki koruma).
 - **Ne zaman çalışır:** ortak ilanı onaylanınca (o ilan için) ve firma kartı onaylanınca/içeriği değişince (kartla ilgili açık ortak ilanları için; `servisler/firma_karti.py`). Kart içeriği değişince bekleyen önerilerin gerekçesi boşaltılır.
 - **Ayrım:** gençler ortak ilanına, firmalar genç ilanına önerilmez.
-- **Bilinen sınırlar:** firma tabanı (`FIRMA_BENZERLIK_ALT_SINIRI`) genç tabanıyla aynı değerde (0.48) ama firma metinleri için ölçülmedi; ayrı sabit olması, ölçüm gelince bağımsız ayarlanabilsin diye. Firma profili (tür, şehir, doğrulama) değişince mevcut öneriler kendiliğinden yeniden hesaplanmaz; bir sonraki pipeline çalışmasında güncellenir.
+- **Bilinen sınırlar:**
+  - **Taban sentetik havuzla ölçüldü.** 0.52, 6 ilan / 28 firma kartlık sentetik havuzla (gerçek `voyage-4` vektörleri, elle etiket; havuzun yarısı yazılım firması) seçildi; gerçek havuzla yeniden doğrulanmalı.
+  - **Aynı sorunu yaşayan firma ortak olarak yaklaşabilir.** İlan bir problem anlatıyor, firma kartı bir çözüm; ortak kelimeler yüzünden problemi yaşayan ama çözüm sunmayan bir firma (örn. destek bileti ilanına, çağrı merkezi olan büyük bir e-ticaret firması) benzerlikte öne çıkabilir (ölçümde 0.488, 28 firma içinde 5. sıra). 0.52 bu örneği eler ama kuralla değil, kenarda kalarak: temsil metni ya da yeniden sıralama olmadan garanti yok.
+  - Firma profili (tür, şehir, doğrulama, sektör) değişince mevcut öneriler ve sektör içeren vektör kendiliğinden yenilenmez; bir sonraki pipeline çalışmasında güncellenir.
+  - İlandaki iş birliği türü ile firmanın türleri, firmanın aradığı iş birliği ve ilan kısıtları skora girmiyor (kısıtlar ve ilan türü yalnızca gerekçe istemine gider).
+
+**Firma tabanı ölçümü (6 ilan, 28 firma kartı, 168 çift; 8 çözüm ortağı, 20 kısmen uygun, kalanı alakasız):**
+
+| Taban | Geçen | Çözüm ortağı (8) | Kısmen (20) | Alakasız | Hassasiyet |
+|---|---|---|---|---|---|
+| 0.45 | 70 | 8 | 17 | 45 | 0.36 |
+| 0.48 | 44 | 8 | 14 | 22 | 0.50 |
+| 0.50 | 31 | 8 | 12 | 11 | 0.65 |
+| **0.52** | **21** | **8** | **8** | **5** | **0.76** |
+| 0.54 | 17 | 8 | 7 | 2 | 0.88 |
+| 0.56 | 15 | 8 | 5 | 2 | 0.87 |
+
+Benzerlik dağılımı: çözüm ortağı ort. 0.679 (en düşük **0.570**), kısmen 0.512, alakasız 0.433 (en yüksek 0.580). Çözüm ortağı adayların hiçbiri 0.56'ya kadar kaybolmuyor; 0.52'de kaybedilen yalnızca kısmen uygunlar (20'den 8'i kalıyor). Genç havuzuyla fark: alakasız ortalama 0.365 (firma metinleri birbirine daha çok benziyor), bu yüzden firma tabanı genç tabanından (0.48) yüksek.
 
 ## İsteğe Bağlı Geliştirme — ESCO Taksonomi Eşleme
 

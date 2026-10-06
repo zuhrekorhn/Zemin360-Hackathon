@@ -71,9 +71,11 @@ PILOT_BONUSU = 0.5
 # (sentetik havuz ölçümü, § 5). 0.48, 6 ihtiyaç / 30 aday / 180 çiftlik
 # sentetik havuzla seçildi; gerçek havuzla yeniden doğrulanmalı.
 BENZERLIK_ALT_SINIRI = 0.48
-# Firma–firma eşleşmesinin tabanı ayrı sabit: şimdilik genç tabanıyla aynı değer
-# (0.48) ama firma metinleri için ölçülmedi. Ölçüm gelince ayrı ayarlanır.
-FIRMA_BENZERLIK_ALT_SINIRI = 0.48
+# Firma–firma eşleşmesinin tabanı ayrı sabit ve daha yüksek: firma metinleri birbirine
+# daha çok benziyor (alakasız ortalama 0.43, genç havuzunda 0.37), 0.48'de geçenlerin
+# yarısı alakasızdı. 0.52, 6 ilan / 28 firma kartlık sentetik havuzla seçildi
+# (docs/matching-algorithm.md § 7); gerçek havuzla yeniden doğrulanmalı.
+FIRMA_BENZERLIK_ALT_SINIRI = 0.52
 # Güven göstergesinin her başlığı 0-3 (agent-specs.md § 4); NULL başlık = "—".
 GUVEN_BASLIK_TAVANI = 3
 

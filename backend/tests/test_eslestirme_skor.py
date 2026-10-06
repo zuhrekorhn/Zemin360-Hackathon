@@ -155,8 +155,9 @@ def test_alaka_tabani_belgedeki_degerde_ve_gurultunun_ustunde():
 
 
 def test_firma_tabani_ayri_sabit_ve_firma_adayina_o_uygulanir():
-    """Firma tabanı şimdilik 0.48 ama ayrı sabit (firma metinleri için ölçülmedi)."""
-    assert FIRMA_BENZERLIK_ALT_SINIRI == 0.48
+    """Firma tabanı 0.52 ve genç tabanından (0.48) ayrı: firma metinleri daha yakın kümeleniyor."""
+    assert FIRMA_BENZERLIK_ALT_SINIRI == 0.52
+    assert FIRMA_BENZERLIK_ALT_SINIRI > BENZERLIK_ALT_SINIRI
     tabanda = FirmaAdayi(
         firma_karti=None, benzerlik=FIRMA_BENZERLIK_ALT_SINIRI, dogrulama_bonus=0.0
     )
@@ -166,6 +167,11 @@ def test_firma_tabani_ayri_sabit_ve_firma_adayina_o_uygulanir():
         firma_karti=None, benzerlik=FIRMA_BENZERLIK_ALT_SINIRI - 0.01, dogrulama_bonus=1.0
     )
     assert siralayip_ele([altinda]) == []
+    # Genç tabanını geçen (0.50) ama firma tabanının altındaki firma adayı elenir; aynı
+    # benzerlikteki genç adayı kalır: iki taban birbirinin yerine geçmez.
+    arada = FirmaAdayi(firma_karti=None, benzerlik=0.50, dogrulama_bonus=1.0)
+    assert siralayip_ele([arada]) == []
+    assert siralayip_ele([SahteAday("genc", benzerlik=0.50)]) != []
 
 
 @dataclass
