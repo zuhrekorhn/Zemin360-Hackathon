@@ -404,10 +404,6 @@ function KayitliKart({
         olcumBelirlenecek={kart.olcum_belirlenecek}
       />
 
-      <p className="font-mono text-xs text-muted-foreground">
-        kart no: <span className="break-all">{kart.id}</span>
-      </p>
-
       <Button asChild size="lg" className="mt-1 w-fit">
         <Link href={`/kurum/oneriler?ihtiyac=${kart.id}`}>
           Uygun adayları gör

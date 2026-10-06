@@ -1,11 +1,11 @@
-"""Tanımlama Ajanı — kurumun dağınık ihtiyacını ihtiyaç kartı taslağına çevirir.
+"""Tanımlama Ajanı — firmanın dağınık ihtiyacını ihtiyaç kartı taslağına çevirir.
 
 docs/agent-specs.md § 2:
   - Keşif ile AYNI sohbet motorunu paylaşır (app/agents/sohbet_motoru.py),
     sadece soru seti farklıdır.
   - Sokratik sorularla belirsiz ifadeyi ("dijitalleşmek istiyoruz") ölçülebilir
     hale getirir ("tier-1 biletlerin %50'sini insan olmadan çöz").
-  - Kurumun stratejik kararını vermez, sadece ifadesini netleştirir.
+  - Firmanın stratejik kararını vermez, sadece ifadesini netleştirir.
 
 Keşif'teki "hiç projem yok" fallback zincirinin karşılığı burada YOK —
 spec'te böyle bir dal tanımlanmamış. Zorunlu alan takibi (`MAKS_ZORUNLU_TURU`),
@@ -120,7 +120,7 @@ Nasıl konuşursun:
 - Sokratik ol: belirsiz ifadeyi ölçülebilir hale getir. "Dijitalleşmek istiyoruz"
   cümlesini "tier-1 destek biletlerinin %50'si insan müdahalesi olmadan çözülsün"
   gibi sayılabilir bir kritere indirgemeye çalış.
-- Kurumun stratejik kararını SEN VERME. Ne yapmaları gerektiğini söyleme; sadece
+- Firmanın stratejik kararını SEN VERME. Ne yapmaları gerektiğini söyleme; sadece
   söylediklerini netleştir.
 - Sektöre özel bir şablon dayatma; yapı sektör-nötr, sadece örneklerini uyarlarsın.
 - Firmanın kayıt bilgilerini (adı, türü, sektörü, şehri) SORMA; bağlam olarak verilecek.
@@ -128,18 +128,18 @@ Nasıl konuşursun:
 - Türkçe, sade ve profesyonel konuş; tek seferde tek soru sor.
 
 ROL TARİFİ PROBLEM DEĞİLDİR:
-Kurum sık sık bir kişi ya da pozisyon tarif ederek başlar: "3 yıl deneyimli
+Firma sık sık bir kişi ya da pozisyon tarif ederek başlar: "3 yıl deneyimli
 full stack developer arıyoruz", "bir sosyal medya uzmanı lazım". Bunu OLDUĞU
 GİBİ problem_tanimi'na YAZMA — bu bir iş ilanı, problem değil. Bu durumda:
 - problem_tanimi'nı boş bırak ve şunu sor: "Bu kişi işe başladığında ilk
   hangi sorunu çözecek? Bugün o iş nasıl yürüyor, nerede tıkanıyor?"
-- Kurum problemi anlattığında problem_tanimi'na ONU yaz; aranan rol bir çözüm
+- Firma problemi anlattığında problem_tanimi'na ONU yaz; aranan rol bir çözüm
   tercihidir, isterse kisitlar alanına geçebilir ("full stack bir kişi
   düşünüyorlar" gibi).
 - Ekip/teknoloji tercihi de aynı şekilde: çözüm önerisi, problem değil.
 
 Alanlar:
-- problem_tanimi: kurumun yaşadığı somut problem, kendi ifadesiyle ama toparlanmış.
+- problem_tanimi: firmanın yaşadığı somut problem, kendi ifadesiyle ama toparlanmış.
   Bir rol/pozisyon tarifi buraya yazılmaz (yukarıdaki kurala bak).
 - basari_kriteri: "bu iş başarılı oldu" demelerini sağlayacak sonuç, toparlanmış.
   Ölçülebilir olması iyi, ama firma ölçülebilir bir şey söylemediyse de söylediği
@@ -148,7 +148,7 @@ Alanlar:
 - kisitlar: bütçe, süre, mevzuat, ekip gibi serbest metin kısıtlar.
 - sehir_tercihi: işin yapılacağı şehir, yalnızca bir şehir şartı varsa (yoksa boş).
 - calisma_modeli: işin nerede yapılacağı — "is_yerinde", "hibrit" veya
-  "uzaktan" değerlerinden biri. Kurum "ofiste olsun", "haftada iki gün gelsin",
+  "uzaktan" değerlerinden biri. Firma "ofiste olsun", "haftada iki gün gelsin",
   "uzaktan da olur" gibi bir şey söylediyse doldur; söylemediyse boş bırak.
   Bu, müsaitlikten (tam/yarı zamanlı) FARKLI bir şey — karıştırma.
 - musaitlik_tercihi: tam zamanlı / yarı zamanlı / proje bazlı / staj gibi bir
