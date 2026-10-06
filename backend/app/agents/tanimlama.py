@@ -8,8 +8,8 @@ docs/agent-specs.md § 2:
   - Kurumun stratejik kararını vermez, sadece ifadesini netleştirir.
 
 Keşif'teki "hiç projem yok" fallback zincirinin karşılığı burada YOK —
-spec'te böyle bir dal tanımlanmamış. Tek dal: eksik alan takibi
-(`MAKS_ZORUNLU_TURU`).
+spec'te böyle bir dal tanımlanmamış. Zorunlu alan takibi (`MAKS_ZORUNLU_TURU`),
+ardından en çok iki ek soru: hedef değer ve koşullar (`ek_sorular`).
 """
 
 from __future__ import annotations
@@ -83,6 +83,31 @@ def hedef_eksigi(taslak: dict[str, Any]) -> list[tuple[str, str]]:
     """Zorunlulardan sonra, hedef değer yoksa bir kez sorulur (kural kodda)."""
     return [("basari_hedefi", HEDEF_SORUSU)] if hedef_sorulmali(taslak) else []
 
+
+def kosul_eksigi(soru: str) -> motor.EkKural:
+    """Kısıt da şehir de söylenmediyse bir kez sorulur; "yok" geçerli cevap.
+
+    Firma ilk mesajında problemi ve hedefi birlikte anlatınca sohbet koşulları
+    hiç sormadan kapanıyordu. Çalışma modeli ve müsaitlik burada yok: onay
+    formunda zorunlu seçim.
+    """
+
+    def kural(taslak: dict[str, Any]) -> list[tuple[str, str]]:
+        if taslak.get("kisitlar") or taslak.get("sehir_tercihi"):
+            return []
+        return [("kosullar", soru)]
+
+    return kural
+
+
+KOSUL_SORUSU = (
+    "İşle ilgili bir şartınız var mı: bütçe, süre ya da işin yapılacağı şehir gibi? "
+    "Yoksa “yok” demeniz yeterli."
+)
+KOSUL_SORUSU_ORTAK = (
+    "İş birliği için bir şartınız var mı: bütçe, süre, veri paylaşımı ya da ortağın "
+    "bulunacağı şehir gibi? Yoksa “yok” demeniz yeterli."
+)
 
 ACIKLAMA_YEDEGI = (
     "Kesin bir cevap gerekmiyor; aklınıza gelen ilk örneği kendi cümlelerinizle yazmanız yeterli."
@@ -217,8 +242,8 @@ TANIMLAMA = motor.AjanTanimi(
     nesne_alanlari=("basari_olcutu",),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
     maks_zorunlu_turu=MAKS_ZORUNLU_TURU,
-    ek_eksikler=hedef_eksigi,
-    maks_ek_turu=1,
+    ek_eksikler=motor.ek_sorular(hedef_eksigi, kosul_eksigi(KOSUL_SORUSU)),
+    maks_ek_turu=2,
     yedek_sorular=YEDEK_SORULAR,
 )
 
@@ -339,8 +364,8 @@ TANIMLAMA_ORTAK = motor.AjanTanimi(
     nesne_alanlari=("basari_olcutu",),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
     maks_zorunlu_turu=MAKS_ZORUNLU_TURU,
-    ek_eksikler=hedef_eksigi,
-    maks_ek_turu=1,
+    ek_eksikler=motor.ek_sorular(hedef_eksigi, kosul_eksigi(KOSUL_SORUSU_ORTAK)),
+    maks_ek_turu=2,
     yedek_sorular=YEDEK_SORULAR_ORTAK,
 )
 

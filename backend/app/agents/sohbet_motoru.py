@@ -227,6 +227,22 @@ def bos_taslak(tanim: AjanTanimi) -> dict[str, Any]:
     return taslak
 
 
+EkKural = Callable[[dict[str, Any]], list[tuple[str, str]]]
+
+
+def ek_sorular(*kurallar: EkKural) -> EkKural:
+    """Ajanın ek soru kurallarını sırasıyla birleştirir (`AjanTanimi.ek_eksikler`).
+
+    Her kural taslağa bakıp (anahtar, soru) listesi döner; yeni bir ek soru
+    yeni bir kuraldır, motor ve mevcut kurallar değişmez.
+    """
+
+    def birlesik(taslak: dict[str, Any]) -> list[tuple[str, str]]:
+        return [eksik for kural in kurallar for eksik in kural(taslak)]
+
+    return birlesik
+
+
 def eksik_alanlar(tanim: AjanTanimi, taslak: dict[str, Any]) -> list[str]:
     return [alan for alan in tanim.zorunlu_alanlar if not taslak.get(alan)]
 
