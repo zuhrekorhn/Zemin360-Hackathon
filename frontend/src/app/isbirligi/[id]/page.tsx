@@ -20,7 +20,9 @@ import {
   type IsbirligiDetayi,
   type MilestoneGirdisi,
   type MilestoneYaniti,
+  type SonlanmaNedeni,
   isbirligiGetir,
+  isbirligiSonlandir,
   milestoneEkle,
   milestoneGuncelle,
   milestoneIsaretiGeriAl,
@@ -34,6 +36,7 @@ import { type Hitap, hitapla } from "@/lib/hitap";
 import { useHitap, useOturum } from "@/lib/oturum";
 import {
   ISBIRLIGI_DURUM_ETIKETLERI,
+  SONLANMA_NEDENLERI,
   type Taraf,
   adimGorunumu,
   planOnayGorunumu,
@@ -165,6 +168,7 @@ function IsbirligiIcerigi() {
       {detay.durum === "tamamlandi" ? (
         <TamamlandiBandi detay={detay} taraf={taraf} hitap={hitap} />
       ) : null}
+      {detay.durum === "sonlandi" ? <SonlandiBandi hitap={hitap} /> : null}
 
       {detay.durum_ozeti ? (
         <section className="flex flex-col gap-1 rounded-sm border border-kenar bg-card px-4 py-3">
@@ -195,6 +199,10 @@ function IsbirligiIcerigi() {
           yap={yap}
         />
       )}
+
+      {taraf && (detay.durum === "plan_bekliyor" || detay.durum === "aktif") ? (
+        <SureciSonlandir detay={detay} bekleniyor={bekleniyor} yap={yap} />
+      ) : null}
 
       <footer className="mt-auto border-t border-kenar pt-6">
         <Button asChild variant="outline" size="lg">
@@ -247,6 +255,85 @@ function TamamlandiBandi({
           ) : null}
         </p>
       ) : null}
+    </section>
+  );
+}
+
+/* --- Erken sonlanma ------------------------------------------------------- */
+
+function SonlandiBandi({ hitap }: { hitap: Hitap }) {
+  return (
+    <section className="flex flex-col gap-1 rounded-sm border border-kenar bg-card px-4 py-4">
+      <p className="font-heading text-lg font-semibold text-ana">
+        Bu süreç sonlandı
+      </p>
+      <p className="text-sm text-pretty text-muted-foreground">
+        {hitapla(
+          hitap,
+          "Adımlar kayıtlı kalır ama artık değiştirilemez. Yeni fırsatlar panelinde görünmeye devam eder.",
+          "Adımlar kayıtlı kalır ama artık değiştirilemez. Yeni eşleşmeler panelinizde görünmeye devam eder.",
+        )}
+      </p>
+    </section>
+  );
+}
+
+/** "Süreci sonlandır": nedeni seçilir, sayfa içinde onaylanır (OnayAlani). */
+function SureciSonlandir({
+  detay,
+  bekleniyor,
+  yap,
+}: {
+  detay: IsbirligiDetayi;
+  bekleniyor: boolean;
+  yap: Yap;
+}) {
+  const [acik, setAcik] = useState(false);
+  const [neden, setNeden] = useState<SonlanmaNedeni>("karar_olumsuz");
+
+  if (!acik) {
+    return (
+      <div>
+        <button
+          type="button"
+          disabled={bekleniyor}
+          onClick={() => setAcik(true)}
+          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+        >
+          Süreci sonlandır
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <section className="flex flex-col gap-3 rounded-sm border border-kenar px-4 py-4">
+      <FormAlani etiket="Neden" htmlFor="sonlanma-nedeni">
+        <select
+          id="sonlanma-nedeni"
+          value={neden}
+          onChange={(olay) => setNeden(olay.target.value as SonlanmaNedeni)}
+          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30"
+        >
+          {SONLANMA_NEDENLERI.map((secenek) => (
+            <option key={secenek.deger} value={secenek.deger}>
+              {secenek.etiket}
+            </option>
+          ))}
+        </select>
+      </FormAlani>
+      <OnayAlani
+        soru="Süreç sonlandırılacak ve bu geri alınamaz. Karşı tarafa yalnızca sürecin sonlandığı bildirilir; nedeni gösterilmez."
+        onayEtiketi="Süreci sonlandır"
+        bekleniyor={bekleniyor}
+        bekleniyorEtiketi="Sonlandırılıyor…"
+        onOnayla={() =>
+          void yap(() => isbirligiSonlandir(detay.id, neden)).then(() =>
+            setAcik(false),
+          )
+        }
+        onVazgec={() => setAcik(false)}
+      />
     </section>
   );
 }

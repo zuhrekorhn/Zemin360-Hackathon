@@ -4,7 +4,12 @@
  * yazsın" var. Testleri takip.test.ts'de.
  */
 
-import type { IsbirligiDetayi, MilestoneYaniti, Rol } from "@/lib/api";
+import type {
+  IsbirligiDetayi,
+  MilestoneYaniti,
+  Rol,
+  SonlanmaNedeni,
+} from "@/lib/api";
 import { type Hitap, hitapla } from "@/lib/hitap";
 
 export type Taraf = "genc" | "kurum";
@@ -138,13 +143,22 @@ export const ISBIRLIGI_DURUM_ETIKETLERI: Record<string, string> = {
   plan_bekliyor: "Plan onay bekliyor",
   aktif: "Sürüyor",
   tamamlandi: "Tamamlandı",
+  sonlandi: "Sonlandı",
 };
+
+/** Süreci sonlandırma nedenleri (backend `takip_durumu.SONLANMA_NEDENLERI`). */
+export const SONLANMA_NEDENLERI: { deger: SonlanmaNedeni; etiket: string }[] = [
+  { deger: "karar_olumsuz", etiket: "Karar olumsuz oldu" },
+  { deger: "baska_yoldan_ilerlendi", etiket: "Başka bir yoldan ilerlendi" },
+  { deger: "iletisim_kurulamadi", etiket: "İletişim kurulamadı" },
+];
 
 /** Panel satırı: "2/4 adım · 1 gecikmiş" ya da plan durumu. */
 export function ilerlemeMetni(
   durum: string,
   ilerleme: { tamamlanan: number; toplam: number; geciken: number },
 ): string {
+  if (durum === "sonlandi") return "Süreç sonlandı";
   if (durum === "plan_bekliyor") {
     return ilerleme.toplam === 0
       ? "Plan henüz yok"

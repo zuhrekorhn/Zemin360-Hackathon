@@ -25,6 +25,7 @@ from app.agents.takip_durumu import (
     ISARETLE,
     ISBIRLIGI_AKTIF,
     ISBIRLIGI_PLAN_BEKLIYOR,
+    ISBIRLIGI_SONLANDI,
     ISBIRLIGI_TAMAMLANDI,
     MILESTONE_BEKLIYOR,
     MILESTONE_TAMAMLANDI,
@@ -40,6 +41,7 @@ from app.agents.takip_durumu import (
     isaret_gecisi,
     isbirligi_tamamlandi_mi,
     plan_gecisi,
+    sonlanma_gecisi,
 )
 from app.agents.takip_surecleri import PlanAdimi, SurecSablonu, surec_adi, surec_sec
 from app.api import sahiplik
@@ -50,6 +52,7 @@ from app.db.session import get_session, get_sessionmaker
 from app.models.bildirim import (
     TUR_ADIM_ISARETLENDI,
     TUR_ADIM_TAMAMLANDI,
+    TUR_ISBIRLIGI_SONLANDI,
     TUR_ISBIRLIGI_TAMAMLANDI,
     TUR_PLAN_DUZENLENDI,
     TUR_PLAN_ONAYI,
@@ -70,6 +73,7 @@ from app.schemas.takip import (
     MilestoneEkleIstegi,
     MilestoneGuncelleIstegi,
     MilestoneYaniti,
+    SonlandirIstegi,
 )
 from app.servisler.eslestirme import iletisim
 
@@ -539,6 +543,46 @@ async def plan_onayla(
                 ),
                 isbirligi.eslesme_id,
             )
+    await oturum.commit()
+    return detay(isbirligi, hesap)
+
+
+def sonlandi_metni(isbirligi: Isbirligi, sonlandiran: str) -> str:
+    """Karşı tarafa nötr bildirim; neden yazılmaz (docs/icerik-rehberi.md § 5.7)."""
+    alici = karsi_rol(sonlandiran)
+    surec = "süreciniz" if siz_mi(isbirligi, alici) else "sürecin"
+    return f"{taraf_adi(isbirligi, sonlandiran)} ile {surec} sonlandı."
+
+
+@router.post("/{isbirligi_id}/sonlandir", response_model=IsbirligiDetayi)
+async def sonlandir(
+    isbirligi_id: uuid.UUID,
+    istek: SonlandirIstegi,
+    hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
+    oturum: AsyncSession = Depends(get_session),
+) -> IsbirligiDetayi:
+    """Bir taraf süreci sonlandırır (docs/plans/takip-surecleri.md § Erken sonlanma).
+
+    Tamamlanmış iş birliği 409; sonlanmış olanın tekrarı 200 ve yan etkisiz (ilk
+    neden korunur). Karşı taraf nötr bir bildirim alır, neden yazılmaz.
+    """
+    isbirligi, rol = await yazilabilir_isbirligi(oturum, hesap, isbirligi_id)
+    try:
+        degisti = sonlanma_gecisi(isbirligi.durum, rol)
+    except GecersizTakipGecisi as hata:
+        raise HTTPException(status_code=409, detail=str(hata)) from hata
+    if degisti:
+        isbirligi.durum = ISBIRLIGI_SONLANDI
+        isbirligi.sonlanma_nedeni = istek.neden
+        isbirligi.sonlanma_tarihi = _simdi()
+        aktivite(isbirligi)
+        bildirim_ekle(
+            oturum,
+            taraf_hesabi(isbirligi, karsi_rol(rol)),
+            TUR_ISBIRLIGI_SONLANDI,
+            sonlandi_metni(isbirligi, rol),
+            isbirligi.eslesme_id,
+        )
     await oturum.commit()
     return detay(isbirligi, hesap)
 

@@ -5,6 +5,7 @@
 tests/test_takip_durumu.py'de birebir sabitlenmiş.
 
     Plan:       plan_bekliyor ──(iki taraf onaylar)──▶ aktif ──(son adım)──▶ tamamlandi
+                plan_bekliyor | aktif ──(bir taraf sonlandırır)──▶ sonlandi (geri açılmaz)
     Milestone:  bekliyor ──(genç + kurum işaretler)──▶ tamamlandi
 
 Ajan karar vermez: tamamlanma, iki tarafın işaretlerinden çıkan bir kural.
@@ -21,6 +22,14 @@ from app.models.hesap import ROL_GENC, ROL_KURUM
 ISBIRLIGI_PLAN_BEKLIYOR = "plan_bekliyor"
 ISBIRLIGI_AKTIF = "aktif"
 ISBIRLIGI_TAMAMLANDI = "tamamlandi"
+# Erken sonlanma (docs/plans/takip-surecleri.md): görüşmeden sonra "şimdilik değil"
+# olağan bir sonuç. Tamamlanmış sayılmaz (pilot bonusu yalnızca `tamamlandi`).
+ISBIRLIGI_SONLANDI = "sonlandi"
+SONLANMA_NEDENLERI: tuple[str, ...] = (
+    "karar_olumsuz",
+    "baska_yoldan_ilerlendi",
+    "iletisim_kurulamadi",
+)
 
 MILESTONE_BEKLIYOR = "bekliyor"
 MILESTONE_TAMAMLANDI = "tamamlandi"
@@ -35,6 +44,7 @@ TARAFLAR = (ROL_GENC, ROL_KURUM)
 
 PLAN_KILITLI = "Plan iki tarafça onaylandı; artık değiştirilemez."
 ISBIRLIGI_BITTI = "İş birliği tamamlandı; değişiklik yapılamaz."
+SUREC_SONLANDI = "Bu süreç sonlandırıldı; değişiklik yapılamaz."
 PLAN_BOS = "Önce en az bir adım eklenmeli."
 PLAN_ONAYSIZ = "Plan iki tarafça onaylanmadan adımlar işaretlenemez."
 ADIM_KAPANDI = "Bu adım iki tarafça tamamlandı; işaret geri alınamaz."
@@ -51,6 +61,14 @@ class RolUygunDegil(Exception):
 def _taraf_mi(rol: str) -> None:
     if rol not in TARAFLAR:
         raise RolUygunDegil(rol)
+
+
+def _kapali_degil(durum: str) -> None:
+    """Tamamlanmış ya da sonlandırılmış iş birliğinde hiçbir eylem yapılmaz."""
+    if durum == ISBIRLIGI_TAMAMLANDI:
+        raise GecersizTakipGecisi(ISBIRLIGI_BITTI)
+    if durum == ISBIRLIGI_SONLANDI:
+        raise GecersizTakipGecisi(SUREC_SONLANDI)
 
 
 # --- Plan -----------------------------------------------------------------------------
@@ -72,8 +90,7 @@ class PlanSonucu:
 
 def plan_gecisi(mevcut: PlanDurumu, olay: str, rol: str, *, milestone_sayisi: int) -> PlanSonucu:
     _taraf_mi(rol)
-    if mevcut.durum == ISBIRLIGI_TAMAMLANDI:
-        raise GecersizTakipGecisi(ISBIRLIGI_BITTI)
+    _kapali_degil(mevcut.durum)
     if mevcut.durum != ISBIRLIGI_PLAN_BEKLIYOR:
         raise GecersizTakipGecisi(PLAN_KILITLI)
 
@@ -121,8 +138,7 @@ class IsaretSonucu:
 
 def isaret_gecisi(isbirligi_durumu: str, mevcut: Isaretler, olay: str, rol: str) -> IsaretSonucu:
     _taraf_mi(rol)
-    if isbirligi_durumu == ISBIRLIGI_TAMAMLANDI:
-        raise GecersizTakipGecisi(ISBIRLIGI_BITTI)
+    _kapali_degil(isbirligi_durumu)
     if isbirligi_durumu != ISBIRLIGI_AKTIF:
         raise GecersizTakipGecisi(PLAN_ONAYSIZ)
 
@@ -141,6 +157,21 @@ def isaret_gecisi(isbirligi_durumu: str, mevcut: Isaretler, olay: str, rol: str)
         return IsaretSonucu(mevcut, degisti=False)
     yeni = replace(mevcut, genc=False) if rol == ROL_GENC else replace(mevcut, kurum=False)
     return IsaretSonucu(yeni, degisti=True)
+
+
+# --- Erken sonlanma ---------------------------------------------------------------------
+
+
+def sonlanma_gecisi(isbirligi_durumu: str, rol: str) -> bool:
+    """Bir taraf süreci sonlandırır. Döner: değişti mi (False: zaten sonlanmış,
+    tekrar yan etkisiz). Tamamlanmış iş birliği sonlandırılamaz; `sonlandi` geri
+    açılmaz (diğer geçişler `_kapali_degil` ile 409)."""
+    _taraf_mi(rol)
+    if isbirligi_durumu == ISBIRLIGI_SONLANDI:
+        return False
+    if isbirligi_durumu == ISBIRLIGI_TAMAMLANDI:
+        raise GecersizTakipGecisi(ISBIRLIGI_BITTI)
+    return True
 
 
 # --- Tamamlanma ve gecikme --------------------------------------------------------------

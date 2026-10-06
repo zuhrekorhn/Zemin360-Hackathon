@@ -6,7 +6,7 @@ import datetime as dt
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.eslestirme import Ilerleme, Iletisim
 
@@ -83,3 +83,11 @@ class MilestoneGuncelleIstegi(BaseModel):
     aciklama: str | None = Field(default=None, max_length=1000)
     hedef_tarih: dt.date | None = None
     kanit_linki: str | None = Field(default=None, max_length=500)
+
+
+class SonlandirIstegi(BaseModel):
+    """`POST /isbirligi/{id}/sonlandir`: neden yalnızca kayıtta, karşı tarafa yazılmaz."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    neden: Literal["karar_olumsuz", "baska_yoldan_ilerlendi", "iletisim_kurulamadi"]

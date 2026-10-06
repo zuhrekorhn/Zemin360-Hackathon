@@ -1544,7 +1544,12 @@ export type MilestoneYaniti = {
 };
 
 /** "plan_bekliyor" | "aktif" | "tamamlandi" */
-export type IsbirligiDurumu = "plan_bekliyor" | "aktif" | "tamamlandi";
+export type IsbirligiDurumu =
+  "plan_bekliyor" | "aktif" | "tamamlandi" | "sonlandi";
+
+/** Süreci sonlandırma nedeni: yalnızca kayıtta, karşı tarafa gösterilmez. */
+export type SonlanmaNedeni =
+  "karar_olumsuz" | "baska_yoldan_ilerlendi" | "iletisim_kurulamadi";
 
 export type IsbirligiDetayi = {
   id: string;
@@ -1636,6 +1641,17 @@ export function milestoneSil(
 export function planOnayla(id: string): Promise<IsbirligiDetayi> {
   return apiIstek<IsbirligiDetayi>(`${isbirligiYolu(id)}/plan-onayla`, {
     method: "POST",
+  });
+}
+
+/** POST /isbirligi/{id}/sonlandir — bir taraf süreci sonlandırır; tekrar 200. */
+export function isbirligiSonlandir(
+  id: string,
+  neden: SonlanmaNedeni,
+): Promise<IsbirligiDetayi> {
+  return apiIstek<IsbirligiDetayi>(`${isbirligiYolu(id)}/sonlandir`, {
+    method: "POST",
+    body: JSON.stringify({ neden }),
   });
 }
 
