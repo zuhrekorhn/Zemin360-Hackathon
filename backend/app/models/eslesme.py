@@ -63,6 +63,10 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
     )
     skor: Mapped[float] = mapped_column(Float)
     gerekce_metni: Mapped[str | None] = mapped_column(Text)
+    # Yapay zekânın gerekçeyle birlikte verdiği karar: uygun | kismen | uygun_degil
+    # (yalnızca firma–firma; NULL = bilinmiyor). `uygun_degil` kayıtlar saklanır ama
+    # hiçbir okumada görünmez (app/agents/uygunluk.py › gorunur_kosulu).
+    uygunluk: Mapped[str | None] = mapped_column(String)
     # State machine: onerildi → ilgileniliyor → kabul_edildi | reddedildi
     # (değer kümesi docs/data-schema.md § Tasarım Kararları'nda;
     #  sabitler app/agents/eslestirme.py içinde DURUM_* olarak)
