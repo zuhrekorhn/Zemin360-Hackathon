@@ -11,6 +11,7 @@ import {
   BelgeKarti,
   CiktiOzeti,
   EtiketSatiri,
+  KismenUygunRozeti,
   PilotRozeti,
   SkorRozeti,
 } from "@/components/kart";
@@ -494,6 +495,7 @@ function FirmaAdayiKarti({
               {firma.tamamlanan_isbirligi} tamamlanan iş birliği
             </span>
           ) : null}
+          <KismenUygunRozeti uygunluk={oneri.uygunluk} />
           <SkorRozeti skor={oneri.skor} />
         </span>
       }

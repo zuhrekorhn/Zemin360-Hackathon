@@ -10,6 +10,7 @@
 import type { AlanAdiIpucu } from "@/lib/firma-dogrulama";
 import { ayrintiyiOku } from "@/lib/ayrinti";
 import type { KapanmaNedeni } from "@/lib/ilan";
+import type { Uygunluk } from "@/lib/uygunluk";
 import { tokenOku, tokenSil } from "@/lib/token";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -1072,6 +1073,8 @@ export type Oneri = {
   /** Gerekçe yoksa null: dil modeli o an yanıt vermedi ya da kanıtı
    *  olduğundan güçlü anlattığı için gerekçe bırakıldı. Skor yine de geçerli. */
   gerekce_metni: string | null;
+  /** Firma–firma yapay zekâ kararı; "kismen" ise rozet gösterilir. Genç ilanında null. */
+  uygunluk: Uygunluk;
   /** Genç ilanında yetenek kartı, ortak ilanında firma kartı (tam biri dolu). */
   aday_turu: "genc" | "firma";
   yetenek_karti: YetenekKartiYaniti | null;
@@ -1222,6 +1225,8 @@ export type FirmaAdayEslesmesi = {
   durum: string;
   uyum: number;
   gerekce_metni: string | null;
+  /** Yapay zekâ kararı; "kismen" ise rozet gösterilir. */
+  uygunluk: Uygunluk;
   son_aktivite_tarihi: string;
   baslatan: string | null;
   ihtiyac_karti: IhtiyacKartiYaniti;

@@ -18,6 +18,7 @@ function satir(
     baslatan,
     uyum: 0.6,
     gerekce_metni: null,
+    uygunluk: null,
     son_aktivite_tarihi: "2026-09-30T10:00:00Z",
     ihtiyac_karti: {} as FirmaAdayEslesmesi["ihtiyac_karti"],
     isbirligi_id: null,

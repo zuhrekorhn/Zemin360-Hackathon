@@ -3,6 +3,7 @@ import { baslikGosterimi, gostergeDoluMu } from "@/lib/guven-gostergesi";
 import { kartDosyasiAdresi } from "@/lib/api";
 import { dosyaParcalari, kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
+import { type Uygunluk, uygunlukRozeti } from "@/lib/uygunluk";
 
 /**
  * Kart ve gerekçe görünümünün paylaşılan parçaları.
@@ -99,6 +100,17 @@ export function SkorRozeti({ skor }: { skor: number }) {
   return (
     <span className="rounded-sm border border-kenar px-2.5 py-1 font-mono text-sm text-ana">
       %{Math.round(skor * 100)} uyum
+    </span>
+  );
+}
+
+/** Yapay zekâ "kısmen uygun" dediyse rozet; diğer kararlarda hiçbir şey çizmez. */
+export function KismenUygunRozeti({ uygunluk }: { uygunluk: Uygunluk | undefined }) {
+  const metin = uygunlukRozeti(uygunluk);
+  if (!metin) return null;
+  return (
+    <span className="rounded-sm border border-baglanti px-2.5 py-1 text-xs text-baglanti">
+      {metin}
     </span>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
+import { KismenUygunRozeti } from "@/components/kart";
 import {
   BosDurum,
   DurumEtiketi,
@@ -148,8 +149,11 @@ function IlanOzeti({ satir }: { satir: FirmaAdayEslesmesi }) {
           {ilan.kurum.ad}
           <DogrulanmisFirma dogrulandi={ilan.kurum.dogrulandi} />
         </span>
-        <span className="rounded-sm border border-baglanti px-2 py-0.5 text-xs text-baglanti">
-          {uyumMetni(satir.uyum)}
+        <span className="flex flex-wrap items-center gap-2">
+          <KismenUygunRozeti uygunluk={satir.uygunluk} />
+          <span className="rounded-sm border border-baglanti px-2 py-0.5 text-xs text-baglanti">
+            {uyumMetni(satir.uyum)}
+          </span>
         </span>
       </div>
       <p className="text-sm text-pretty">{ilan.problem_tanimi}</p>
