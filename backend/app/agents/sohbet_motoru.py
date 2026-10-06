@@ -98,6 +98,10 @@ class SohbetDurumu(TypedDict, total=False):
     # yazdığı açıklama ve bu turda taslağa yeni bilgi girip girmediği.
     son_aciklama_istedi: bool
     son_aciklama: str | None
+    # Son turda kullanıcı soruyu bilmediğini ya da yanıtlayamayacağını söyledi
+    # mi. Açıklama isteğiyle karışıyordu: "bilmiyorum" diyen firmaya açıklama
+    # turu açılıyor, açıklama tur hakkından düşmediği için sohbet uzuyordu.
+    son_cevap_veremiyor: bool
     taslak_degisti: bool
     # Sohbetin başında bilinen, SORULMAYACAK bilgiler (Keşif'te kayıt formunun
     # profil alanları). Çıkarımda sistem talimatının ardından ayrı bir sistem
@@ -130,6 +134,14 @@ class SohbetCikarimi(BaseModel):
             "kullanıcının anlattıklarına uyan kısa bir örnekle açıklayan 1-2 cümle, "
             "ardından AYNI soruyu kısaca yeniden sor. Başka bir konuya geçme; önceki "
             "mesajdaki övgü ya da giriş cümlesini tekrarlama."
+        ),
+    )
+    cevap_veremiyor: bool = Field(
+        default=False,
+        description=(
+            "Kullanıcı son soruyu bilmediğini, ölçmediğini ya da yanıtlayamayacağını "
+            "söylediyse True ('bilmiyorum', 'emin değilim', 'ölçmüyoruz'). Bu bir "
+            "açıklama isteği DEĞİLDİR; bu durumda aciklama_istedi False kalır."
         ),
     )
 
@@ -394,6 +406,7 @@ def _cikar_dugumu(tanim: AjanTanimi, zincir_uret: Callable[[], Runnable]):
             "son_takip_konusu": getattr(cikarim, "takip_konusu", None),
             "son_aciklama_istedi": cikarim.aciklama_istedi,
             "son_aciklama": cikarim.aciklama,
+            "son_cevap_veremiyor": cikarim.cevap_veremiyor,
             **bayraklar,
         }
 
@@ -417,11 +430,14 @@ def aciklama_gerekli(durum: Mapping[str, Any]) -> bool:
     """Bekleyen soru açıklamayla yeniden sorulmalı mı?
 
     Kullanıcı açıklama istediyse ve bu turda taslağa yeni bilgi girmediyse.
+    "Bilmiyorum" açıklama isteği değildir: model ikisini birden işaretlese de
+    soru akışı (sayaçlı) ilerler, açıklama turu açılmaz.
     Hem soru sorup hem cevap veren kullanıcıda (taslak değişti) sohbet normal
     ilerler; aynı soru boşuna tekrarlanmaz. Soru başına en fazla MAKS_ACIKLAMA.
     """
     return (
         bool(durum.get("son_aciklama_istedi"))
+        and not durum.get("son_cevap_veremiyor")
         and not durum.get("taslak_degisti")
         and bool(_bekleyen_soru(durum))
         and durum.get("aciklama_sayisi", 0) < MAKS_ACIKLAMA
