@@ -1,3 +1,4 @@
+# ruff: noqa: E501  (ölçüm betiği: rapor satırları ve etiket tabloları uzun)
 """Uygunluk kararı ölçümü (TASLAK, üretim koduna dokunmaz, veritabanına yazmaz).
 
 Soru: gerekçeyi üreten model aynı çağrıda "uygun / kismen / uygun_degil" kararını
@@ -22,7 +23,7 @@ import re
 import sys
 import tempfile
 import time
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from typing import Literal
 
@@ -38,7 +39,13 @@ from app.core.embeddings import (
     yetenek_temsil_metni,
 )
 from app.core.firma_dogrulama import DOGRULANDI
-from app.core.llm import HizSinirHatasi, ModelMesgulHatasi, kullanim_topla, llm_hatasini_cevir, yedekli_zincir
+from app.core.llm import (
+    HizSinirHatasi,
+    ModelMesgulHatasi,
+    kullanim_topla,
+    llm_hatasini_cevir,
+    yedekli_zincir,
+)
 from app.core.metin import turkce_kucult
 from app.models.firma_karti import FirmaKarti
 from app.models.ihtiyac_karti import IhtiyacKarti
@@ -49,7 +56,9 @@ from app.models.yetenek_karti import YetenekKarti
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-VERI = Path(__file__).resolve().parent.parent / "tests" / "degerlendirme_seti" / "eslestirme_uygunluk"
+VERI = (
+    Path(__file__).resolve().parent.parent / "tests" / "degerlendirme_seti" / "eslestirme_uygunluk"
+)
 BEKLENEN = {2: "uygun", 1: "kismen", 0: "uygun_degil"}
 KARARLAR = ("uygun", "kismen", "uygun_degil")
 # Demo veritabanında GİRVAK'ın doğruladığı firmalar (güven bilgisi satırı için).
@@ -60,8 +69,12 @@ DOGRULANMIS_DEMO_FIRMALAR = {"Tazele Analitik", "Ayaz Sensör Teknolojileri"}
 
 class UygunlukKarari(BaseModel):
     # Alan sırası önemli: model önce gerekçeyi yazar, karar yazdığı metne dayanır.
-    gerekce: str = Field(description="2-3 cümlelik gerekçe; adayın ihtiyaca karşılık veren ve eksik kalan yanları")
-    uygunluk: Literal["uygun", "kismen", "uygun_degil"] = Field(description="Gerekçeyle tutarlı uygunluk kararı")
+    gerekce: str = Field(
+        description="2-3 cümlelik gerekçe; adayın ihtiyaca karşılık veren ve eksik kalan yanları"
+    )
+    uygunluk: Literal["uygun", "kismen", "uygun_degil"] = Field(
+        description="Gerekçeyle tutarlı uygunluk kararı"
+    )
 
 
 EK_KURAL = """
@@ -85,13 +98,17 @@ def sablon(tur: str) -> ChatPromptTemplate:
     talimat = (E.GEREKCE_TALIMATI if genc else E.FIRMA_GEREKCE_TALIMATI) + EK_KURAL
     insan = uretim.messages[1].prompt.template
     assert "Bu eşleşmenin gerekçesini yaz." in insan
-    insan = insan.replace("Bu eşleşmenin gerekçesini yaz.", "Bu eşleşmenin gerekçesini ve uygunluk kararını ver.")
+    insan = insan.replace(
+        "Bu eşleşmenin gerekçesini yaz.", "Bu eşleşmenin gerekçesini ve uygunluk kararını ver."
+    )
     return ChatPromptTemplate.from_messages([("system", talimat), ("human", insan)])
 
 
 def zincir(tur: str):
     return yedekli_zincir(
-        "guclu", f"uygunluk_olcumu_{tur}", lambda m: sablon(tur) | m.with_structured_output(UygunlukKarari)
+        "guclu",
+        f"uygunluk_olcumu_{tur}",
+        lambda m: sablon(tur) | m.with_structured_output(UygunlukKarari),
     )
 
 
@@ -133,7 +150,10 @@ def firma_nesnesi(ad: str, d: dict) -> E.FirmaAdayi:
         dogrulama_durumu=DOGRULANDI if ad in DOGRULANMIS_DEMO_FIRMALAR else None,
     )
     kart = FirmaKarti(
-        ne_yapiyoruz=d["ne_yapiyoruz"], yetkinlikler=d["yetkinlikler"], onceki_isler=d.get("onceki_isler"), kurum=kurum
+        ne_yapiyoruz=d["ne_yapiyoruz"],
+        yetkinlikler=d["yetkinlikler"],
+        onceki_isler=d.get("onceki_isler"),
+        kurum=kurum,
     )
     return E.FirmaAdayi(firma_karti=kart, benzerlik=0.0, dogrulama_bonus=0.0)
 
@@ -183,10 +203,12 @@ def kosinus(a: list[float], b: list[float]) -> float:
     )
 
 
-async def vektorler(metinler: dict[str, str], onbellek: dict, dosya: Path) -> dict[str, list[float]]:
+async def vektorler(
+    metinler: dict[str, str], onbellek: dict, dosya: Path
+) -> dict[str, list[float]]:
     eksik = [k for k, m in metinler.items() if m not in onbellek]
     if eksik:
-        for deneme in range(6):
+        for _ in range(6):
             try:
                 sonuc = await embedding_listesi_uret([metinler[k] for k in eksik], "document")
                 break
@@ -234,7 +256,10 @@ async def ciftleri_kur(onbellek: dict, onbellek_dosya: Path) -> list[dict]:
                     }
                 )
     d = json.loads((VERI / "demo_vakalari.json").read_text(encoding="utf-8"))
-    nm = {k: ihtiyac_temsil_metni(problem_tanimi=v["problem"], basari_kriteri=v.get("basari_kriteri")) for k, v in d["ilanlar"].items()}
+    nm = {
+        k: ihtiyac_temsil_metni(problem_tanimi=v["problem"], basari_kriteri=v.get("basari_kriteri"))
+        for k, v in d["ilanlar"].items()
+    }
     _, fm = temsil_metinleri("firma", {}, d["firmalar"])
     _, gm = temsil_metinleri("genc", {}, d["gencler"])
     nv = await vektorler(nm, onbellek, onbellek_dosya)
@@ -285,7 +310,14 @@ async def karar_al(zincirler: dict, cift: dict, girdi: dict, sem: asyncio.Semaph
                 if isinstance(cevrilmis, HizSinirHatasi | ModelMesgulHatasi) and deneme < 3:
                     await asyncio.sleep(5 * 2**deneme)
                     continue
-                return {"karar": None, "hata": f"{type(hata).__name__}: {str(hata)[:200]}", "girdi_token": 0, "cikti_token": 0, "cagri": 0, "gerekce": ""}
+                return {
+                    "karar": None,
+                    "hata": f"{type(hata).__name__}: {str(hata)[:200]}",
+                    "girdi_token": 0,
+                    "cikti_token": 0,
+                    "cagri": 0,
+                    "gerekce": "",
+                }
     raise AssertionError
 
 
@@ -331,7 +363,9 @@ def karisiklik(kayitlar: list[tuple[int, str | None]]) -> str:
     satirlar = []
     for et in (2, 1, 0):
         satirlar.append(
-            [f"{et} ({BEKLENEN[et]})"] + [str(sayim[(et, k)]) for k in KARARLAR] + [str(sayim[(et, None)])]
+            [f"{et} ({BEKLENEN[et]})"]
+            + [str(sayim[(et, k)]) for k in KARARLAR]
+            + [str(sayim[(et, None)])]
         )
     return tablo(satirlar, ["etiket \\ model", *KARARLAR, "hata"])
 
@@ -347,11 +381,16 @@ def metrikler(kayitlar: list[tuple[int, str | None, dict]]) -> dict:
     return {
         "n": len(kayitlar),
         "hata": len(kayitlar) - len(gecerli),
-        "uyum": f"{uyum}/{len(gecerli)}" + (f" (%{100 * uyum / len(gecerli):.0f})" if gecerli else ""),
+        "uyum": f"{uyum}/{len(gecerli)}"
+        + (f" (%{100 * uyum / len(gecerli):.0f})" if gecerli else ""),
         "guclu_elenen": f"{sum(1 for k in guclu if k[1] == 'uygun_degil')}/{len(guclu)}",
         "guclu_kismen": f"{sum(1 for k in guclu if k[1] == 'kismen')}/{len(guclu)}",
         "alakasiz_elenen": f"{sum(1 for k in alakasiz if k[1] == 'uygun_degil')}/{len(alakasiz)}"
-        + (f" (%{100 * sum(1 for k in alakasiz if k[1] == 'uygun_degil') / len(alakasiz):.0f})" if alakasiz else ""),
+        + (
+            f" (%{100 * sum(1 for k in alakasiz if k[1] == 'uygun_degil') / len(alakasiz):.0f})"
+            if alakasiz
+            else ""
+        ),
         "alakasiz_uygun": f"{sum(1 for k in alakasiz if k[1] == 'uygun')}/{len(alakasiz)}",
         "kismen_elenen": f"{sum(1 for k in kismen if k[1] == 'uygun_degil')}/{len(kismen)}",
         "eksiklik_uygun": f"{len(cel)}/{len(uygun_kararlar)}",
@@ -364,11 +403,15 @@ def rapor_yaz(ciftler: list[dict], sonuclar: list[list[dict]], args, sure: float
     cikti: list[str] = []
     ek = cikti.append
     ek("# Uygunluk kararı ölçümü (taslak istem, çevrimdışı karar için yalnızca ölçüm)\n")
-    ek(f"Çalıştırma: {n_run} kez, aynı çiftler; süre {sure:.0f} sn. Etiketler bağımsız değil (kartları ve etiketleri aynı kişi yazdı).\n")
+    ek(
+        f"Çalıştırma: {n_run} kez, aynı çiftler; süre {sure:.0f} sn. Etiketler bağımsız değil (kartları ve etiketleri aynı kişi yazdı).\n"
+    )
     from app.core.config import get_settings
 
     ayar = get_settings()
-    ek(f"Model (güçlü katman): `{ayar.gemini_guclu_model}`, yedek `{ayar.gemini_guclu_yedek_model}`.\n")
+    ek(
+        f"Model (güçlü katman): `{ayar.gemini_guclu_model}`, yedek `{ayar.gemini_guclu_yedek_model}`.\n"
+    )
 
     ek("## 1. Çiftler\n")
     satir = []
@@ -380,14 +423,25 @@ def rapor_yaz(ciftler: list[dict], sonuclar: list[list[dict]], args, sure: float
             extra = f"; tabanın altında kalan: {sum(1 for c in cs if not c.get('taban_ustu'))}"
         satir.append([h, str(len(cs)), str(e[2]), str(e[1]), str(e[0]), extra or "—"])
     ek(tablo(satir, ["havuz", "çift", "etiket 2", "etiket 1", "etiket 0", "not"]))
-    ek("\nHavuzlarda yalnızca üretimdeki koşulu (benzerlik tabanı) geçen çiftler var; demo vakalarında etiketli çiftlerin hepsi.\n")
+    ek(
+        "\nHavuzlarda yalnızca üretimdeki koşulu (benzerlik tabanı) geçen çiftler var; demo vakalarında etiketli çiftlerin hepsi.\n"
+    )
 
     ek("## 2. Karışıklık tablosu (tüm çalıştırmalar toplamı)\n")
     ek(karisiklik([(e, k) for e, k, _ in tum]))
     ek("")
     for h in ("genc_havuzu", "firma_havuzu", "demo"):
         ek(f"\n**{h}**\n")
-        ek(karisiklik([(c["etiket"], s[i]["karar"]) for s in sonuclar for i, c in enumerate(ciftler) if c["havuz"] == h]))
+        ek(
+            karisiklik(
+                [
+                    (c["etiket"], s[i]["karar"])
+                    for s in sonuclar
+                    for i, c in enumerate(ciftler)
+                    if c["havuz"] == h
+                ]
+            )
+        )
     ek("")
 
     ek("\n## 3. Ölçüler\n")
@@ -402,9 +456,21 @@ def rapor_yaz(ciftler: list[dict], sonuclar: list[list[dict]], args, sure: float
         ("hata", "hata (çağrı sonuç vermedi)"),
     ]
     satir = []
-    gruplar = [("hepsi", None), ("genç havuzu", "genc_havuzu"), ("firma havuzu", "firma_havuzu"), ("demo", "demo")]
+    gruplar = [
+        ("hepsi", None),
+        ("genç havuzu", "genc_havuzu"),
+        ("firma havuzu", "firma_havuzu"),
+        ("demo", "demo"),
+    ]
     m = {
-        ad: metrikler([(c["etiket"], s[i]["karar"], s[i]) for s in sonuclar for i, c in enumerate(ciftler) if h is None or c["havuz"] == h])
+        ad: metrikler(
+            [
+                (c["etiket"], s[i]["karar"], s[i])
+                for s in sonuclar
+                for i, c in enumerate(ciftler)
+                if h is None or c["havuz"] == h
+            ]
+        )
         for ad, h in gruplar
     }
     for a, ad in anahtarlar:
@@ -414,13 +480,21 @@ def rapor_yaz(ciftler: list[dict], sonuclar: list[list[dict]], args, sure: float
     ayni = [(c, s[i]) for s in sonuclar for i, c in enumerate(ciftler) if c.get("ayni_sorun")]
     if ayni:
         sayim = Counter(r["karar"] for _, r in ayni)
-        ek(f"\n'Aynı sorunu yaşayan, çözüm sunmayan' firmalar (firma havuzu): {dict(sayim)} (n={len(ayni)})\n")
+        ek(
+            f"\n'Aynı sorunu yaşayan, çözüm sunmayan' firmalar (firma havuzu): {dict(sayim)} (n={len(ayni)})\n"
+        )
     ek("\nHer çalıştırma ayrı ayrı (uyum / güçlü elenen / alakasız elenen):\n")
     satir = []
     for r, s in enumerate(sonuclar, 1):
         mm = metrikler([(c["etiket"], s[i]["karar"], s[i]) for i, c in enumerate(ciftler)])
-        satir.append([str(r), mm["uyum"], mm["guclu_elenen"], mm["alakasiz_elenen"], mm["eksiklik_uygun"]])
-    ek(tablo(satir, ["çalıştırma", "uyum", "güçlü elenen", "alakasız elenen", "'uygun' + eksiklik"]))
+        satir.append(
+            [str(r), mm["uyum"], mm["guclu_elenen"], mm["alakasiz_elenen"], mm["eksiklik_uygun"]]
+        )
+    ek(
+        tablo(
+            satir, ["çalıştırma", "uyum", "güçlü elenen", "alakasız elenen", "'uygun' + eksiklik"]
+        )
+    )
 
     ek("\n## 4. Karar 'uygun' iken gerekçede eksiklik ifadesi bulunanlar\n")
     ek("(Düzenli ifade eşleşmesi; yanlış pozitif olabilir, eşleşen parça gösterilir.)\n")
@@ -429,7 +503,9 @@ def rapor_yaz(ciftler: list[dict], sonuclar: list[list[dict]], args, sure: float
         for i, c in enumerate(ciftler):
             if s[i]["karar"] == "uygun" and (parca := eksiklik_ifadesi(s[i]["gerekce"])):
                 bulundu = True
-                ek(f"- çalıştırma {r}, {c['ilan_id']} ↔ {c['aday_adi']} (etiket {c['etiket']}), eşleşen: «{parca}»\n  > {ozet(s[i]['gerekce'], 400)}")
+                ek(
+                    f"- çalıştırma {r}, {c['ilan_id']} ↔ {c['aday_adi']} (etiket {c['etiket']}), eşleşen: «{parca}»\n  > {ozet(s[i]['gerekce'], 400)}"
+                )
     if not bulundu:
         ek("Yok.")
 
@@ -438,25 +514,36 @@ def rapor_yaz(ciftler: list[dict], sonuclar: list[list[dict]], args, sure: float
     ek(f"Kararı çalıştırmalar arasında değişen çift: **{len(degisen)} / {len(ciftler)}**\n")
     for i in degisen:
         c = ciftler[i]
-        ek(f"- {c['ilan_id']} ↔ {c['aday_adi']} (etiket {c['etiket']}): " + " / ".join(str(s[i]["karar"]) for s in sonuclar))
+        ek(
+            f"- {c['ilan_id']} ↔ {c['aday_adi']} (etiket {c['etiket']}): "
+            + " / ".join(str(s[i]["karar"]) for s in sonuclar)
+        )
 
     ek("\n## 6. Token ve maliyet\n")
     gt = sum(r["girdi_token"] for s in sonuclar for r in s)
     ct = sum(r["cikti_token"] for s in sonuclar for r in s)
     cg = sum(r["cagri"] for s in sonuclar for r in s)
     n_cagri = sum(len(s) for s in sonuclar)
-    ek(f"- Çalıştırma sayısı: {n_run}; çift başına çağrı: {len(ciftler)}; toplam çözülen çift: {n_cagri}; model çağrısı (yedeğe düşenler dahil): {cg}")
+    ek(
+        f"- Çalıştırma sayısı: {n_run}; çift başına çağrı: {len(ciftler)}; toplam çözülen çift: {n_cagri}; model çağrısı (yedeğe düşenler dahil): {cg}"
+    )
     ek(f"- Girdi token toplamı: {gt:,}; çıktı token toplamı (düşünme dahil): {ct:,}")
     if n_cagri:
         ek(f"- Çift başına ortalama: girdi {gt / n_cagri:.0f}, çıktı {ct / n_cagri:.0f}")
     if args.fiyat_girdi is not None and args.fiyat_cikti is not None:
         usd = gt / 1e6 * args.fiyat_girdi + ct / 1e6 * args.fiyat_cikti
-        ek(f"- Tahmini maliyet: {usd:.3f} USD (girdi {args.fiyat_girdi}/1M, çıktı {args.fiyat_cikti}/1M token; verilen fiyatla)")
+        ek(
+            f"- Tahmini maliyet: {usd:.3f} USD (girdi {args.fiyat_girdi}/1M, çıktı {args.fiyat_cikti}/1M token; verilen fiyatla)"
+        )
     else:
-        ek("- Maliyet: birim fiyat depoda yok; `--fiyat-girdi` ve `--fiyat-cikti` (USD/1M token) verilirse hesaplanır.")
+        ek(
+            "- Maliyet: birim fiyat depoda yok; `--fiyat-girdi` ve `--fiyat-cikti` (USD/1M token) verilirse hesaplanır."
+        )
 
     ek("\n## 7. Modelin etikete katılmadığı çiftler\n")
-    ek("Beklenen eşleme: etiket 2 → uygun, 1 → kismen, 0 → uygun_degil. Bir çift, herhangi bir çalıştırmada karar beklenenden farklıysa listelenir. Etiketler bağımsız değil: hangisinde modelin haklı olduğuna siz karar verin.\n")
+    ek(
+        "Beklenen eşleme: etiket 2 → uygun, 1 → kismen, 0 → uygun_degil. Bir çift, herhangi bir çalıştırmada karar beklenenden farklıysa listelenir. Etiketler bağımsız değil: hangisinde modelin haklı olduğuna siz karar verin.\n"
+    )
     sayac = 0
     for i, c in enumerate(ciftler):
         karar = [s[i]["karar"] for s in sonuclar]
@@ -472,7 +559,9 @@ def rapor_yaz(ciftler: list[dict], sonuclar: list[list[dict]], args, sure: float
         for r, s in enumerate(sonuclar, 1):
             if s[i]["karar"] != BEKLENEN[c["etiket"]] and s[i]["gerekce"] not in gosterilen:
                 gosterilen.add(s[i]["gerekce"])
-                ek(f"- **Gerekçe (çalıştırma {r}, karar {s[i]['karar']}):** {s[i].get('gerekce') or s[i].get('hata')}")
+                ek(
+                    f"- **Gerekçe (çalıştırma {r}, karar {s[i]['karar']}):** {s[i].get('gerekce') or s[i].get('hata')}"
+                )
         ek("")
     if not sayac:
         ek("Hiçbir çiftte katılmama yok.")
@@ -485,22 +574,30 @@ def rapor_yaz(ciftler: list[dict], sonuclar: list[list[dict]], args, sure: float
 async def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--calistirma", type=int, default=3)
-    p.add_argument("--kuru", action="store_true", help="LLM çağrısı yapma; çiftleri ve ilk istemi göster")
+    p.add_argument(
+        "--kuru", action="store_true", help="LLM çağrısı yapma; çiftleri ve ilk istemi göster"
+    )
     p.add_argument("--es", type=int, default=5, help="aynı anda en fazla çağrı")
-    p.add_argument("--onbellek", default=str(Path(tempfile.gettempdir()) / "uygunluk_vektor_onbellegi.json"))
+    p.add_argument(
+        "--onbellek", default=str(Path(tempfile.gettempdir()) / "uygunluk_vektor_onbellegi.json")
+    )
     p.add_argument("--cikti", default=str(VERI / "sonuclar"))
     p.add_argument("--fiyat-girdi", type=float)
     p.add_argument("--fiyat-cikti", type=float)
     args = p.parse_args()
 
     onbellek_dosya = Path(args.onbellek)
-    onbellek = json.loads(onbellek_dosya.read_text(encoding="utf-8")) if onbellek_dosya.exists() else {}
+    onbellek = (
+        json.loads(onbellek_dosya.read_text(encoding="utf-8")) if onbellek_dosya.exists() else {}
+    )
     ciftler = await ciftleri_kur(onbellek, onbellek_dosya)
     sayim = Counter((c["havuz"], c["etiket"]) for c in ciftler)
     print(f"{len(ciftler)} çift:", dict(sorted(sayim.items())))
     for c in ciftler:
         if c["havuz"] == "demo":
-            print(f"  demo {c['ilan_id']} ↔ {c['aday_adi']}: etiket {c['etiket']}, benzerlik {c['benzerlik']:.3f}, taban üstü {c['taban_ustu']}")
+            print(
+                f"  demo {c['ilan_id']} ↔ {c['aday_adi']}: etiket {c['etiket']}, benzerlik {c['benzerlik']:.3f}, taban üstü {c['taban_ustu']}"
+            )
     girdiler = [girdi_olustur(c) for c in ciftler]
     if args.kuru:
         c = ciftler[0]
@@ -515,7 +612,11 @@ async def main() -> None:
     sonuclar = []
     for r in range(args.calistirma):
         print(f"Çalıştırma {r + 1}/{args.calistirma}…", flush=True)
-        sonuclar.append(await asyncio.gather(*(karar_al(zincirler, c, g, sem) for c, g in zip(ciftler, girdiler, strict=True))))
+        sonuclar.append(
+            await asyncio.gather(
+                *(karar_al(zincirler, c, g, sem) for c, g in zip(ciftler, girdiler, strict=True))
+            )
+        )
         print("  kararlar:", dict(Counter(x["karar"] for x in sonuclar[-1])), flush=True)
     sure = time.time() - bas
 
@@ -524,13 +625,25 @@ async def main() -> None:
     ad = time.strftime("%Y-%m-%d-%H%M")
     (cikti / f"{ad}-ham.json").write_text(
         json.dumps(
-            [{"havuz": c["havuz"], "ilan": c["ilan_id"], "aday": c["aday_adi"], "etiket": c["etiket"], "benzerlik": c["benzerlik"], "calistirmalar": [s[i] for s in sonuclar]} for i, c in enumerate(ciftler)],
+            [
+                {
+                    "havuz": c["havuz"],
+                    "ilan": c["ilan_id"],
+                    "aday": c["aday_adi"],
+                    "etiket": c["etiket"],
+                    "benzerlik": c["benzerlik"],
+                    "calistirmalar": [s[i] for s in sonuclar],
+                }
+                for i, c in enumerate(ciftler)
+            ],
             ensure_ascii=False,
             indent=1,
         ),
         encoding="utf-8",
     )
-    (cikti / f"{ad}-rapor.md").write_text(rapor_yaz(ciftler, sonuclar, args, sure), encoding="utf-8")
+    (cikti / f"{ad}-rapor.md").write_text(
+        rapor_yaz(ciftler, sonuclar, args, sure), encoding="utf-8"
+    )
     print(f"Rapor: {cikti / (ad + '-rapor.md')}")
 
 
