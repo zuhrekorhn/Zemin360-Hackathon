@@ -226,3 +226,156 @@ def test_hazirlama_embedding_yazar_eski_versiyonu_atlar(monkeypatch):
         assert kendi["embedding_var"] is True
 
     senaryo(adimlar)
+
+
+# --- Profil değişince yenileme (PATCH /kurum/profil) -----------------------------------
+
+
+async def _profil_kur(d, *, kart: bool = True, **alanlar):
+    """Firmanın profilini bilinen değerlere çeker; isteğe bağlı kartı da yazar."""
+    kurum = d.kurum1.profil
+    kurum.tur, kurum.sektor, kurum.sehir = "kobi", "Gıda", "İzmir"
+    await d.oturum.commit()
+    return await _kart(d) if kart else None
+
+
+def test_sektor_degisince_kart_hazirlanir(
+    firma_karti_hazirlama_arka_plani_yok, firma_yeniden_eslestirme_arka_plani_yok
+):
+    hazirlama, eslestirme = (
+        firma_karti_hazirlama_arka_plani_yok,
+        firma_yeniden_eslestirme_arka_plani_yok,
+    )
+
+    async def adimlar(istemci, d):
+        kart = await _profil_kur(d)
+        kart_id, versiyon = kart.id, kart.versiyon
+        yanit = await istemci.patch(
+            "/kurum/profil", headers=d.kurum1.baslik, json={"sektor": "Lojistik"}
+        )
+        assert yanit.status_code == 200
+        assert yanit.json()["sektor"] == "Lojistik"
+        assert hazirlama == [(kart_id, versiyon)]
+        assert eslestirme == []
+
+    senaryo(adimlar)
+
+
+def test_sehir_ya_da_tur_degisince_yalnizca_eslestirme(
+    firma_karti_hazirlama_arka_plani_yok, firma_yeniden_eslestirme_arka_plani_yok
+):
+    hazirlama, eslestirme = (
+        firma_karti_hazirlama_arka_plani_yok,
+        firma_yeniden_eslestirme_arka_plani_yok,
+    )
+
+    async def adimlar(istemci, d):
+        kart = await _profil_kur(d)
+        kart_id = kart.id
+        for govde in ({"sehir": "Ankara"}, {"tur": "kurumsal"}):
+            yanit = await istemci.patch("/kurum/profil", headers=d.kurum1.baslik, json=govde)
+            assert yanit.status_code == 200
+        assert eslestirme == [kart_id, kart_id]
+        assert hazirlama == []
+
+    senaryo(adimlar)
+
+
+def test_sektor_ve_sehir_birlikte_degisince_tek_is(
+    firma_karti_hazirlama_arka_plani_yok, firma_yeniden_eslestirme_arka_plani_yok
+):
+    """Hazırlama zaten ilgili ilanları eşleştirir; ikinci iş boşuna pipeline koşturmaz."""
+
+    async def adimlar(istemci, d):
+        await _profil_kur(d)
+        yanit = await istemci.patch(
+            "/kurum/profil", headers=d.kurum1.baslik, json={"sektor": "Lojistik", "sehir": "Ankara"}
+        )
+        assert yanit.status_code == 200
+        assert len(firma_karti_hazirlama_arka_plani_yok) == 1
+        assert firma_yeniden_eslestirme_arka_plani_yok == []
+
+    senaryo(adimlar)
+
+
+def test_ayni_degerle_ya_da_ilgisiz_alanla_kaydetmek_hicbir_sey_calistirmaz(
+    firma_karti_hazirlama_arka_plani_yok, firma_yeniden_eslestirme_arka_plani_yok
+):
+    async def adimlar(istemci, d):
+        await _profil_kur(d)
+        for govde in (
+            {"sektor": "Gıda", "sehir": "İzmir", "tur": "kobi"},
+            {"tanitim": "Yeni tanıtım", "kurulus_yili": 2015},
+        ):
+            yanit = await istemci.patch("/kurum/profil", headers=d.kurum1.baslik, json=govde)
+            assert yanit.status_code == 200
+        assert firma_karti_hazirlama_arka_plani_yok == []
+        assert firma_yeniden_eslestirme_arka_plani_yok == []
+
+    senaryo(adimlar)
+
+
+def test_karti_olmayan_firmada_profil_degisimi_hicbir_sey_calistirmaz(
+    firma_karti_hazirlama_arka_plani_yok, firma_yeniden_eslestirme_arka_plani_yok
+):
+    async def adimlar(istemci, d):
+        await _profil_kur(d, kart=False)
+        yanit = await istemci.patch(
+            "/kurum/profil",
+            headers=d.kurum1.baslik,
+            json={"sektor": "Lojistik", "sehir": "Ankara", "tur": "kurumsal"},
+        )
+        assert yanit.status_code == 200
+        assert firma_karti_hazirlama_arka_plani_yok == []
+        assert firma_yeniden_eslestirme_arka_plani_yok == []
+
+    senaryo(adimlar)
+
+
+def test_sektor_degisince_yalnizca_onerildi_kararlari_sifirlanir():
+    """Karar verilmiş kayda (karar 14) dokunulmaz; kararsız öneri yeniden yargılanır."""
+    from sqlalchemy import select
+
+    from app.models.eslesme import Eslesme
+    from app.models.ihtiyac_karti import IhtiyacKarti
+
+    async def adimlar(istemci, d):
+        kart = await _profil_kur(d)
+        ilan3 = IhtiyacKarti(kurum_id=d.kurum2.profil.id, problem_tanimi="Üçüncü ilan")
+        d.oturum.add(ilan3)
+        await d.oturum.flush()
+        d.oturum.add_all(
+            [
+                Eslesme(
+                    ihtiyac_karti_id=d.I2.id,
+                    firma_karti_id=kart.id,
+                    skor=0.6,
+                    durum="onerildi",
+                    gerekce_metni="Eski gerekçe",
+                    uygunluk="kismen",
+                ),
+                Eslesme(
+                    ihtiyac_karti_id=ilan3.id,
+                    firma_karti_id=kart.id,
+                    skor=0.6,
+                    durum="kabul_edildi",
+                    gerekce_metni="Karar gerekçesi",
+                    uygunluk="uygun",
+                ),
+            ]
+        )
+        await d.oturum.commit()
+        yanit = await istemci.patch(
+            "/kurum/profil", headers=d.kurum1.baslik, json={"sektor": "Lojistik"}
+        )
+        assert yanit.status_code == 200
+        for kayit in await d.oturum.scalars(
+            select(Eslesme).where(Eslesme.firma_karti_id == kart.id)
+        ):
+            await d.oturum.refresh(kayit)
+            if kayit.durum == "onerildi":
+                assert kayit.gerekce_metni is None and kayit.uygunluk is None
+            else:
+                assert kayit.gerekce_metni == "Karar gerekçesi" and kayit.uygunluk == "uygun"
+
+    senaryo(adimlar)

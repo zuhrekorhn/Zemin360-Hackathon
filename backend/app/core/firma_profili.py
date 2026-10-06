@@ -69,3 +69,18 @@ def eksik_firma_alanlari(*, tur: str | None, sektor: str | None, sehir: str | No
     """Doldurulması gereken zorunlu alanlar (sabit sırada)."""
     degerler = {"tur": tur, "sektor": sektor, "sehir": sehir}
     return [alan for alan in ZORUNLU_ALANLAR if not degerler[alan]]
+
+
+# Profil alanlarından eşleştirmeyi etkileyenler (docs/matching-algorithm.md § 7):
+# sektör firma kartının embedding metnine girer; şehir ve tür başkasının ilanında
+# SQL kesin şartıdır.
+EMBEDDINGI_ETKILEYEN_ALANLAR = frozenset({"sektor"})
+KESIN_SARTI_ETKILEYEN_ALANLAR = frozenset({"sehir", "tur"})
+
+
+def sektor_degisti_mi(degisenler: set[str]) -> bool:
+    return bool(degisenler & EMBEDDINGI_ETKILEYEN_ALANLAR)
+
+
+def kesin_sart_degisti_mi(degisenler: set[str]) -> bool:
+    return bool(degisenler & KESIN_SARTI_ETKILEYEN_ALANLAR)

@@ -104,6 +104,19 @@ async def firma_kartini_hazirla(kart_id: uuid.UUID, versiyon: int) -> None:
             logger.exception("Firma kartı hazırlama başarısız (%s)", kart_id)
 
 
+async def firma_kartini_yeniden_eslestir(kart_id: uuid.UUID) -> None:
+    """Arka plan işi: embedding aynı, firmanın şehri ya da türü değişti (kesin şartlar).
+
+    Kartın aday olduğu açık ortak ilanları için pipeline yeniden çalışır; kendi
+    oturumunu açar, hatayı yutar (profil zaten kaydedildi).
+    """
+    async with get_sessionmaker()() as oturum:
+        try:
+            await firma_kartini_eslestir(oturum, kart_id)
+        except Exception:
+            logger.exception("Firma kartı yeniden eşleştirme başarısız (%s)", kart_id)
+
+
 async def firma_kartini_hazirla_oturumla(
     oturum: AsyncSession, kart_id: uuid.UUID, versiyon: int
 ) -> bool:

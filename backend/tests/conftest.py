@@ -125,6 +125,21 @@ def firma_karti_hazirlama_arka_plani_yok(monkeypatch):
     return cagrilar
 
 
+@pytest.fixture(autouse=True)
+def firma_yeniden_eslestirme_arka_plani_yok(monkeypatch):
+    """Firma profilinde şehir/tür değişince kart yanıttan sonra yeniden eşleşir (gerçek
+    oturum, pipeline, LLM). Testlerde çalışmasın; çağrılan kart kimlikleri kaydedilir."""
+    from app.servisler import firma_karti
+
+    cagrilar: list = []
+
+    async def kaydet(kart_id):
+        cagrilar.append(kart_id)
+
+    monkeypatch.setattr(firma_karti, "firma_kartini_yeniden_eslestir", kaydet)
+    return cagrilar
+
+
 class SahteEpostaGonderici:
     kip = "sahte"
 

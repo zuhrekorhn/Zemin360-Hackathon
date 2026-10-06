@@ -42,6 +42,7 @@ from app.schemas.profil import (
     GencProfilYaniti,
 )
 from app.schemas.tanimlama import KurumProfili
+from app.servisler import firma_karti as firma_karti_servisi
 from app.servisler import kart_hazirlama, kimlik_dogrulama
 
 router = APIRouter(tags=["profil"])
@@ -256,12 +257,18 @@ async def firma_profili_getir(
 @router.patch("/kurum/profil", response_model=FirmaProfilYaniti)
 async def firma_profili_guncelle(
     istek: FirmaProfilGuncelleme,
+    arka_plan: BackgroundTasks,
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> FirmaProfilYaniti:
     """Yalnızca gönderilen alan değişir; zorunlu alan boşaltılamaz (422).
 
     Profil token'daki hesabın firması; başkasının profili diye bir yol yok.
+
+    Eşleştirmeyi etkileyen alan gerçekten değiştiyse, kartı olan firma için iş
+    yanıttan sonra arka planda yürür: sektör kartın embedding'ini ve önerilerini
+    yeniler; şehir ya da tür, firmanın aday olduğu açık ortak ilanlarını yeniden
+    eşleştirir. Aynı değerle kaydetme hiçbir şeyi tetiklemez.
     """
     gonderilenler = {alan: getattr(istek, alan) for alan in istek.model_fields_set}
     bosalanlar = sorted(
@@ -278,10 +285,30 @@ async def firma_profili_guncelle(
         # Doğrulama kimlikle ilgili: site değişince GİRVAK yeniden bakar (karar 15).
         kurum.dogrulama_durumu = firma_dogrulama.BEKLIYOR
         kurum.dogrulama_tarihi = None
+    degisenler = degisen_alanlar(
+        {alan: getattr(kurum, alan) for alan in FIRMA_PROFIL_ALANLARI},
+        {a: d for a, d in gonderilenler.items() if a in FIRMA_PROFIL_ALANLARI},
+    )
     firma_profilini_uygula(kurum, gonderilenler)
     if gonderilenler.get("kvkk_onay") and hesap.kvkk_onay_tarihi is None:
         hesap.kvkk_onay_tarihi = dt.datetime.now(dt.UTC)
+    kurum_id = kurum.id
+    sektor = firma_profili.sektor_degisti_mi(degisenler)
+    kesin_sart = firma_profili.kesin_sart_degisti_mi(degisenler)
+    arka_is = None
+    if sektor or kesin_sart:
+        kart = await firma_karti_servisi.kurumun_karti(oturum, kurum_id, kilitle=True)
+        if kart is not None:
+            if sektor:
+                # Sektör kartın temsil metninde ve gerekçe isteminde: eski kararlar
+                # yeni bilgiye dayanmaz (kart düzenlemesindeki kural).
+                await firma_karti_servisi.onerilerin_gerekcesini_bosalt(oturum, kart.id)
+                arka_is = (firma_karti_servisi.firma_kartini_hazirla, kart.id, kart.versiyon)
+            else:
+                arka_is = (firma_karti_servisi.firma_kartini_yeniden_eslestir, kart.id)
     await oturum.commit()
+    if arka_is is not None:
+        arka_plan.add_task(*arka_is)
     return firma_profil_yaniti(hesap, hesap.kurum)
 
 
