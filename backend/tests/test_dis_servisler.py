@@ -11,11 +11,15 @@ from fastapi.testclient import TestClient
 from app.core.config import Settings
 from app.core.dis_servisler import kurulum
 from app.core.dis_servisler.eposta import (
+    BREVO_ADRESI,
+    BrevoGonderici,
     Eposta,
     KapaliGonderici,
     LogGonderici,
     ResendGonderici,
+    SahteAdresiAtlayan,
     dusmeden_gonder,
+    sahte_adres_mi,
 )
 from app.core.dis_servisler.saglik import SAGLIK
 from app.core.dis_servisler.sarmalayicilar import zaman_asimli
@@ -88,11 +92,29 @@ def test_zaman_asimli_sureyi_asarsa_timeout():
             },
             ResendGonderici,
         ),
+        # Brevo: anahtar ya da gönderen eksikse yine log kipi, tamsa gerçek gönderici.
+        ({"eposta_saglayici": "brevo", "eposta_gonderen": "a@ornek.org"}, LogGonderici),
+        ({"eposta_saglayici": "brevo", "brevo_api_key": "xkeysib-x"}, LogGonderici),
+        (
+            {
+                "eposta_saglayici": "brevo",
+                "brevo_api_key": "xkeysib-x",
+                "eposta_gonderen": "a@ornek.org",
+            },
+            BrevoGonderici,
+        ),
     ],
 )
 def test_kurulum_bayraga_gore_secer(ayarlar, beklenen):
-    ayar = Settings(_env_file=None, **{"resend_api_key": "", "eposta_gonderen": "", **ayarlar})
-    assert isinstance(kurulum.eposta_gondericisi_sec(ayar), beklenen)
+    ayar = Settings(
+        _env_file=None,
+        **{"resend_api_key": "", "brevo_api_key": "", "eposta_gonderen": "", **ayarlar},
+    )
+    gonderici = kurulum.eposta_gondericisi_sec(ayar)
+    # Gerçek göndericiler sahte adres sarmalayıcısının içinde gelir; kip dışarıdan da görünür.
+    ic = gonderici.ic if isinstance(gonderici, SahteAdresiAtlayan) else gonderici
+    assert isinstance(ic, beklenen)
+    assert gonderici.kip == ic.kip
 
 
 def test_saglik_ucu_yalnizca_girvak():
@@ -113,3 +135,91 @@ def test_saglik_ucu_yalnizca_girvak():
         "gorsel_arayici",
     ]
     assert yanit.json()[0]["kip"] == "sahte"
+
+
+# --- Brevo ve sahte adres koruması ---------------------------------------------------------
+
+
+def _brevo(isleyici, gonderen="Zemin360 <bildirim@ornek.org>") -> BrevoGonderici:
+    return BrevoGonderici(
+        api_anahtari="brevo-test-anahtari",
+        gonderen=gonderen,
+        zaman_asimi_sn=5,
+        tasima=httpx.MockTransport(isleyici),
+    )
+
+
+def test_brevo_istegi_ve_basari_kaydi():
+    istekler = []
+
+    def isleyici(istek):
+        istekler.append(istek)
+        return httpx.Response(201, json={"messageId": "<x>"})
+
+    once = SAGLIK.oku("eposta").basari_sayisi
+    assert asyncio.run(dusmeden_gonder(_brevo(isleyici), EPOSTA)) is True
+    (istek,) = istekler
+    assert str(istek.url) == BREVO_ADRESI
+    assert istek.headers["api-key"] == "brevo-test-anahtari"
+    assert json.loads(istek.content) == {
+        "sender": {"email": "bildirim@ornek.org", "name": "Zemin360"},
+        "to": [{"email": "elif@ornek.com"}],
+        "subject": "Konu",
+        "textContent": "Metin",
+    }
+    assert SAGLIK.oku("eposta").basari_sayisi == once + 1
+
+
+def test_brevo_gonderen_yalnizca_adresse_ad_alani_yok():
+    istekler = []
+    gonderici = _brevo(lambda i: istekler.append(i) or httpx.Response(201), gonderen="a@ornek.org")
+    asyncio.run(gonderici.gonder(EPOSTA))
+    assert json.loads(istekler[0].content)["sender"] == {"email": "a@ornek.org"}
+
+
+def test_brevo_hatasi_akisi_dusurmez_ve_anahtar_hata_kaydina_sizmaz(caplog):
+    once = SAGLIK.oku("eposta").hata_sayisi
+    gonderici = _brevo(lambda _i: httpx.Response(401, json={"message": "Key not found"}))
+    with caplog.at_level("ERROR"):
+        assert asyncio.run(dusmeden_gonder(gonderici, EPOSTA)) is False
+    assert SAGLIK.oku("eposta").hata_sayisi == once + 1
+    assert "brevo-test-anahtari" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("adres", "sahte"),
+    [
+        ("ayse@soguklojistik.example", True),
+        ("iletisim@demo.zemin360.example", True),
+        ("x@deneme.test", True),
+        ("x@yerel.localhost", True),
+        ("x@gecersiz.invalid", True),
+        ("x@example.com", True),
+        ("X@EXAMPLE.ORG", True),
+        ("elif@ornek.com", False),
+        ("elif@gmail.com", False),
+        # "example" yalnızca son parça olarak sahte; başka alan adının içinde geçmesi sahte değil.
+        ("x@examplesirket.com", False),
+        ("x@my.example.com", False),
+    ],
+)
+def test_sahte_adres_mi(adres, sahte):
+    assert sahte_adres_mi(adres) is sahte
+
+
+def test_sahte_adrese_ag_istegi_atilmaz_gercek_adrese_atilir():
+    istekler = []
+
+    def isleyici(istek):
+        istekler.append(istek)
+        return httpx.Response(201)
+
+    gonderici = SahteAdresiAtlayan(_brevo(isleyici))
+    assert gonderici.kip == "brevo"
+
+    sahte = Eposta(alici="ayse@soguklojistik.example", konu="K", metin="M")
+    assert asyncio.run(dusmeden_gonder(gonderici, sahte)) is True  # hata değil, atlandı
+    assert istekler == []
+
+    assert asyncio.run(dusmeden_gonder(gonderici, EPOSTA)) is True
+    assert len(istekler) == 1

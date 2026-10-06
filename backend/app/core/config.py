@@ -65,9 +65,10 @@ class Settings(BaseSettings):
 
     # Dış servisler (docs/plans/dogrulama-iyilestirme.md § 14.4). Somut sınıf
     # app/core/dis_servisler/kurulum.py'de bu bayraklara göre seçilir.
-    # E-posta: resend | log (gönderilmez, log'a yazılır) | kapali.
-    eposta_saglayici: Literal["resend", "log", "kapali"] = "log"
+    # E-posta: resend | brevo | log (gönderilmez, log'a yazılır) | kapali.
+    eposta_saglayici: Literal["resend", "brevo", "log", "kapali"] = "log"
     resend_api_key: str = ""
+    brevo_api_key: str = ""
     # Resend'de doğrulanmış alan adından gönderen, ör. "Zemin360 <bildirim@ornek.org>".
     eposta_gonderen: str = ""
     eposta_zaman_asimi_sn: float = 10

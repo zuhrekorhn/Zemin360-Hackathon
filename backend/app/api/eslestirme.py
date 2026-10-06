@@ -85,6 +85,7 @@ from app.schemas.eslestirme import (
     OnerilerYaniti,
     OneriYaniti,
 )
+from app.servisler import eslesme_epostasi
 from app.servisler import eslestirme as servis
 from app.servisler.eslestirme import (
     IHTIYAC_ACIK,
@@ -193,6 +194,13 @@ async def onerilerim(
     ]
 
 
+def _eslestiniz_epostasi(arka_plan: BackgroundTasks, eslesme: Eslesme, alici_taraf: str) -> None:
+    """Karşılıklı ilgide bildirimi alan tarafa "eşleştiniz" e-postası (yanıttan sonra)."""
+    eposta = eslesme_epostasi.eslesme_epostasi(eslesme, alici_taraf)
+    if eposta is not None:
+        arka_plan.add_task(eslesme_epostasi.eposta_gonder, eposta)
+
+
 @router.post("/ilgileniyorum", response_model=EslesmeDurumYaniti)
 async def ilgileniyorum(
     istek: IlgileniyorumIstegi,
@@ -238,6 +246,7 @@ async def ilgileniyorum(
     await oturum.commit()
     if degisti and karsilikli and eslesme.isbirligi is not None:
         arka_plan.add_task(takip.plani_arka_planda_oner, eslesme.isbirligi.id)
+        _eslestiniz_epostasi(arka_plan, eslesme, TARAF_ADAY)
     return _durum_yaniti(eslesme, hesap)
 
 
@@ -345,6 +354,7 @@ async def kabul(
     await oturum.commit()
     if degisti and eslesme.isbirligi is not None:
         arka_plan.add_task(takip.plani_arka_planda_oner, eslesme.isbirligi.id)
+        _eslestiniz_epostasi(arka_plan, eslesme, TARAF_ILAN)
     return _durum_yaniti(eslesme, hesap)
 
 
@@ -736,6 +746,7 @@ async def firma_kabul(
     await oturum.commit()
     if degisti and eslesme.isbirligi is not None:
         arka_plan.add_task(takip.plani_arka_planda_oner, eslesme.isbirligi.id)
+        _eslestiniz_epostasi(arka_plan, eslesme, TARAF_ILAN)
     return _durum_yaniti(eslesme, hesap)
 
 

@@ -16,10 +16,12 @@ from pathlib import Path
 from app.core.config import Settings, get_settings
 from app.core.dis_servisler.depo import Depo, KapaliDepo, R2Depo, YerelDepo
 from app.core.dis_servisler.eposta import (
+    BrevoGonderici,
     EpostaGonderici,
     KapaliGonderici,
     LogGonderici,
     ResendGonderici,
+    SahteAdresiAtlayan,
 )
 from app.core.dis_servisler.gorsel_arayici import (
     CloudVisionArayici,
@@ -64,14 +66,28 @@ def eposta_gondericisi_sec(ayar: Settings) -> EpostaGonderici:
         return KapaliGonderici()
     if ayar.eposta_saglayici == "resend":
         if ayar.resend_api_key and ayar.eposta_gonderen:
-            return ResendGonderici(
-                api_anahtari=ayar.resend_api_key,
-                gonderen=ayar.eposta_gonderen,
-                zaman_asimi_sn=ayar.eposta_zaman_asimi_sn,
+            return SahteAdresiAtlayan(
+                ResendGonderici(
+                    api_anahtari=ayar.resend_api_key,
+                    gonderen=ayar.eposta_gonderen,
+                    zaman_asimi_sn=ayar.eposta_zaman_asimi_sn,
+                )
             )
         # Eksik ayarla açılış durmaz (İ9): kayıt sürer, bağlantı log'da görünür.
         logger.warning(
             "EPOSTA_SAGLAYICI=resend ama RESEND_API_KEY ya da EPOSTA_GONDEREN boş; log kipi"
+        )
+    if ayar.eposta_saglayici == "brevo":
+        if ayar.brevo_api_key and ayar.eposta_gonderen:
+            return SahteAdresiAtlayan(
+                BrevoGonderici(
+                    api_anahtari=ayar.brevo_api_key,
+                    gonderen=ayar.eposta_gonderen,
+                    zaman_asimi_sn=ayar.eposta_zaman_asimi_sn,
+                )
+            )
+        logger.warning(
+            "EPOSTA_SAGLAYICI=brevo ama BREVO_API_KEY ya da EPOSTA_GONDEREN boş; log kipi"
         )
     return LogGonderici()
 

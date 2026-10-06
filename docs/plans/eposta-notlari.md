@@ -37,7 +37,16 @@ Durum: **karar notu, plan değil.** Yeni bir sohbette bu dosyadan başlanır; pl
 1500 karakteri geçmez; sığmazsa çalışma, sonra başarı ölçütü düşer, sonra problem kısalır.
 Uçlara e-posta içermeyen iki alan eklendi: `basari_kriteri` ve `calisma_basligi`
 (`/eslestirme/onerilerim`, `/isbirliklerim`, `/isbirligi/{id}`; `/me` ilan özetinde
-`basari_kriteri`). Brevo (karar 2-3) henüz yapılmadı.
+`basari_kriteri`).
+
+**Durum (7 Eki, Brevo):** `BrevoGonderici` yapıldı (`EPOSTA_SAGLAYICI=brevo`, `BREVO_API_KEY`,
+`EPOSTA_GONDEREN`; eksikse log kipi). Gerçek göndericiler `SahteAdresiAtlayan` içinde:
+`.example/.test/.invalid/.localhost` ve `example.com/.org/.net` adreslerine ağ isteği atılmaz
+(demo hesapları), log'a "atlandı" yazılır. Yeni "eşleştiniz" e-postası
+(`app/servisler/eslesme_epostasi.py`): karşılıklı ilgi kesinleşince (`ilgileniyorum` karşılıklı
+kolu, `kabul`, `firma-kabul`) yalnızca bildirimi alan tarafa, yanıttan sonra arka planda;
+gövdede karşı tarafın adresi yok, yalnızca iş birliği sayfası bağlantısı. Gönderim hatası
+akışı düşürmez. Gerçek göndericiyle elle deneme Brevo hesabı açılınca yapılacak.
 
 ## Örnek taslak (firma → genç)
 
