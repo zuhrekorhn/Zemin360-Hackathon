@@ -1531,6 +1531,8 @@ export type MilestoneYaniti = {
   sira: number;
   baslik: string;
   aciklama: string | null;
+  /** Hazırlık önerisi (süreç şablonundan ya da kişiselleştirilmiş). */
+  oneri?: string | null;
   hedef_tarih: string | null;
   /** "bekliyor" | "tamamlandi" */
   durum: string;
@@ -1547,6 +1549,9 @@ export type IsbirligiDurumu = "plan_bekliyor" | "aktif" | "tamamlandi";
 export type IsbirligiDetayi = {
   id: string;
   durum: IsbirligiDurumu;
+  /** Süreç şablonu ve görünen adı ("İşe alım süreci"); eski kayıtta null. */
+  surec?: string | null;
+  surec_adi?: string | null;
   baslangic_tarihi: string | null;
   tamamlanma_tarihi: string | null;
   eslesme_id: string;

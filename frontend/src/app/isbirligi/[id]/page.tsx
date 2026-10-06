@@ -48,7 +48,7 @@ import { panelYolu } from "@/lib/yonlendirme";
  * İki tarafa aynı sayfa. Üç hâl:
  *   plan_bekliyor — ajanın önerdiği plan düzenlenir, iki taraf onaylar;
  *   aktif         — adımlar iki taraflı işaretlenir, gecikme görünür;
- *   tamamlandi    — son adımla kendiliğinden; gencin kartına pilot sinyali.
+ *   tamamlandi    — son adımla kendiliğinden; gencin kartında tamamlanan iş birliği.
  * GİRVAK yalnızca okur. Ajan karar vermez: plan ve özet önerir, hiçbir adımı
  * kendisi kapatmaz.
  */
@@ -251,6 +251,46 @@ function TamamlandiBandi({
   );
 }
 
+/* --- Süreç çizgisi (plan taslağı ve zaman çizelgesi ortak) ----------------- */
+
+const SUREC_CIZGISI = "relative flex flex-col gap-5 border-l border-kenar pl-5";
+
+function CizgiNoktasi({ tamamlandi }: { tamamlandi: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        tamamlandi
+          ? "absolute top-1.5 -left-[25px] size-2.5 rounded-full bg-baglanti"
+          : "absolute top-1.5 -left-[25px] size-2.5 rounded-full border border-kenar bg-zemin"
+      }
+    />
+  );
+}
+
+/** Adımın "ne olunca tamam" cümlesi ve açılır hazırlık önerisi. */
+function AdimMetinleri({ adim }: { adim: MilestoneYaniti }) {
+  return (
+    <>
+      {adim.aciklama ? (
+        <p className="text-sm text-pretty text-muted-foreground">
+          {adim.aciklama}
+        </p>
+      ) : null}
+      {adim.oneri ? (
+        <details className="group text-sm">
+          <summary className="w-fit cursor-pointer text-baglanti underline-offset-4 hover:underline">
+            Hazırlık önerisi
+          </summary>
+          <p className="mt-1 border-l-2 border-kenar pl-3 text-pretty">
+            {adim.oneri}
+          </p>
+        </details>
+      ) : null}
+    </>
+  );
+}
+
 /* --- Plan taslağı --------------------------------------------------------- */
 
 function PlanTaslagi({
@@ -275,8 +315,8 @@ function PlanTaslagi({
   return (
     <PanelBolumu
       id="plan"
-      baslik="Plan"
-      aciklama="Başarı ölçütünden bir plan önerisi hazırlanır; iki taraf düzenleyip onaylar. Onaylanan plan değiştirilemez."
+      baslik={detay.surec_adi ?? "Plan"}
+      aciklama="Adımlar bu tür iş birliklerinde izlenen yoldan gelir ve bu ihtiyaca göre uyarlanır; her adımda bir hazırlık önerisi var. İki taraf düzenleyip onaylar; onaylanan plan değiştirilemez."
     >
       <p className="text-sm text-pretty">{onay.metin}</p>
 
@@ -303,7 +343,7 @@ function PlanTaslagi({
           ) : null}
         </div>
       ) : (
-        <ol className="flex flex-col gap-3">
+        <ol className={SUREC_CIZGISI}>
           {adimlar.map((adim) => (
             <TaslakAdim
               key={adim.id}
@@ -380,7 +420,8 @@ function TaslakAdim({
 
   if (duzenleniyor) {
     return (
-      <li className="rounded-sm border border-kenar bg-card px-4 py-3">
+      <li className="relative">
+        <CizgiNoktasi tamamlandi={false} />
         <AdimFormu
           baslangic={adim}
           dugme="Kaydet"
@@ -396,11 +437,9 @@ function TaslakAdim({
   }
 
   return (
-    <li className="flex flex-col gap-1 rounded-sm border border-kenar bg-card px-4 py-3">
+    <li className="relative flex flex-col gap-1.5">
+      <CizgiNoktasi tamamlandi={false} />
       <div className="flex flex-wrap items-baseline gap-x-3">
-        <span className="font-mono text-xs text-muted-foreground">
-          {adim.sira + 1}
-        </span>
         <span className="font-medium text-ana">{adim.baslik}</span>
         <span className="text-xs text-muted-foreground">
           {adim.hedef_tarih
@@ -408,11 +447,7 @@ function TaslakAdim({
             : "tarihsiz"}
         </span>
       </div>
-      {adim.aciklama ? (
-        <p className="text-sm text-pretty text-muted-foreground">
-          {adim.aciklama}
-        </p>
-      ) : null}
+      <AdimMetinleri adim={adim} />
       {duzenlenebilir ? (
         <div className="flex gap-3 pt-1">
           <button
@@ -570,12 +605,12 @@ function ZamanCizelgesi({
   return (
     <PanelBolumu
       id="cizelge"
-      baslik="Zaman çizelgesi"
+      baslik={detay.surec_adi ?? "Zaman çizelgesi"}
       aciklama={`${tamamlanan}/${toplam} adım tamamlandı${
         geciken > 0 ? ` · ${geciken} gecikmiş` : ""
       }. Bir adım, iki taraf da “tamamlandı” deyince tamamlanır.`}
     >
-      <ol className="relative flex flex-col gap-5 border-l border-kenar pl-5">
+      <ol className={SUREC_CIZGISI}>
         {detay.milestonelar.map((adim) => (
           <CizelgeAdimi
             key={adim.id}
@@ -614,14 +649,7 @@ function CizelgeAdimi({
 
   return (
     <li className="relative flex flex-col gap-1.5">
-      <span
-        aria-hidden="true"
-        className={
-          gorunum.tamamlandi
-            ? "absolute top-1.5 -left-[25px] size-2.5 rounded-full bg-baglanti"
-            : "absolute top-1.5 -left-[25px] size-2.5 rounded-full border border-kenar bg-zemin"
-        }
-      />
+      <CizgiNoktasi tamamlandi={gorunum.tamamlandi} />
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="font-medium text-ana">{adim.baslik}</span>
         <span className="text-xs text-muted-foreground">
@@ -631,11 +659,7 @@ function CizelgeAdimi({
         </span>
         {adim.gecikmis ? <DurumEtiketi metin="Gecikmiş" /> : null}
       </div>
-      {adim.aciklama ? (
-        <p className="text-sm text-pretty text-muted-foreground">
-          {adim.aciklama}
-        </p>
-      ) : null}
+      <AdimMetinleri adim={adim} />
       <p
         className={
           gorunum.siraBende
