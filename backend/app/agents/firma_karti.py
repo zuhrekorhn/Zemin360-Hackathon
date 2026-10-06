@@ -153,6 +153,14 @@ FIRMA_KARTI = motor.AjanTanimi(
 )
 
 
+# Bağlamın kullanım kuralı bağlamla birlikte gider: onu alan her sohbet (firma
+# kartı, iki Tanımlama kapısı) aynı kuralı alır, talimatlara ayrıca yazılmaz.
+PROFIL_BASLIGI = (
+    "FİRMANIN PROFİLİ (kayıt formundan; bunları SORMA). Örneklerini ve sorularını "
+    "firmanın sektörüne ve türüne uyarla; sektör yoksa genel örnek ver:\n"
+)
+
+
 def profil_baglami(kurum: Any) -> str | None:
     """Kayıt formundan bilinenler: ajana bağlam olarak gider, sorulmaz (saf).
 
@@ -175,9 +183,7 @@ def profil_baglami(kurum: Any) -> str | None:
         satirlar.append(f"Kendi tanıtımı: {kurum.tanitim}")
     if not satirlar:
         return None
-    return "FİRMANIN PROFİLİ (kayıt formundan; bunları SORMA, yalnızca bağlam):\n" + "\n".join(
-        f"- {satir}" for satir in satirlar
-    )
+    return PROFIL_BASLIGI + "\n".join(f"- {satir}" for satir in satirlar)
 
 
 @lru_cache

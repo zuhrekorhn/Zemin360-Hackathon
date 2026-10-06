@@ -80,10 +80,13 @@ async def sohbet_baslat(
 ) -> TanimlamaSohbetYaniti:
     oturum_id = uuid.uuid4()
     # Oturumu açan hesap checkpoint'e yazılır; cevap ve onay yalnızca ondan.
-    baslangic = {**sohbet_baslangici(hesap), "aranan": istek.aranan}
-    if istek.aranan == ARANAN_FIRMA:
-        # Firmanın kayıt bilgileri sorulmaz, bağlam olarak gider (§ 5).
-        baslangic["profil_baglami"] = profil_baglami(hesap.kurum)
+    # Firmanın kayıt bilgileri iki kapıda da sorulmaz, bağlam olarak gider (§ 5):
+    # örnek sorular firmanın sektörüne uyarlanır.
+    baslangic = {
+        **sohbet_baslangici(hesap),
+        "aranan": istek.aranan,
+        "profil_baglami": profil_baglami(hesap.kurum),
+    }
     durum = await _grafik(request, istek.aranan).ainvoke(
         baslangic, config={"configurable": {"thread_id": str(oturum_id)}}
     )
