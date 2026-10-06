@@ -203,15 +203,21 @@ Ajan inceleme sırasının 3. adımı. Kötü girdi senaryo seti
 - [x] **"Düzenle" düğmesi** (5 Eki, `plans/ilan-duzenleme.md`): açık ilan yerinde düzenlenir
       (`PATCH /ihtiyac-kartlari/{id}`, onaydaki form); kopyalama ve ilgi aktarımı gerekmedi,
       ilgiler kendiliğinden korunur. İş birliği başlamış ya da kapalı ilan 409.
-- [ ] Genç kapısında firmanın kayıt bilgileri bağlam olarak gitmiyor (bulgu 5): örnek sorular
+- [x] Genç kapısında firmanın kayıt bilgileri bağlam olarak gitmiyor (bulgu 5): örnek sorular
       sektöre uyarlanamıyor. Firma kartı sohbetinde de örnekler sektöre uyarlanmıyor.
-- [ ] Sohbet ilk mesajda kapanabiliyor; kısıtlar ve şehir sohbette sorulmuyor (bulgu 6'nın
-      kalanı; çalışma modeli ve müsaitlik onay formunda zorunlu yapıldı).
-- [ ] Küçükler (bulgu 7): kayıtlı kartta "kart no" satırı teknik; talimatlarda "kurum" kelimesi.
-- [ ] İlan metni "Neden uygun?" isteminde veri olarak işaretlenmiyor (istem enjeksiyonuna karşı
+      *6 Eki: iki kapıya da bağlam gider; kullanım kuralı `PROFIL_BASLIGI`'nda.*
+- [x] Sohbet ilk mesajda kapanabiliyor; kısıtlar ve şehir sohbette sorulmuyor (bulgu 6'nın
+      kalanı; çalışma modeli ve müsaitlik onay formunda zorunlu yapıldı). *6 Eki: kısıt ve
+      şehir boşsa bir kez koşul sorusu (`kosul_eksigi`).*
+- [x] Küçükler (bulgu 7): kayıtlı kartta "kart no" satırı teknik; talimatlarda "kurum" kelimesi.
+- [x] İlan metni "Neden uygun?" isteminde veri olarak işaretlenmiyor (istem enjeksiyonuna karşı
       sınır işareti); senaryo setinde sohbet tarafı temiz çıktı, gerekçe tarafı denenmedi.
-- [ ] "Bilmiyorum" diyen firma 7 tura kadar soru görüyor: açıklama turları tur hakkından
-      düşmüyor. Gerekirse "bilmiyorum"u açıklama isteğinden ayırmak.
+      *6 Eki: `<ilan>`/`<aday>` etiketleri, kural `app/core/istem_guvenligi.py`. Doğrulama'nın
+      `<kanit_metni>` kuralı aynı modüle taşınabilir (borç).*
+- [x] "Bilmiyorum" diyen firma 7 tura kadar soru görüyor: açıklama turları tur hakkından
+      düşmüyor. *6 Eki: `SohbetCikarimi.cevap_veremiyor`; "bilmiyorum" açıklama turu açmaz.*
+- [ ] Elle deneme (kullanıcı): "Düzenle", koşul sorusu, sektöre uyarlanan örnekler. Senaryo
+      karnesi istem değiştiği için eskidi; ücretli canlı koşu isteğe bağlı.
 - [ ] Mimari borç: `servisler/kart_hazirlama` API katmanından (`api.yetenek_kartlari`) import
       ediyor; döngü edevlet'te tembel importla kırıldı, `embedding_hesapla` servis katmanına
       taşınmalı.

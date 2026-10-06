@@ -26,7 +26,8 @@ def dolu_taslak(**degisiklikler) -> dict:
         "problem_tanimi": "Destek ekibi gelen talepleri elle sınıflandırıyor",
         "basari_kriteri": "Tier-1 biletlerin %50'si insan müdahalesi olmadan çözülsün",
         "basari_olcutu": {"metrik": "insansız çözülen tier-1 bilet", "hedef_deger": "%50"},
-        "kisitlar": None,
+        # Kısıt söylenmiş: koşul sorusu (tests/test_tanimlama_kalanlar.py) burada araya girmez.
+        "kisitlar": "Bütçe 100 bin TL",
         "sehir_tercihi": None,
         "musaitlik_tercihi": None,
     }

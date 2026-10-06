@@ -1,6 +1,6 @@
 # Tanımlama incelemesinin kalanları (6 Eki)
 
-Durum: **uygulanıyor.** `docs/roadmap.md` § Tanımlama incelemesi'nin açık maddeleri 2-6.
+Durum: **uygulandı (6 Eki); elle deneme kullanıcıda.** `docs/roadmap.md` § Tanımlama incelemesi'nin açık maddeleri 2-6.
 Elle tarayıcı denemesi ("Düzenle" dahil) kullanıcıda. Testler yalnızca sonda.
 
 ## İlke
