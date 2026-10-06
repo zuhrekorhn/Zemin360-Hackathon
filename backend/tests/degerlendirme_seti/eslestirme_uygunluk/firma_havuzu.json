@@ -1,0 +1,360 @@
+{
+ "aciklama": "Sentetik firma havuzu: 6 ilan, 28 firma kartı. Etiket: 2 çözüm ortağı, 1 kısmen, 0 alakasız (listede olmayan çift 0). 'ayni_sorun': ilanla aynı sorunu yaşayan, çözüm sunmayan firmalar (etiketi 0). Kaynak: firma eşleştirme ölçümü (6 Eki 2026), elle etiket.",
+ "tur": "firma",
+ "benzerlik_tabani": 0.52,
+ "ilanlar": {
+  "F1": {
+   "ad": "F1 destek otomasyonu",
+   "problem": "Müşteri destek ekibimiz günde 800 bilet alıyor, elle ayırıyoruz. Biletleri otomatik sınıflandıracak ve yönlendirecek bir yapay zekâ çözümü için ortak arıyoruz.",
+   "basari_kriteri": "Elle ayırma süresi %70 azalır.",
+   "isbirligi_turu": null
+  },
+  "F2": {
+   "ad": "F2 lojistik takip",
+   "problem": "Dağıtım filomuzdaki araçların konumunu ve teslimat durumunu canlı izleyecek bir yazılım için çözüm ortağı arıyoruz.",
+   "basari_kriteri": "Geç teslimat oranı %15 düşer.",
+   "isbirligi_turu": null
+  },
+  "F3": {
+   "ad": "F3 enerji verimliliği",
+   "problem": "Fabrikamızın enerji tüketimini ölçüp azaltacak sensör ve analiz çözümü sunabilecek bir ortak arıyoruz.",
+   "basari_kriteri": "Enerji faturası %10 düşer.",
+   "isbirligi_turu": null
+  },
+  "F4": {
+   "ad": "F4 e-ticaret kurulum",
+   "problem": "Yerel el sanatları üreticileri için çevrimiçi satış sitesi ve ödeme altyapısı kuracak bir teknoloji ortağı arıyoruz.",
+   "basari_kriteri": "İlk üç ayda 500 sipariş.",
+   "isbirligi_turu": null
+  },
+  "F5": {
+   "ad": "F5 tarım takibi",
+   "problem": "Zeytinlik ve bağ üreticilerine verim takibi ve sulama önerisi sunacak bir tarım teknolojisi ortağı arıyoruz.",
+   "basari_kriteri": "Sulama suyu tüketimi %20 azalır.",
+   "isbirligi_turu": null
+  },
+  "F6": {
+   "ad": "F6 siber güvenlik",
+   "problem": "Şirketimizin ağ güvenliğini test edecek ve çalışanlara farkındalık eğitimi verecek bir siber güvenlik ortağı arıyoruz.",
+   "basari_kriteri": "Yıllık sızma testi ve eğitim programı.",
+   "isbirligi_turu": null
+  }
+ },
+ "adaylar": {
+  "f01": {
+   "ne_yapiyoruz": "Müşteri hizmetleri için yapay zekâ destekli bilet sınıflandırma ve yönlendirme yazılımı geliştiriyoruz",
+   "yetkinlikler": [
+    "doğal dil işleme",
+    "chatbot",
+    "SaaS"
+   ],
+   "onceki_isler": "Üç e-ticaret firmasında destek otomasyonu kurduk",
+   "sektor": "yazılım"
+  },
+  "f02": {
+   "ne_yapiyoruz": "Çağrı merkezleri için konuşma analitiği ve sesli asistan çözümleri sunuyoruz",
+   "yetkinlikler": [
+    "konuşma tanıma",
+    "NLP",
+    "entegrasyon"
+   ],
+   "onceki_isler": "Bir telekom operatörüne sesli asistan teslim ettik",
+   "sektor": "yazılım"
+  },
+  "f03": {
+   "ne_yapiyoruz": "Kurumsal yazılım danışmanlığı ve özel yazılım geliştirme yapıyoruz",
+   "yetkinlikler": [
+    "web geliştirme",
+    "API",
+    "DevOps"
+   ],
+   "onceki_isler": "Bankalar için iç araçlar geliştirdik",
+   "sektor": "yazılım"
+  },
+  "f04": {
+   "ne_yapiyoruz": "Veri analitiği ve iş zekâsı panoları kuruyoruz",
+   "yetkinlikler": [
+    "Power BI",
+    "veri ambarı",
+    "SQL"
+   ],
+   "onceki_isler": "Perakende zincirlerine raporlama sistemi kurduk",
+   "sektor": "danışmanlık"
+  },
+  "f05": {
+   "ne_yapiyoruz": "Büyük bir e-ticaret platformu işletiyoruz, günde yüzlerce müşteri talebi alıyoruz",
+   "yetkinlikler": [
+    "pazaryeri",
+    "lojistik",
+    "müşteri deneyimi"
+   ],
+   "onceki_isler": "Ülke genelinde satış yapıyoruz",
+   "sektor": "e-ticaret"
+  },
+  "f06": {
+   "ne_yapiyoruz": "Filo yönetimi ve araç takip yazılımı geliştiriyoruz",
+   "yetkinlikler": [
+    "GPS",
+    "mobil uygulama",
+    "telematik"
+   ],
+   "onceki_isler": "Üç lojistik firmasının filosunu canlı izliyoruz",
+   "sektor": "yazılım"
+  },
+  "f07": {
+   "ne_yapiyoruz": "Teslimat rotası optimizasyonu ve kurye yönetim platformu sunuyoruz",
+   "yetkinlikler": [
+    "rota optimizasyonu",
+    "API",
+    "mobil"
+   ],
+   "onceki_isler": "Yemek ve market teslimatı yapan firmalarla çalıştık",
+   "sektor": "lojistik teknolojisi"
+  },
+  "f08": {
+   "ne_yapiyoruz": "Ağır nakliye ve depolama hizmeti veriyoruz",
+   "yetkinlikler": [
+    "nakliye",
+    "depolama"
+   ],
+   "onceki_isler": "Sanayi tesislerine yük taşıdık",
+   "sektor": "lojistik"
+  },
+  "f09": {
+   "ne_yapiyoruz": "Endüstriyel IoT sensörleri ve enerji izleme sistemleri üretiyoruz",
+   "yetkinlikler": [
+    "IoT",
+    "sensör",
+    "enerji analitiği"
+   ],
+   "onceki_isler": "İki fabrikada enerji tüketimini %12 düşürdük",
+   "sektor": "endüstriyel teknoloji"
+  },
+  "f10": {
+   "ne_yapiyoruz": "Binalar için enerji danışmanlığı ve yalıtım projeleri yapıyoruz",
+   "yetkinlikler": [
+    "enerji etüdü",
+    "yalıtım"
+   ],
+   "onceki_isler": "Ofis binalarında enerji denetimi yaptık",
+   "sektor": "danışmanlık"
+  },
+  "f11": {
+   "ne_yapiyoruz": "Güneş enerjisi panelleri kurulumu yapıyoruz",
+   "yetkinlikler": [
+    "PV sistemleri",
+    "proje yönetimi"
+   ],
+   "onceki_isler": "Fabrika çatılarına GES kurduk",
+   "sektor": "enerji"
+  },
+  "f12": {
+   "ne_yapiyoruz": "Küçük üreticiler için çevrimiçi mağaza kurulumu ve ödeme entegrasyonu sağlıyoruz",
+   "yetkinlikler": [
+    "e-ticaret altyapısı",
+    "ödeme sistemleri",
+    "Shopify"
+   ],
+   "onceki_isler": "Otuz küçük işletmenin sitesini kurduk",
+   "sektor": "e-ticaret teknolojisi"
+  },
+  "f13": {
+   "ne_yapiyoruz": "Dijital ödeme ve sanal pos çözümleri sunuyoruz",
+   "yetkinlikler": [
+    "ödeme API",
+    "güvenlik",
+    "fintech"
+   ],
+   "onceki_isler": "Pazaryerlerine ödeme altyapısı sağladık",
+   "sektor": "fintech"
+  },
+  "f14": {
+   "ne_yapiyoruz": "Ambalaj ve paketleme malzemeleri üretiyoruz",
+   "yetkinlikler": [
+    "üretim",
+    "tedarik"
+   ],
+   "onceki_isler": "Gıda firmalarına ambalaj sağladık",
+   "sektor": "üretim"
+  },
+  "f15": {
+   "ne_yapiyoruz": "Hassas tarım için toprak nem sensörleri ve sulama yazılımı geliştiriyoruz",
+   "yetkinlikler": [
+    "IoT",
+    "uydu görüntüsü",
+    "agronomi"
+   ],
+   "onceki_isler": "Zeytin ve üzüm bahçelerinde sulama suyunu %25 azalttık",
+   "sektor": "tarım teknolojisi"
+  },
+  "f16": {
+   "ne_yapiyoruz": "Gübre ve tarım ilacı satışı yapıyoruz",
+   "yetkinlikler": [
+    "bayilik",
+    "saha satışı"
+   ],
+   "onceki_isler": "Kooperatiflere girdi sağladık",
+   "sektor": "tarım"
+  },
+  "f17": {
+   "ne_yapiyoruz": "Siber güvenlik danışmanlığı, sızma testi ve çalışan farkındalık eğitimi veriyoruz",
+   "yetkinlikler": [
+    "sızma testi",
+    "SOC",
+    "eğitim"
+   ],
+   "onceki_isler": "On bir kuruma sızma testi yaptık",
+   "sektor": "siber güvenlik"
+  },
+  "f18": {
+   "ne_yapiyoruz": "Ağ altyapısı ve bilgi işlem donanımı kurulumu yapıyoruz",
+   "yetkinlikler": [
+    "ağ kurulumu",
+    "sunucu"
+   ],
+   "onceki_isler": "Okullara ağ altyapısı kurduk",
+   "sektor": "bilişim"
+  },
+  "f19": {
+   "ne_yapiyoruz": "Kurumsal eğitim ve insan kaynakları danışmanlığı veriyoruz",
+   "yetkinlikler": [
+    "eğitim tasarımı",
+    "koçluk"
+   ],
+   "onceki_isler": "Şirketlere liderlik programı yürüttük",
+   "sektor": "danışmanlık"
+  },
+  "f20": {
+   "ne_yapiyoruz": "Restoran zincirleri için stok ve sipariş yönetim yazılımı geliştiriyoruz",
+   "yetkinlikler": [
+    "SaaS",
+    "mobil",
+    "entegrasyon"
+   ],
+   "onceki_isler": "Beş restoran zincirinde kullanılıyor",
+   "sektor": "yazılım"
+  },
+  "f21": {
+   "ne_yapiyoruz": "Reklam ve sosyal medya ajansı olarak markalara içerik üretiyoruz",
+   "yetkinlikler": [
+    "sosyal medya",
+    "video",
+    "reklam"
+   ],
+   "onceki_isler": "Kozmetik markalarıyla çalıştık",
+   "sektor": "reklam"
+  },
+  "f22": {
+   "ne_yapiyoruz": "Mobil uygulama ve oyun geliştirme stüdyosuyuz",
+   "yetkinlikler": [
+    "Unity",
+    "Flutter",
+    "mobil"
+   ],
+   "onceki_isler": "İki oyun yayınladık",
+   "sektor": "yazılım"
+  },
+  "f23": {
+   "ne_yapiyoruz": "Gıda üretimi ve toptan satış yapıyoruz",
+   "yetkinlikler": [
+    "üretim",
+    "dağıtım"
+   ],
+   "onceki_isler": "Marketlere ürün sağlıyoruz",
+   "sektor": "gıda"
+  },
+  "f24": {
+   "ne_yapiyoruz": "Hukuk ve mevzuat danışmanlığı sunuyoruz",
+   "yetkinlikler": [
+    "sözleşme",
+    "KVKK"
+   ],
+   "onceki_isler": "Girişimlere KVKK uyumu danışmanlığı verdik",
+   "sektor": "hukuk"
+  },
+  "f25": {
+   "ne_yapiyoruz": "Yapay zekâ ile görüntü işleme ve kalite kontrol çözümleri geliştiriyoruz",
+   "yetkinlikler": [
+    "bilgisayarlı görü",
+    "derin öğrenme"
+   ],
+   "onceki_isler": "Tekstil üretiminde hata tespiti kurduk",
+   "sektor": "yazılım"
+  },
+  "f26": {
+   "ne_yapiyoruz": "Çevrimiçi eğitim platformu işletiyoruz",
+   "yetkinlikler": [
+    "e-öğrenme",
+    "video"
+   ],
+   "onceki_isler": "Yetmiş bin öğrenciye ulaştık",
+   "sektor": "eğitim teknolojisi"
+  },
+  "f27": {
+   "ne_yapiyoruz": "Makine bakım ve onarım hizmeti veriyoruz",
+   "yetkinlikler": [
+    "bakım",
+    "yedek parça"
+   ],
+   "onceki_isler": "Fabrikalara periyodik bakım sağladık",
+   "sektor": "endüstri"
+  },
+  "f28": {
+   "ne_yapiyoruz": "Büyük bir tekstil üreticisiyiz, çağrı merkezimiz ve müşteri hizmetleri ekibimiz var",
+   "yetkinlikler": [
+    "üretim",
+    "ihracat"
+   ],
+   "onceki_isler": "Avrupa'ya hazır giyim ihraç ediyoruz",
+   "sektor": "tekstil"
+  }
+ },
+ "etiketler": {
+  "F1": {
+   "f01": 2,
+   "f02": 2,
+   "f03": 1,
+   "f04": 1,
+   "f25": 1
+  },
+  "F2": {
+   "f06": 2,
+   "f07": 2,
+   "f03": 1,
+   "f22": 1,
+   "f08": 1
+  },
+  "F3": {
+   "f09": 2,
+   "f10": 1,
+   "f11": 1,
+   "f27": 1,
+   "f25": 1
+  },
+  "F4": {
+   "f12": 2,
+   "f13": 1,
+   "f03": 1,
+   "f22": 1,
+   "f20": 1
+  },
+  "F5": {
+   "f15": 2,
+   "f09": 1,
+   "f16": 1,
+   "f25": 1
+  },
+  "F6": {
+   "f17": 2,
+   "f18": 1,
+   "f03": 1,
+   "f24": 1
+  }
+ },
+ "ayni_sorun": {
+  "F1": [
+   "f05",
+   "f28"
+  ]
+ }
+}

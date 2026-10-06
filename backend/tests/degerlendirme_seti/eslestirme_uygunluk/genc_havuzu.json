@@ -1,0 +1,616 @@
+{
+ "aciklama": "Sentetik genç havuzu: 6 ilan, 30 aday kartı. Etiket: 2 güçlü uygun, 1 kısmen, 0 alakasız (listede olmayan çift 0). Kaynak: eşleştirme ölçümü (6 Eki 2026), elle etiket.",
+ "tur": "genc",
+ "benzerlik_tabani": 0.48,
+ "ilanlar": {
+  "N1": {
+   "ad": "N1 bilet siniflandirma",
+   "problem": "E-ticaret müşteri destek ekibimiz günde 800 bilet alıyor ve bunları elle konuya göre ayırıyoruz. Gelen biletleri otomatik sınıflandıran bir model istiyoruz.",
+   "basari_kriteri": "Sınıflandırma doğruluğu %85 üzeri, ilk yanıt süresi yarıya iner."
+  },
+  "N2": {
+   "ad": "N2 raporlama panosu",
+   "problem": "KOBİ'miz muhasebe verilerini Excel'de elle birleştiriyor. Aylık gelir-gider ve nakit akışını gösteren bir raporlama panosu kurmak istiyoruz.",
+   "basari_kriteri": "Aylık kapanış raporu 2 günden yarım güne iner."
+  },
+  "N3": {
+   "ad": "N3 mobil siparis",
+   "problem": "Restoran zincirimiz için müşterilerin sipariş durumunu takip edebildiği bir mobil uygulama geliştirmek istiyoruz.",
+   "basari_kriteri": "iOS ve Android'de yayında, ilk ay 2000 indirme."
+  },
+  "N4": {
+   "ad": "N4 sosyal medya",
+   "problem": "Kozmetik markamız için Instagram ve TikTok içerik üretimi ve reklam yönetimi yapacak birini arıyoruz.",
+   "basari_kriteri": "Üç ayda takipçi %30 artar, reklam dönüşüm maliyeti düşer."
+  },
+  "N5": {
+   "ad": "N5 ariza tahmini",
+   "problem": "Üretim hattımızdaki makinelerden sensör verisi topluyoruz. Arıza olmadan önce uyarı veren bir tahmin sistemi istiyoruz.",
+   "basari_kriteri": "Plansız duruş süresi %20 azalır."
+  },
+  "N6": {
+   "ad": "N6 web sitesi",
+   "problem": "Kurumsal web sitemiz eski ve arama motorlarında görünmüyor. Siteyi yenileyip SEO çalışması yapacak birini arıyoruz.",
+   "basari_kriteri": "Organik trafik altı ayda ikiye katlanır."
+  }
+ },
+ "adaylar": {
+  "c01": {
+   "rol": "NLP mühendisi",
+   "deneyim": "junior",
+   "sektorler": [
+    "e-ticaret"
+   ],
+   "araclar": [
+    "Python",
+    "scikit-learn",
+    "HuggingFace"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Şikayet metni sınıflandırıcı",
+     "aciklama": "Türkçe şikayetleri 8 kategoriye ayıran model, F1 0.88"
+    }
+   ]
+  },
+  "c02": {
+   "rol": "Makine öğrenmesi geliştirici",
+   "deneyim": "orta",
+   "sektorler": [
+    "müşteri hizmetleri",
+    "SaaS"
+   ],
+   "araclar": [
+    "Python",
+    "PyTorch",
+    "FastAPI"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Destek talebi yönlendirme botu",
+     "aciklama": "Gelen talepleri ekiplere otomatik atayan servis"
+    }
+   ]
+  },
+  "c03": {
+   "rol": "Veri bilimci",
+   "deneyim": "junior",
+   "sektorler": [
+    "finans"
+   ],
+   "araclar": [
+    "Python",
+    "pandas",
+    "XGBoost"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Kredi risk modeli",
+     "aciklama": "Tabular veride temerrüt tahmini"
+    }
+   ]
+  },
+  "c04": {
+   "rol": "Backend geliştirici",
+   "deneyim": "junior",
+   "sektorler": [
+    "e-ticaret"
+   ],
+   "araclar": [
+    "Python",
+    "Django",
+    "PostgreSQL"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Sipariş API'si",
+     "aciklama": "Sipariş yönetimi için REST servisi"
+    }
+   ]
+  },
+  "c05": {
+   "rol": "Veri analisti",
+   "deneyim": "junior",
+   "sektorler": [
+    "finans",
+    "KOBİ"
+   ],
+   "araclar": [
+    "Excel",
+    "Power BI",
+    "SQL"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Nakit akışı panosu",
+     "aciklama": "Küçük işletme için aylık gelir-gider panosu"
+    }
+   ]
+  },
+  "c06": {
+   "rol": "İş zekâsı analisti",
+   "deneyim": "orta",
+   "sektorler": [
+    "perakende"
+   ],
+   "araclar": [
+    "Power BI",
+    "DAX",
+    "SQL Server"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Satış raporlama sistemi",
+     "aciklama": "Şube bazlı satış panoları"
+    }
+   ]
+  },
+  "c07": {
+   "rol": "Muhasebe asistanı",
+   "deneyim": "junior",
+   "sektorler": [
+    "muhasebe"
+   ],
+   "araclar": [
+    "Excel",
+    "Logo",
+    "Mikro"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Mizan otomasyonu",
+     "aciklama": "Excel makrolarıyla aylık mizan birleştirme"
+    }
+   ]
+  },
+  "c08": {
+   "rol": "Veri mühendisi",
+   "deneyim": "orta",
+   "sektorler": [
+    "telekom"
+   ],
+   "araclar": [
+    "Airflow",
+    "Spark",
+    "Python"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Veri ambarı hattı",
+     "aciklama": "Günlük ETL akışları"
+    }
+   ]
+  },
+  "c09": {
+   "rol": "Mobil geliştirici",
+   "deneyim": "junior",
+   "sektorler": [
+    "yemek"
+   ],
+   "araclar": [
+    "React Native",
+    "TypeScript",
+    "Firebase"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Yemek siparişi uygulaması",
+     "aciklama": "Sipariş takibi ve bildirimli mobil uygulama"
+    }
+   ]
+  },
+  "c10": {
+   "rol": "Flutter geliştirici",
+   "deneyim": "orta",
+   "sektorler": [
+    "lojistik"
+   ],
+   "araclar": [
+    "Flutter",
+    "Dart",
+    "REST"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Kurye takip uygulaması",
+     "aciklama": "Canlı konum ve teslimat durumu"
+    }
+   ]
+  },
+  "c11": {
+   "rol": "Frontend geliştirici",
+   "deneyim": "junior",
+   "sektorler": [
+    "SaaS"
+   ],
+   "araclar": [
+    "React",
+    "Next.js",
+    "Tailwind"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Yönetim paneli",
+     "aciklama": "Kurumsal dashboard arayüzü"
+    }
+   ]
+  },
+  "c12": {
+   "rol": "Android geliştirici",
+   "deneyim": "junior",
+   "sektorler": [
+    "oyun"
+   ],
+   "araclar": [
+    "Kotlin",
+    "Android Studio"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Bulmaca oyunu",
+     "aciklama": "Play Store'da yayında oyun"
+    }
+   ]
+  },
+  "c13": {
+   "rol": "Sosyal medya uzmanı",
+   "deneyim": "junior",
+   "sektorler": [
+    "moda",
+    "güzellik"
+   ],
+   "araclar": [
+    "Canva",
+    "Meta Ads",
+    "CapCut"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Butik marka Instagram yönetimi",
+     "aciklama": "Takipçi 4 ayda %40 arttı"
+    }
+   ]
+  },
+  "c14": {
+   "rol": "İçerik üreticisi",
+   "deneyim": "junior",
+   "sektorler": [
+    "kozmetik"
+   ],
+   "araclar": [
+    "TikTok",
+    "Premiere Pro",
+    "Canva"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Cilt bakım serisi videoları",
+     "aciklama": "Aylık 12 video, ortalama 30 bin izlenme"
+    }
+   ]
+  },
+  "c15": {
+   "rol": "Dijital pazarlama uzmanı",
+   "deneyim": "orta",
+   "sektorler": [
+    "e-ticaret"
+   ],
+   "araclar": [
+    "Google Ads",
+    "Meta Ads",
+    "GA4"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Performans reklam kampanyası",
+     "aciklama": "Dönüşüm maliyeti %25 düştü"
+    }
+   ]
+  },
+  "c16": {
+   "rol": "Grafik tasarımcı",
+   "deneyim": "junior",
+   "sektorler": [
+    "ajans"
+   ],
+   "araclar": [
+    "Illustrator",
+    "Photoshop",
+    "Figma"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Marka kimliği çalışması",
+     "aciklama": "Logo ve sosyal medya şablonları"
+    }
+   ]
+  },
+  "c17": {
+   "rol": "Metin yazarı",
+   "deneyim": "junior",
+   "sektorler": [
+    "medya"
+   ],
+   "araclar": [
+    "SEO yazarlığı",
+    "WordPress"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Blog serisi",
+     "aciklama": "Aylık 20 SEO uyumlu yazı"
+    }
+   ]
+  },
+  "c18": {
+   "rol": "Elektronik mühendisi",
+   "deneyim": "junior",
+   "sektorler": [
+    "endüstri"
+   ],
+   "araclar": [
+    "Arduino",
+    "MQTT",
+    "Python"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Titreşim sensörü izleme",
+     "aciklama": "Motor titreşimini toplayıp panoda gösteren sistem"
+    }
+   ]
+  },
+  "c19": {
+   "rol": "Yapay zekâ mühendisi",
+   "deneyim": "orta",
+   "sektorler": [
+    "üretim"
+   ],
+   "araclar": [
+    "Python",
+    "TensorFlow",
+    "zaman serisi"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Bakım tahmin modeli",
+     "aciklama": "Sensör verisiyle arıza öncesi uyarı, tutarlılık %82"
+    }
+   ]
+  },
+  "c20": {
+   "rol": "Endüstri mühendisi",
+   "deneyim": "junior",
+   "sektorler": [
+    "üretim"
+   ],
+   "araclar": [
+    "Excel",
+    "Minitab",
+    "Lean"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Verimlilik analizi",
+     "aciklama": "Hat dengeleme ve duruş analizi"
+    }
+   ]
+  },
+  "c21": {
+   "rol": "Gömülü yazılımcı",
+   "deneyim": "orta",
+   "sektorler": [
+    "otomotiv"
+   ],
+   "araclar": [
+    "C++",
+    "FreeRTOS"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "ECU yazılımı",
+     "aciklama": "Motor kontrol modülü"
+    }
+   ]
+  },
+  "c22": {
+   "rol": "Web geliştirici",
+   "deneyim": "junior",
+   "sektorler": [
+    "ajans"
+   ],
+   "araclar": [
+    "WordPress",
+    "PHP",
+    "Elementor"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Kurumsal site yenileme",
+     "aciklama": "5 firmaya WordPress sitesi, hız puanı 90+"
+    }
+   ]
+  },
+  "c23": {
+   "rol": "SEO uzmanı",
+   "deneyim": "orta",
+   "sektorler": [
+    "hizmet"
+   ],
+   "araclar": [
+    "Search Console",
+    "Ahrefs",
+    "Screaming Frog"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Organik trafik çalışması",
+     "aciklama": "Altı ayda organik trafik 2.1 kat"
+    }
+   ]
+  },
+  "c24": {
+   "rol": "Full-stack geliştirici",
+   "deneyim": "junior",
+   "sektorler": [
+    "SaaS"
+   ],
+   "araclar": [
+    "Next.js",
+    "Node.js",
+    "MongoDB"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Portföy sitesi",
+     "aciklama": "Kişisel Next.js sitesi"
+    }
+   ]
+  },
+  "c25": {
+   "rol": "UI/UX tasarımcı",
+   "deneyim": "junior",
+   "sektorler": [
+    "fintech"
+   ],
+   "araclar": [
+    "Figma",
+    "Adobe XD"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Mobil bankacılık arayüzü",
+     "aciklama": "Prototip ve kullanıcı testi"
+    }
+   ]
+  },
+  "c26": {
+   "rol": "Ziraat mühendisi",
+   "deneyim": "junior",
+   "sektorler": [
+    "tarım"
+   ],
+   "araclar": [
+    "GIS",
+    "Excel"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Sulama planlama",
+     "aciklama": "Damla sulama verimlilik çalışması"
+    }
+   ]
+  },
+  "c27": {
+   "rol": "Hukuk stajyeri",
+   "deneyim": "junior",
+   "sektorler": [
+    "hukuk"
+   ],
+   "araclar": [
+    "Mevzuat taraması"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Sözleşme inceleme notları",
+     "aciklama": "Kira sözleşmesi karşılaştırması"
+    }
+   ]
+  },
+  "c28": {
+   "rol": "Grafik animatör",
+   "deneyim": "junior",
+   "sektorler": [
+    "medya"
+   ],
+   "araclar": [
+    "After Effects",
+    "Blender"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Tanıtım animasyonu",
+     "aciklama": "60 saniyelik ürün animasyonu"
+    }
+   ]
+  },
+  "c29": {
+   "rol": "Siber güvenlik analisti",
+   "deneyim": "junior",
+   "sektorler": [
+    "bankacılık"
+   ],
+   "araclar": [
+    "Wireshark",
+    "Splunk"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Log analiz çalışması",
+     "aciklama": "Şüpheli giriş tespiti"
+    }
+   ]
+  },
+  "c30": {
+   "rol": "Gıda mühendisi",
+   "deneyim": "junior",
+   "sektorler": [
+    "gıda"
+   ],
+   "araclar": [
+    "HACCP",
+    "Excel"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Raf ömrü çalışması",
+     "aciklama": "Ürün stabilite testi"
+    }
+   ]
+  }
+ },
+ "etiketler": {
+  "N1": {
+   "c01": 2,
+   "c02": 2,
+   "c03": 1,
+   "c04": 1,
+   "c08": 1
+  },
+  "N2": {
+   "c05": 2,
+   "c06": 2,
+   "c07": 1,
+   "c08": 1,
+   "c20": 1
+  },
+  "N3": {
+   "c09": 2,
+   "c10": 2,
+   "c12": 1,
+   "c11": 1,
+   "c25": 1
+  },
+  "N4": {
+   "c13": 2,
+   "c14": 2,
+   "c15": 1,
+   "c16": 1,
+   "c17": 1
+  },
+  "N5": {
+   "c19": 2,
+   "c18": 2,
+   "c20": 1,
+   "c21": 1,
+   "c03": 1
+  },
+  "N6": {
+   "c22": 2,
+   "c23": 2,
+   "c24": 1,
+   "c17": 1,
+   "c11": 1
+  }
+ }
+}

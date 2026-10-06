@@ -1,0 +1,442 @@
+{
+ "aciklama": "Demo veritabanındaki gerçek kartlarla vakalar. ETİKETLER BAĞIMSIZ DEĞİL: kartları ve etiketleri aynı kişi yazdı (Zühre, 6 Eki 2026). 2 güçlü uygun, 1 kısmen, 0 uygun değil. Kartlar scripts/demo_hesaplari.py ve demo_zenginlestir.py'den; Soğuk Lojistik firma kartı betikte yok, demo veritabanından salt okuma ile alındı. Yalnızca etiketli çiftler vardır; benzerlik tabanı bu vakalarda uygulanmaz.",
+ "ilanlar": {
+  "anadolu": {
+   "ad": "Anadolu Market ortak ilanı",
+   "problem": "Şubelerde meyve-sebze fire oranı yüksek: sipariş miktarları şube müdürünün tahminine bırakılıyor, satış verisinden tahmin yapılmıyor. Taze ürün siparişini veriye dayandıracak bir ortak arıyoruz.",
+   "basari_kriteri": "6 ay içinde pilot şubelerde meyve-sebze firesi %20 azalsın.",
+   "kisitlar": "Pilot 5 şubede; şube verisi yalnızca anonim ve toplu paylaşılabilir.",
+   "isbirligi_turu": "pilot"
+  },
+  "soguk_lojistik": {
+   "ad": "Soğuk Lojistik ortak ilanı",
+   "problem": "Soğutmalı araçlarımızda ve depolarımızda sıcaklık takibi elle, saatte bir yapılan okumalarla yürüyor; sıcaklık ihlali geç fark ediliyor ve ürün kaybı yaşıyoruz. Araç ve depolarda sıcaklığı anlık izleyecek ve ihlal olduğunda yetkiliyi uyaracak bir teknoloji ortağı arıyoruz.",
+   "basari_kriteri": "Pilot süresince 3 araçta sıcaklık ihlallerinin tamamı 5 dakika içinde uyarıyla yakalansın.",
+   "kisitlar": "Pilot 3 araçta; sensör kurulumu kendi araç servisimizde yapılacak.",
+   "isbirligi_turu": "pilot"
+  },
+  "kooperatif_gida_bankasi": {
+   "ad": "Kooperatif gıda bankası (genç ilanı)",
+   "problem": "Kooperatifin gıda bankasında bağış ve dağıtım kayıtları kâğıt defterde tutuluyor; hangi aileye ne zaman ne verildiği takip edilemiyor. Bağışları ve ailelere yapılan dağıtımları kaydeden, aylık raporu kendisi çıkaran basit bir web uygulaması gerekiyor.",
+   "basari_kriteri": "3 ay içinde tüm bağış ve dağıtımlar dijital kayıtta; aylık rapor 1 gün yerine 10 dakikada çıkıyor.",
+   "kisitlar": "Bütçe yok; kayıtları giren gönüllüler teknik değil, arayüz sade olmalı.",
+   "isbirligi_turu": null
+  },
+  "kooperatif_sosyal_medya": {
+   "ad": "Kooperatif sosyal medya (genç ilanı)",
+   "problem": "Kooperatifin sosyal medya hesapları düzensiz paylaşılıyor; bağış çağrılarımız ve etkinliklerimiz mahalleye ulaşmıyor. Haftalık bir içerik takvimi hazırlayacak, kısa görsel ve metinlerle kooperatifi tanıtacak bir sosyal medya ve tanıtım desteği arıyoruz.",
+   "basari_kriteri": "3 ay içinde takipçi sayısı ikiye katlansın, her ay en az 8 paylaşım yapılsın.",
+   "kisitlar": "Bütçe yok; haftada birkaç saatlik gönüllü destek yeterli.",
+   "isbirligi_turu": null
+  }
+ },
+ "firmalar": {
+  "Ayaz Sensör Teknolojileri": {
+   "tur": "girisim",
+   "sektor": "lojistik teknolojisi",
+   "ne_yapiyoruz": "Soğutmalı araçlarda ve soğuk depolarda IoT sensörüyle sıcaklığı anlık izleyen, sıcaklık ihlalinde yetkiliye hemen uyarı gönderen soğuk zincir takip yazılımı ve sensör seti.",
+   "yetkinlikler": [
+    "soğuk zincir sıcaklık izleme",
+    "IoT sensör",
+    "sıcaklık ihlali uyarısı",
+    "araç ve depo takibi"
+   ],
+   "onceki_isler": "İki lojistik firmasında soğutmalı araç ve depolarda pilot yaptık; sıcaklık ihlali artık dakikalar içinde yetkiliye ulaşıyor, elle okuma gerekmiyor."
+  },
+  "Vitrinpark Online Ticaret A.Ş.": {
+   "tur": "kurumsal",
+   "sektor": "e-ticaret",
+   "ne_yapiyoruz": "Elektronik, ev ve taze gıda ürünlerini online satan bir pazaryeri. Kendi müşteri hizmetlerimizi ve çağrı merkezimizi işletiyoruz; sipariş, iade ve teslimat operasyonunu yönetiyoruz. Talep tahmini ya da sensör yazılımı geliştirmiyoruz.",
+   "yetkinlikler": [
+    "müşteri hizmetleri",
+    "çağrı merkezi yönetimi",
+    "sipariş ve teslimat operasyonu",
+    "pazaryeri yönetimi"
+   ],
+   "onceki_isler": "Yılda 20 milyon siparişi karşılayan çağrı merkezi ve iade operasyonu; taze gıda teslimatında müşteri şikâyetlerini takip eden bir ekip."
+  },
+  "Yolgüç Operasyon Danışmanlık": {
+   "tur": "kobi",
+   "sektor": "danışmanlık",
+   "ne_yapiyoruz": "Gıda perakendecilerine operasyon ve tedarik zinciri danışmanlığı: şube süreçleri, tedarikçi yönetimi, stok ve sevkiyat planlaması. Yazılım geliştirmiyoruz, ihtiyaç olduğunda yazılım ortaklarıyla çalışıyoruz.",
+   "yetkinlikler": [
+    "operasyon iyileştirme",
+    "tedarik zinciri danışmanlığı",
+    "tedarikçi yönetimi",
+    "gıda perakendesi"
+   ],
+   "onceki_isler": "Üç bölgesel market zincirinde şube sipariş ve sevkiyat süreçlerini yeniden tasarladık."
+  },
+  "Tazele Analitik": {
+   "tur": "girisim",
+   "sektor": "perakende teknolojisi",
+   "ne_yapiyoruz": "Perakendeciler için satış verisinden şube bazında günlük talep tahmini yapan ve taze ürün siparişini öneren bir yazılım.",
+   "yetkinlikler": [
+    "talep tahmini",
+    "taze ürün fire azaltma",
+    "satış verisi analizi",
+    "makine öğrenmesi"
+   ],
+   "onceki_isler": "İki bölgesel markette 3 aylık pilot; meyve-sebze firesi %15 azaldı."
+  },
+  "Soğuk Lojistik": {
+   "tur": "girisim",
+   "sektor": "lojistik",
+   "ne_yapiyoruz": "Gıda perakendecileri için şubelere günlük taze ürün dağıtımı kapsayan soğuk zincir lojistiği hizmeti sunuyoruz.",
+   "yetkinlikler": [
+    "soğuk zincir lojistiği",
+    "günlük taze ürün dağıtımı",
+    "gıda perakende teslimatı"
+   ],
+   "onceki_isler": "Üç bölgesel market zincirinin şubelerine günlük taze ürün dağıtımı yapıyoruz; araçlarımızda soğuk zincir kayıt tutuyoruz."
+  }
+ },
+ "gencler": {
+  "Burak": {
+   "rol": "web uygulaması geliştirici",
+   "deneyim": "orta",
+   "sektorler": [
+    "sivil toplum",
+    "sosyal yardım"
+   ],
+   "araclar": [
+    "Python",
+    "Django",
+    "PostgreSQL",
+    "React"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Yardım derneği bağış ve dağıtım takip uygulaması",
+     "aciklama": "Derneğin ayni bağışlarını ve ailelere yapılan dağıtımları kaydeden, aylık raporu otomatik çıkaran web uygulaması.",
+     "kendi_rolu": "Tasarım, veritabanı ve arayüzü tek başıma geliştirdim; derneğin gönüllüleri kullanıyor.",
+     "olculebilir_sonuc": "900 bağışçı ve 350 aile kaydı; aylık rapor 1 günden 10 dakikaya indi."
+    },
+    {
+     "baslik": "Okul kantini stok takip sistemi",
+     "aciklama": "Kantinin günlük stok giriş çıkışını tutan basit web uygulaması.",
+     "kendi_rolu": "Kodlamayı ve veritabanını yaptım.",
+     "olculebilir_sonuc": "Haftalık fire listesi otomatik çıkıyor."
+    }
+   ]
+  },
+  "Selin": {
+   "rol": "web uygulaması ve veritabanı geliştirici",
+   "deneyim": "baslangic",
+   "sektorler": [
+    "sivil toplum",
+    "gıda"
+   ],
+   "araclar": [
+    "Node.js",
+    "PostgreSQL",
+    "Next.js",
+    "Excel"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Gıda dağıtım noktası stok ve kayıt sistemi",
+     "aciklama": "Bir mahalle dayanışma mutfağının stok girişlerini, günlük dağıtımları ve aile kayıtlarını tutan web uygulaması; haftalık rapor sayfası var.",
+     "kendi_rolu": "Veritabanını ve rapor sayfalarını ben yaptım.",
+     "olculebilir_sonuc": "Gönüllüler kâğıt defteri bıraktı; rapor sayfası her hafta kullanılıyor."
+    },
+    {
+     "baslik": "Gönüllü kayıt formu ve rapor paneli",
+     "aciklama": "Bir belediye etkinliği için gönüllü başvurularını toplayan form ve yöneticiler için özet panel.",
+     "kendi_rolu": "Staj boyunca formu ve paneli geliştirdim.",
+     "olculebilir_sonuc": "280 gönüllü başvurusu tek panelde toplandı."
+    }
+   ]
+  },
+  "Emre": {
+   "rol": "mobil uygulama geliştirici",
+   "deneyim": "orta",
+   "sektorler": [
+    "eğitim",
+    "sivil toplum"
+   ],
+   "araclar": [
+    "Flutter",
+    "Dart",
+    "Firebase"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Kampüs yemekhane menü ve doluluk uygulaması",
+     "aciklama": "Öğrencilerin günlük menüyü ve yemekhane yoğunluğunu gördüğü mobil uygulama.",
+     "kendi_rolu": "Uygulamanın tamamını geliştirdim.",
+     "olculebilir_sonuc": "1.200 öğrenci indirdi, günlük 300 kullanıcı."
+    },
+    {
+     "baslik": "Gönüllü etkinlik takvimi uygulaması",
+     "aciklama": "Bir öğrenci topluluğunun etkinliklerini ve gönüllü vardiyalarını gösteren mobil uygulama.",
+     "kendi_rolu": "Arayüzü ve bildirimleri yaptım.",
+     "olculebilir_sonuc": "4 etkinlikte gönüllü vardiyaları uygulamadan yönetildi."
+    }
+   ]
+  },
+  "Deniz": {
+   "rol": "veri analisti",
+   "deneyim": "orta",
+   "sektorler": [
+    "sivil toplum",
+    "finans"
+   ],
+   "araclar": [
+    "SQL",
+    "Python",
+    "pandas",
+    "Power BI",
+    "Excel"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Bir derneğin bağış verisi analizi ve aylık panel",
+     "aciklama": "Üç yıllık bağış kayıtlarını temizleyip bağışçı gruplarına ve aylara göre analiz ettim, Power BI'da aylık bir panel hazırladım.",
+     "kendi_rolu": "Veri temizliği, analiz ve panel bana ait.",
+     "olculebilir_sonuc": "Dernek yönetimi bağış çağrılarını panele göre planlıyor."
+    },
+    {
+     "baslik": "Öğrenci kulübü üye anketi raporu",
+     "aciklama": "400 yanıtlık üye anketini analiz edip sonuçları rapora döktüm.",
+     "kendi_rolu": "Anket tasarımı ve analiz.",
+     "olculebilir_sonuc": "Rapor kulüp yönetimine sunuldu."
+    }
+   ]
+  },
+  "Zeynep": {
+   "rol": "ziraat mühendisi",
+   "deneyim": "orta",
+   "sektorler": [
+    "tarım",
+    "gıda"
+   ],
+   "araclar": [
+    "Excel",
+    "QGIS",
+    "AutoCAD"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Kooperatif için hasat sonrası kayıp analizi",
+     "aciklama": "Bir üretici kooperatifinin sebze ve meyvede hasat sonrası kayıplarını ölçtüm, nedenlerini ve azaltma önerilerini raporladım.",
+     "kendi_rolu": "Saha ölçümünü ve raporu ben yaptım.",
+     "olculebilir_sonuc": "Kayıp oranı %18'den %11'e düştü."
+    },
+    {
+     "baslik": "Organik üretici envanteri",
+     "aciklama": "Bölgedeki 40 küçük üreticinin ürün ve kapasite bilgisini tek tabloda topladım.",
+     "kendi_rolu": "Görüşmeleri ve tabloyu hazırladım.",
+     "olculebilir_sonuc": "40 üretici tek envanterde."
+    }
+   ]
+  },
+  "Mert": {
+   "rol": "endüstri mühendisi",
+   "deneyim": "baslangic",
+   "sektorler": [
+    "lojistik",
+    "üretim"
+   ],
+   "araclar": [
+    "Excel",
+    "Python",
+    "Arena",
+    "AutoCAD"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Depo yerleşim iyileştirme çalışması",
+     "aciklama": "Bir dağıtım deposunda ürün yerleşimini sipariş sıklığına göre yeniden düzenleyen staj projesi.",
+     "kendi_rolu": "Veriyi analiz ettim, yerleşim önerisini hazırladım.",
+     "olculebilir_sonuc": "Toplama süresi ortalama %12 kısaldı."
+    },
+    {
+     "baslik": "Stok seviyesi planlama modeli",
+     "aciklama": "Bir market için ürün bazında güvenlik stoğu hesaplayan Excel modeli.",
+     "kendi_rolu": "Modeli kurdum.",
+     "olculebilir_sonuc": "Raf boşluğu şikâyetleri azaldı."
+    }
+   ]
+  },
+  "Ceren": {
+   "rol": "grafik animatör",
+   "deneyim": "orta",
+   "sektorler": [
+    "medya",
+    "reklam"
+   ],
+   "araclar": [
+    "After Effects",
+    "Blender",
+    "Illustrator"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Kısa tanıtım animasyonları",
+     "aciklama": "Üç küçük işletme için 30 saniyelik hareketli tanıtım videosu hazırladım.",
+     "kendi_rolu": "Hikâye, çizim ve animasyonun tamamı bende.",
+     "olculebilir_sonuc": "Videolar işletmelerin sayfalarında yayında."
+    },
+    {
+     "baslik": "Belgesel başlık animasyonu",
+     "aciklama": "Bir öğrenci belgeseli için açılış ve başlık animasyonu.",
+     "kendi_rolu": "Tasarım ve animasyon.",
+     "olculebilir_sonuc": "Belgesel bir festivalde gösterildi."
+    }
+   ]
+  },
+  "Kaan": {
+   "rol": "hukuk stajyeri",
+   "deneyim": "baslangic",
+   "sektorler": [
+    "hukuk"
+   ],
+   "araclar": [
+    "UYAP",
+    "Word",
+    "mevzuat arama"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Kira sözleşmesi inceleme notları",
+     "aciklama": "Bir bürodaki kira uyuşmazlıkları için sözleşme maddelerini inceleyip özet notlar çıkardım.",
+     "kendi_rolu": "Maddeleri inceledim ve notları yazdım.",
+     "olculebilir_sonuc": "18 dosyada avukata hazır özet sağlandı."
+    },
+    {
+     "baslik": "İş hukuku emsal karar derlemesi",
+     "aciklama": "Kıdem tazminatı konusunda Yargıtay emsal kararlarını derleyen bir dosya.",
+     "kendi_rolu": "Karar taraması ve derleme.",
+     "olculebilir_sonuc": "60 karar konularına göre derlendi."
+    }
+   ]
+  },
+  "Defne": {
+   "rol": "sosyal medya ve içerik üreticisi",
+   "deneyim": "orta",
+   "sektorler": [
+    "sivil toplum",
+    "gıda",
+    "kültür sanat"
+   ],
+   "araclar": [
+    "Instagram",
+    "Canva",
+    "CapCut",
+    "Meta Business Suite"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Bir mahalle kitap kafesinin Instagram hesabı yönetimi",
+     "aciklama": "Kafenin Instagram hesabı için haftalık içerik takvimi hazırladım; gönderi, hikâye ve kısa video üretip yayınladım.",
+     "kendi_rolu": "İçerik planını, görselleri ve paylaşımları tek başıma yürüttüm.",
+     "olculebilir_sonuc": "Takipçi sayısı 6 ayda 1.200'den 5.400'e çıktı; haftada 4 gönderi."
+    },
+    {
+     "baslik": "Öğrenci topluluğu için kısa video ve görsel içerik",
+     "aciklama": "Bir öğrenci topluluğunun etkinlik duyuruları için 12 kısa video ve afiş hazırladım.",
+     "kendi_rolu": "Çekim, kurgu ve tanıtım metinlerini ben yaptım.",
+     "olculebilir_sonuc": "Videolar ortalama 8.000 izlenme aldı; etkinlik katılımı arttı."
+    }
+   ]
+  },
+  "Elif": {
+   "rol": "backend geliştirici",
+   "deneyim": "orta",
+   "sektorler": [
+    "sivil toplum",
+    "eğitim"
+   ],
+   "araclar": [
+    "Python",
+    "FastAPI",
+    "PostgreSQL"
+   ],
+   "ciktilar": [
+    {
+     "baslik": "Mahalle kütüphanesi ödünç takip sistemi",
+     "aciklama": "400 kitabı ve 120 üyeyi takip eden web uygulaması; gecikmiş ödünçleri gönüllülere listeliyor."
+    },
+    {
+     "baslik": "Dernek bağış ve dağıtım kayıt sistemi",
+     "aciklama": "Bir yardım derneğinin ayni bağışlarını ve ailelere yapılan dağıtımları kaydeden, aylık raporu tek tıkla çıkaran web uygulaması."
+    }
+   ]
+  }
+ },
+ "vakalar": [
+  {
+   "ilan": "anadolu",
+   "aday_tur": "firma",
+   "aday": "Tazele Analitik",
+   "etiket": 2
+  },
+  {
+   "ilan": "anadolu",
+   "aday_tur": "firma",
+   "aday": "Soğuk Lojistik",
+   "etiket": 0
+  },
+  {
+   "ilan": "soguk_lojistik",
+   "aday_tur": "firma",
+   "aday": "Ayaz Sensör Teknolojileri",
+   "etiket": 2
+  },
+  {
+   "ilan": "soguk_lojistik",
+   "aday_tur": "firma",
+   "aday": "Tazele Analitik",
+   "etiket": 0
+  },
+  {
+   "ilan": "soguk_lojistik",
+   "aday_tur": "firma",
+   "aday": "Yolgüç Operasyon Danışmanlık",
+   "etiket": 0
+  },
+  {
+   "ilan": "soguk_lojistik",
+   "aday_tur": "firma",
+   "aday": "Vitrinpark Online Ticaret A.Ş.",
+   "etiket": 0
+  },
+  {
+   "ilan": "kooperatif_gida_bankasi",
+   "aday_tur": "genc",
+   "aday": "Selin",
+   "etiket": 2
+  },
+  {
+   "ilan": "kooperatif_gida_bankasi",
+   "aday_tur": "genc",
+   "aday": "Burak",
+   "etiket": 2
+  },
+  {
+   "ilan": "kooperatif_gida_bankasi",
+   "aday_tur": "genc",
+   "aday": "Elif",
+   "etiket": 2
+  },
+  {
+   "ilan": "kooperatif_gida_bankasi",
+   "aday_tur": "genc",
+   "aday": "Emre",
+   "etiket": 1
+  },
+  {
+   "ilan": "kooperatif_gida_bankasi",
+   "aday_tur": "genc",
+   "aday": "Zeynep",
+   "etiket": 1
+  },
+  {
+   "ilan": "kooperatif_sosyal_medya",
+   "aday_tur": "genc",
+   "aday": "Defne",
+   "etiket": 2
+  }
+ ]
+}

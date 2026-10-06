@@ -1,0 +1,1712 @@
+[
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N1",
+  "aday": "c01",
+  "etiket": 2,
+  "benzerlik": 0.6215161411647885,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Adayın Python, scikit-learn ve HuggingFace araçlarını kullanarak Türkçe metinleri 8 kategoriye ayıran bir şikayet sınıflandırma çalışması yapmış olması, firmanın biletleri otomatik gruplama ihtiyacına doğrudan karşılık veriyor. Buna karşın adayın bu çalışmasına ait bir kanıt sunulmamış ve henüz doğrulama adımı tamamlanmamıştır.",
+    "girdi_token": 1116,
+    "cikti_token": 1332,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Python ve HuggingFace araçlarıyla Türkçe şikayetleri sekiz kategoriye ayıran bir metin sınıflandırıcı üzerinde çalışmış; bu tecrübe firmanın biletleri konuya göre ayırma ihtiyacıyla doğrudan örtüşüyor. Ancak bu çalışmaya dair henüz bir kanıt eklenmediği için çıktının doğrulanmış bir güven göstergesi bulunmuyor.",
+    "girdi_token": 1116,
+    "cikti_token": 1080,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Python, scikit-learn ve HuggingFace kullanarak Türkçe şikayetleri 8 kategoriye ayıran ve 0.88 başarı değerine ulaşan bir metin sınıflandırıcı çalışması yürütmüştür. Bu çalışma firmanın günlük 800 destek biletini otomatik sınıflandırma ihtiyacıyla doğrudan örtüşmektedir. Bununla birlikte, ilgili çalışmaya henüz bir kanıt eklenmemiştir ve güven göstergesi tarafında doğrulanmış bir kaydı bulunmamaktadır.",
+    "girdi_token": 1116,
+    "cikti_token": 898,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N1",
+  "aday": "c02",
+  "etiket": 2,
+  "benzerlik": 0.5969281226444957,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, firmanın günlük 800 destek biletini otomatik sınıflandırma ihtiyacına yönelik olarak Python, PyTorch ve FastAPI araçlarıyla benzer bir destek talebi yönlendirme botu çalışması sunmaktadır. Ancak bu çalışmaya dair henüz bir kanıt eklenmemiş olup doğrulama adımı tamamlanmamıştır.",
+    "girdi_token": 1108,
+    "cikti_token": 1342,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Python, PyTorch ve FastAPI araçlarıyla gelen talepleri ekiplere otomatik atayan destek talebi yönlendirme botu çalışması yapmıştır. Bu tecrübe, firmanın günde 800 bileti otomatik sınıflandırma ihtiyacına doğrudan karşılık gelmektedir. Bununla birlikte, ilgili çalışma için henüz bir kanıt sunulmamıştır ve doğrulanmış bir kaydı bulunmamaktadır.",
+    "girdi_token": 1108,
+    "cikti_token": 1011,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Adayın Python ve PyTorch araçlarıyla geliştirdiği destek talebi yönlendirme çalışması, firmanın günlük 800 bileti otomatik sınıflandırma ihtiyacına doğrudan hitap ediyor. Bununla birlikte, bu çalışma için karta henüz bir kanıt eklenmemiştir.",
+    "girdi_token": 1108,
+    "cikti_token": 1653,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N1",
+  "aday": "c03",
+  "etiket": 1,
+  "benzerlik": 0.4845972575040094,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Python, pandas ve XGBoost kullanarak tabular veride kredi riski tahmini yaptığı bir çalışma bulunuyor ancak firmanın aradığı metin sınıflandırması alanında bir tecrübe kartta yer almıyor. Ayrıca adayın sunduğu bu çalışmaya yönelik herhangi bir kanıt eklenmemiş durumda.",
+    "girdi_token": 1090,
+    "cikti_token": 766,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Python ve XGBoost kullanarak tablo verileri üzerinde kredi riski tahmini çalışması yürütmüştür; ancak firmanın biletleri ayırma ihtiyacına yönelik bir metin işleme tecrübesi kartında belirtilmemiştir. Ek olarak adayın bu çalışmasına yönelik henüz bir kanıt sunulmamıştır ve doğrulanmış bir çalışması bulunmamaktadır.",
+    "girdi_token": 1090,
+    "cikti_token": 995,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Python ve XGBoost kullanarak tablo verileri üzerinde tahmin çalışması bulunsa da firmanın bilet sınıflandırma ihtiyacına yönelik metin işleme tecrübesi kartında yer almıyor. Ayrıca adayın sunduğu kredi riski çalışmasına ait bir kanıt bulunmuyor ve çalışması henüz doğrulanmamış görünüyor.",
+    "girdi_token": 1090,
+    "cikti_token": 1095,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N1",
+  "aday": "c19",
+  "etiket": 0,
+  "benzerlik": 0.5107971496065035,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Firma biletleri otomatik sınıflandıracak bir yapay zekâ çözümü ararken, aday Python ve TensorFlow araçlarıyla sensör verisine dayalı arıza tahmini üzerine çalışmıştır. Kartta metin sınıflandırmaya yönelik doğrudan bir deneyim yer almamaktadır, ayrıca mevcut çalışması için henüz bir kanıt sunulmamıştır.",
+    "girdi_token": 1104,
+    "cikti_token": 844,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Python ve TensorFlow araçlarıyla yapay zekâ alanında deneyime sahip olsa da çalışmaları metin sınıflandırma yerine sensör verileri ve zaman serisi üzerine odaklanıyor. Müşteri destek biletlerinin sınıflandırılmasına yönelik doğrudan bir tecrübesi kartta yer almıyor ve sunduğu bakım tahmini çalışması henüz doğrulanmamış durumda.",
+    "girdi_token": 1104,
+    "cikti_token": 583,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Python ve TensorFlow kullanarak sensör verileriyle tahmin çalışması yapmış bir yapay zekâ mühendisidir, ancak firmanın aradığı müşteri destek biletlerini metin olarak sınıflandırma alanında bir deneyimi kartında yer almamaktadır. Ayrıca sensör verisiyle yürüttüğü çalışmaya dair herhangi bir kanıt eklenmediğinden bu deneyim henüz doğrulanmamıştır.",
+    "girdi_token": 1104,
+    "cikti_token": 655,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N2",
+  "aday": "c05",
+  "etiket": 2,
+  "benzerlik": 0.674490545582076,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, firmanın aradığı Excel aracını kullanarak küçük işletmeler için aylık gelir-gider ve nakit akışı panosu çalışmaları yürütmüştür. Bununla birlikte kartta listelenen bu çalışmalar için henüz bir kanıt sunulmamış ve doğrulanmamıştır.",
+    "girdi_token": 1096,
+    "cikti_token": 727,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, firmanın talep ettiği nakit akışı ve gelir-gider panosu ihtiyacına yönelik olarak Excel ve Power BI araçlarıyla benzer çalışmalar yapmıştır. Ancak bu çalışmalara dair kanıt sunulmadığı için çalışmalar henüz doğrulanmamış durumdadır.",
+    "girdi_token": 1096,
+    "cikti_token": 1076,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, firmanın ihtiyaç duyduğu aylık gelir-gider ve nakit akışı panosu alanında küçük işletmelere yönelik çalışma yapmış olup Excel ve Power BI araçlarına sahiptir. Ancak kartında yer alan çalışmalar için henüz kanıt sunulmamış olduğundan bu çıktılar doğrulanmamış durumdadır.",
+    "girdi_token": 1096,
+    "cikti_token": 649,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N2",
+  "aday": "c06",
+  "etiket": 2,
+  "benzerlik": 0.5427416485648029,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Power BI, DAX ve SQL Server araçlarıyla raporlama panosu geliştirme geçmişi, firmanın manuel Excel sürecini panoya dönüştürme ihtiyacıyla örtüşüyor. Bununla birlikte adayın deneyimi finans ya da muhasebe yerine satış panoları üzerine ve sunduğu çalışmaya dair henüz doğrulanmış bir kanıt bulunmuyor.",
+    "girdi_token": 1093,
+    "cikti_token": 479,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday Power BI, DAX ve SQL Server araçlarıyla pano geliştirme deneyimine sahip olsa da önceki çalışmaları muhasebe ve nakit akışından ziyade şube satış panoları üzerinedir. Firmanın aylık raporlama panosu ihtiyacına bu iş zekâsı araçlarıyla katkı sağlayabilir, ancak sunduğu satış raporlama çalışması henüz doğrulanmamıştır.",
+    "girdi_token": 1093,
+    "cikti_token": 612,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, firmanın gelir-gider ve nakit akışı panosu ihtiyacıyla ilişkili olarak Power BI, DAX ve SQL Server araçlarına hâkimdir ve şube bazlı satış panoları çalışması yürütmüştür. Buna karşın muhasebe odaklı bir deneyimi belirtilmemiştir ve sunduğu satış raporlama çalışmasına ilişkin henüz doğrulanmış bir kanıt bulunmamaktadır.",
+    "girdi_token": 1093,
+    "cikti_token": 745,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N2",
+  "aday": "c07",
+  "etiket": 1,
+  "benzerlik": 0.641972838511172,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Firmanın Excel verilerini birleştirerek aylık gelir-gider ve nakit akışı raporlama panosu kurma ihtiyacına karşılık aday, Excel makrolarıyla aylık mizan birleştirme çalışması yapmıştır. Bununla birlikte pano kurulumuna yönelik doğrudan bir çalışma kartta belirtilmemiştir ve mevcut mizan çalışması için henüz bir kanıt sunulmamıştır.",
+    "girdi_token": 1094,
+    "cikti_token": 1258,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, firmanın Excel'de veri birleştirme ihtiyacıyla örtüşen Excel makrolarıyla mizan birleştirme çalışması yürütmüştür. Bununla birlikte, talep edilen raporlama panosu kurulumuna dair doğrudan bir deneyim kartta bulunmamaktadır ve yapılan çalışmaya ilişkin henüz bir kanıt eklenmemiştir.",
+    "girdi_token": 1094,
+    "cikti_token": 616,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Excel makrolarıyla aylık mizan birleştirme çalışması, firmanın Excel verilerini birleştirme ihtiyacıyla örtüşüyor. Ancak nakit akışı ve gelir-gider raporlama panosu kurma tecrübesi kartta doğrudan belirtilmemiş ve mizan çalışmasına dair bir kanıt henüz sunulmamış durumda.",
+    "girdi_token": 1094,
+    "cikti_token": 404,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N2",
+  "aday": "c20",
+  "etiket": 1,
+  "benzerlik": 0.49565078060815904,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday araç olarak Excel bilgisine sahip olsa da kartındaki çalışmalar finans ve nakit akışı yerine üretimdeki verimlilik ve hat dengeleme süreçlerine odaklanıyor. Ayrıca adayın sunduğu verimlilik analizi çalışması için henüz bir kanıt eklenmemiş durumda.",
+    "girdi_token": 1090,
+    "cikti_token": 607,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın araçları arasında Excel bulunuyor, ancak önceki çalışmaları muhasebe veya nakit akışı raporlamasından ziyade üretimdeki hat dengeleme ve verimlilik analizine odaklanıyor. Firmanın ihtiyaç duyduğu gelir-gider panosuna dair doğrudan bir çalışması yer almadığı gibi, mevcut çalışmalarına ilişkin henüz bir kanıt da sunulmamış.",
+    "girdi_token": 1090,
+    "cikti_token": 515,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday araç olarak Excel bilgisine sahip olsa da kayıtlı çalışmaları finansal raporlama panoları yerine üretim odaklı hat dengeleme ve duruş analizlerini kapsıyor. Ayrıca karttaki çalışmalar için henüz bir kanıt sunulmamış durumda. Firmanın muhasebe verilerini birleştirme ve nakit akışı panosu kurma hedefine yönelik doğrudan bir deneyim kartta yer almıyor.",
+    "girdi_token": 1090,
+    "cikti_token": 718,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N3",
+  "aday": "c04",
+  "etiket": 0,
+  "benzerlik": 0.511738082731247,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Firmanın iOS ve Android mobil uygulama ihtiyacına karşılık adayın kartında mobil geliştirme yetkinliği bulunmuyor, adayın deneyimi Python, Django ve PostgreSQL ile backend geliştirmeye odaklanıyor. Adayın sunduğu Sipariş API'si çalışması arka uç tarafında ilgili bir alan sunsa da bu çalışmaya henüz kanıt eklenmemiştir.",
+    "girdi_token": 1069,
+    "cikti_token": 648,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Firmanın temel ihtiyacı iOS ve Android için mobil uygulama geliştirmek iken, aday Python ve Django kullanarak backend tarafında sipariş API'si hazırlamıştır. Bu çalışma uygulamanın arka yüzüyle ilişkili bir alan sunsa da adayın kartında doğrudan mobil geliştirmeye dair bir deneyim yer almamaktadır ve çalışması henüz doğrulanmamıştır.",
+    "girdi_token": 1069,
+    "cikti_token": 916,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Firma iOS ve Android için sipariş takip mobil uygulaması ararken, adayın profili Python ve Django ile sipariş API'si geliştirmeye odaklanıyor. Aday mobil uygulama geliştirme deneyimi sunmuyor, arka yüz desteği sağlayabilecek olsa da belirtilen sipariş API'si çalışmasına dair henüz bir kanıt bulunmuyor.",
+    "girdi_token": 1069,
+    "cikti_token": 588,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N3",
+  "aday": "c09",
+  "etiket": 2,
+  "benzerlik": 0.6485025619668069,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, React Native ve TypeScript kullanarak sipariş takibi ve bildirim özellikleri barındıran bir yemek siparişi uygulaması çalışması yürütmüştür. Firmanın sipariş takibi sunan mobil uygulama ihtiyacı ile adayın bu çalışması ve araç bilgisi örtüşmektedir. Bununla birlikte, ilgili çalışmaya dair henüz bir kanıt eklenmemiştir ve doğrulanmış bir kayıt bulunmamaktadır.",
+    "girdi_token": 1071,
+    "cikti_token": 624,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, firmanın mobil sipariş takip uygulaması ihtiyacıyla örtüşen React Native ve Firebase tabanlı bir yemek siparişi çalışması listelemiştir. Ancak bu çalışmaya dair henüz bir kanıt eklenmemiştir ve çalışma doğrulanmamıştır. Ayrıca uygulamanın iOS ve Android üzerinde yayına alınmasına ilişkin geçmiş bir deneyim kartta belirtilmemiştir.",
+    "girdi_token": 1071,
+    "cikti_token": 713,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, firmanın sipariş takip özellikli mobil uygulama ihtiyacıyla örtüşen React Native ve Firebase kullanarak bir yemek siparişi uygulaması çalışması yürütmüştür. Bununla birlikte, bu çalışmaya dair henüz bir kanıt sunulmamış ve uygulama platform üzerinde doğrulanmamıştır. Bu durum, iOS ve Android mağazalarında yayınlanma hedefine dair deneyimin doğrudan teyit edilmesini kısıtlamaktadır.",
+    "girdi_token": 1071,
+    "cikti_token": 756,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N3",
+  "aday": "c10",
+  "etiket": 2,
+  "benzerlik": 0.536575507045986,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Adayın Flutter ve REST kullanarak geliştirdiği kurye takip uygulaması çalışması, firmanın iOS ve Android platformlarında sipariş takip uygulaması ihtiyacıyla örtüşüyor. Bununla birlikte, belirtilen bu çalışmaya dair sisteme herhangi bir kanıt bağlantısı eklenmemiştir.",
+    "girdi_token": 1069,
+    "cikti_token": 1034,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Adayın Flutter ve Dart araçlarıyla geliştirdiği kurye takip uygulaması çalışması, firmanın hem iOS hem Android platformlarında sipariş takip uygulaması geliştirme ihtiyacına doğrudan karşılık veriyor. Bununla birlikte, kurye takip çalışmasına ait herhangi bir kanıt sunulmadığı için bu deneyim henüz doğrulanmamış durumda.",
+    "girdi_token": 1069,
+    "cikti_token": 920,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Adayın Flutter, Dart ve REST kullanarak geliştirdiği kurye takip uygulaması çalışması, firmanın her iki platformda sipariş takibi yapacak mobil uygulama ihtiyacıyla doğrudan örtüşüyor. Ancak bu çalışmaya dair henüz bir kanıt eklenmemiş olduğundan uygulama deneyimi doğrulanmamış durumdadır.",
+    "girdi_token": 1069,
+    "cikti_token": 658,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N3",
+  "aday": "c12",
+  "etiket": 1,
+  "benzerlik": 0.48200967753159124,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Kotlin ve Android Studio ile Android geliştirme bilgisine sahip olsa da ilanın gerektirdiği iOS tarafına dair bir yetkinlik kartında yer almıyor. Ayrıca sipariş takip sistemleri yerine oyun alanında deneyimi bulunuyor ve sunduğu oyun çalışması henüz doğrulanmış değil.",
+    "girdi_token": 1064,
+    "cikti_token": 413,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday Kotlin ve Android Studio ile Android geliştirme yapabilse de ilanın başarı kriterleri arasında yer alan iOS tarafına dair bir yetkinliği kartında bulunmuyor. Play Store'da yer aldığını belirttiği bulmaca oyunu çalışmasına dair bir kanıt ise henüz eklenmemiş durumda. Ayrıca adayın deneyimi sipariş ve takip uygulamalarından ziyade oyun alanına odaklanıyor.",
+    "girdi_token": 1064,
+    "cikti_token": 705,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday Kotlin ve Android Studio araçlarıyla Android tarafında uygulama geliştirme deneyimine sahip olsa da ilanda beklenen iOS geliştirme ve sipariş takibi alanına dair bir bilgisi kartında bulunmuyor. Ayrıca Play Store'da yer aldığı belirtilen bulmaca oyunu çalışması için henüz bir kanıt sunulmamış ve doğrulanmamıştır.",
+    "girdi_token": 1064,
+    "cikti_token": 625,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N4",
+  "aday": "c13",
+  "etiket": 2,
+  "benzerlik": 0.6943461866273394,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Meta Ads, Canva ve CapCut araçlarıyla güzellik alanında Instagram yönetimi yapmış ve 4 ayda %40 takipçi artışı sağladığını belirtmiştir. İlandaki TikTok içerik üretimi ve reklam dönüşümüne yönelik bir deneyim kartta yer almamaktadır. Ayrıca adayın paylaştığı Instagram çalışması için henüz bir kanıt sunulmamış ve doğrulanmamıştır.",
+    "girdi_token": 1082,
+    "cikti_token": 793,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Meta Ads ve CapCut araç bilgisi ile butik bir markada dört ayda takipçi artışı sağladığı Instagram yönetimi çalışması, firmanın Instagram ve reklam ihtiyaçlarıyla örtüşüyor. Buna karşın ilandaki TikTok içerik üretimine dair bir deneyim kartta yer almıyor ve belirtilen Instagram çalışması için henüz bir kanıt sunulmamış durumda.",
+    "girdi_token": 1082,
+    "cikti_token": 929,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Meta Ads ve CapCut bilgisi ile bir butik markanın Instagram takipçisini dört ayda %40 artırdığı çalışması, firmanın Instagram yönetimi ve reklam hedefleriyle örtüşüyor. Buna karşın kartta TikTok tarafına dair bir deneyim belirtilmiyor ve bahsettiği Instagram çalışması için henüz bir kanıt sunulmamış.",
+    "girdi_token": 1082,
+    "cikti_token": 579,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N4",
+  "aday": "c14",
+  "etiket": 2,
+  "benzerlik": 0.6879346477426189,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın kozmetik alanında TikTok ve Premiere Pro kullanarak hazırladığı aylık 12 videoluk cilt bakım serisi çalışması firmanın içerik üretimi arayışıyla örtüşüyor. Ancak firmanın talep ettiği reklam yönetimi alanında kartta herhangi bir araç veya çalışma yer almıyor ve belirtilen video çalışmalarına henüz kanıt eklenmemiş durumda.",
+    "girdi_token": 1085,
+    "cikti_token": 571,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, kozmetik sektöründe TikTok video üretimi ve Premiere Pro kullanımı konularında çalışma belirtse de ilanda aranan reklam yönetimine dair bir bilgi kartında yer almıyor. Ayrıca paylaşılan video izlenme sayılarına ilişkin çalışmalar için henüz bir kanıt sunulmamış.",
+    "girdi_token": 1085,
+    "cikti_token": 491,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday kozmetik alanında TikTok içerik üretimi yapmış olsa da ilanda aranan reklam yönetimi ve Instagram tarafına dair kartında bir bilgi bulunmuyor. Ayrıca belirttiği video çalışmasına yönelik henüz bir kanıt eklenmemiş durumda.",
+    "girdi_token": 1085,
+    "cikti_token": 479,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N4",
+  "aday": "c15",
+  "etiket": 1,
+  "benzerlik": 0.5845604965441243,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday Meta Ads kullanarak reklam dönüşüm maliyetini %25 düşürdüğü bir çalışma belirtmiş, bu da firmanın reklam yönetimi ihtiyacıyla örtüşüyor. Buna karşılık kartta Instagram ve TikTok için içerik üretimine dair herhangi bir çalışma veya araç bilgisi bulunmuyor. Ayrıca adayın belirttiği reklam çalışmasına henüz bir kanıt eklenmemiş ve çalışma doğrulanmamış durumda.",
+    "girdi_token": 1082,
+    "cikti_token": 670,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Meta Ads deneyimi ve dönüşüm maliyetini %25 düşürdüğünü belirttiği performans reklam kampanyası çalışması, reklam maliyetini düşürme hedefinizle örtüşüyor. Buna karşın ilandaki Instagram ve TikTok içerik üretimi ihtiyacına dair kartta herhangi bir araç veya çalışma yer almıyor. Ayrıca adayın belirttiği reklam çalışması için henüz bir kanıt sunulmamış ve doğrulanmamıştır.",
+    "girdi_token": 1082,
+    "cikti_token": 1090,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Meta Ads tecrübesiyle firmanın reklam yönetimi ve dönüşüm maliyetini düşürme hedefine hitap ediyor, ancak kartında Instagram ve TikTok için içerik üretimine dair bir çalışma yer almıyor. Ayrıca belirttiği performans reklamı çalışması henüz doğrulanmadı ve sisteme bir kanıt eklenmemiş.",
+    "girdi_token": 1082,
+    "cikti_token": 467,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N4",
+  "aday": "c16",
+  "etiket": 1,
+  "benzerlik": 0.5114035630183728,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Illustrator ve Photoshop kullanarak hazırladığı sosyal medya şablonları, firmanın içerik üretimi tarafındaki görsel ihtiyaçlarıyla kesişmektedir. Bununla birlikte ilanda aranan reklam yönetimi ve TikTok içerik üretimi alanlarına dair kartta bir deneyim yer almamaktadır. Ayrıca adayın marka kimliği çalışması için henüz bir kanıt sunulmamıştır.",
+    "girdi_token": 1072,
+    "cikti_token": 731,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday Illustrator, Photoshop ve Figma araçlarıyla sosyal medya şablonları hazırlamış olup, bu deneyim firmanın içerik tasarımı ihtiyacına katkı sağlayabilir. Buna karşın kartta TikTok içerik üretimi veya reklam yönetimine dair somut bir bilgi bulunmamaktadır. Ayrıca adayın marka kimliği çalışması için sisteme henüz bir kanıt eklenmemiştir.",
+    "girdi_token": 1072,
+    "cikti_token": 594,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Photoshop, Illustrator ve Figma kullanarak hazırladığı sosyal medya şablonları çalışması, görsel içerik tarafında temel bir destek sunabilir. Buna karşın ilanın ana hedefleri olan reklam yönetimi ve TikTok içerik üretimi kartında yer almamaktadır, ayrıca sunduğu tasarım çalışması için henüz bir kanıt eklenmemiştir.",
+    "girdi_token": 1072,
+    "cikti_token": 551,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N4",
+  "aday": "c28",
+  "etiket": 0,
+  "benzerlik": 0.5004583338429053,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın After Effects ve Blender kullanarak hazırladığı 60 saniyelik ürün tanıtım animasyonu, sosyal medya görsel içeriği tarafında değerlendirilebilir. Buna karşın ilandaki temel beklentiler olan reklam yönetimi ve takipçi artırma süreçlerine dair kartta herhangi bir deneyim bulunmuyor. Ayrıca adayın animasyon çalışması için henüz bir kanıt sunulmamıştır.",
+    "girdi_token": 1071,
+    "cikti_token": 502,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, After Effects ve Blender kullanarak hazırladığı 60 saniyelik ürün tanıtım animasyonuyla görsel içerik üretimi tarafında destek sunabilir. Buna karşın ilanda belirtilen Instagram ve TikTok reklam yönetimi ve takipçi artırma hedeflerine dair bir bilgi kartta yer almıyor. Ayrıca adayın mevcut animasyon çalışması henüz doğrulanmamış durumdadır.",
+    "girdi_token": 1071,
+    "cikti_token": 626,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday After Effects ve Blender ile ürün tanıtım animasyonu hazırlamış, bu yetkinlik sosyal medya içeriklerinin görsel tarafına katkı sağlayabilir. Ancak ilanın temel ihtiyacı olan reklam yönetimi ve sosyal medya büyümesine dair kartta bir deneyim yer almıyor, ayrıca mevcut animasyon çalışması henüz doğrulanmamış.",
+    "girdi_token": 1071,
+    "cikti_token": 404,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N5",
+  "aday": "c18",
+  "etiket": 2,
+  "benzerlik": 0.5377311413944758,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın Arduino ve Python ile motor titreşimini toplayıp panoda gösteren bir izleme çalışması bulunuyor, bu da sensör verisi toplama ihtiyacına denk geliyor. Ancak arıza olmadan önce uyarı üreten tahminleme tarafına yönelik bir çalışma kartta yer almıyor ve mevcut izleme çalışmasına dair henüz bir kanıt eklenmemiş durumda.",
+    "girdi_token": 1078,
+    "cikti_token": 560,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Arduino, MQTT ve Python kullanarak motor titreşim verilerini toplayıp panoda gösteren bir çalışma yapmıştır. Ancak firmanın arıza tahmini ihtiyacına yönelik bir deneyim kartta yer almamaktadır ve mevcut çalışmasına dair henüz bir kanıt sunulmamıştır.",
+    "girdi_token": 1078,
+    "cikti_token": 555,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Arduino, MQTT ve Python kullanarak motor titreşim verisini toplayıp panoda gösteren bir sistem çalışması yürütmüştür. Firmanın arıza olmadan önce uyarı veren tahmin sistemi ihtiyacına dair bir deneyim ise kartta belirtilmemiştir. Ayrıca yürütülen bu titreşim sensörü izleme çalışmasına ilişkin sisteme henüz bir kanıt eklenmemiştir.",
+    "girdi_token": 1078,
+    "cikti_token": 824,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N5",
+  "aday": "c19",
+  "etiket": 2,
+  "benzerlik": 0.6918170121138368,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Adayın zaman serisi araçlarını kullanarak hazırladığı sensör verisine dayalı bakım tahmin çalışması, firmanın arıza öncesi uyarı sistemi ihtiyacıyla doğrudan örtüşüyor. Ancak bu çalışmaya ilişkin herhangi bir kanıt sunulmadığı için doğrulanmış bir bilgi bulunmuyor.",
+    "girdi_token": 1081,
+    "cikti_token": 618,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Python ve zaman serisi araçlarıyla sensör verisi üzerinden arıza öncesi uyarı veren ve yüzde 82 tutarlılık vadeden bir bakım tahmini çalışması yaptığını belirtmektedir. İlanın üretim hattındaki arızaları önceden tahmin etme ihtiyacıyla örtüşen bu çalışma için henüz bir kanıt sunulmamıştır ve güven göstergesi doğrulanmamıştır.",
+    "girdi_token": 1081,
+    "cikti_token": 823,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Yapay zekâ mühendisi olan aday, Python, TensorFlow ve zaman serisi araçlarıyla sensör verisine dayalı arıza öncesi bakım tahmini çalışması yürütmüştür. Bu deneyim, firmanın üretim hattında plansız duruş süresini azaltmaya yönelik tahmin sistemi arayışıyla doğrudan örtüşmektedir. Bununla birlikte, yürütülen çalışmaya dair henüz bir kanıt sunulmamış olup çalışma doğrulanmamıştır.",
+    "girdi_token": 1081,
+    "cikti_token": 891,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N5",
+  "aday": "c20",
+  "etiket": 1,
+  "benzerlik": 0.5439468963880816,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın üretim alanında hat dengeleme ve duruş analizi üzerine çalışması bulunsa da, sensör verisiyle arıza tahmin sistemi geliştirmeye yönelik bir deneyimi veya aracı kartta yer almıyor. Ayrıca adayın belirttiği duruş analizi çalışması için henüz bir kanıt sunulmamış görünüyor.",
+    "girdi_token": 1072,
+    "cikti_token": 535,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın üretim hattında yürüttüğü hat dengeleme ve duruş analizi çalışması, firmanın plansız duruş süresini azaltma hedefiyle örtüşüyor. Buna karşın sensör verisi üzerinden arıza tahmin sistemi kurmaya yönelik teknik araçlar ve yetkinlikler kartta yer almıyor. Ayrıca adayın sunduğu duruş analizi çalışması henüz doğrulanmamış durumda.",
+    "girdi_token": 1072,
+    "cikti_token": 540,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Excel ve Minitab kullanarak duruş analizi ve hat dengeleme üzerine çalışma yapmış olup firmanın plansız duruşları azaltma alanına aşinadır. Buna karşın sensör verisi üzerinden arıza tahmini yapacak bir sistem kurmaya yönelik yazılım ya da veri araçları kartında yer almamaktadır. Ayrıca duruş analizi çalışmasına dair henüz bir kanıt sunulmamıştır.",
+    "girdi_token": 1072,
+    "cikti_token": 863,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N6",
+  "aday": "c15",
+  "etiket": 0,
+  "benzerlik": 0.5149792967407094,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday GA4 ve dijital pazarlama araçlarına hâkim olsa da firmanın aradığı web sitesi yenileme ve SEO konusunda kartında somut bir çalışma yer almıyor. Ayrıca adayın kayıtlı reklam kampanyası çalışması için henüz bir kanıt sunulmamış durumda.",
+    "girdi_token": 1081,
+    "cikti_token": 1051,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday dijital pazarlama ve GA4 kullanımı tecrübesine sahip olsa da kartında web sitesi yenileme veya SEO çalışmasına dair bir bilgi yer almıyor. İlettiği performans reklamı çalışması için henüz bir kanıt sunulmamış durumdadır. Firmanın organik trafik ve site geliştirme ihtiyacına doğrudan karşılık veren bir deneyim kartta görünmüyor.",
+    "girdi_token": 1081,
+    "cikti_token": 1005,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın dijital pazarlama ve GA4 deneyimi organik trafik takibine komşu olsa da web sitesi yenileme ve SEO alanında kartında somut bir yetkinlik ya da çalışma bulunmuyor. Ek olarak adayın belirttiği performans reklam kampanyası çalışması için sisteme henüz herhangi bir kanıt eklenmemiştir.",
+    "girdi_token": 1081,
+    "cikti_token": 1083,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N6",
+  "aday": "c17",
+  "etiket": 1,
+  "benzerlik": 0.5441494030206787,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın WordPress ve SEO yazarlığı araçlarıyla içerik üretimi deneyimi bulunsa da, firmanın web sitesini yenileme ihtiyacına karşılık gelen teknik bir çalışma kartta yer almıyor. Ayrıca adayın aylık 20 SEO uyumlu yazı çalışması için henüz bir kanıt eklenmemiş ve doğrulanmamış durumda.",
+    "girdi_token": 1067,
+    "cikti_token": 517,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın WordPress ve SEO yazarlığı deneyimi firmanın arama motoru görünürlüğü ihtiyacına kısmen temas etse de, web sitesini yenilemeye yönelik bir geliştirme çalışması kartta yer almıyor. Ayrıca aylık 20 SEO uyumlu yazıdan oluşan blog serisi çalışması için herhangi bir kanıt sunulmamış ve henüz doğrulanmamıştır.",
+    "girdi_token": 1067,
+    "cikti_token": 784,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın WordPress ve SEO yazarlığı deneyimi firmanın arama motoru görünürlüğü ihtiyacına içerik tarafında destek sunabilir, fakat kartında web sitesini yenilemeye yönelik teknik bir çalışma yer almıyor. Ayrıca listelediği aylık 20 SEO uyumlu yazı çalışmasına dair henüz doğrulanmış bir kanıt sunulmamış.",
+    "girdi_token": 1067,
+    "cikti_token": 624,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N6",
+  "aday": "c22",
+  "etiket": 2,
+  "benzerlik": 0.568161679328522,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın WordPress ve Elementor kullanarak beş firmaya kurumsal site yenileme çalışması bulunsa da arama motoru optimizasyonu ve organik trafiği artırmaya yönelik bir deneyimi kartında yer almıyor. Ayrıca web sitesi yenileme çalışmalarına dair henüz bir kanıt eklenmemiştir.",
+    "girdi_token": 1079,
+    "cikti_token": 648,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın WordPress ve Elementor kullanarak 5 firmaya kurumsal site yenileme yaptığı belirtilse de ilandaki organik trafiği artırmaya yönelik SEO tecrübesi kartta yer almıyor. Ayrıca listelenen site yenileme çalışmalarına dair henüz doğrulanmış bir kanıt sunulmamış.",
+    "girdi_token": 1079,
+    "cikti_token": 758,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Adayın WordPress ve Elementor kullanarak 5 firmaya kurumsal site yenileme çalışması bulunuyor, ancak arama motorlarında görünürlük ve organik trafik artışına yönelik SEO yetkinliği kartında yer almıyor. Ayrıca listelenen web sitesi çalışmalarına dair sisteme henüz bir kanıt sunulmamış durumda.",
+    "girdi_token": 1079,
+    "cikti_token": 762,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "genc_havuzu",
+  "ilan": "N6",
+  "aday": "c23",
+  "etiket": 2,
+  "benzerlik": 0.7337579447268344,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Search Console ve Ahrefs araçlarını kullanarak altı ayda organik trafiği 2,1 katına çıkardığı bir çalışmayı belirtmektedir. Buna karşın ilandaki web sitesinin yenilenmesi ihtiyacına yönelik kartta bir deneyim yer almamaktadır ve belirtilen çalışmanın henüz bir kanıtı bulunmamaktadır.",
+    "girdi_token": 1076,
+    "cikti_token": 634,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday Search Console, Ahrefs ve Screaming Frog araçlarıyla SEO ihtiyacına karşılık veriyor ve altı ayda organik trafiği 2.1 katına çıkarma çalışması bulunuyor. Buna karşın firmanın aradığı web sitesi yenileme konusunda kartta bir deneyim yer almıyor ve belirtilen trafik çalışması henüz doğrulanmış değil.",
+    "girdi_token": 1076,
+    "cikti_token": 527,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday Search Console, Ahrefs ve Screaming Frog araçlarını kullanarak SEO alanında deneyim sahibidir ve ilandaki organik trafik artışı hedefine benzer bir çalışma belirtmiştir. Buna karşın ilandaki web sitesinin yenilenmesi ihtiyacına yönelik kartta herhangi bir araç veya çalışma bulunmamaktadır. Ayrıca adayın organik trafik çalışmasına dair sunduğu bilgiler henüz doğrulanmamıştır.",
+    "girdi_token": 1076,
+    "cikti_token": 631,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F1",
+  "aday": "f01",
+  "etiket": 2,
+  "benzerlik": 0.6994256965728958,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, müşteri hizmetleri için yapay zekâ destekli bilet sınıflandırma ve yönlendirme yazılımı sunmakta olup doğal dil işleme alanında yetkinliğe sahiptir. Daha önce üç e-ticaret firmasında destek otomasyonu kurmuş olan firmanın platform üzerinde henüz tamamlanmış bir iş birliği bulunmamaktadır.",
+    "girdi_token": 1024,
+    "cikti_token": 604,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, müşteri hizmetleri için yapay zekâ destekli bilet sınıflandırma ve yönlendirme yazılımı geliştirmekte olup doğal dil işleme yetkinliğine sahiptir. Daha önce üç e-ticaret firmasında destek otomasyonu kuran firmanın platformda tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 1024,
+    "cikti_token": 699,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, aradığınız ihtiyaca yönelik olarak müşteri hizmetleri için yapay zekâ destekli bilet sınıflandırma ve yönlendirme yazılımı geliştirmektedir. Daha önce üç e-ticaret firmasında destek otomasyonu kurmuş olmakla birlikte, firmanın platformda tamamlanmış bir iş birliği kaydı henüz bulunmamaktadır.",
+    "girdi_token": 1024,
+    "cikti_token": 502,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F1",
+  "aday": "f02",
+  "etiket": 2,
+  "benzerlik": 0.5702307783668112,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma NLP ve konuşma analitiği alanında çalışarak çağrı merkezlerine çözümler sunsa da, doğrudan yazılı biletlerin otomatik sınıflandırılması ve yönlendirilmesi konusunda somut bir çalışması kartında belirtilmemiştir. Önceki işlerinde bir telekom operatörüne sesli asistan teslim ettiği yazılıdır ancak destek biletlerini ayrıştırmaya yönelik bir tecrübe yer almamaktadır. Ayrıca firmanın henüz doğrulanmadığı ve tamamlanmış bir iş birliği kaydının bulunmadığı görülmektedir.",
+    "girdi_token": 1019,
+    "cikti_token": 732,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma çağrı merkezleri için NLP ve entegrasyon yetkinlikleriyle sesli asistan çözümleri sunmaktadır. İlanınızdaki yazılı destek biletlerini sınıflandırma ve yönlendirme ihtiyacına doğrudan denk gelen bir çalışma kartında yer almamakta, önceki işi sesli asistan teslimiyle sınırlı kalmaktadır. Firmanın henüz tamamlanmış bir iş birliği kaydı da bulunmamaktadır.",
+    "girdi_token": 1019,
+    "cikti_token": 573,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma, doğal dil işleme (NLP) ve entegrasyon yetkinliklerine sahip olup çağrı merkezlerine yönelik sesli asistan çözümleri sunmaktadır. İlandaki yazılı destek biletlerini sınıflandırma ve yönlendirme ihtiyacına doğrudan karşılık gelen bir çalışma ise kartta yer almamaktadır. Ayrıca firmanın doğrulanma süreci henüz tamamlanmamıştır.",
+    "girdi_token": 1019,
+    "cikti_token": 598,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F1",
+  "aday": "f07",
+  "etiket": 0,
+  "benzerlik": 0.5249288724531866,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firmanın hizmetleri teslimat rotası optimizasyonu ve kurye yönetimi platformu üzerine odaklanmaktadır. İlanınızdaki destek biletlerinin sınıflandırılması ve yönlendirilmesine yönelik bir yapay zekâ yetkinliği veya benzer bir çalışma kartta yer almamaktadır.",
+    "girdi_token": 1013,
+    "cikti_token": 342,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda müşteri destek biletlerini otomatik sınıflandırıp yönlendirecek bir yapay zekâ çözümü aranmaktadır. Aday firma ise lojistik teknolojileri alanında teslimat rotası optimizasyonu ve kurye yönetimi sunmakta olup bilet sınıflandırma veya destek sistemlerine yönelik bir yetkinliği kartında bulunmamaktadır. Firmanın bu alanda gösterilmiş bir önceki çalışması veya tamamlanmış iş birliği de yer almamaktadır.",
+    "girdi_token": 1013,
+    "cikti_token": 732,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda müşteri destek biletlerini otomatik sınıflandıracak ve yönlendirecek bir yapay zekâ çözümü aranmaktadır. Aday firma ise lojistik alanında teslimat rotası optimizasyonu ve kurye yönetimi platformu sunmakta olup bilet sınıflandırmaya yönelik bir yetkinlik veya çalışma belirtmemiştir. Firmanın doğrulanmış bir durumu veya tamamlanan iş birliği kaydı da kartta yer almamaktadır.",
+    "girdi_token": 1013,
+    "cikti_token": 430,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F1",
+  "aday": "f25",
+  "etiket": 1,
+  "benzerlik": 0.5581450424844628,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma yapay zekâ ve derin öğrenme alanında çalışsa da uzmanlığı bilet sınıflandırma yerine görüntü işleme ve tekstilde hata tespiti üzerinedir. Firmanın kartında metin işleme veya müşteri destek süreçlerine yönelik somut bir yetkinlik veya önceki çalışma yer almamaktadır.",
+    "girdi_token": 1009,
+    "cikti_token": 752,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda müşteri destek biletlerini sınıflandıracak bir yapay zekâ çözümü aranırken, aday firmanın yetkinlikleri bilgisayarlı görü ve görüntü işlemeye dayalı kalite kontrol alanındadır. Kartta bilet sınıflandırmaya yönelik bir yetkinlik veya çalışma belirtilmemiştir. Firmanın ayrıca tamamlanmış bir iş birliği de bulunmamaktadır.",
+    "girdi_token": 1009,
+    "cikti_token": 891,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma yapay zekâ ve derin öğrenme alanında uzmanlaşmış olup tekstil üretiminde görüntü işleme odaklı hata tespiti çalışmaları yürütmüştür. Ancak biletleri otomatik sınıflandırma ve yönlendirme ihtiyacınız için gerekli metin işleme alanında somut bir yetkinlik veya önceki çalışma kartında yer almamaktadır. Firmanın onaylanmış bir güven kaydı da bulunmamaktadır.",
+    "girdi_token": 1009,
+    "cikti_token": 776,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F2",
+  "aday": "f06",
+  "etiket": 2,
+  "benzerlik": 0.6525212927021167,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, filo yönetimi ve araç takip yazılımları geliştirerek GPS ve telematik yetkinlikleriyle üç lojistik firmasının araçlarını canlı izlemektedir. Bu tecrübe ilanınızdaki araç konumu ve teslimat takibi ihtiyacını karşılamaktadır, ancak firmanın platformda tamamlanmış bir iş birliği geçmişi henüz bulunmamaktadır.",
+    "girdi_token": 987,
+    "cikti_token": 494,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, GPS ve telematik yetkinlikleriyle araç takip yazılımları geliştirmekte olup üç lojistik firmasının filosunu canlı izleme tecrübesine sahiptir. İlandaki geç teslimat oranını düşürme kriterine dair somut bir çıktı kartta belirtilmemiştir. Firmanın platformda tamamlanmış bir iş birliği kaydı bulunmamaktadır ve firma henüz doğrulanmamıştır.",
+    "girdi_token": 987,
+    "cikti_token": 421,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, filo yönetimi ile araç takip yazılımları geliştirmekte olup üç lojistik firmasının araçlarını canlı izleme deneyimine sahiptir. Sahip olduğu GPS ve telematik yetkinlikleri dağıtım filonuzun konumunu canlı izleme ihtiyacına doğrudan karşılık verse de platformda henüz tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 987,
+    "cikti_token": 386,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F2",
+  "aday": "f07",
+  "etiket": 2,
+  "benzerlik": 0.641618425373904,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma, teslimat rotası optimizasyonu ve kurye yönetimi alanında mobil ve API çözümleri sunmakta, yemek ve market teslimatı yapan firmalarla çalıştığını belirtmektedir. Dağıtım filonuz için aradığınız araçların canlı konum takibine dair somut bir özellik kartta doğrudan yer almamaktadır. Firmanın platform üzerinde henüz tamamlanmış bir iş birliği de bulunmamaktadır.",
+    "girdi_token": 994,
+    "cikti_token": 488,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma, teslimat rotası optimizasyonu ve kurye yönetimi alanlarında mobil ve API yetkinlikleri sunmaktadır. Ancak araçların canlı konum takibine dair doğrudan bir yetkinlik veya çalışma kartında belirtilmemiştir. Firmanın platform üzerinde tamamlanmış bir iş birliği kaydı da bulunmamaktadır.",
+    "girdi_token": 994,
+    "cikti_token": 466,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma teslimat rotası optimizasyonu ve kurye yönetim platformu sunmakta, yemek ve market teslimatı yapan firmalarla çalışmalar yürütmektedir. İlanınızdaki araç konumunu canlı izleme ihtiyacına doğrudan karşılık gelen bir yetkinlik kartta açıkça belirtilmemiştir. Firmanın platform üzerinde tamamlanmış bir iş birliği kaydı da yer almamaktadır.",
+    "girdi_token": 994,
+    "cikti_token": 559,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F2",
+  "aday": "f20",
+  "etiket": 0,
+  "benzerlik": 0.5284732344178299,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma, restoran zincirleri için sipariş yönetimi alanında SaaS, mobil ve entegrasyon yetkinliklerine sahiptir. Ancak kartında araç konumu izleme veya filo yönetimi üzerine doğrudan bir yetkinlik veya çalışma belirtilmemiştir. Firmanın güven göstergelerinde henüz doğrulanmadığı ve tamamlanan iş birliği bulunmadığı görülmektedir.",
+    "girdi_token": 987,
+    "cikti_token": 485,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firmanın restoran zincirlerine yönelik sipariş yönetimi ile SaaS ve mobil yazılım geliştirme tecrübesi bulunmaktadır. Ancak ilandaki temel gereksinim olan araç konum takibi ve filo yönetimine dair doğrudan bir çalışması kartında yer almamaktadır. Ayrıca firmanın henüz tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 987,
+    "cikti_token": 446,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma mobil, SaaS ve sipariş yönetimi alanlarında yazılım çözümleri sunmaktadır. Ancak ilanınızdaki araç konumu ve dağıtım filosu canlı izleme ihtiyacına yönelik doğrudan bir yetkinliği veya çalışması kartında belirtilmemiştir. Firmanın güven bilgisi henüz doğrulanmamıştır ve tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 987,
+    "cikti_token": 335,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F3",
+  "aday": "f09",
+  "etiket": 2,
+  "benzerlik": 0.7219393756631433,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, ihtiyacınız olan endüstriyel IoT sensörleri ile enerji izleme sistemlerini üretmekte ve enerji analitiği alanında çalışmaktadır. Daha önceki çalışmalarında iki fabrikada enerji tüketimini yüzde 12 azalttığını belirtmektedir. Bununla birlikte firmanın platform kaydı henüz doğrulanmamıştır ve tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 996,
+    "cikti_token": 625,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, endüstriyel IoT sensörleri ve enerji izleme sistemleri üreterek enerji analitiği alanında çözümler sunuyor. Daha önce iki fabrikada enerji tüketimini %12 düşürdüğünü belirten firmanın sunduğu çözümler, ilanınızdaki enerji faturasını azaltma hedefine doğrudan karşılık geliyor. Bununla birlikte firmanın henüz doğrulanmadığını ve platformda tamamlanmış bir iş birliği kaydı bulunmadığını dikkate alabilirsiniz.",
+    "girdi_token": 996,
+    "cikti_token": 485,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma endüstriyel IoT sensörleri ile enerji izleme sistemleri üretmekte ve enerji analitiği yetkinliği sunmaktadır. Daha önceki çalışmalarında iki fabrikada enerji tüketimini yüzde 12 oranında azalttığını belirtmektedir, ancak platform üzerinde doğrulanmış bir iş birliği geçmişi bulunmamaktadır.",
+    "girdi_token": 996,
+    "cikti_token": 461,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F3",
+  "aday": "f10",
+  "etiket": 1,
+  "benzerlik": 0.5794487417549458,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma enerji etüdü ve danışmanlığı alanında tecrübeye sahip olsa da ilanda aradığınız sensör ve analiz çözümlerine dair kartında bir yetkinlik yer almamaktadır. Firmanın önceki çalışmaları ofis binalarıyla sınırlıdır ve doğrulanmış bir iş birliği kaydı henüz bulunmamaktadır.",
+    "girdi_token": 988,
+    "cikti_token": 555,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma binalara yönelik enerji etüdü ve danışmanlık hizmeti sunmaktadır. Ancak fabrikanız için aradığınız sensör ve veri analizi çözümlerine dair somut bir yetkinlik veya çalışma kartında belirtilmemiştir. Firmanın tamamlanmış bir iş birliği kaydı da henüz bulunmamaktadır.",
+    "girdi_token": 988,
+    "cikti_token": 669,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma, enerji etüdü ve yalıtım danışmanlığı ile enerji tüketimini azaltmaya yönelik hizmetler sunmaktadır. Bununla birlikte fabrikalara yönelik sensör ve analiz çözümleri kartta yer almamakta olup firmanın önceki çalışmaları yalnızca ofis binalarındaki denetimlerle sınırlıdır.",
+    "girdi_token": 988,
+    "cikti_token": 576,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F3",
+  "aday": "f11",
+  "etiket": 1,
+  "benzerlik": 0.5861455295522151,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma fabrika çatılarına güneş enerjisi panelleri kurarak enerji üretimi alanında hizmet vermektedir. Ancak kartında enerji tüketimini ölçecek sensör veya analiz çözümlerine yönelik herhangi bir yetkinlik ve çalışma yer almamaktadır.",
+    "girdi_token": 977,
+    "cikti_token": 1024,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma enerji sektöründe yer almakta ve fabrikalara güneş enerjisi paneli kurulumu hizmeti sunmaktadır. Ancak ilanınızda talep ettiğiniz tüketim ölçümüne yönelik sensör ve analiz çözümlerine dair herhangi bir yetkinlik kartında yer almamaktadır. Firmanın platformda tamamlanmış bir iş birliği de henüz bulunmamaktadır.",
+    "girdi_token": 977,
+    "cikti_token": 629,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma fabrika çatılarına güneş enerjisi paneli kurulumu yapmakta ve proje yönetimi alanında çalışmaktadır. İlanınızda aranan enerji tüketimini ölçecek sensör ve analiz çözümlerine yönelik aday kartında herhangi bir yetkinlik veya önceki çalışma yer almamaktadır.",
+    "girdi_token": 977,
+    "cikti_token": 1172,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F3",
+  "aday": "f15",
+  "etiket": 0,
+  "benzerlik": 0.5798360466497513,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma IoT ve sensör alanında yetkinliğe sahip olsa da çözümleri tarımsal sulama ve toprak nemi takibi üzerine odaklanmıştır. Fabrika ortamında enerji tüketimini ölçme ve azaltma konusunda doğrudan bir tecrübesi veya daha önce gerçekleştirdiği bir çalışması bulunmamaktadır.",
+    "girdi_token": 998,
+    "cikti_token": 517,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma IoT tabanlı sensörler geliştirmekte ve kaynak kullanımını azaltmaya dönük izleme çözümleri sunmaktadır. Bununla birlikte uzmanlığı tarım sektöründe sulama sistemleri üzerine olup fabrikalarda enerji tüketimini ölçmeye ve düşürmeye yönelik bir çalışması kartında yer almamaktadır.",
+    "girdi_token": 998,
+    "cikti_token": 653,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma IoT ve sensör teknolojileri alanında yetkinliğe sahip olsa da çalışmaları tarımsal sulama ve toprak nemi ölçümü üzerine odaklanmaktadır. Fabrikalarda enerji tüketimini ölçme ve analiz etmeye yönelik doğrudan bir çözümü veya önceki çalışması kartında yer almamaktadır.",
+    "girdi_token": 998,
+    "cikti_token": 699,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F3",
+  "aday": "f25",
+  "etiket": 1,
+  "benzerlik": 0.5397031870746029,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma yapay zekâ destekli görüntü işleme ve kalite kontrol alanında çalışmalar yürütmektedir. İlanınızdaki fabrika enerji tüketimini ölçecek sensör ve analiz çözümlerine karşılık gelen bir yetkinlik veya önceki çalışma kartında yer almamaktadır. Firmanın bu alanda tamamlanmış bir iş birliği de bulunmamaktadır.",
+    "girdi_token": 986,
+    "cikti_token": 354,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma, üretimde görüntü işleme ve yapay zekâ ile hata tespiti alanlarında çalışmaktadır. Kartında enerji tüketimi ölçümü, sensör sistemleri ya da enerji analiziyle ilgili somut bir yetkinlik veya çalışma yer almamaktadır.",
+    "girdi_token": 986,
+    "cikti_token": 374,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma, yapay zekâ destekli görüntü işleme ve tekstil sektöründe kalite kontrol çözümleri üzerine çalışmaktadır. İlanınızda aranan enerji tüketimi ölçümü, sensör entegrasyonu ve enerji analizi gibi konularda firmanın kartında herhangi bir yetkinlik veya çalışma yer almamaktadır. Ayrıca firmanın platformda tamamlanmış bir iş birliği kaydı da bulunmamaktadır.",
+    "girdi_token": 986,
+    "cikti_token": 433,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F4",
+  "aday": "f05",
+  "etiket": 0,
+  "benzerlik": 0.5693453999747237,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma pazaryeri, lojistik ve e-ticaret alanlarında deneyim sahibidir. Ancak ilanda belirtilen çevrimiçi satış sitesi ve ödeme altyapısı kurulumunu sağlayacak bir teknoloji geliştirme yetkinliği kartında yer almamaktadır. Firmanın tamamlanan bir iş birliği veya geçmiş yazılım çalışması da belirtilmemiştir.",
+    "girdi_token": 999,
+    "cikti_token": 598,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma e-ticaret pazaryeri işletmeciliği, lojistik ve müşteri deneyimi alanlarında deneyim sahibidir. Bununla birlikte, ilanda talep edilen satış sitesi ve ödeme altyapısı kurulumunu sağlayacak bir teknoloji geliştirme yetkinliği kartında yer almamaktadır. Firmanın geçmişte sıfırdan site veya altyapı kurduğuna dair somut bir çalışması da belirtilmemiştir.",
+    "girdi_token": 999,
+    "cikti_token": 718,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma e-ticaret, pazaryeri ve lojistik alanlarında tecrübe sahibidir. Ancak ilanda aranan satış sitesi ve ödeme altyapısını teknik olarak kurma yetkinliği kartta açıkça belirtilmemiştir. Ayrıca firmanın daha önce benzer bir sistem geliştirdiğine dair somut bir çalışma bilgisi kartta yer almamaktadır.",
+    "girdi_token": 999,
+    "cikti_token": 589,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F4",
+  "aday": "f12",
+  "etiket": 2,
+  "benzerlik": 0.6658507646046428,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, küçük üreticilere yönelik çevrimiçi mağaza kurulumu ile ödeme altyapısı hizmeti vermekte ve daha önce otuz küçük işletmenin sitesini kurduğunu belirtmektedir. Firmanın e-ticaret altyapısı ve ödeme sistemleri yetkinlikleri ilanınızdaki temel teknik ihtiyaçla örtüşmektedir. Ancak firmanın henüz doğrulanmadığını ve ilk üç aydaki 500 sipariş hedefine yönelik özel bir tecrübesinin kartta yer almadığını dikkate alabilirsiniz.",
+    "girdi_token": 1008,
+    "cikti_token": 565,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, küçük üreticilere yönelik çevrimiçi mağaza kurulumu ve ödeme sistemleri entegrasyonu alanında yetkinliklere sahip olduğunu ve daha önce otuz işletmenin sitesini kurduğunu belirtmektedir. İlanınızdaki satış sitesi ve ödeme altyapısı ihtiyacını doğrudan karşılayabilecek bir çalışma geçmişi bulunmakla birlikte, firmanın platformda tamamlanmış bir iş birliği kaydı yer almamaktadır.",
+    "girdi_token": 1008,
+    "cikti_token": 536,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, küçük üreticiler için çevrimiçi mağaza kurulumu ve ödeme entegrasyonu sağlayarak ilanınızdaki altyapı ihtiyacını doğrudan karşılıyor. Daha önce otuz küçük işletmenin sitesini kurmuş olan firmanın platform üzerinde henüz tamamlanmış bir iş birliği kaydı bulunmuyor.",
+    "girdi_token": 1008,
+    "cikti_token": 596,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F4",
+  "aday": "f13",
+  "etiket": 1,
+  "benzerlik": 0.5685240381240341,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma, dijital ödeme çözümleri sunmakta ve daha önce pazaryerlerine ödeme altyapısı sağladığını belirtmektedir. İlanınızdaki ödeme sistemi ihtiyacını karşılayabilecek yetkinliğe sahip olsa da, çevrimiçi satış sitesinin sıfırdan kurulmasına yönelik bir çalışma kartında yer almamaktadır. Ayrıca firmanın platform üzerinde tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 990,
+    "cikti_token": 460,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma dijital ödeme ve sanal pos çözümleri sunmakta olup pazaryerlerine ödeme altyapısı sağlama tecrübesine sahiptir. Bununla birlikte ilanda talep edilen çevrimiçi satış sitesinin kurulumuna dair bir yetkinlik veya çalışma kartında belirtilmemiştir. Firmanın henüz tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 990,
+    "cikti_token": 505,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma, dijital ödeme ve sanal pos çözümleri sunarak pazaryerlerine ödeme altyapısı sağlama deneyimine sahiptir. Bununla birlikte, ilanda belirtilen çevrimiçi satış sitesi kurulumuna yönelik bir yetkinlik veya çalışma kartında yer almamaktadır. Firmanın doğrulanma bilgisi ve tamamlanan bir iş birliği kaydı da bulunmamaktadır.",
+    "girdi_token": 990,
+    "cikti_token": 478,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F5",
+  "aday": "f09",
+  "etiket": 1,
+  "benzerlik": 0.5632795707017952,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma IoT sensörleri ve enerji analitiği alanında çalışmakta olup fabrikalarda tüketim düşürme tecrübesine sahiptir. İlanın temel ihtiyacı olan tarım, verim takibi ve sulama önerilerine yönelik somut bir çalışma kartta yer almamaktadır. Firmanın güven göstergelerinde doğrulanma veya tamamlanmış iş birliği bilgisi bulunmamaktadır.",
+    "girdi_token": 1000,
+    "cikti_token": 504,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma endüstriyel IoT sensörleri ve enerji analitiği alanında çalışmakta, fabrikalarda enerji tüketimini azaltmaya dönük tecrübe sunmaktadır. Buna karşın kartında tarım teknolojileri, bağ ve zeytinlik verim takibi veya sulama yönetimi üzerine somut bir çalışma yer almamaktadır.",
+    "girdi_token": 1000,
+    "cikti_token": 579,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma endüstriyel IoT sensörleri ve analitik sistemler geliştirerek tüketim azaltmaya yönelik fabrika deneyimine sahiptir. Bununla birlikte kartında tarım teknolojileri, zeytinlik ve bağ verim takibi ya da sulama yönetimine dair doğrudan bir çalışma yer almamaktadır.",
+    "girdi_token": 1000,
+    "cikti_token": 533,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F5",
+  "aday": "f15",
+  "etiket": 2,
+  "benzerlik": 0.7247212768746729,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, toprak nem sensörleri ve sulama yazılımı geliştirmekte olup zeytin ve üzüm bahçelerinde sulama suyunu yüzde 25 azalttığı bir önceki çalışmaya sahiptir. IoT, uydu görüntüsü ve agronomi yetkinlikleri, ilanınızdaki zeytinlik ve bağlar için verim takibi ile sulama önerisi ihtiyacına doğrudan karşılık vermektedir. Firmanın platform üzerinde tamamlanmış bir iş birliği kaydı henüz bulunmamaktadır.",
+    "girdi_token": 1002,
+    "cikti_token": 899,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, zeytin ve üzüm bahçelerinde sulama suyunu %25 azalttığı önceki çalışmasıyla aradığınız su tasarrufu kriterini ve ürün odağını somut olarak karşılamaktadır. Toprak nem sensörleri ile sulama yazılımı geliştiren firmanın IoT, uydu görüntüsü ve agronomi yetkinlikleri bulunmaktadır. Bununla birlikte, firmanın platform üzerinde daha önce tamamlanmış bir iş birliği kaydı yer almamaktadır.",
+    "girdi_token": 1002,
+    "cikti_token": 1428,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, hassas tarım alanında toprak nem sensörleri ile sulama yazılımı geliştirmekte olup IoT, agronomi ve uydu görüntüsü yetkinliklerine sahiptir. Daha önce zeytin ve üzüm bahçelerinde sulama suyunu %25 azalttığı bir çalışması bulunmakla birlikte, platform üzerinde henüz tamamlanmış bir iş birliği kaydı yer almamaktadır.",
+    "girdi_token": 1002,
+    "cikti_token": 955,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F5",
+  "aday": "f16",
+  "etiket": 1,
+  "benzerlik": 0.5575435511483464,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda zeytinlik ve bağ üreticilerine yönelik verim takibi ve sulama önerisi sunabilecek bir tarım teknolojisi ortağı aranmaktadır. Aday firma ise tarım alanında gübre ve tarım ilacı satışı ile bayilik faaliyetleri yürütmektedir. Firmanın kartında sulama, verim takibi veya tarım teknolojilerine dair bir yetkinlik ya da önceki çalışma yer almamaktadır.",
+    "girdi_token": 980,
+    "cikti_token": 496,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma tarım sektöründe saha satışı, bayilik ile gübre ve tarım ilacı tedariki yapmaktadır. İlanınızda aranan verim takibi ve sulama önerisi sunacak teknolojiye yönelik somut bir yetkinlik ya da çalışma firmanın kartında yer almamaktadır. Firmanın daha önce tamamlanmış bir iş birliği de bulunmamaktadır.",
+    "girdi_token": 980,
+    "cikti_token": 565,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma tarım sektöründe gübre ve tarım ilacı satışı ile bayilik alanında faaliyet göstermektedir. İlanınızdaki verim takibi ve sulama önerisi geliştirmeye yönelik herhangi bir teknoloji yetkinliği veya çalışması kartında yer almamaktadır. Firmanın doğrulaması ve tamamlanmış bir iş birliği kaydı da bulunmamaktadır.",
+    "girdi_token": 980,
+    "cikti_token": 491,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F6",
+  "aday": "f17",
+  "etiket": 2,
+  "benzerlik": 0.7584794106567999,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, ilanda belirtilen sızma testi ve çalışan farkındalık eğitimi hizmetlerini doğrudan sunmakta olup on bir kuruma sızma testi yaptığını belirtmektedir. Bununla birlikte farkındalık eğitimi alanındaki geçmiş çalışmaları hakkında kartta ayrıntı yer almamaktadır ve firmanın henüz doğrulanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 991,
+    "cikti_token": 462,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, aradığınız sızma testi ve çalışan farkındalık eğitimi hizmetlerini doğrudan sunmakta olup on bir kuruma sızma testi yaptığını belirtmektedir. Bununla birlikte, eğitim alanındaki geçmiş çalışmalarına kartında değinmemiştir ve henüz doğrulanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 991,
+    "cikti_token": 513,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, ilanınızda aranan sızma testi ve çalışan farkındalık eğitimi hizmetlerini doğrudan sunmakta olup geçmişte on bir kuruluşa sızma testi çalışması gerçekleştirmiştir. Bununla birlikte farkındalık eğitimi alanındaki geçmiş çalışmaları kartta detaylandırılmamıştır ve firmanın platform üzerinde henüz tamamlanmış bir iş birliği bulunmamaktadır.",
+    "girdi_token": 991,
+    "cikti_token": 592,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F6",
+  "aday": "f18",
+  "etiket": 1,
+  "benzerlik": 0.5751030390830244,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma ağ altyapısı ve sunucu kurulumu alanında çalışıyor, okullara ağ kurulumu yapmış olması da altyapı tecrübesini gösteriyor. Ancak ilanınızda aradığınız sızma testi ve çalışanlara yönelik siber güvenlik eğitimi gibi temel yetkinlikler kartında yer almıyor. Ayrıca firmanın henüz tamamlanmış bir iş birliği de bulunmuyor.",
+    "girdi_token": 985,
+    "cikti_token": 446,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma ağ kurulumu ve sunucu donanımı alanında hizmet verse de ilanınızdaki sızma testi ve siber güvenlik eğitimi gibi temel ihtiyaçlara yönelik bir yetkinlik belirtmemiştir. Okullara ağ altyapısı kurma deneyimi bulunmakta, ancak siber güvenlik alanında daha önce yapılmış bir çalışma kartta yer almamaktadır.",
+    "girdi_token": 985,
+    "cikti_token": 497,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Aday firma ağ kurulumu ve sunucu donanımı alanında hizmet vermekte, önceki işlerinde okullara ağ altyapısı kurduğunu belirtmektedir. Ancak ilanınızdaki sızma testi ve siber güvenlik farkındalık eğitimi gereksinimlerine yönelik doğrudan bir yetkinliği veya çalışması kartında yer almamaktadır. Ayrıca firmanın güven bilgisi henüz doğrulanmamıştır ve tamamlanan bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 985,
+    "cikti_token": 712,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "firma_havuzu",
+  "ilan": "F6",
+  "aday": "f25",
+  "etiket": 0,
+  "benzerlik": 0.5338460784402161,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda ağ güvenliği testi, sızma testi ve çalışanlara farkındalık eğitimi sağlayacak bir siber güvenlik ortağı aranmaktadır. Aday firma ise yapay zekâ destekli görüntü işleme ve kalite kontrol alanında çalışmakta olup kartında siber güvenliğe yönelik herhangi bir yetkinlik veya çalışma yer almamaktadır. Firmanın daha önce tamamlanmış bir iş birliği kaydı da bulunmamaktadır.",
+    "girdi_token": 989,
+    "cikti_token": 314,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda ağ güvenliği testi ve siber güvenlik farkındalık eğitimi aranırken, aday firmanın uzmanlığı yapay zekâ tabanlı görüntü işleme ve kalite kontrol çözümleridir. Firmanın siber güvenlik veya sızma testi alanında somut bir yetkinliği ya da önceki çalışması bulunmamaktadır. Aday firma henüz doğrulanmamıştır ve tamamlanmış bir iş birliği kaydı yoktur.",
+    "girdi_token": 989,
+    "cikti_token": 378,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma yapay zekâ tabanlı görüntü işleme ve tekstil üretimi için kalite kontrol çözümleri üzerine çalışmaktadır. İlanınızda talep edilen ağ güvenliği, sızma testi ve siber güvenlik farkındalık eğitimi konularında firmanın kartında herhangi bir yetkinlik veya çalışma bulunmamaktadır.",
+    "girdi_token": 989,
+    "cikti_token": 385,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "anadolu",
+  "aday": "Tazele Analitik",
+  "etiket": 2,
+  "benzerlik": 0.7363262982872284,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Doğrulanmış aday firma, satış verisinden şube bazında talep tahmini yaparak taze ürün siparişi öneren bir yazılım geliştirmektedir. İki markette yürüttüğü önceki çalışmada meyve-sebze firesini yüzde 15 düşürdüğünü belirtse de platform üzerinde henüz tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 1083,
+    "cikti_token": 718,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, satış verilerini analiz ederek şube bazında taze ürün talep tahmini yapan bir yazılım sunmakta ve önceki çalışmasında meyve-sebze firesini yüzde 15 azalttığını belirtmektedir. Sistemde firma doğrulandı olarak kayıtlıdır ancak platform üzerinde tamamlanmış bir iş birliği geçmişi yer almamaktadır.",
+    "girdi_token": 1083,
+    "cikti_token": 885,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Doğrulanmış aday firma, satış verilerini analiz ederek şube bazında taze ürün siparişi ve talep tahmini öneren bir yazılım sunmaktadır. Daha önce iki markette yürüttüğü üç aylık çalışmada meyve-sebze firesini yüzde 15 oranında düşürmüştür. Firmanın sunduğu çözüm ilanınızdaki fire azaltma ve sipariş tahmini ihtiyacıyla doğrudan örtüşmektedir.",
+    "girdi_token": 1083,
+    "cikti_token": 834,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "anadolu",
+  "aday": "Soğuk Lojistik",
+  "etiket": 0,
+  "benzerlik": 0.5545569250517065,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma, gıda perakendecileri için şubelere soğuk zincir lojistiği ve günlük taze ürün dağıtımı hizmeti sunmaktadır. Buna karşın ilanın temel ihtiyacı olan satış verisine dayalı sipariş tahmini yapılmasına ilişkin bir yetkinlik veya çalışma firma kartında bulunmamaktadır.",
+    "girdi_token": 1091,
+    "cikti_token": 625,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma, gıda perakendecilerine yönelik soğuk zincir lojistiği ve günlük taze ürün dağıtımı hizmeti sunmaktadır. Ancak kartında satış verilerini kullanarak sipariş tahmini yapabilecek bir veri analitiği yetkinliği yer almamaktadır. Firmanın henüz tamamlanmış bir iş birliği kaydı da bulunmamaktadır.",
+    "girdi_token": 1091,
+    "cikti_token": 652,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma, gıda perakendecilerine yönelik soğuk zincir lojistiği ve taze ürün dağıtımı alanında hizmet sunmaktadır. Buna karşın ilanınızdaki satış verisine dayalı sipariş tahmini ihtiyacını karşılayacak bir veri analitiği veya yazılım yetkinliği kartında yer almamaktadır. Dolayısıyla firma taze ürün alanında faaliyet gösterse de aradığınız sipariş tahminleme çalışmasını sağlayacak uzmanlığa sahip görünmüyor.",
+    "girdi_token": 1091,
+    "cikti_token": 543,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "soguk_lojistik",
+  "aday": "Ayaz Sensör Teknolojileri",
+  "etiket": 2,
+  "benzerlik": 0.7631746618388674,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, soğutmalı araç ve depolarda IoT sensörleriyle anlık sıcaklık izleme ve ihlal durumunda doğrudan uyarı iletme çözümü sunmakta olup benzer alanda iki lojistik firmasıyla önceki çalışmalara sahiptir. Program ekibi tarafından doğrulanmış olan firmanın platform üzerinde henüz tamamlanmış bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 1150,
+    "cikti_token": 501,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, soğutmalı araç ve depolarda IoT sensörleriyle anlık sıcaklık izleme ve ihlal durumunda yetkiliye anında uyarı gönderme çözümü sunuyor. Daha önce iki lojistik firmasında benzer araç ve depo takip çalışmalarını hayata geçirmiş olan firmanın doğrulaması yapılmıştır. Platform üzerinde henüz tamamlanan bir iş birliği kaydı bulunmamaktadır.",
+    "girdi_token": 1150,
+    "cikti_token": 440,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday firma, soğutmalı araç ve depolarda IoT sensörleriyle anlık sıcaklık takibi yapan ve ihlal durumunda yetkiliye hemen uyarı gönderen bir çözüme sahiptir. Benzer çalışmayı daha önce iki lojistik firmasında gerçekleştirmiş olan firma, program ekibi tarafından doğrulanmıştır. Platform üzerinde henüz tamamlanmış bir iş birliği bulunmamakla birlikte, firmanın sunduğu hizmet ilandaki anlık takip ve uyarı ihtiyacını doğrudan karşılamaktadır.",
+    "girdi_token": 1150,
+    "cikti_token": 791,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "soguk_lojistik",
+  "aday": "Tazele Analitik",
+  "etiket": 0,
+  "benzerlik": 0.6012404692361478,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda araç ve depolarda sensörle anlık sıcaklık takibi ve ihlal uyarısı yapacak bir teknoloji aranırken, aday firma satış verisine dayalı talep tahmini yazılımı sunmaktadır. Firma doğrulandı bilgisi bulunsa da kartında sensör, cihaz veya anlık ortam izleme alanında bir yetkinlik yer almamaktadır.",
+    "girdi_token": 1111,
+    "cikti_token": 672,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma, perakende alanında satış verisi analiziyle talep tahmini yapmakta ve taze ürün firesini azaltmaya yönelik yazılım sunmaktadır. Buna karşın ilanda talep edilen soğutmalı araç ve depolarda anlık sıcaklık takibi, sensör altyapısı ve uyarı sistemine ilişkin bir yetkinliği kartında yer almamaktadır. Firma doğrulandı bilgisi bulunmakla birlikte sıcaklık izleme alanında önceki bir çalışması belirtilmemiştir.",
+    "girdi_token": 1111,
+    "cikti_token": 941,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma perakendede talep tahmini ve fire azaltma üzerine yazılım geliştirmektedir ve program ekibi tarafından doğrulandı. Ancak firmanın kartında araç veya depolarda anlık sıcaklık izleme, sensör kullanımı ve alarm sistemlerine yönelik herhangi bir yetkinlik ya da çalışma yer almamaktadır.",
+    "girdi_token": 1111,
+    "cikti_token": 1090,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "soguk_lojistik",
+  "aday": "Yolgüç Operasyon Danışmanlık",
+  "etiket": 0,
+  "benzerlik": 0.4857185449278238,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma gıda perakendesi ve sevkiyat planlaması alanında süreç danışmanlığı yürütmekte olup tedarik zinciri tecrübesine sahiptir. Buna karşın kendileri yazılım geliştirmediklerini belirtmekte, araç ve depolara yönelik anlık sıcaklık izleme ve uyarı teknolojisi sunmamaktadır. Firmanın kartında ilanınızdaki anlık takip ihtiyacını doğrudan karşılayacak teknolojik bir altyapı veya tamamlanan iş birliği yer almamaktadır.",
+    "girdi_token": 1139,
+    "cikti_token": 948,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda soğutmalı araç ve depolarda anlık sıcaklık takibi yapacak ve uyarı gönderecek bir teknoloji ortağı aranmaktadır. Aday firma gıda perakendesinde tedarik zinciri süreçleri üzerine danışmanlık vermekte olup doğrudan yazılım ya da teknoloji geliştirmediğini belirtmektedir. Firmanın sıcaklık izleme sensörleri veya takip sistemlerine yönelik bir çözümü ya da önceki çalışması kartta bulunmamaktadır.",
+    "girdi_token": 1139,
+    "cikti_token": 741,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda soğutmalı araç ve depolarda sıcaklığı anlık izleyip uyarı verecek bir teknoloji ortağı aranmaktadır. Aday firma gıda perakendesinde operasyon ve tedarik zinciri danışmanlığı yapmakta olup yazılım veya sensör çözümü geliştirmediğini açıkça belirtmektedir. İhtiyacınız olan anlık takip ve uyarı altyapısını sağlayacak somut bir teknolojik yetkinliği kartında bulunmamaktadır.",
+    "girdi_token": 1139,
+    "cikti_token": 810,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "soguk_lojistik",
+  "aday": "Vitrinpark Online Ticaret A.Ş.",
+  "etiket": 0,
+  "benzerlik": 0.4572366575117758,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma e-ticaret alanında pazaryeri, çağrı merkezi ve teslimat operasyonları yönetmekte olup sensör yazılımı geliştirmediğini açıkça belirtmektedir. İlanınızdaki araç ve depolarda anlık sıcaklık izleme ile uyarı sistemi ihtiyacına yönelik bir teknolojisi veya yetkinliği kartında bulunmamaktadır. Firmanın daha önce tamamlanmış bir iş birliği çalışması da yer almamaktadır.",
+    "girdi_token": 1153,
+    "cikti_token": 486,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Aday firma taze gıda teslimatı ve operasyon yönetimi tecrübesine sahip olsa da sensör yazılımı veya anlık izleme teknolojisi geliştirmediğini açıkça belirtmektedir. İlanınızda ihtiyaç duyulan araç içi sıcaklık takibi ve anlık uyarı sistemine yönelik bir yetkinlik adayın kartında yer almamaktadır. Firmanın bu alanda listelenmiş bir önceki çalışması da bulunmamaktadır.",
+    "girdi_token": 1153,
+    "cikti_token": 455,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "İlanınızda araç ve depolarda anlık sıcaklık takibi ile uyarı sistemi sağlayacak bir teknoloji ortağı aranırken, aday firma e-ticaret pazaryeri operasyonu ve çağrı merkezi yönetimi alanında faaliyet göstermektedir. Firmanın kartında sensör yazılımı geliştirmedikleri açıkça belirtilmiş olup, aradığınız takip altyapısına karşılık gelen bir yetkinlik veya önceki çalışma bulunmamaktadır.",
+    "girdi_token": 1153,
+    "cikti_token": 507,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "kooperatif_gida_bankasi",
+  "aday": "Selin",
+  "etiket": 2,
+  "benzerlik": 0.6524471132446796,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, bir mahalle mutfağı için aile kayıtlarını, dağıtımları ve haftalık raporları takip eden web uygulaması geliştirerek firmanın aradığı kâğıttan dijitale geçiş sürecinde doğrudan benzer bir çalışma yapmıştır. Next.js ve PostgreSQL araçlarını kullanarak gönüllülerin kullandığı sade arayüzler ve raporlama panelleri hazırlamıştır. Bununla birlikte, kartta yer alan bu çalışmalara dair platforma henüz bir kanıt eklenmemiştir.",
+    "girdi_token": 1326,
+    "cikti_token": 548,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Node.js ve PostgreSQL kullanarak bir dayanışma mutfağında kâğıt defter yerine aile kayıtlarını, stok girişlerini ve dağıtım raporlarını tutan benzer bir web uygulaması geliştirmiştir. İlandaki kayıt ve raporlama ihtiyacına doğrudan karşılık gelen bu çalışmalara dair henüz sisteme kanıt eklenmemiştir ve doğrulanmış bir kaydı bulunmamaktadır.",
+    "girdi_token": 1326,
+    "cikti_token": 1567,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, bir dayanışma mutfağının aile kayıtlarını, günlük dağıtımlarını ve raporlamasını yürüten benzer bir web uygulaması geliştirdiğini belirtmektedir. Bu çalışmada kullanılan Node.js ve PostgreSQL araçları, kooperatifin bağış ve dağıtım takip sistemi ihtiyacıyla doğrudan örtüşmektedir. Bununla birlikte, kartta yer alan çalışmalar için henüz bir kanıt sunulmadığından güven göstergesi doğrulanmamış durumdadır.",
+    "girdi_token": 1326,
+    "cikti_token": 615,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "kooperatif_gida_bankasi",
+  "aday": "Burak",
+  "etiket": 2,
+  "benzerlik": 0.6141883725098336,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Python, Django ve React kullanarak bir yardım derneği için bağış ve aile dağıtımlarını kaydeden, aylık rapor süresini 10 dakikaya indiren bir web uygulaması çalışması yürütmüştür. Yapılan bu çalışma, firmanın kâğıt kayıtları dijitalleştirme ve sade arayüzle dağıtım takibi yapma ihtiyacına birebir karşılık gelmektedir. Ancak adayın kartındaki çalışmalara henüz kanıt eklenmediği için bu deneyimler doğrulanmış durumda değildir.",
+    "girdi_token": 1319,
+    "cikti_token": 645,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, bir yardım derneği için bağış ve aile dağıtımlarını takip eden, aylık raporu otomatik üreten bir web uygulaması çalışması yürüttüğünü belirtmektedir. Firmanın ihtiyaç duyduğu gönüllülere yönelik sade arayüz ve raporlama ihtiyacı, adayın Django ve React ile yaptığı bu önceki çalışmayla doğrudan örtüşmektedir. Bununla birlikte, kartta paylaşılan çalışmalar için henüz bir kanıt sunulmamış olup güven göstergesi oluşmamıştır.",
+    "girdi_token": 1319,
+    "cikti_token": 926,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Django ve React kullanarak bir yardım derneği için bağış ile dağıtımları kaydeden ve aylık rapor süresini 10 dakikaya indiren benzer bir web uygulaması çalışması yapmıştır. Gönüllülerin kullandığı bu sistem deneyimi, firmanın gıda bankası kayıt ihtiyacına doğrudan karşılık vermektedir. Bununla birlikte, kartta yer alan çalışmalara henüz kanıt eklenmediği için güven göstergeleri doğrulanmamış durumdadır.",
+    "girdi_token": 1319,
+    "cikti_token": 959,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "kooperatif_gida_bankasi",
+  "aday": "Elif",
+  "etiket": 2,
+  "benzerlik": 0.5892910308903959,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Python, FastAPI ve PostgreSQL kullanarak bir yardım derneğinin bağış ve dağıtımlarını kaydedip aylık raporunu çıkaran benzer bir web uygulaması çalışması yürütmüştür. Bununla birlikte adayın rolü backend geliştirici olduğundan arayüz ihtiyacının nasıl çözüleceği açık değildir ve kartta yer alan çalışmalar henüz kanıtla desteklenmemiştir.",
+    "girdi_token": 1259,
+    "cikti_token": 973,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Adayın Python, FastAPI ve PostgreSQL kullanarak geliştirdiği dernek bağış ve dağıtım kayıt sistemi çalışması, firmanın bağış takibi ve aylık rapor çıkarma ihtiyacıyla doğrudan örtüşüyor. Bununla birlikte, adayın rolü backend geliştirici olduğu için sade arayüz geliştirme tarafında desteğe ihtiyaç duyulabilir. Ayrıca bahsettiği bu çalışmalara dair henüz herhangi bir kanıt eklenmemiş.",
+    "girdi_token": 1259,
+    "cikti_token": 1852,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Python, FastAPI ve PostgreSQL kullanarak bir dernek için bağış ve ailelere dağıtım kayıtlarını tutan ve aylık rapor çıkaran benzer bir web uygulaması çalışması yürütmüş. Firmanın gıda bankasındaki kayıt ve raporlama ihtiyacı adayın bu çalışmasıyla doğrudan örtüşüyor. Bununla birlikte, kartta listelenen çalışmalar için henüz herhangi bir kanıt eklenmemiş durumda.",
+    "girdi_token": 1259,
+    "cikti_token": 740,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "kooperatif_gida_bankasi",
+  "aday": "Emre",
+  "etiket": 1,
+  "benzerlik": 0.5046717803225618,
+  "calistirmalar": [
+   {
+    "karar": "kismen",
+    "gerekce": "Aday, Flutter ve Firebase ile gönüllü vardiyaları ve yemekhane takibi üzerine mobil uygulama geliştirme tecrübesine sahip; ancak firmanın temel ihtiyacı olan web uygulaması alanında doğrudan bir çalışması bulunmuyor. Ayrıca adayın listelediği çalışmalar için henüz bir kanıt sunulmamış ve doğrulanmamış durumda.",
+    "girdi_token": 1287,
+    "cikti_token": 424,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Firma bağış ve dağıtım takibi için basit bir web uygulaması ararken, adayın deneyimi Flutter ve Firebase ile geliştirilmiş mobil uygulamalara dayanıyor. Gönüllü takvimi ve kullanıcı takibi gibi çalışmaları benzer süreçleri barındırsa da web geliştirme alanında doğrudan bir çalışması bulunmuyor ve adayın çalışmaları henüz doğrulanmadı.",
+    "girdi_token": 1287,
+    "cikti_token": 650,
+    "cagri": 1
+   },
+   {
+    "karar": "kismen",
+    "gerekce": "Firma, bağış ve dağıtım takibi ile raporlama yapacak bir web uygulaması ararken, adayın deneyimi Flutter ve Firebase ile mobil uygulama geliştirme alanındadır. Gönüllü etkinlik yönetimi gibi mobil çalışmalar yapmış olsa da kartta doğrudan web geliştirmeye dair bir bilgi yer almamaktadır ve paylaştığı çalışmalar için henüz bir kanıt sunulmamıştır.",
+    "girdi_token": 1287,
+    "cikti_token": 556,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "kooperatif_gida_bankasi",
+  "aday": "Zeynep",
+  "etiket": 1,
+  "benzerlik": 0.48902037337832605,
+  "calistirmalar": [
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Adayın kooperatiflerle çalışma ve Excel üzerinde envanter tutma tecrübesi bulunsa da, ilanın temel ihtiyacı olan web uygulaması geliştirme alanında herhangi bir yetkinliği veya aracı kartında yer almıyor. Ayrıca adayın listelediği çalışmalar için henüz bir kanıt sunulmamış durumda. Bu profil firmanın yazılım geliştirme beklentisini doğrudan karşılamıyor.",
+    "girdi_token": 1296,
+    "cikti_token": 478,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Firmanın temel ihtiyacı bağış ve dağıtım takibi için basit bir web uygulaması geliştirilmesiyken, adayın deneyimi ziraat mühendisliği ve Excel üzerinde veri toplama alanındadır. Adayın profilinde web uygulaması veya yazılım geliştirmeye dair bir çalışma bulunmadığı gibi, kooperatif envanteri ve kayıp analizi çalışmalarına ilişkin kanıt da eklenmemiştir.",
+    "girdi_token": 1296,
+    "cikti_token": 495,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun_degil",
+    "gerekce": "Firma bağış ve dağıtımların takibi için basit bir web uygulaması geliştirilmesini istemektedir. Adayın kooperatif süreçleri ve Excel ile envanter toplama deneyimi bulunsa da web uygulaması geliştirmeye yönelik bir yetkinliği kartında yer almamaktadır. Ayrıca adayın listelediği çalışmalar için henüz bir kanıt sunulmamıştır.",
+    "girdi_token": 1296,
+    "cikti_token": 406,
+    "cagri": 1
+   }
+  ]
+ },
+ {
+  "havuz": "demo",
+  "ilan": "kooperatif_sosyal_medya",
+  "aday": "Defne",
+  "etiket": 2,
+  "benzerlik": 0.6234738228634704,
+  "calistirmalar": [
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, haftalık içerik takvimi hazırlama, Canva ve CapCut ile görsel ve kısa video üretme gibi firmanın aradığı temel çalışmaları daha önce mahalle kitap kafesi ve öğrenci topluluğu için yürütmüştür. Belirtilen takipçi artışı ve içerik üretim deneyimi firmanın hedefleriyle örtüşse de, bu çalışmalara dair henüz bir kanıt sunulmamış ve doğrulanmamıştır.",
+    "girdi_token": 1344,
+    "cikti_token": 818,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, Meta Business Suite ve Canva kullanarak haftalık içerik takvimi oluşturma, afiş ve video hazırlama deneyimini kitap kafesi ve öğrenci topluluğu çalışmalarında göstermiştir. Bu deneyimler firmanın düzenli paylaşım ve tanıtım içeriği ihtiyacını doğrudan karşılamaktadır. Bununla birlikte, adayın listelediği çalışmalar için henüz bir kanıt sunulmamış olup doğrulanmış bir kaydı bulunmamaktadır.",
+    "girdi_token": 1344,
+    "cikti_token": 724,
+    "cagri": 1
+   },
+   {
+    "karar": "uygun",
+    "gerekce": "Aday, haftalık içerik takvimi hazırlama, Canva ve CapCut ile görsel ve video üretimi gibi mahalle kitap kafesi ve öğrenci topluluğu çalışmalarında edindiği deneyimle firmanın temel beklentilerini karşılıyor. Ancak kartta listelenen bu çalışmalar için sisteme henüz herhangi bir kanıt eklenmemiştir.",
+    "girdi_token": 1344,
+    "cikti_token": 858,
+    "cagri": 1
+   }
+  ]
+ }
+]
