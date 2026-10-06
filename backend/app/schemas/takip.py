@@ -16,6 +16,8 @@ class MilestoneYaniti(BaseModel):
     sira: int
     baslik: str
     aciklama: str | None
+    # Hazırlık önerisi (süreç şablonundan ya da ajanın kişiselleştirmesinden).
+    oneri: str | None = None
     hedef_tarih: dt.date | None
     # bekliyor | tamamlandi
     durum: str
@@ -30,8 +32,11 @@ class IsbirligiDetayi(BaseModel):
     """`GET /isbirligi/{id}` — iki tarafa aynı görünüm (GİRVAK'a e-postasız)."""
 
     id: uuid.UUID
-    # plan_bekliyor | aktif | tamamlandi
+    # plan_bekliyor | aktif | tamamlandi | sonlandi
     durum: str
+    # Süreç şablonu ve görünen adı (docs/plans/takip-surecleri.md); eski kayıtta None.
+    surec: str | None = None
+    surec_adi: str | None = None
     baslangic_tarihi: dt.date | None
     tamamlanma_tarihi: dt.datetime | None
     eslesme_id: uuid.UUID

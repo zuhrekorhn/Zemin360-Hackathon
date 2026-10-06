@@ -29,6 +29,10 @@ class Milestone(UUIDPrimaryKeyMixin, Base):
     baslik: Mapped[str] = mapped_column(String)
     # "Ne olunca tamam sayılır" — ölçülebilir tanım.
     aciklama: Mapped[str | None] = mapped_column(Text)
+    # Şablondaki adım anahtarı; elle eklenen adımda None.
+    asama: Mapped[str | None] = mapped_column(String)
+    # Hazırlık önerisi (ajanın kişiselleştirmesi ya da şablon metni).
+    oneri: Mapped[str | None] = mapped_column(Text)
     sira: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
     hedef_tarih: Mapped[date | None] = mapped_column(Date)
     # bekliyor | tamamlandi (takip_durumu.py)

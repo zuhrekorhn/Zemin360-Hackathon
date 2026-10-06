@@ -42,6 +42,11 @@ class Isbirligi(UUIDPrimaryKeyMixin, Base):
     ozet_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Ajan bu iş birliği için plan önerdi mi? Kabuldeki arka plan işi ikinci
     # kez çalışıp tarafların planını ezmesin.
+    # Süreç şablonu (app/agents/takip_surecleri.py); eski kayıtta None.
+    surec: Mapped[str | None] = mapped_column(String)
+    # Erken sonlanma (durum `sonlandi`): neden yalnızca kayıtta, karşı tarafa yazılmaz.
+    sonlanma_nedeni: Mapped[str | None] = mapped_column(String)
+    sonlanma_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     plan_onerildi_mi: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
 
     eslesme: Mapped[Eslesme] = relationship(back_populates="isbirligi")

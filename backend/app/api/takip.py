@@ -41,7 +41,7 @@ from app.agents.takip_durumu import (
     isbirligi_tamamlandi_mi,
     plan_gecisi,
 )
-from app.agents.takip_surecleri import PlanAdimi, SurecSablonu, surec_sec
+from app.agents.takip_surecleri import PlanAdimi, SurecSablonu, surec_adi, surec_sec
 from app.api import sahiplik
 from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import mevcut_hesap, rol_gerekli
@@ -195,14 +195,17 @@ def plan_gecisini_uygula(isbirligi: Isbirligi, olay: str, rol: str) -> PlanSonuc
     return sonuc
 
 
-def plani_yaz(isbirligi: Isbirligi, adimlar: list[PlanAdimi]) -> None:
+def plani_yaz(isbirligi: Isbirligi, surec: str, adimlar: list[PlanAdimi]) -> None:
     """Süreç planını yazar: eski adımlar silinir, onaylar sıfırlanır."""
+    isbirligi.surec = surec
     isbirligi.milestonelar.clear()
     for sira, adim in enumerate(adimlar):
         isbirligi.milestonelar.append(
             Milestone(
                 baslik=adim.baslik,
                 aciklama=adim.tamam_tanimi,
+                asama=adim.anahtar,
+                oneri=adim.oneri,
                 sira=sira,
                 hedef_tarih=adim.hedef_tarih,
                 durum=MILESTONE_BEKLIYOR,
@@ -235,6 +238,7 @@ def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> I
             sira=m.sira,
             baslik=m.baslik,
             aciklama=m.aciklama,
+            oneri=m.oneri,
             hedef_tarih=m.hedef_tarih,
             durum=m.durum,
             genc_isaret=m.genc_isaret,
@@ -247,6 +251,8 @@ def detay(isbirligi: Isbirligi, hesap: Hesap, bugun: dt.date | None = None) -> I
     return IsbirligiDetayi(
         id=isbirligi.id,
         durum=isbirligi.durum,
+        surec=isbirligi.surec,
+        surec_adi=surec_adi(isbirligi.surec),
         baslangic_tarihi=isbirligi.baslangic_tarihi,
         tamamlanma_tarihi=isbirligi.tamamlanma_tarihi,
         eslesme_id=eslesme.id,
@@ -333,8 +339,8 @@ def isbirliginin_sureci(isbirligi: Isbirligi) -> SurecSablonu:
     )
 
 
-async def _plani_hazirla(isbirligi: Isbirligi) -> list[PlanAdimi]:
-    """Şablon adımları + ajanın kişiselleştirmesi; hiçbir zaman boş dönmez."""
+async def _plani_hazirla(isbirligi: Isbirligi) -> tuple[str, list[PlanAdimi]]:
+    """Şablon anahtarı ve adımları (+ ajanın kişiselleştirmesi); hiçbir zaman boş dönmez."""
     eslesme = isbirligi.eslesme
     sablon = isbirliginin_sureci(isbirligi)
     girdiler = takip.plan_girdileri(
@@ -345,7 +351,7 @@ async def _plani_hazirla(isbirligi: Isbirligi) -> list[PlanAdimi]:
         firma_karti=eslesme.firma_karti,
     )
     baslangic = isbirligi.baslangic_tarihi or dt.date.today()
-    return await takip.plan_hazirla(sablon, baslangic, girdiler)
+    return sablon.anahtar, await takip.plan_hazirla(sablon, baslangic, girdiler)
 
 
 # --- Uç noktalar ----------------------------------------------------------------------
@@ -362,7 +368,7 @@ async def plan_oner(
     kendi metni yazılır: plan hiçbir zaman boş kalmaz."""
     isbirligi, rol = await yazilabilir_isbirligi(oturum, hesap, isbirligi_id)
     plan_gecisini_uygula(isbirligi, PLAN_DUZENLE, rol)
-    plani_yaz(isbirligi, await _plani_hazirla(isbirligi))
+    plani_yaz(isbirligi, *await _plani_hazirla(isbirligi))
     aktivite(isbirligi)
     await plan_duzenlendi_bildir(
         oturum,
@@ -391,7 +397,7 @@ async def plani_arka_planda_oner(isbirligi_id: uuid.UUID) -> None:
                 or isbirligi.milestonelar
             ):
                 return
-            plani_yaz(isbirligi, await _plani_hazirla(isbirligi))
+            plani_yaz(isbirligi, *await _plani_hazirla(isbirligi))
             for rol in (ROL_GENC, ROL_KURUM):
                 bildirim_ekle(
                     oturum,
