@@ -4,6 +4,7 @@ import type { IsbirligiDetayi, MilestoneYaniti } from "@/lib/api";
 import {
   adimGorunumu,
   ilerlemeMetni,
+  isbirligiSirasi,
   planOnayGorunumu,
   tarafim,
 } from "@/lib/takip";
@@ -94,5 +95,22 @@ describe("ilerlemeMetni", () => {
     expect(
       ilerlemeMetni("tamamlandi", { tamamlanan: 4, toplam: 4, geciken: 0 }),
     ).toBe("4/4 adım");
+  });
+});
+
+describe("isbirligiSirasi", () => {
+  it("önce plan bekleyen ve süren, sonra biten; içinde en yeni önce", () => {
+    const liste = [
+      { durum: "tamamlandi", baslangic_tarihi: "2026-10-05", ad: "a" },
+      { durum: "aktif", baslangic_tarihi: "2026-10-01", ad: "b" },
+      { durum: "aktif", baslangic_tarihi: "2026-10-03", ad: "c" },
+      { durum: "plan_bekliyor", baslangic_tarihi: "2026-09-01", ad: "d" },
+    ];
+    expect(isbirligiSirasi(liste).map((x) => x.ad)).toEqual([
+      "d",
+      "c",
+      "b",
+      "a",
+    ]);
   });
 });

@@ -153,6 +153,24 @@ export const SONLANMA_NEDENLERI: { deger: SonlanmaNedeni; etiket: string }[] = [
   { deger: "iletisim_kurulamadi", etiket: "İletişim kurulamadı" },
 ];
 
+const DURUM_SIRASI: Record<string, number> = {
+  plan_bekliyor: 0,
+  aktif: 1,
+  tamamlandi: 2,
+  sonlandi: 3,
+};
+
+/** İş birliği listesinin sırası: önce eylem bekleyen ve süren, sonra bitenler; içinde en yeni önce. */
+export function isbirligiSirasi<
+  T extends { durum: string; baslangic_tarihi: string | null },
+>(liste: T[]): T[] {
+  return [...liste].sort(
+    (a, b) =>
+      (DURUM_SIRASI[a.durum] ?? 9) - (DURUM_SIRASI[b.durum] ?? 9) ||
+      (b.baslangic_tarihi ?? "").localeCompare(a.baslangic_tarihi ?? ""),
+  );
+}
+
 /** Panel satırı: "2/4 adım · 1 gecikmiş" ya da plan durumu. */
 export function ilerlemeMetni(
   durum: string,

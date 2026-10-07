@@ -8,6 +8,7 @@ import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirmaFirsatlari } from "@/components/firma-firsatlari";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { IlanKapatma } from "@/components/ilan-kapatma";
+import { IsbirligiSatiri } from "@/components/isbirligi-satiri";
 import { SkorRozeti } from "@/components/kart";
 import {
   BosDurum,
@@ -30,7 +31,7 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
 import { firmaDurumEtiketi } from "@/lib/ilgi";
 import { KAPILAR, arananEtiketi, ilanKapali, ilanlariSirala } from "@/lib/ilan";
 import { useOturum } from "@/lib/oturum";
-import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
+import { isbirligiSirasi } from "@/lib/takip";
 
 /**
  * Kurum paneli (docs/kimlik-ve-dongu.md § 7): ihtiyaç kartlarım (her
@@ -307,72 +308,11 @@ function KurumPaneliIcerigi() {
           <BosDurum metin="Henüz iş birliğiniz yok. Bir aday ilginizi kabul ettiğinde iş birliği burada açılır ve iletişim bilgileri görünür." />
         ) : (
           <ul className="flex flex-col gap-4">
-            {isbirlikleri.map((isbirligi) => (
-              <li
+            {isbirligiSirasi(isbirlikleri).map((isbirligi) => (
+              <IsbirligiSatiri
                 key={isbirligi.isbirligi_id}
-                className="flex flex-col gap-2 rounded-sm border border-kenar px-4 py-3"
-              >
-                <div className="flex flex-wrap items-baseline gap-x-3">
-                  {/* Karşı taraf: ilanı açtıysak aday (genç ya da ortak firma),
-                      ortak firmaysak ilanı açan firma (docs/takip.md, Ek). */}
-                  <span className="font-medium text-ana">
-                    {isbirligi.tarafim === "genc"
-                      ? isbirligi.kurum_adi
-                      : isbirligi.aday_adi}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {isbirligi.rol_alani ?? "İş birliği ortağı"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {tarihYaz(isbirligi.baslangic_tarihi)} tarihinde başladı
-                  </span>
-                </div>
-                <p className="line-clamp-2 text-sm text-pretty">
-                  {isbirligi.problem_tanimi}
-                </p>
-                <IletisimSatiri
-                  iletisim={isbirligi.iletisim}
-                  karsiTaraf={isbirligi.tarafim === "genc" ? "kurum" : "genc"}
-                  taslak={{
-                    adayTuru: isbirligi.aday_turu,
-                    gonderenAdi:
-                      isbirligi.tarafim === "genc"
-                        ? isbirligi.aday_adi
-                        : isbirligi.kurum_adi,
-                    aliciAdi:
-                      isbirligi.tarafim === "genc"
-                        ? isbirligi.kurum_adi
-                        : isbirligi.aday_adi,
-                    problem: isbirligi.problem_tanimi,
-                    basariKriteri: isbirligi.basari_kriteri,
-                    calisma: isbirligi.calisma_basligi,
-                  }}
-                />
-                <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-2">
-                  <DurumEtiketi
-                    metin={
-                      ISBIRLIGI_DURUM_ETIKETLERI[isbirligi.durum] ??
-                      isbirligi.durum
-                    }
-                    baglanti={isbirligi.durum === "tamamlandi"}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {ilerlemeMetni(isbirligi.durum, isbirligi.ilerleme)}
-                  </span>
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="outline"
-                    className="ml-auto"
-                  >
-                    <Link href={`/isbirligi/${isbirligi.isbirligi_id}`}>
-                      {isbirligi.durum === "plan_bekliyor"
-                        ? "Planı gör"
-                        : "İş birliğini aç"}
-                    </Link>
-                  </Button>
-                </div>
-              </li>
+                isbirligi={isbirligi}
+              />
             ))}
           </ul>
         )}

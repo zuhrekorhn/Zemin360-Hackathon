@@ -1,30 +1,32 @@
 "use client";
 
 /**
- * Üst menü, role göre (docs/kimlik-ve-dongu.md § 7):
+ * Üst menü, role göre (docs/kimlik-ve-dongu.md § 7, docs/design-language.md § Sayfa düzeni):
  *   Girişsiz: Giriş yap, Kayıt ol (/ sayfasında karşılama menüsü)
- *   Genç:     Panelim, Kartım (yoksa Keşif), Profilim, Bildirimler (rozet), Çıkış
- *   Kurum:    Panelim, Yeni ihtiyaç, Firma kartı, Firma profili, Bildirimler, Çıkış
- *   GİRVAK:   Panel, Çıkış
+ *   Genç:     Fırsatlar, Kartım (yoksa Keşif), İş birliklerim · zil · hesap menüsü (Hesabım, Çıkış)
+ *   Kurum:    Panelim, Yeni ihtiyaç, Firma kartı · zil · hesap menüsü (Firma profili, Çıkış)
+ *   GİRVAK:   Panel · hesap menüsü (Çıkış)
  *
- * İskelet MenuKabugu'nda (karşılama menüsüyle ortak). Mobilde bağlantılar
- * katlanır menüde; bildirim zili ve rozeti katlanmadan görünür kalır.
+ * Bağlantılar yalnızca sayfa; hesapla ilgili olan (ayarlar, çıkış) adın
+ * altındaki menüde. Zil ve okunmamış sayısı her ekranda görünür. İskelet
+ * MenuKabugu'nda (karşılama menüsüyle ortak); mobilde bağlantılar ve hesap
+ * menüsünün öğeleri katlanır menüde.
  *
  * Rozet /me'deki okunmamış sayısı; oturum sağlayıcısı onu sayfa değişiminde
  * ve 60 saniyede bir tazeliyor.
  */
 
-import { Bell } from "lucide-react";
+import { Bell, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { KarsilamaMenusu } from "@/components/karsilama/menu";
 import { MENU_ODAK, MenuKabugu } from "@/components/menu-kabugu";
+import type { MeYaniti } from "@/lib/api";
+import { menuBaglantilari, type MenuBaglantisi } from "@/lib/menu";
 import { cn } from "@/lib/utils";
 import { useOturum } from "@/lib/oturum";
-import { kartYolu, panelYolu } from "@/lib/yonlendirme";
-
-type Baglanti = { yol: string; etiket: string; rozet?: number };
 
 function Rozet({ sayi }: { sayi: number }) {
   return (
@@ -34,6 +36,113 @@ function Rozet({ sayi }: { sayi: number }) {
     >
       {sayi > 99 ? "99+" : sayi}
     </span>
+  );
+}
+
+/** Adın baş harfi; ad yoksa e-postanın. */
+function basHarf(hesap: MeYaniti): string {
+  return (hesap.ad ?? hesap.email).trim().charAt(0).toLocaleUpperCase("tr");
+}
+
+function HesapMenusu({
+  hesap,
+  ayar,
+  onCikis,
+}: {
+  hesap: MeYaniti;
+  ayar: MenuBaglantisi | null;
+  onCikis: () => void;
+}) {
+  const [acik, setAcik] = useState(false);
+  const kutu = useRef<HTMLDivElement>(null);
+  const dugme = useRef<HTMLButtonElement>(null);
+
+  // Dışarı tıklayınca ya da Escape'le kapanır.
+  useEffect(() => {
+    if (!acik) return;
+    function disari(olay: MouseEvent) {
+      if (!kutu.current?.contains(olay.target as Node)) setAcik(false);
+    }
+    function tus(olay: KeyboardEvent) {
+      if (olay.key === "Escape") {
+        setAcik(false);
+        dugme.current?.focus();
+      }
+    }
+    document.addEventListener("mousedown", disari);
+    document.addEventListener("keydown", tus);
+    return () => {
+      document.removeEventListener("mousedown", disari);
+      document.removeEventListener("keydown", tus);
+    };
+  }, [acik]);
+
+  const ad = hesap.ad ?? hesap.email;
+  const ogeSinifi = cn(
+    "flex min-h-10 w-full items-center rounded-md px-3 text-left text-sm text-metin hover:bg-muted",
+    MENU_ODAK,
+  );
+
+  return (
+    <div ref={kutu} className="relative hidden lg:block">
+      <button
+        ref={dugme}
+        type="button"
+        aria-expanded={acik}
+        aria-controls="hesap-menusu"
+        onClick={() => setAcik((onceki) => !onceki)}
+        className={cn(
+          "inline-flex h-11 items-center gap-2 rounded-lg pr-1.5 pl-1 text-[15px] text-metin hover:bg-muted",
+          MENU_ODAK,
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className="flex size-8 items-center justify-center rounded-full bg-ana font-heading text-sm font-semibold text-zemin"
+        >
+          {basHarf(hesap)}
+        </span>
+        <span className="max-w-40 truncate">{ad}</span>
+        <ChevronDown
+          aria-hidden="true"
+          className={cn("size-4 transition-transform", acik && "rotate-180")}
+        />
+      </button>
+      {acik ? (
+        <div
+          id="hesap-menusu"
+          className="absolute top-full right-0 z-50 mt-2 flex w-60 flex-col gap-0.5 rounded-lg border border-kenar bg-card p-1.5 shadow-[0_8px_24px_-12px_rgb(22_33_27/0.25)]"
+        >
+          <div className="px-3 pt-1.5 pb-2">
+            <p className="truncate text-sm font-medium text-ana">{ad}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {hesap.email}
+            </p>
+          </div>
+          <div className="border-t border-kenar pt-1">
+            {ayar ? (
+              <Link
+                href={ayar.yol}
+                onClick={() => setAcik(false)}
+                className={ogeSinifi}
+              >
+                {ayar.etiket}
+              </Link>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                setAcik(false);
+                onCikis();
+              }}
+              className={ogeSinifi}
+            >
+              Çıkış
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -81,35 +190,10 @@ export function UstMenu() {
     );
   }
 
-  const { rol, okunmamis_bildirim } = oturum.hesap;
-  const panel = {
-    yol: panelYolu(rol),
-    etiket: rol === "girvak" ? "Panel" : "Panelim",
-  };
-  const bildirim = {
-    yol: "/bildirimler",
-    etiket: "Bildirimler",
-    rozet: okunmamis_bildirim,
-  };
-  let baglantilar: Baglanti[] = [panel];
-  if (rol === "genc") {
-    baglantilar = [
-      panel,
-      // Gencin tek kartı var (docs/kararlar.md G17): "Yeni kart" değil, kendi kartı.
-      { yol: kartYolu(oturum.hesap.yetenek_karti), etiket: "Kartım" },
-      { yol: "/profil", etiket: "Profilim" },
-      bildirim,
-    ];
-  } else if (rol === "kurum") {
-    baglantilar = [
-      panel,
-      { yol: "/tanimlama", etiket: "Yeni ihtiyaç" },
-      { yol: "/kurum/kart", etiket: "Firma kartı" },
-      { yol: "/kurum/profil", etiket: "Firma profili" },
-      bildirim,
-    ];
-  }
-  const zil = rol !== "girvak";
+  const hesap = oturum.hesap;
+  const { okunmamis_bildirim } = hesap;
+  const { baglantilar, ayar } = menuBaglantilari(hesap);
+  const zil = hesap.rol !== "girvak";
 
   const aktifMi = (yol: string) =>
     pathname === yol || pathname.startsWith(`${yol}/`);
@@ -135,7 +219,6 @@ export function UstMenu() {
             MENU_ODAK,
           )}
         >
-          {/* Alt çizgi yalnızca etikette; rozetin altına uzanmasın. */}
           <span
             className={cn(
               aktif &&
@@ -144,18 +227,12 @@ export function UstMenu() {
           >
             {baglanti.etiket}
           </span>
-          {baglanti.rozet ? (
-            <>
-              <Rozet sayi={baglanti.rozet} />
-              <span className="sr-only">, {baglanti.rozet} okunmamış</span>
-            </>
-          ) : null}
         </Link>
       );
     });
 
-  const cikisSinifi = cn(
-    "inline-flex min-h-11 items-center rounded-sm text-muted-foreground hover:text-ana",
+  const mobilOgeSinifi = cn(
+    "inline-flex min-h-11 items-center rounded-sm px-1 text-base text-muted-foreground hover:text-ana",
     MENU_ODAK,
   );
 
@@ -169,7 +246,8 @@ export function UstMenu() {
               href="/bildirimler"
               aria-current={aktifMi("/bildirimler") ? "page" : undefined}
               className={cn(
-                "relative inline-flex size-11 items-center justify-center rounded-lg text-metin lg:hidden",
+                "relative inline-flex size-11 items-center justify-center rounded-lg text-metin hover:bg-muted",
+                aktifMi("/bildirimler") && "bg-muted text-ana",
                 MENU_ODAK,
               )}
             >
@@ -187,31 +265,29 @@ export function UstMenu() {
               ) : null}
             </Link>
           ) : null}
-          <button
-            type="button"
-            onClick={cikis}
-            className={cn(cikisSinifi, "hidden text-[15px] lg:inline-flex")}
-          >
-            Çıkış
-          </button>
+          <HesapMenusu hesap={hesap} ayar={ayar} onCikis={cikis} />
         </>
       }
       mobil={(kapat) => (
         <>
           {baglantiListesi(true, kapat)}
-          <button
-            type="button"
-            onClick={() => {
-              kapat();
-              cikis();
-            }}
-            className={cn(
-              cikisSinifi,
-              "mt-2 border-t border-kenar px-1 pt-2 text-base",
-            )}
-          >
-            Çıkış
-          </button>
+          <div className="mt-2 flex flex-col border-t border-kenar pt-2">
+            {ayar ? (
+              <Link href={ayar.yol} onClick={kapat} className={mobilOgeSinifi}>
+                {ayar.etiket}
+              </Link>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                kapat();
+                cikis();
+              }}
+              className={cn(mobilOgeSinifi, "text-left")}
+            >
+              Çıkış
+            </button>
+          </div>
         </>
       )}
     />
