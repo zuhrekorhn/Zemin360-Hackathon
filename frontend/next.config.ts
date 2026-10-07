@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Geliştirmede sol alttaki Next.js göstergesi demo kaydına girmesin.
+  devIndicators: false,
 };
 
 export default nextConfig;

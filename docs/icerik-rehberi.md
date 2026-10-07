@@ -58,11 +58,12 @@ Her kavramın **tek** adı var. "Kullanma" sütunundaki karşılıklar kullanıc
 | Profil açıklamasına yazılan kod (`z360-…`) | **doğrulama kodu** | profil kodu, token, doğrulama tokenı | "Profil" kayıt bilgileri demek; platformdaki sayfa için "profilin" yalnızca platform adıyla ("Medium profilin") |
 | Dört bileşenli değerlendirme | **güven göstergesi** | rubrik, güven skoru, puan, doğrulama skoru | |
 | Göstergenin dört başlığı | **Kanıt · Sonuç · Rol · Referans** | kanıt orijinalliği, sonuç ölçülebilirliği, rol netliği, üçüncü taraf onayı | Uzun adlar yalnızca açıklama metninde |
+| Bir başlığın değeri | **Eksik · Zayıf · Orta · Güçlü** (çubukla); değerlendirilmemişse "—" | 0/3, 2/3, puan, not | Kelime her zaman görünür, renk tek başına bilgi taşımaz |
 | Firmanın tanımladığı ihtiyaç | **ihtiyaç** (firma tarafında) | talep, ilan | Başlıkta "ihtiyaç kartı" olabilir |
 | Gencin gördüğü eşleşen ihtiyaç | **fırsat** | ihtiyaç kartı, ilan, iş ilanı | Aynı kayıt, gence "fırsat" olarak görünür |
 | Firmanın gördüğü eşleşen genç | **aday** | yetenek, profil, sonuç | |
 | Platformu kullanan kuruluş | **firma** | kurum (yeni metinlerde), şirket, kuruluş | Startup, KOBİ, kurumsal hepsi "firma" |
-| Eşleşmenin gücü | **uyum** ("%72 uyum") | skor, eşleşme puanı, benzerlik | |
+| Eşleşmenin gücü | **uyum**: "Güçlü uyum", "İyi uyum", "Olası uyum" | skor, eşleşme puanı, benzerlik, yüzde ("%56 uyum") | Yüzde sıralama için olan bir sayıyı ölçü gibi gösterip caydırıyordu (8 Eki 2026) |
 | Eşleşmenin açıklaması | **Neden uygun?** | gerekçe, gerekçe metni, bu eşleşmenin gerekçesi | İki tarafta da aynı başlık |
 | Tarafların ilgisi | **ilgileniyorum** / **karşılıklı ilgi** | talep, başvuru, beğeni | Platform bir "başvuru" sistemi değil |
 | Eşleşme sonrası çalışma | **iş birliği** | proje, pilot (tek başına), işbirliği (bitişik) | TDK: ayrı yazılır |
@@ -174,7 +175,7 @@ Gence "Reddedildi", "Elendi", "Başarısız" gibi etiketler gösterilmez.
 ## 9. Alınan kararlar
 
 1. **Somut işlerin adı: "çalışma".** "İş" ve "deneyim" başka kavramlarla (tür listesindeki "İş deneyimi", "deneyim seviyesi" alanı) karıştığı için kullanılmaz; "proje" yalnızca bir tür adıdır.
-2. **Eşleşme açıklamasının başlığı: "Neden uygun?"** Genç ve firma ekranında aynı başlık. Açıklama metni şimdilik firmaya hitaben 3. şahısla yazılıyor ve gence de aynen gösteriliyor; bu bilinen bir sınır.
+2. **Eşleşme açıklamasının başlığı: "Neden uygun?"** Genç ve firma ekranında aynı başlık. Metin iki ayrı: firma adaydan 3. şahısla bahseden gerekçeyi, aday kendisine yazılanı ("sen" / "siz") görür (`docs/kararlar.md` G9).
 3. **Tamamlanmış iş birliği rozeti: "tamamlanan iş birliği".** Genç ve firma için aynı. "Pilot" kelimesi kullanıcıya gösterilmez.
 4. **Kayıt ekranındaki rol seçimi:** "Genç yetenek olarak katılıyorum" / "Firma olarak katılıyorum".
 5. **Yapay zekâ açıklaması** iki yerde yapılır:
@@ -189,11 +190,11 @@ Gence "Reddedildi", "Elendi", "Başarısız" gibi etiketler gösterilmez.
 | Yapay zekâ bir kez söylenir (§ 9.5) | Üç sohbetin açıklamasında ve kart sayfasında güven göstergesi notunda |
 | Hitap bakan hesaba göre (§ 3) | `frontend/src/lib/hitap.ts` (`hitapRolden`, `hitapla`) ve `useHitap()`; backend bildirimlerinde `siz_mi` |
 | "kurum" yerine "firma", "ilan" yerine "ihtiyaç / fırsat" | Kayıt, KVKK, paneller, öneri ekranları, GİRVAK sayaçları |
-| Skor ve eşik gösterilmez | "%72 uyum", "yeterince uyan"; GİRVAK'ta "hareketsizlik süresi" |
+| Skor ve eşik gösterilmez | Uyum kelimeyle (`lib/ilgi.ts` › `uyumMetni`), gösterge kelime ve çubukla (`lib/guven-gostergesi.ts`); GİRVAK'ta "hareketsizlik süresi" |
 | Onaylar sayfa içinde (§ 5.6) | `frontend/src/components/onay-alani.tsx`; `window.confirm` yok |
 | Hatalar insan diliyle (§ 5.4) | İngilizce şema metni gösterilmez (`lib/ayrinti.ts`); 401/403/404/409/422 cümleleri `lib/hata.ts`; backend'de boş alan cümleleri tek yerde (`app/core/alan_adlari.py`) |
 | LLM'in yazdığı kullanıcı metni | Bütün istemlere `app/core/kullanici_dili.py` › `KULLANICI_DILI_KURALLARI` eklenir |
 
-**Bilinen sınırlar:** "Neden uygun?" açıklaması firmaya hitaben 3. şahısla yazılıp gence de aynen
-gösteriliyor (§ 9.2). "Pilot uygulama" firma kartında bir iş birliği türünün adıdır; rehber yalnızca
+**Bilinen sınırlar:** Firmanın aday listesinde uyum hâlâ yüzdeyle yazıyor (`SkorRozeti`); firma
+ekranları ayrıca ele alınacak. "Pilot uygulama" firma kartında bir iş birliği türünün adıdır; rehber yalnızca
 tek başına "pilot"u yasaklar.

@@ -1,5 +1,10 @@
+import { SeviyeCubugu } from "@/components/seviye-cubugu";
 import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
-import { baslikGosterimi, gostergeDoluMu } from "@/lib/guven-gostergesi";
+import {
+  GOSTERGE_BASLIKLARI,
+  baslikGosterimi,
+  gostergeDoluMu,
+} from "@/lib/guven-gostergesi";
 import { kartDosyasiAdresi } from "@/lib/api";
 import { dosyaParcalari, kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
@@ -17,34 +22,36 @@ import { type Uygunluk, uygunlukRozeti } from "@/lib/uygunluk";
  */
 
 /**
- * Güven göstergesinin dört başlığı (docs/agent-specs.md § 4). Kısa adlar
- * rehberden (docs/icerik-rehberi.md § 4); uzun adlar yalnızca açıklamada.
- */
-const BILESENLER = [
-  { ad: "Kanıt", alan: "kanit_orijinalligi" },
-  { ad: "Sonuç", alan: "sonuc_olculebilirligi" },
-  { ad: "Rol", alan: "rol_netligi" },
-  { ad: "Referans", alan: "ucuncu_taraf_onayi" },
-] as const;
-
-/**
- * Dört bileşen ayrı ayrı gösterilir, tek bir "güven puanı"na indirgenmez —
- * agent-specs.md § 4'ün açık kararı. Değerlendirilmemiş başlık "—" (0 değil).
+ * Dört başlık ayrı ayrı gösterilir, tek bir "güven puanı"na indirgenmez:
+ * agent-specs.md § 4'ün açık kararı. Her başlık kelime ve çubukla; kısa adlar
+ * rehberden (docs/icerik-rehberi.md § 4). Değerlendirilmemiş başlık "—" (0 değil).
  */
 export function GuvenGostergesi({ skor }: { skor: GuvenSkoru }) {
   return (
     <dl className="grid grid-cols-2 gap-px border-t border-kenar bg-kenar sm:grid-cols-4">
-      {BILESENLER.map((bilesen) => {
-        const { metin, sozlu } = baslikGosterimi(
+      {GOSTERGE_BASLIKLARI.map((bilesen) => {
+        const { metin, sozlu, seviye } = baslikGosterimi(
           bilesen.ad,
           skor[bilesen.alan],
         );
         return (
-          <div key={bilesen.ad} className="bg-card px-5 py-3 sm:px-4">
+          <div
+            key={bilesen.ad}
+            className="flex flex-col gap-1.5 bg-card px-5 py-3 sm:px-4"
+          >
             <dt className="text-xs text-muted-foreground">{bilesen.ad}</dt>
-            <dd className="font-mono text-sm text-ana">
-              <span aria-hidden="true">{metin}</span>
-              <span className="sr-only">{sozlu}</span>
+            <dd className="flex items-center gap-2.5">
+              <SeviyeCubugu seviye={seviye} etiket={`${bilesen.ad}: ${sozlu}`} />
+              <span
+                aria-hidden="true"
+                className={
+                  seviye === null
+                    ? "text-sm text-muted-foreground"
+                    : "text-sm font-medium text-metin"
+                }
+              >
+                {metin}
+              </span>
             </dd>
           </div>
         );

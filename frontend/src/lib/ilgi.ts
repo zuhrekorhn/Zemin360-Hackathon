@@ -38,9 +38,24 @@ export function firmaDurumEtiketi(durum: string): string {
 /** Eşleşme açıklamasının başlığı; genç ve firma ekranında aynı (rehber § 9.2). */
 export const NEDEN_UYGUN = "Neden uygun?";
 
-/** "%72 uyum" (rehber § 4 ve § 6: yüzde işareti sayıdan önce). */
+/**
+ * Adayın gördüğü uyum kelimeyle (rehber § 4): yüzde, sıralama için var olan bir
+ * sayıyı ölçü gibi gösteriyordu; listedeki en iyi fırsat bile "%56" diye okunup
+ * caydırıyordu. Listede olmak zaten konuyla ilgili olmak demek
+ * (docs/matching-algorithm.md § 5); kelime yalnızca kademeyi söyler.
+ * Kademeler skorun gerçek dağılımına göre: taban benzerlik 0.48 ≈ skor 0.36.
+ */
+export const UYUM_KADEMELERI = [
+  { alt: 0.6, metin: "Güçlü uyum" },
+  { alt: 0.45, metin: "İyi uyum" },
+  { alt: 0, metin: "Olası uyum" },
+] as const;
+
 export function uyumMetni(skor: number): string {
-  return `%${Math.round(skor * 100)} uyum`;
+  return (
+    UYUM_KADEMELERI.find((kademe) => skor >= kademe.alt)?.metin ??
+    "Olası uyum"
+  );
 }
 
 /**

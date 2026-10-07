@@ -8,8 +8,8 @@
  */
 
 import { BelgeKarti } from "@/components/kart";
+import { SeviyeCubugu as Cubuk } from "@/components/seviye-cubugu";
 import { SEFFAF, SEVIYE_KELIMELERI, type Seviye } from "@/content/landing";
-import { cn } from "@/lib/utils";
 
 import { OrnekRozeti } from "./demo-karti";
 
@@ -17,21 +17,7 @@ function SeviyeCubugu({ seviye }: { seviye: Seviye }) {
   const kelime = SEVIYE_KELIMELERI[seviye];
   return (
     <div className="flex shrink-0 items-center gap-3">
-      <span
-        role="img"
-        aria-label={`Seviye: ${kelime}`}
-        className="flex gap-1"
-      >
-        {[1, 2, 3].map((parca) => (
-          <span
-            key={parca}
-            className={cn(
-              "block h-2 w-[22px] rounded-[3px]",
-              parca <= seviye ? "bg-ana" : "bg-kenar",
-            )}
-          />
-        ))}
-      </span>
+      <Cubuk seviye={seviye} etiket={`Seviye: ${kelime}`} buyuk />
       <span aria-hidden="true" className="w-14 text-right text-[15px] font-semibold text-metin">
         {kelime}
       </span>

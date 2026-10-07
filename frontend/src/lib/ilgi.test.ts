@@ -33,8 +33,14 @@ describe("durum etiketleri (rehber § 5.9)", () => {
 });
 
 describe("uyumMetni", () => {
-  it("yüzde işareti sayıdan önce", () => {
-    expect(uyumMetni(0.7249)).toBe("%72 uyum");
+  it.each([
+    [0.7249, "Güçlü uyum"],
+    [0.6, "Güçlü uyum"],
+    [0.56, "İyi uyum"],
+    [0.45, "İyi uyum"],
+    [0.36, "Olası uyum"],
+  ])("%s → %s (yüzde gösterilmez)", (skor, metin) => {
+    expect(uyumMetni(skor)).toBe(metin);
   });
 });
 
