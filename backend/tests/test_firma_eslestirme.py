@@ -32,6 +32,7 @@ from app.models.eslesme import Eslesme
 from app.models.firma_karti import FirmaKarti
 from app.models.hesap import Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
+from app.servisler import embedding as embedding_servisi
 from app.servisler import eslestirme as servis
 from app.servisler import firma_karti as firma_servisi
 from app.servisler.eslestirme import iletisim, iliskileriyle
@@ -262,7 +263,7 @@ def test_firma_karti_hazirlaninca_ortak_ilanlariyla_eslesir(monkeypatch):
     async def embedding(_metin, girdi_turu="document"):
         return V
 
-    monkeypatch.setattr(firma_servisi, "embedding_uret", embedding)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", embedding)
 
     async def adimlar(istemci, d):
         ilan = await _ortak_ilan(d)
@@ -354,7 +355,6 @@ def test_oneriler_ucu_firma_karti_doner_eposta_yok():
 
 def _voyage_sayaci(monkeypatch, *, basarili: bool):
     """İlan embedding'i için Voyage çağrılarını sayar; gerçek çağrı yok."""
-    from app.api import ihtiyac_kartlari
     from app.core.embeddings import EmbeddingHatasi
 
     cagrilar: list[str] = []
@@ -365,7 +365,7 @@ def _voyage_sayaci(monkeypatch, *, basarili: bool):
             raise EmbeddingHatasi("kapalı")
         return V
 
-    monkeypatch.setattr(ihtiyac_kartlari, "embedding_uret", embedding)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", embedding)
     return cagrilar
 
 

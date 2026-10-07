@@ -17,6 +17,7 @@ from app.db.base import EMBEDDING_DIM
 from app.models.bildirim import TUR_FIRSAT_GUNCELLENDI, Bildirim
 from app.models.eslesme import Eslesme
 from app.models.ihtiyac_karti import IhtiyacKarti
+from app.servisler import embedding as embedding_servisi
 from tests.test_sahiplik import durumlar, senaryo
 
 GOVDE = {
@@ -42,7 +43,7 @@ def eslestirme_kaydi(monkeypatch):
     async def eslestir(kart_id):
         cagrilar.append(kart_id)
 
-    monkeypatch.setattr(ihtiyac_kartlari, "embedding_uret", embedding)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", embedding)
     monkeypatch.setattr(ihtiyac_kartlari, "eslestirmeyi_arka_planda_calistir", eslestir)
     return cagrilar
 
@@ -182,7 +183,7 @@ def test_embedding_hesaplanamazsa_duzenleme_kaydedilir(monkeypatch):
     async def eslestir(kart_id):
         cagrilar.append(kart_id)
 
-    monkeypatch.setattr(ihtiyac_kartlari, "embedding_uret", embedding)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", embedding)
     monkeypatch.setattr(ihtiyac_kartlari, "eslestirmeyi_arka_planda_calistir", eslestir)
 
     async def adimlar(istemci, d):

@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agents.firma_karti import profil_baglami
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.agents.tanimlama import ZORUNLU_ALANLAR
-from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
+from app.api.ihtiyac_kartlari import kart_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.profil import kurumun_profilini_guncelle
 from app.core.alan_adlari import IHTIYAC_ALAN_ADLARI, bos_alan_mesaji
@@ -40,6 +40,7 @@ from app.schemas.tanimlama import (
     TanimlamaSohbetDurumu,
     TanimlamaSohbetYaniti,
 )
+from app.servisler.embedding import embedding_hesapla
 from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.servisler.ilan_duzenleme import taslak_alanlari
 from app.servisler.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi

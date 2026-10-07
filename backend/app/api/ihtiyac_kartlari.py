@@ -6,7 +6,6 @@ taşımıyor). Eşleştirme Ajanı da bu görünümü okuyor.
 
 from __future__ import annotations
 
-import logging
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -16,10 +15,8 @@ from sqlalchemy.orm import selectinload
 
 from app.agents.tanimlama import ZORUNLU_ALANLAR
 from app.api.kimlik import bulunamadi, mevcut_hesap, rol_gerekli
-from app.api.yetenek_kartlari import EMBEDDING_HATA_MESAJI
 from app.core.alan_adlari import IHTIYAC_ALAN_ADLARI, bos_alan_mesaji
 from app.core.basari_olcutu import olcum_belirlenecek
-from app.core.embeddings import EmbeddingHatasi, embedding_uret, ihtiyac_temsil_metni
 from app.core.firma_dogrulama import DOGRULANDI
 from app.db.session import get_session
 from app.models.hesap import ROL_KURUM, Hesap
@@ -30,6 +27,7 @@ from app.schemas.tanimlama import (
     IhtiyacTaslagiGirdisi,
     KurumYaniti,
 )
+from app.servisler.embedding import EMBEDDING_HATA_MESAJI, embedding_hesapla
 from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir, ihtiyac_kilidi
 from app.servisler.ilan_duzenleme import duzenleme_engeli, ilan_eslesmeleri, ilani_duzenle
 from app.servisler.ilgi import IHTIYAC_KAPANDI, ihtiyaci_kapat
@@ -38,8 +36,6 @@ from app.servisler.sahiplik import (
     ihtiyac_kartini_gorebilir_mi,
     ihtiyac_kartinin_sahibi_mi,
 )
-
-logger = logging.getLogger("zemin360.embedding")
 
 router = APIRouter(tags=["ihtiyac-kartlari"])
 
@@ -78,24 +74,6 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> IhtiyacKartiY
             sehir=kart.kurum.sehir,
         ),
     )
-
-
-async def embedding_hesapla(oturum: AsyncSession, kart: IhtiyacKarti) -> bool:
-    """İhtiyaç kartının embedding'ini hesaplayıp kaydeder.
-
-    Yetenek kartındakiyle aynı sözleşme (app/api/yetenek_kartlari.py):
-    Voyage'a ulaşılamazsa False döner, kart kaybolmaz.
-    """
-    metin = ihtiyac_temsil_metni(
-        problem_tanimi=kart.problem_tanimi, basari_kriteri=kart.basari_kriteri
-    )
-    try:
-        kart.embedding = await embedding_uret(metin, girdi_turu="document")
-    except EmbeddingHatasi:
-        logger.warning("İhtiyaç kartı embedding'i hesaplanamadı (%s)", kart.id, exc_info=True)
-        return False
-    await oturum.commit()
-    return True
 
 
 @router.get("/ihtiyac-kartlari/{kart_id}", response_model=IhtiyacKartiYaniti)

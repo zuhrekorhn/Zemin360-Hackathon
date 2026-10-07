@@ -8,7 +8,6 @@ yani yanlışlıkla sızdırmak için şemayı değiştirmek gerekir.
 
 from __future__ import annotations
 
-import logging
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -19,8 +18,6 @@ from sqlalchemy.orm import selectinload
 from app.agents.eslestirme import tamamlanan_pilot_sayilari
 from app.api.kimlik import bulunamadi, mevcut_hesap
 from app.core.dis_servisler.depo import DepoKapali
-from app.core.embeddings import EmbeddingHatasi, embedding_uret, yetenek_temsil_metni
-from app.core.is_kalemi import is_kalemi_metni
 from app.db.session import get_session
 from app.models.hesap import Hesap
 from app.models.kanit_parcasi import KanitParcasi
@@ -28,24 +25,19 @@ from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.dogrulama import IndirmeAdresiYaniti
 from app.schemas.kesif import YetenekKartiYaniti
+from app.servisler import kart_hazirlama
 from app.servisler.dogrulama import dosyalar
 from app.servisler.dogrulama.parcalar import DOSYA_TURLERI
+from app.servisler.embedding import EMBEDDING_HATA_MESAJI, embedding_hesapla
 from app.servisler.sahiplik import (
     girvak_mi,
     yetenek_kartini_gorebilir_mi,
     yetenek_kartinin_sahibi_mi,
 )
 
-logger = logging.getLogger("zemin360.embedding")
-
 router = APIRouter(tags=["yetenek-kartlari"])
 
 KART_BULUNAMADI = "Yetenek kartı bulunamadı"
-
-EMBEDDING_HATA_MESAJI = (
-    "Kart kaydedildi, ancak şu an eşleşmeye hazırlanamadı. Biraz sonra "
-    "“Eşleştirmeye hazırla” ile yeniden denenebilir."
-)
 
 
 async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiYaniti:
@@ -80,31 +72,6 @@ async def kart_yaniti(oturum: AsyncSession, kart_id: uuid.UUID) -> YetenekKartiY
         somut_ciktilar=kart.somut_ciktilar,
         tamamlanan_pilot=(await tamamlanan_pilot_sayilari(oturum, [kart.id])).get(kart.id, 0),
     )
-
-
-async def embedding_hesapla(oturum: AsyncSession, kart: YetenekKarti) -> bool:
-    """Kartın embedding'ini hesaplayıp kaydeder (docs/matching-algorithm.md § 1-2).
-
-    Voyage'a ulaşılamazsa hata fırlatmaz, False döner: kart zaten kayıtlı ve
-    kaybolmamalı. Embedding NULL kalan kart eşleştirmeye girmez; arayüz bunu
-    söyleyip yeniden hesaplatma butonu gösteriyor.
-
-    `kart.somut_ciktilar` yüklenmiş olmalı (temsil metni onlardan kuruluyor).
-    """
-    metin = yetenek_temsil_metni(
-        rol_alani=kart.rol_alani,
-        deneyim_seviyesi=kart.deneyim_seviyesi,
-        sektor_ilgi_alani=kart.sektor_ilgi_alani,
-        araclar_teknolojiler=kart.araclar_teknolojiler,
-        somut_ciktilar=[(c.baslik, is_kalemi_metni(c)) for c in kart.somut_ciktilar],
-    )
-    try:
-        kart.embedding = await embedding_uret(metin, girdi_turu="document")
-    except EmbeddingHatasi:
-        logger.warning("Yetenek kartı embedding'i hesaplanamadı (%s)", kart.id, exc_info=True)
-        return False
-    await oturum.commit()
-    return True
 
 
 @router.get("/yetenek-kartlari/{kart_id}", response_model=YetenekKartiYaniti)
@@ -185,8 +152,5 @@ async def yetenek_karti_embedding(
         raise bulunamadi(KART_BULUNAMADI)
     if not await embedding_hesapla(oturum, kart):
         raise HTTPException(status_code=503, detail=EMBEDDING_HATA_MESAJI)
-    # kart_hazirlama bu modülü içe aktarıyor (embedding_hesapla); döngü olmasın.
-    from app.servisler import kart_hazirlama
-
     arka_plan.add_task(kart_hazirlama.karti_hazirla, kart.id, kart.versiyon)
     return await kart_yaniti(oturum, kart.id)

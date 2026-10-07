@@ -36,7 +36,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.eslestirme import BENZERLIK_ALT_SINIRI, DURUM_ONERILDI
-from app.api.yetenek_kartlari import embedding_hesapla
 from app.core.ilan import ARANAN_GENC
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
 from app.db.session import get_sessionmaker
@@ -46,6 +45,7 @@ from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.servisler import eslestirme as eslestirme_servisi
 from app.servisler.dogrulama import ciktiyi_puanla, degerlendirildi_mi
+from app.servisler.embedding import embedding_hesapla
 
 logger = logging.getLogger("zemin360.kart_hazirlama")
 

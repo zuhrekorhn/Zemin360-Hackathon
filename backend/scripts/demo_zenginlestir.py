@@ -33,7 +33,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.agents.dogrulama.cekirdek import KURAL_SURUMU
-from app.api import ihtiyac_kartlari, yetenek_kartlari
 from app.api.auth import hesap_olustur
 from app.core.config import get_settings
 from app.core.firma_dogrulama import DOGRULANDI
@@ -48,6 +47,7 @@ from app.models.kurum import Kurum
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
+from app.servisler import embedding as embedding_servisi
 from app.servisler import firma_karti as firma_servisi
 from app.servisler.eslestirme import pipeline_calistir
 from scripts.demo_hesaplari import ALAN, KURUM_EPOSTA, kurumun_karti, sifreyi_dogrula
@@ -538,7 +538,7 @@ async def _ilan_yoksa_ekle(oturum, ilan: IhtiyacKarti) -> tuple[IhtiyacKarti, bo
         return var, False
     oturum.add(ilan)
     await oturum.commit()
-    await ihtiyac_kartlari.embedding_hesapla(oturum, ilan)
+    await embedding_servisi.embedding_hesapla(oturum, ilan)
     return ilan, True
 
 
@@ -576,7 +576,7 @@ async def zenginlestir(sifre: str) -> list[str]:
             )
             await oturum.commit()
             kart = await firma_servisi.kurumun_karti(oturum, kurum.id)
-            gomuldu = await firma_servisi.embedding_hesapla(oturum, kart)
+            gomuldu = await embedding_servisi.embedding_hesapla(oturum, kart)
             dogrulama = "doğrulanmış" if tanim.dogrulanmis else "doğrulama bekliyor"
             satirlar.append(
                 f"firma  {tanim.ad} ({tanim.profil.tur}, {dogrulama}): eklendi"
@@ -660,7 +660,7 @@ async def zenginlestir(sifre: str) -> list[str]:
                 .where(YetenekKarti.id == kart.id)
                 .options(selectinload(YetenekKarti.somut_ciktilar))
             )
-            gomuldu = await yetenek_kartlari.embedding_hesapla(oturum, kart)
+            gomuldu = await embedding_servisi.embedding_hesapla(oturum, kart)
             gosterge = f"{len(gostergeli)}/{len(tanim.ciktilar)} çalışmada gösterge"
             satirlar.append(
                 f"genç   {tanim.ad} ({tanim.rol}; {tanim.grup}; {gosterge}): eklendi"

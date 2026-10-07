@@ -19,7 +19,6 @@ from app.agents.tanimlama import (
     YEDEK_SORULAR_ORTAK,
     bos_ortak_taslak,
 )
-from app.api import ihtiyac_kartlari
 from app.core.firma_profili import firma_turlerini_temizle
 from app.db.base import EMBEDDING_DIM
 from app.main import app
@@ -27,6 +26,7 @@ from app.models.eslesme import Eslesme
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler import embedding as embedding_servisi
 from app.servisler import eslestirme as eslestirme_servisi
 from app.servisler import kart_hazirlama
 from tests.test_sahiplik import senaryo
@@ -166,7 +166,7 @@ def test_ortak_ilani_onayi_alanlari_yazar(monkeypatch):
     async def uret(_metin, girdi_turu="document"):
         return VEKTOR
 
-    monkeypatch.setattr(ihtiyac_kartlari, "embedding_uret", uret)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", uret)
 
     def degerler(d):
         return {

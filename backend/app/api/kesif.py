@@ -23,7 +23,7 @@ from app.agents.kesif import (
 )
 from app.api.kimlik import rol_gerekli
 from app.api.profil import gencin_profilini_guncelle
-from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
+from app.api.yetenek_kartlari import kart_yaniti
 from app.core import istek_izi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.is_kalemi import kanit_bekliyor
@@ -51,6 +51,7 @@ from app.servisler.dogrulama import (
 )
 from app.servisler.dogrulama.parcalar import link_parcasi_ekle
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
+from app.servisler.embedding import embedding_hesapla
 from app.servisler.genc_karti import gencin_karti
 from app.servisler.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 

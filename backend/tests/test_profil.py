@@ -15,9 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.agents.eslestirme import adaylari_getir
-from app.api import ihtiyac_kartlari as ihtiyac_api
 from app.api import tanimlama as tanimlama_api
-from app.api import yetenek_kartlari as yetenek_api
 from app.api.auth import hesap_olustur
 from app.api.kesif import KART_ZATEN_VAR, SEHIR_GEREKLI
 from app.api.profil import gencin_profilini_guncelle, kurumun_profilini_guncelle
@@ -32,6 +30,7 @@ from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import GencProfili
 from app.schemas.tanimlama import KurumProfili
+from app.servisler import embedding as embedding_servisi
 from tests.veritabani import api_istemcisi, geri_alinan_oturum
 
 VEKTOR = [1.0] + [0.0] * (EMBEDDING_DIM - 1)
@@ -117,8 +116,7 @@ def _embedding_sahte(monkeypatch):
     async def uret(_metin, girdi_turu="document"):
         return VEKTOR
 
-    monkeypatch.setattr(yetenek_api, "embedding_uret", uret)
-    monkeypatch.setattr(ihtiyac_api, "embedding_uret", uret)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", uret)
 
 
 async def _genc_hesabi(oturum):

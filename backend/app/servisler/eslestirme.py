@@ -59,6 +59,7 @@ from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import Iletisim
 from app.servisler.bildirim import bildirim_ekle
+from app.servisler.embedding import embedding_hesapla
 from app.servisler.sahiplik import eslesmedeki_taraf
 
 logger = logging.getLogger("zemin360.eslestirme")
@@ -158,9 +159,6 @@ async def _embedding_tamamla(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> boo
     gibi 409 döner. Kapalı ilan için Voyage'a gidilmez."""
     if ihtiyac.durum != IHTIYAC_ACIK:
         return False
-    # api modülü bu servisi içe aktarıyor; döngü olmasın.
-    from app.api.ihtiyac_kartlari import embedding_hesapla
-
     return await embedding_hesapla(oturum, ihtiyac)
 
 

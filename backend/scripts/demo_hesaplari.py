@@ -35,7 +35,6 @@ from app.agents.eslestirme import (
     firma_bonusu,
     skor_hesapla,
 )
-from app.api import ihtiyac_kartlari, yetenek_kartlari
 from app.api.auth import hesap_olustur
 from app.core.config import get_settings
 from app.core.firma_dogrulama import DOGRULANDI
@@ -50,6 +49,7 @@ from app.models.kurum import Kurum
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
+from app.servisler import embedding as embedding_servisi
 from app.servisler import firma_karti as firma_servisi
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -246,7 +246,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
             genc_karti = gencin_karti(kullanici.id)
             oturum.add(genc_karti)
             await oturum.commit()
-            gomuldu = await yetenek_kartlari.embedding_hesapla(oturum, genc_karti)
+            gomuldu = await embedding_servisi.embedding_hesapla(oturum, genc_karti)
             sonuclar.append(
                 Sonuc(GENC_EPOSTA, ROL_GENC, yeni=True, not_=_kart_notu("yetenek", gomuldu))
             )
@@ -272,7 +272,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
             ihtiyac = kurumun_karti(kurum.id)
             oturum.add(ihtiyac)
             await oturum.commit()
-            gomuldu = await ihtiyac_kartlari.embedding_hesapla(oturum, ihtiyac)
+            gomuldu = await embedding_servisi.embedding_hesapla(oturum, ihtiyac)
             sonuclar.append(
                 Sonuc(KURUM_EPOSTA, ROL_KURUM, yeni=True, not_=_kart_notu("ihtiyaç", gomuldu))
             )
@@ -313,7 +313,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
             oturum.add(firma_karti)
             await oturum.commit()
             firma_karti = await firma_servisi.kurumun_karti(oturum, kurum.id)
-            gomuldu = await firma_servisi.embedding_hesapla(oturum, firma_karti)
+            gomuldu = await embedding_servisi.embedding_hesapla(oturum, firma_karti)
             sonuclar.append(
                 Sonuc(GIRISIM_EPOSTA, ROL_KURUM, yeni=True, not_=_kart_notu("firma", gomuldu))
             )
@@ -336,7 +336,7 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
             ortak_ilani = kurumsalin_ilani(kurum.id)
             oturum.add(ortak_ilani)
             await oturum.commit()
-            gomuldu = await ihtiyac_kartlari.embedding_hesapla(oturum, ortak_ilani)
+            gomuldu = await embedding_servisi.embedding_hesapla(oturum, ortak_ilani)
             sonuclar.append(
                 Sonuc(
                     KURUMSAL_EPOSTA,

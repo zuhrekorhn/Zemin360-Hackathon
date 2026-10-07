@@ -16,7 +16,6 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import IntegrityError
 
-from app.api import ihtiyac_kartlari as ihtiyac_api
 from app.api import kesif as kesif_api
 from app.api import tanimlama as tanimlama_api
 from app.api import yetenek_kartlari as yetenek_api
@@ -29,6 +28,7 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kesif import YetenekKartiYaniti
 from app.schemas.tanimlama import IhtiyacKartiYaniti, KurumYaniti
+from app.servisler import embedding as embedding_servisi
 from tests.sahte_hesap import sahte_hesap, sohbet_degerleri
 
 # Giriş yapmış genç ve kurum: sohbetleri onlar açmış, kartlar onların.
@@ -154,16 +154,14 @@ def embedding_basarili(monkeypatch):
     async def uret(_metin, girdi_turu="document"):
         return VEKTOR
 
-    monkeypatch.setattr(yetenek_api, "embedding_uret", uret)
-    monkeypatch.setattr(ihtiyac_api, "embedding_uret", uret)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", uret)
 
 
 def embedding_basarisiz(monkeypatch):
     async def uret(_metin, girdi_turu="document"):
         raise EmbeddingHatasi("Voyage 503")
 
-    monkeypatch.setattr(yetenek_api, "embedding_uret", uret)
-    monkeypatch.setattr(ihtiyac_api, "embedding_uret", uret)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", uret)
 
 
 def test_ayni_oturum_ikinci_kez_onaylaninca_yeni_kart_acilmaz(kesif, monkeypatch):

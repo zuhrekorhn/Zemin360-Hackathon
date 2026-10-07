@@ -53,6 +53,20 @@ def canlilik_llm_yok(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def kart_embedding_agi_yok(monkeypatch):
+    """Kart embedding'i tek noktadan Voyage'a gider (app/servisler/embedding.py).
+    Testlerde ağa çıkılmasın: Voyage ulaşılamaz sayılır, kart kaybolmaz. Başarılı
+    embedding'i sınayan test kendi sahtesini aynı yere yazar (bunu ezer)."""
+    from app.core.embeddings import EmbeddingHatasi
+    from app.servisler import embedding
+
+    async def ulasilamaz(_metin, girdi_turu="document"):
+        raise EmbeddingHatasi("Testte Voyage'a gidilmez")
+
+    monkeypatch.setattr(embedding, "embedding_uret", ulasilamaz)
+
+
+@pytest.fixture(autouse=True)
 def kart_hazirlama_arka_plani_yok(monkeypatch):
     """Kart onayı ve düzenlemesi yanıttan sonra kartı hazırlıyor (gerçek oturum,
     embedding, LLM rubriği, pipeline). Testlerde çalışmasın; çağrılar kaydedilir,

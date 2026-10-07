@@ -19,6 +19,7 @@ from app.core.firma_karti import (
 )
 from app.db.base import EMBEDDING_DIM
 from app.schemas.firma_karti import FirmaKartiGirdisi, FirmaKartiGuncelleme
+from app.servisler import embedding as embedding_servisi
 from app.servisler import firma_karti as servis
 from tests.test_sahiplik import durumlar, senaryo
 
@@ -209,7 +210,7 @@ def test_hazirlama_embedding_yazar_eski_versiyonu_atlar(monkeypatch):
         metinler.append(metin)
         return [0.1] * EMBEDDING_DIM
 
-    monkeypatch.setattr(servis, "embedding_uret", sahte_embedding)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", sahte_embedding)
 
     async def adimlar(istemci, d):
         kart = await _kart(d)

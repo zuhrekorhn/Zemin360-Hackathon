@@ -24,15 +24,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.eslestirme import DURUM_ONERILDI, FIRMA_BENZERLIK_ALT_SINIRI
-from app.core.embeddings import EmbeddingHatasi, embedding_uret, firma_temsil_metni
 from app.core.firma_karti import EMBEDDING_ALANLARI
 from app.core.ilan import ARANAN_FIRMA
 from app.db.session import get_sessionmaker
 from app.models.eslesme import Eslesme
 from app.models.firma_karti import FirmaKarti
 from app.models.ihtiyac_karti import IhtiyacKarti
-from app.models.kurum import Kurum
 from app.servisler import eslestirme as eslestirme_servisi
+from app.servisler.embedding import embedding_hesapla
 
 logger = logging.getLogger("zemin360.firma_karti")
 
@@ -184,21 +183,3 @@ async def onerilerin_gerekcesini_bosalt(oturum: AsyncSession, kart_id: uuid.UUID
         .where(Eslesme.firma_karti_id == kart_id, Eslesme.durum == DURUM_ONERILDI)
         .values(gerekce_metni=None, uygunluk=None)
     )
-
-
-async def embedding_hesapla(oturum: AsyncSession, kart: FirmaKarti) -> bool:
-    """Voyage'a ulaşılamazsa False; kart kaybolmaz, sonraki hazırlama yeniden dener."""
-    kurum: Kurum = kart.kurum
-    metin = firma_temsil_metni(
-        ne_yapiyoruz=kart.ne_yapiyoruz,
-        yetkinlikler=kart.yetkinlikler,
-        onceki_isler=kart.onceki_isler,
-        sektor=kurum.sektor,
-    )
-    try:
-        kart.embedding = await embedding_uret(metin, girdi_turu="document")
-    except EmbeddingHatasi:
-        logger.warning("Firma kartı embedding'i hesaplanamadı (%s)", kart.id, exc_info=True)
-        return False
-    await oturum.commit()
-    return True

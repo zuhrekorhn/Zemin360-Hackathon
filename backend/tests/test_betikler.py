@@ -14,7 +14,6 @@ import pytest
 from sqlalchemy import func, select
 
 from app.agents.eslestirme import adaylari_getir
-from app.api import ihtiyac_kartlari, yetenek_kartlari
 from app.core.kimlik import sifre_dogru_mu
 from app.db.base import EMBEDDING_DIM
 from app.models.hesap import Hesap
@@ -23,7 +22,7 @@ from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.auth import GirisIstegi
-from app.servisler import firma_karti as firma_servisi
+from app.servisler import embedding as embedding_servisi
 from scripts import demo_hesaplari, yerel_sifirla
 from tests.veritabani import geri_alinan_oturum
 
@@ -114,9 +113,7 @@ def test_demo_hesaplari_acilir_tekrar_calismasi_guvenli_ve_kartlar_eslesir(monke
     async def sahte_embedding(_metin, girdi_turu="document"):
         return vektor
 
-    monkeypatch.setattr(yetenek_kartlari, "embedding_uret", sahte_embedding)
-    monkeypatch.setattr(ihtiyac_kartlari, "embedding_uret", sahte_embedding)
-    monkeypatch.setattr(firma_servisi, "embedding_uret", sahte_embedding)
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", sahte_embedding)
 
     async def senaryo():
         async with geri_alinan_oturum() as oturum:
