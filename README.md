@@ -94,6 +94,12 @@ cp .env.example .env            # Windows PowerShell: Copy-Item .env.example .en
 
 `.env` içindeki `DATABASE_URL`'i kendi bağlantına göre düzenle (async sürücü: `postgresql+asyncpg://...`). Gerçek `.env` commit edilmez.
 
+**Oturum anahtarı (zorunlu).** `JWT_GIZLI_ANAHTAR` boşsa ya da 32 karakterden kısaysa backend açılmaz. Bir kez üretip `.env`'e yaz:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
 **API anahtarları.** Ajanlar iki dış servise gidiyor, ikisinin anahtarı da `.env`'de olmalı — yoksa sohbet, kart onayı, eşleştirme gerekçesi ve kanıt değerlendirmesi çalışmaz:
 
 | Değişken | Ne için | Nereden |
