@@ -135,7 +135,6 @@ Demo genç kartı ile kurumun ihtiyaç kartı birbirine önerilecek şekilde se�
 pytest                                        # testler (API anahtarı gerektirmez; yerel DB yoksa DB testleri atlanır)
 python scripts/kesif_e2e.py                   # Keşif Ajanı uçtan uca (sunucu + gerçek API'ler)
 python scripts/kesif_e2e.py b                 # sadece "hiç projem yok" senaryosu
-python scripts/eslestirme_e2e.py <kurum_id> --tohum   # Eşleştirme pipeline'i uçtan uca
 python scripts/yerel_sifirla.py              # yerel DB'yi boşaltır (onay sorar; production'da çalışmaz)
 python scripts/demo_hesaplari.py             # genç/kurum/GİRVAK demo hesapları + birer kart (.env: DEMO_SIFRESI)
 python scripts/demo_zenginlestir.py          # demo havuzuna firma, ilan ve genç kartları ekler (yalnızca ekler)
