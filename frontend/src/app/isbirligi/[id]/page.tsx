@@ -167,8 +167,7 @@ function IsbirligiIcerigi() {
             taslak={{
               adayTuru: detay.aday_turu,
               // Aday tarafı yazıyorsa gönderen aday, alıcı ilanı açan firma.
-              gonderenAdi:
-                taraf === "genc" ? detay.aday_adi : detay.kurum_adi,
+              gonderenAdi: taraf === "genc" ? detay.aday_adi : detay.kurum_adi,
               aliciAdi: taraf === "genc" ? detay.kurum_adi : detay.aday_adi,
               problem: detay.problem_tanimi,
               basariKriteri: detay.basari_kriteri,
@@ -217,10 +216,18 @@ function IsbirligiIcerigi() {
         <SureciSonlandir detay={detay} bekleniyor={bekleniyor} yap={yap} />
       ) : null}
 
+      {/* Menüde "İş birliklerim" var; burada yalnızca listeye sakin bir dönüş. */}
       <footer className="mt-auto border-t border-kenar pt-6">
-        <Button asChild variant="outline" size="lg">
-          <Link href={panelYolu(hesap.rol)}>Panele dön</Link>
-        </Button>
+        <Link
+          href={
+            hesap.rol === "girvak" ? panelYolu(hesap.rol) : "/isbirliklerim"
+          }
+          className="text-sm text-baglanti underline underline-offset-4"
+        >
+          {hesap.rol === "girvak"
+            ? "Panele dön"
+            : hitapla(hitap, "Bütün iş birliklerin", "Bütün iş birlikleriniz")}
+        </Link>
       </footer>
     </Sayfa>
   );

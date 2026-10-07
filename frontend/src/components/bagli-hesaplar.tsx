@@ -38,7 +38,12 @@ import {
 export function BagliHesaplar() {
   const [veri, setVeri] = useState<Hesaplarim | null>(null);
   const [hata, setHata] = useState<Hata | null>(null);
+  const [kodFormuAcik, setKodFormuAcik] = useState(false);
   const okundu = useRef(false);
+  // Zaten bağlı sağlayıcıya ikinci kez "bağla" düğmesi gösterilmez.
+  const baglanabilir = (veri?.oauth_saglayicilari ?? []).filter(
+    (saglayici) => !veri?.hesaplar.some((h) => h.saglayici === saglayici),
+  );
 
   function yenile() {
     hesaplarim()
@@ -56,12 +61,12 @@ export function BagliHesaplar() {
     <section
       id="hesaplar"
       aria-labelledby="hesaplar-baslik"
-      className="flex scroll-mt-20 flex-col gap-5 border-t border-kenar pt-8"
+      className="flex scroll-mt-24 flex-col gap-5 rounded-md border border-kenar bg-card px-5 py-5"
     >
       <div className="flex flex-col gap-1">
         <h2
           id="hesaplar-baslik"
-          className="font-heading text-xl font-semibold text-ana"
+          className="font-heading text-lg font-semibold text-ana"
         >
           Bağlı hesaplar
         </h2>
@@ -77,22 +82,44 @@ export function BagliHesaplar() {
         <>
           <HesapListesi hesaplar={veri.hesaplar} onDegisti={setVeri} />
           {veri.inceleme_bekleyen ? (
-            <p className="text-sm text-pretty text-muted-foreground" role="status">
-              {platformAdi(veri.inceleme_bekleyen)} sayfanı otomatik
-              okuyamadık; GİRVAK kodu kendisi kontrol edecek. Sonucu bildirim
-              olarak göreceksin.
+            <p
+              className="text-sm text-pretty text-muted-foreground"
+              role="status"
+            >
+              {platformAdi(veri.inceleme_bekleyen)} sayfanı otomatik okuyamadık;
+              GİRVAK kodu kendisi kontrol edecek. Sonucu bildirim olarak
+              göreceksin.
             </p>
           ) : null}
-          {veri.oauth_saglayicilari.length > 0 ? (
-            <OauthDugmeleri saglayicilar={veri.oauth_saglayicilari} />
+          {baglanabilir.length > 0 ? (
+            <OauthDugmeleri saglayicilar={baglanabilir} />
           ) : null}
           {veri.bekleyen_kodlar.map((kod) => (
             <KodKutusu key={kod.platform} kod={kod} onDegisti={yenile} />
           ))}
-          <KodAlmaFormu
-            platformlar={veri.profil_kodu_platformlari}
-            onAlindi={yenile}
-          />
+          {veri.profil_kodu_platformlari.length > 0 ? (
+            kodFormuAcik ? (
+              <div className="rounded-md border border-kenar bg-zemin px-4 py-4">
+                <KodAlmaFormu
+                  platformlar={veri.profil_kodu_platformlari}
+                  onAlindi={() => {
+                    setKodFormuAcik(false);
+                    yenile();
+                  }}
+                  onVazgec={() => setKodFormuAcik(false)}
+                />
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-fit px-0 text-baglanti underline underline-offset-4 hover:bg-transparent"
+                onClick={() => setKodFormuAcik(true)}
+              >
+                YouTube, Medium, Behance gibi başka bir hesabı bağla
+              </Button>
+            )
+          ) : null}
         </>
       ) : null}
     </section>
@@ -282,9 +309,11 @@ function KodKutusu({
 function KodAlmaFormu({
   platformlar,
   onAlindi,
+  onVazgec,
 }: {
   platformlar: string[];
   onAlindi: () => void;
+  onVazgec: () => void;
 }) {
   const [platform, setPlatform] = useState(platformlar[0] ?? "");
   const [adres, setAdres] = useState("");
@@ -311,8 +340,8 @@ function KodAlmaFormu({
   return (
     <form className="flex flex-col gap-3" onSubmit={kodAl}>
       <p className="text-sm text-pretty">
-        Diğer hesaplar için doğrulama kodu al: kodu o hesabın açıklamasına
-        ekle, biz de orada görelim.
+        Doğrulama kodu al: kodu o hesabın açıklamasına ekle, biz de orada
+        görelim.
       </p>
       <div className="grid gap-3 sm:grid-cols-[12rem_1fr]">
         <FormAlani etiket="Hesap türü" htmlFor="kod-platform">
@@ -340,15 +369,14 @@ function KodAlmaFormu({
         </FormAlani>
       </div>
       {hata ? <HataKutusu hata={hata} /> : null}
-      <Button
-        type="submit"
-        size="sm"
-        variant="outline"
-        className="w-fit"
-        disabled={!adres.trim() || bekleniyor}
-      >
-        {bekleniyor ? "Kod hazırlanıyor…" : "Kod al"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" size="sm" disabled={!adres.trim() || bekleniyor}>
+          {bekleniyor ? "Kod hazırlanıyor…" : "Kod al"}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={onVazgec}>
+          Vazgeç
+        </Button>
+      </div>
     </form>
   );
 }
