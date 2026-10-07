@@ -136,8 +136,9 @@ Tablo testle birebir sabitlenmiştir (`tests/test_eslesme_durumu.py`, `tests/tes
 |---|---|---|
 | `/`, `/giris`, `/kayit`, `/kvkk` | herkes | Karşılama, giriş, rol seçimli kayıt, KVKK metni |
 | `/eposta-dogrula`, `/referans?token=…` | herkes | E-posta doğrulama, referansın girişsiz yanıt formu |
-| `/genc` | genç | Kartı güçlendirme önerileri, fırsatlar, ilgiler, bana gelen ilgiler, iş birlikleri |
-| `/kesif`, `/kart/{id}`, `/profil`, `/hesap-baglama/{saglayici}` | genç | Kart sohbeti, kart ve güven göstergesi, profil, hesap bağlama dönüşü |
+| `/genc` | genç | "Fırsatlar": önce yanıt bekleyen işler (firmanın ilgisi, plan onayı, geciken adım), sonra fırsatlar; yan sütunda kart özeti, tamamlanacaklar, tek "Süreçlerin" listesi (`docs/kararlar.md` G18) |
+| `/kesif`, `/kart/{id}`, `/profil`, `/hesap-baglama/{saglayici}` | genç | Kart sohbeti; kart, çalışma tercihleri ve güven göstergesi; "Hesabım" (ad, eğitim, bağlantılar, bağlı hesaplar, KVKK); hesap bağlama dönüşü |
+| `/isbirliklerim` | genç, firma | İş birlikleri, önce süren |
 | `/kurum` | firma | İki kapı, ilanlar, öneriler, iş birliği fırsatları, iş birlikleri |
 | `/tanimlama`, `/kurum/oneriler`, `/kurum/ilan/{id}/duzenle` | firma | İhtiyaç sohbeti, öneriler, ilan düzenleme |
 | `/kurum/kart`, `/kurum/profil` | firma | Firma kartı, firma profili |
@@ -145,8 +146,9 @@ Tablo testle birebir sabitlenmiştir (`tests/test_eslesme_durumu.py`, `tests/tes
 | `/girvak` | GİRVAK | Program sayıları ve hedefler, firma doğrulama, inceleme kuyruğu, gözlem, hareketsiz bağlantılar |
 | `/bildirimler` | herkes (girişli) | Liste, "hepsini okundu say" |
 
-**Menü:** genç için Panelim, Kartım, Profilim, Bildirimler; firma için Panelim, Yeni ihtiyaç,
-Firma kartı, Firma profili, Bildirimler; GİRVAK için Panel.
+**Menü** (`frontend/src/lib/menu.ts`): genç için Fırsatlar, Kartım, İş birliklerim; firma için
+Panelim, Yeni ihtiyaç, Firma kartı; GİRVAK için Panel. Bildirimler her ekranda zil ve okunmamış
+sayısı; ayar sayfası (genç "Hesabım", firma "Firma profili") ve çıkış adın altındaki hesap menüsünde.
 
 **Yönlendirme:** giriş gerektiren sayfa `GirisKapisi` ile sarılır; girişsiz açılırsa
 `/giris?sonra=<yol>`, rolü uymuyorsa kendi paneli. Kurallar `frontend/src/lib/yonlendirme.ts`'de

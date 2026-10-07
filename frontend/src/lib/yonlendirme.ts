@@ -71,15 +71,18 @@ export function kayittanSonra(rol: Rol, sonra: string | null): string {
 
 /**
  * Bildirime tıklayınca nereye (docs/kimlik-ve-dongu.md § 6).
- * Gence gidenler (ilgi, referans yanıtı) genç paneline; kuruma gidenler
- * (yeni öneri, red) kurum paneline. İş birliği olan bildirim (kabul ve
- * Takip'in bütün türleri) doğrudan iş birliği sayfasına. Bilinmeyen
- * tür bildirim sayfasında kalır.
+ * Gence gidenler ana sayfanın ilgili bölümüne (yanıt bekleyen ilgi
+ * "Seni bekleyenler"e, sonuçlanan ilişki "Süreçlerin"e); çalışmayla ilgili
+ * olanlar (referans yanıtı, GİRVAK incelemesi) kart sayfasına. Kuruma
+ * gidenler (yeni öneri, red) kurum paneline. İş birliği olan bildirim (kabul
+ * ve Takip'in bütün türleri) doğrudan iş birliği sayfasına. Bilinmeyen tür
+ * bildirim sayfasında kalır.
  */
 export function bildirimHedefi(
   tur: string,
   isbirligiId: string | null = null,
   rol: Rol | null = null,
+  kart: Pick<YetenekKartiOzeti, "id"> | null = null,
 ): string {
   if (
     isbirligiId &&
@@ -103,9 +106,9 @@ export function bildirimHedefi(
     case "oneri_bekliyor":
       return "/kurum#ihtiyaclar";
     case "ilgi_yanitsiz_1":
-      return "/genc#ilgiler";
+      return "/genc#bekleyenler";
     case "ilgi_yanitsiz_2":
-      return rol === "kurum" ? "/kurum#oneriler" : "/genc#ilgiler";
+      return rol === "kurum" ? "/kurum#oneriler" : "/genc#bekleyenler";
     case "yeni_firsat":
       return "/genc#firsatlar";
     // Gençten ilgi (docs/api-contracts.md)
@@ -114,12 +117,12 @@ export function bildirimHedefi(
       return "/kurum#ihtiyaclar";
     case "karsilikli_ilgi":
     case "firsat_kapandi":
-      return "/genc#ilgilerim";
+      return "/genc#surecler";
     case "ilgi":
-      return "/genc#ilgiler";
+      return "/genc#bekleyenler";
     case "referans_yaniti":
     case "referans_yanit_yok":
-      return "/genc#kart";
+      return kart ? kartYolu(kart) : "/genc";
     case "yeni_oneri":
       return "/kurum#ihtiyaclar";
     case "kabul":
@@ -130,7 +133,7 @@ export function bildirimHedefi(
       return "/kurum/profil";
     // GİRVAK inceleme kuyruğu (docs/dogrulama.md § 9)
     case "inceleme_sonucu":
-      return "/genc#kart";
+      return kart ? kartYolu(kart) : "/genc";
     case "ad_degisikligi_sonucu":
       return "/profil";
     case "hesap_baglama_sonucu":

@@ -37,6 +37,7 @@ Düzen kodda tek yerde; sayfa kendi kabuğunu yazmaz.
 
   | Genişlik | Ölçü | Ne için |
   |---|---|---|
+  | `genis` | 1024px | İki sütunlu ana sayfa: akış ve yan sütun (genç "Fırsatlar"). |
   | `icerik` (varsayılan) | 672px | Okunan ve listelenen içerik: paneller, kart, sohbet, iş birliği. Satır uzunluğu okunabilir kalsın; panel bir "belge". |
   | `form` | 576px | Tek sütunlu formlar: kayıt, profil. |
   | `dar` | 448px | Birkaç alanlı kısa form: giriş. |
@@ -45,6 +46,10 @@ Düzen kodda tek yerde; sayfa kendi kabuğunu yazmaz.
 - **Başlık bloğu:** tek `h1` (Fraunces, 24→30px), altında açıklama. Başlığın yanında durum etiketi, sağda tek bir eylem olabilir.
 - **Yükleniyor ve hata** durumları da aynı kabukla ve aynı genişlikte çizilir (`SayfaDurumu`, `GirisKapisi genislik=`). Veri gelince içerik yana ya da aşağı kaymaz.
 - **Menü** (`menu-kabugu.tsx`): karşılama ve uygulama menüsü aynı iskeleti giyer. Yapışkandır, 1200px'lik geniş kapsayıcıdadır ve yüksekliği 64px (`lg`'de 76px). Girişten önce ve sonra logo aynı yerde durur. İçerik dar sütunda ortalanır, menü geniş kalır. `lg` altında bağlantılar katlanır menüye girer, bildirim zili ve okunmamış sayısı katlanmadan görünür kalır. Etkin sayfa kalın yazı ve vurgu renginde alt çizgiyle gösterilir.
+- **Menü içeriği:** bağlantılar yalnızca sayfadır; bildirimler zil (her ekranda), ayar ve çıkış adın baş harfli hesap menüsünde. "Panele dön" düğmesi yazılmaz, menü var.
+- **Ekran "şimdi ne yapmalıyım" sırasıyla dizilir:** yanıt bekleyen iş en üstte ve vurgu renginde sol çizgiyle; boş bölüm çizilmez (yeni kullanıcı yedi boş kutu yerine tek çağrı görür); bölüm başına tek birincil eylem. Açıklama paragrafı yerine eylem: bir bölümün nasıl çalıştığı bir kez söylenir, her başlığın altında tekrarlanmaz.
+- **Formlar istenince açılır:** bir öğenin ekleme ve düzenleme formları düğmenin arkasında; düzenle ve sil gibi ikincil eylemler "⋯" menüsünde (`eylem-menusu.tsx`), yıkıcı eylem birincil düğmenin yanında durmaz.
+- **Seviye kelime ve çubukla:** güven göstergesi "Eksik / Zayıf / Orta / Güçlü" ve üç parçalı çubuk (`seviye-cubugu.tsx`, karşılama sayfasıyla ortak); "2/3" gibi not biçimi yok. En güçlü seviye bağlantı renginde.
 - **Karşılama sayfası** kabuğun dışındadır: 1200px, kendi bölüm ritmi (96–112px) ve daha büyük yazı ölçeği (`src/app/page.tsx`, metinler `src/content/landing.ts`). Uygulamanın içi sade ve dar kalır.
 - **Kontrast:** vurgu rengi (`#B8823C`) üstünde metin koyu olur (`metin`, 4.9:1). Beyaz 3.3:1'de kalıyor. Küçük metin vurgu renginde yazılmaz, zemin üstünde 3:1'de kalıyor.
 

@@ -42,7 +42,7 @@ export function BolumBasligi({
     <div className="flex flex-col gap-1">
       <h2
         id={id}
-        className="flex items-center gap-2.5 font-heading text-xl font-semibold text-ana"
+        className="flex scroll-mt-24 items-center gap-2.5 font-heading text-xl font-semibold text-ana"
       >
         {baslik}
         {sayi ? (

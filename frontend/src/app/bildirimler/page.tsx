@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -70,7 +71,14 @@ function BildirimListesi() {
     } catch {
       // Okundu işaretlenemese de kullanıcı gitmek istediği yere gitsin.
     }
-    router.push(bildirimHedefi(bildirim.tur, bildirim.isbirligi_id, hesap.rol));
+    router.push(
+      bildirimHedefi(
+        bildirim.tur,
+        bildirim.isbirligi_id,
+        hesap.rol,
+        hesap.yetenek_karti,
+      ),
+    );
   }
 
   async function hepsiniOkunduSay() {
@@ -128,13 +136,13 @@ function BildirimListesi() {
       ) : liste.length === 0 ? (
         <BosDurum metin={BOS_METINLERI[hesap.rol] ?? BOS_METINLERI.girvak} />
       ) : (
-        <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
+        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-md border border-kenar bg-card">
           {liste.map((bildirim) => (
             <li key={bildirim.id}>
               <button
                 type="button"
                 onClick={() => void ac(bildirim)}
-                className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-muted"
+                className="group flex w-full items-start gap-3 px-4 py-3.5 text-left hover:bg-muted"
               >
                 <span
                   aria-hidden="true"
@@ -161,6 +169,10 @@ function BildirimListesi() {
                     {tarihYaz(bildirim.olusturma_tarihi, true)}
                   </span>
                 </span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                />
               </button>
             </li>
           ))}

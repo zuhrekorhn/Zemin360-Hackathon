@@ -57,9 +57,12 @@ describe("giristenSonra", () => {
 
 describe("bildirimHedefi", () => {
   it("bildirimi alan rolün paneline, ilgili bölüme götürür", () => {
-    expect(bildirimHedefi("ilgi")).toBe("/genc#ilgiler");
-    expect(bildirimHedefi("referans_yaniti")).toBe("/genc#kart");
-    expect(bildirimHedefi("referans_yanit_yok")).toBe("/genc#kart");
+    expect(bildirimHedefi("ilgi")).toBe("/genc#bekleyenler");
+    expect(bildirimHedefi("referans_yaniti")).toBe("/genc");
+    expect(bildirimHedefi("referans_yaniti", null, "genc", { id: "k1" })).toBe(
+      "/kart/k1",
+    );
+    expect(bildirimHedefi("referans_yanit_yok")).toBe("/genc");
     expect(bildirimHedefi("yeni_oneri")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("kabul")).toBe("/kurum#isbirlikleri");
     expect(bildirimHedefi("red")).toBe("/kurum#oneriler");
@@ -79,7 +82,7 @@ describe("bildirimHedefi — iş birliği", () => {
 
   it("iş birliği kimliği yoksa eski hedefler geçerli", () => {
     expect(bildirimHedefi("kabul", null)).toBe("/kurum#isbirlikleri");
-    expect(bildirimHedefi("ilgi", "abc")).toBe("/genc#ilgiler");
+    expect(bildirimHedefi("ilgi", "abc")).toBe("/genc#bekleyenler");
   });
 });
 
@@ -94,7 +97,7 @@ describe("bildirimHedefi — Canlılık", () => {
 
   it("yanıtsız ilginin son hatırlatması alıcının rolüne göre", () => {
     expect(bildirimHedefi("ilgi_yanitsiz_2", null, "genc")).toBe(
-      "/genc#ilgiler",
+      "/genc#bekleyenler",
     );
     expect(bildirimHedefi("ilgi_yanitsiz_2", null, "kurum")).toBe(
       "/kurum#oneriler",
@@ -107,9 +110,11 @@ describe("bildirimHedefi — Canlılık", () => {
     expect(bildirimHedefi("yeni_firsat")).toBe("/genc#firsatlar");
     expect(bildirimHedefi("genc_ilgi")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("genc_ilgisi_yanitsiz")).toBe("/kurum#ihtiyaclar");
-    expect(bildirimHedefi("firsat_kapandi")).toBe("/genc#ilgilerim");
+    expect(bildirimHedefi("firsat_kapandi")).toBe("/genc#surecler");
     expect(bildirimHedefi("firma_dogrulandi")).toBe("/kurum/profil");
-    expect(bildirimHedefi("inceleme_sonucu")).toBe("/genc#kart");
+    expect(bildirimHedefi("inceleme_sonucu", null, "genc", { id: "k1" })).toBe(
+      "/kart/k1",
+    );
     expect(bildirimHedefi("ad_degisikligi_sonucu")).toBe("/profil");
     expect(bildirimHedefi("hesap_baglama_sonucu")).toBe("/profil#hesaplar");
     // Aday firmaya giden ilgi bildirimleri firma panelindeki bölümlere.
@@ -117,9 +122,9 @@ describe("bildirimHedefi — Canlılık", () => {
     expect(bildirimHedefi("firsat_kapandi", null, "kurum")).toBe(
       "/kurum#ilgilerimiz",
     );
-    expect(bildirimHedefi("ilgi", null, "genc")).toBe("/genc#ilgiler");
+    expect(bildirimHedefi("ilgi", null, "genc")).toBe("/genc#bekleyenler");
     expect(bildirimHedefi("karsilikli_ilgi", "i1")).toBe("/isbirligi/i1");
-    expect(bildirimHedefi("karsilikli_ilgi")).toBe("/genc#ilgilerim");
+    expect(bildirimHedefi("karsilikli_ilgi")).toBe("/genc#surecler");
   });
 });
 
