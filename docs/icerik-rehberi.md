@@ -150,9 +150,9 @@ Gence "Reddedildi", "Elendi", "Başarısız" gibi etiketler gösterilmez.
 - **Üç nokta** tek karakterdir: …
 - Başlık ve butonlarda cümle düzeni: yalnızca ilk harf büyük.
 
-## 7. Önce ve sonra: mevcut metinlerden örnekler
+## 7. Önce ve sonra: düzeltilen metinlerden örnekler
 
-| Ekran | Şu an | Olmalı |
+| Ekran | Eskiden | Bugün |
 |---|---|---|
 | Genç paneli, boş durum | "Henüz yetenek kartın yok. Keşif Ajanı’yla kısa bir sohbet yap; ne yaptığını birlikte bir karta dönüştürelim." | "Henüz yetenek kartın yok. Birkaç soruyla neler yaptığını anlat, kartını birlikte oluşturalım." [Kartını oluştur] |
 | Kart sayfası, açıklama (genç) | "Doğrulama Ajanı her somut çıktıyı dört ayrı başlıkta puanlar — tek bir “güven puanı”na indirmez." | "Her çalışman dört açıdan değerlendirilir: kanıt, sonuç, rol ve referans. Tek bir puana indirilmez; böylece neyin güçlü, neyin eksik olduğunu görürsün." |
@@ -167,12 +167,11 @@ Gence "Reddedildi", "Elendi", "Başarısız" gibi etiketler gösterilmez.
 
 ## 8. Süreç
 
-1. **Yeni metin:** Claude Code bu rehbere göre yazar ve `docs/plans/genc-akisi-metinler.md` listesine ekler.
-2. **Denetim:** Liste, genç akışı bittikten sonra toplu olarak gözden geçirilir. Son onayı Zühre verir.
-3. **Rehber değişikliği:** Terim ya da kural değişirse önce bu dosya güncellenir, sonra metinler.
-4. **Şüphede:** Bir metnin hangi terimi kullanacağı belirsizse rehbere bakılır; rehberde yoksa terim uydurulmaz, listeye not düşülür.
+1. **Yeni metin** bu rehbere göre yazılır; rehberde karşılığı olmayan terim uydurulmaz, önce rehbere eklenir.
+2. **Rehber değişikliği:** terim ya da kural değişirse önce bu dosya güncellenir, sonra metinler.
+3. **Kod içindeki adlar değişmez:** alan ve değişken adları (`somut_cikti`, `kurum`…) veri şemasına sadıktır; rehber yalnızca kullanıcıya görünen metin içindir.
 
-## 9. Alınan kararlar (28 Eylül 2026)
+## 9. Alınan kararlar
 
 1. **Somut işlerin adı: "çalışma".** "İş" ve "deneyim" başka kavramlarla (tür listesindeki "İş deneyimi", "deneyim seviyesi" alanı) karıştığı için kullanılmaz; "proje" yalnızca bir tür adıdır.
 2. **Eşleşme açıklamasının başlığı: "Neden uygun?"** Genç ve firma ekranında aynı başlık. Açıklama metni şimdilik firmaya hitaben 3. şahısla yazılıyor ve gence de aynen gösteriliyor; bu bilinen bir sınır.
@@ -181,3 +180,20 @@ Gence "Reddedildi", "Elendi", "Başarısız" gibi etiketler gösterilmez.
 5. **Yapay zekâ açıklaması** iki yerde yapılır:
    - Sohbetin başında bir kez: "Bu sohbet yapay zekâ desteğiyle ilerler. Kartın sen onaylamadan kaydedilmez." Firma tarafındaki ihtiyaç sohbetinde: "Bu sohbet yapay zekâ desteğiyle ilerler. İhtiyacınız siz onaylamadan kaydedilmez."
    - Güven göstergesinin açıklamasında: "Kanıt, sonuç ve rol yapay zekâ desteğiyle değerlendirilir; referans puanını referans kişi verir."
+
+## 10. Rehber kodda nasıl uygulanıyor
+
+| Kural | Nerede |
+|---|---|
+| "Ajan" gösterilmez (§ 4) | Sayfa başlıkları ("Yetenek kartını oluştur", "İhtiyacınızı tanımlayın"); sohbet balonunun adı "Zemin360"; "Durum özeti", "Plan önerisi al" |
+| Yapay zekâ bir kez söylenir (§ 9.5) | Üç sohbetin açıklamasında ve kart sayfasında güven göstergesi notunda |
+| Hitap bakan hesaba göre (§ 3) | `frontend/src/lib/hitap.ts` (`hitapRolden`, `hitapla`) ve `useHitap()`; backend bildirimlerinde `siz_mi` |
+| "kurum" yerine "firma", "ilan" yerine "ihtiyaç / fırsat" | Kayıt, KVKK, paneller, öneri ekranları, GİRVAK sayaçları |
+| Skor ve eşik gösterilmez | "%72 uyum", "yeterince uyan"; GİRVAK'ta "hareketsizlik süresi" |
+| Onaylar sayfa içinde (§ 5.6) | `frontend/src/components/onay-alani.tsx`; `window.confirm` yok |
+| Hatalar insan diliyle (§ 5.4) | İngilizce şema metni gösterilmez (`lib/ayrinti.ts`); 401/403/404/409/422 cümleleri `lib/hata.ts`; backend'de boş alan cümleleri tek yerde (`app/core/alan_adlari.py`) |
+| LLM'in yazdığı kullanıcı metni | Bütün istemlere `app/core/kullanici_dili.py` › `KULLANICI_DILI_KURALLARI` eklenir |
+
+**Bilinen sınırlar:** "Neden uygun?" açıklaması firmaya hitaben 3. şahısla yazılıp gence de aynen
+gösteriliyor (§ 9.2). "Pilot uygulama" firma kartında bir iş birliği türünün adıdır; rehber yalnızca
+tek başına "pilot"u yasaklar.
