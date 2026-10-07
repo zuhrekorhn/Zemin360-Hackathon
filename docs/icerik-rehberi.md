@@ -1,8 +1,8 @@
 # Zemin360 İçerik Rehberi
 
-> Durum: **Onaylandı (28 Eylül 2026).** Karar veren: Zühre Nur Korhan. Alınan terim kararları § 9'da.
+> Alınan terim kararları § 9'da; rehberin kodda nasıl uygulandığı § 10'da.
 >
-> Kullanım: Arayüzde kullanıcıya görünen **her** metin bu rehbere göre yazılır: sayfa başlıkları, butonlar, form etiketleri, yardım metinleri, hata mesajları, boş durumlar, bildirimler, onay pencereleri ve sohbet soruları. Backend'den gelip arayüzde gösterilen hata cümleleri de dahil. Kod içi yorumlar, teknik belgeler ve commit mesajları kapsam dışı. Yeni ya da değişen her metin `docs/plans/genc-akisi-metinler.md` listesine eklenir.
+> Kullanım: Arayüzde kullanıcıya görünen **her** metin bu rehbere göre yazılır: sayfa başlıkları, butonlar, form etiketleri, yardım metinleri, hata mesajları, boş durumlar, bildirimler, onay pencereleri ve sohbet soruları. Backend'den gelip arayüzde gösterilen hata cümleleri de dahil. Kod içi yorumlar, teknik belgeler ve commit mesajları kapsam dışı. Rehberde karşılığı olmayan terim uydurulmaz, önce rehbere eklenir.
 
 ---
 

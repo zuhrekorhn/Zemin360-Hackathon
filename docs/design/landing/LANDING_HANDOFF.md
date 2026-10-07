@@ -142,7 +142,7 @@ Metinler her ekran boyutunda aynıdır; tek kaynaktan (`content/landing.ts`) gel
 - [ ] CTA'lar doğru route'lara gidiyor; sekmeler fare ve klavyeyle çalışıyor.
 - [ ] Demo animasyonu reduced-motion'a uyuyor.
 - [ ] Dev rozeti production'da görünmüyor.
-- [ ] Yeni metinler `docs/plans/genc-akisi-metinler.md` listesine eklendi.
+- [ ] Yeni metinler `docs/icerik-rehberi.md`'ye uygun.
 - [ ] Lint ve build hatasız.
 
 ## 8. Commit kuralı

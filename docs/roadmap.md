@@ -32,9 +32,9 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 | Güvenlik | SSRF engeli (`app/core/guvenli_istek.py`) | `agent-specs.md` § 4 |
 | Toplu metin denetimi (30 Eyl) | Hitap, onaylar, LLM istem dili | `icerik-rehberi.md` |
 | Doğrulama incelemesi (1-5 Eki) | 14 adım: link/dosya/görsel okuma, hesap bağlama, referans, kötüye kullanım, gözlem | `dogrulama.md` |
-| Tanımlama incelemesi (5-6 Eki) | Kötü girdi senaryoları 42/42, başarı ölçütü, "Düzenle" düğmesi, koşul sorusu, istem güvenliği | `plans/ilan-duzenleme.md`, `plans/tanimlama-kalanlar.md` |
+| Tanımlama incelemesi (5-6 Eki) | Kötü girdi senaryoları 42/42, başarı ölçütü, "Düzenle" düğmesi, koşul sorusu, istem güvenliği | `kararlar.md D1`, `kararlar.md S1-S4` |
 | Eşleştirme incelemesi (6 Eki) | Skor eşiği kaldırıldı, alt sınır 0.48 / 0.52, uygunluk kararı | `matching-algorithm.md` § 5, § 8 |
-| Takip incelemesi (6 Eki) | Süreç şablonları, hazırlık önerisi, erken sonlanma | `plans/takip-surecleri.md` |
+| Takip incelemesi (6 Eki) | Süreç şablonları, hazırlık önerisi, erken sonlanma | `kararlar.md T1` |
 | E-posta (7 Eki) | Brevo gönderici, "eşleştiniz" e-postası, "E-posta yaz" düğmesi | `architecture.md`, `api-contracts.md` |
 
 ## Kalan işler
