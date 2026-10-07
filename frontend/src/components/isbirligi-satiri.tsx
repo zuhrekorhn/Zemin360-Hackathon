@@ -2,8 +2,10 @@ import Link from "next/link";
 
 import { DurumEtiketi, IletisimSatiri, tarihYaz } from "@/components/panel";
 import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
 import type { IsbirligiOzeti } from "@/lib/api";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
+import { cn } from "@/lib/utils";
 
 /**
  * Bir iş birliği satırı: genç ve firma aynı satırı görür, karşı taraf
@@ -15,11 +17,10 @@ export function IsbirligiSatiri({ isbirligi }: { isbirligi: IsbirligiOzeti }) {
   const karsiAd = adayTarafi ? isbirligi.kurum_adi : isbirligi.aday_adi;
   const benimAd = adayTarafi ? isbirligi.aday_adi : isbirligi.kurum_adi;
   const { tamamlanan, toplam } = isbirligi.ilerleme;
-  const cizgi =
-    isbirligi.durum === "aktif" || isbirligi.durum === "tamamlandi";
+  const cizgi = isbirligi.durum === "aktif" || isbirligi.durum === "tamamlandi";
 
   return (
-    <li className="flex flex-col gap-3 rounded-md border border-kenar bg-card px-5 py-4">
+    <li className={cn(KUTU, "flex flex-col gap-3 px-6 py-5")}>
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="font-heading text-lg font-semibold text-ana">
@@ -35,9 +36,7 @@ export function IsbirligiSatiri({ isbirligi }: { isbirligi: IsbirligiOzeti }) {
           </span>
         </div>
         <DurumEtiketi
-          metin={
-            ISBIRLIGI_DURUM_ETIKETLERI[isbirligi.durum] ?? isbirligi.durum
-          }
+          metin={ISBIRLIGI_DURUM_ETIKETLERI[isbirligi.durum] ?? isbirligi.durum}
           baglanti={isbirligi.durum === "tamamlandi"}
         />
       </div>

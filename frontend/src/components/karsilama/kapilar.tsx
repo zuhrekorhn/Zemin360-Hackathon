@@ -4,7 +4,7 @@
  *
  * Vurgu (#B8823C) üstünde beyaz metin 3.3:1'de kalıyor; kontrast renk
  * sadakatinden önce geldiği için firma kapısında koyu metin (4.9:1) —
- * shadcn'deki primary-foreground ile aynı karar.
+ * vurgu rengi üstündeki her metin için aynı karar (design-language § Kontrast).
  */
 
 import Link from "next/link";

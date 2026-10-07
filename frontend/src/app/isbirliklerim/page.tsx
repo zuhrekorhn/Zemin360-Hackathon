@@ -47,7 +47,7 @@ function IsbirlikleriListesi() {
   }, [oku]);
 
   return (
-    <Sayfa>
+    <Sayfa genislik="genis">
       <SayfaBasligi
         baslik={hitapla(hitap, "İş birliklerin", "İş birlikleriniz")}
         aciklama={hitapla(
@@ -77,9 +77,12 @@ function IsbirlikleriListesi() {
           }
         />
       ) : (
-        <ul className="flex flex-col gap-4">
+        <ul className="grid gap-4 lg:grid-cols-2">
           {liste.map((isbirligi) => (
-            <IsbirligiSatiri key={isbirligi.isbirligi_id} isbirligi={isbirligi} />
+            <IsbirligiSatiri
+              key={isbirligi.isbirligi_id}
+              isbirligi={isbirligi}
+            />
           ))}
         </ul>
       )}

@@ -16,6 +16,7 @@ import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SECIM_SINIFI } from "@/components/ui/secim";
+import { KUTU } from "@/components/ui/yuzey";
 import {
   type BagliHesap,
   type Hesaplarim,
@@ -34,6 +35,7 @@ import {
   profilOrnegi,
   yontemEtiketi,
 } from "@/lib/hesap-baglama";
+import { cn } from "@/lib/utils";
 
 export function BagliHesaplar() {
   const [veri, setVeri] = useState<Hesaplarim | null>(null);
@@ -61,7 +63,7 @@ export function BagliHesaplar() {
     <section
       id="hesaplar"
       aria-labelledby="hesaplar-baslik"
-      className="flex scroll-mt-24 flex-col gap-5 rounded-md border border-kenar bg-card px-5 py-5"
+      className={cn(KUTU, "flex scroll-mt-24 flex-col gap-5 px-6 py-6")}
     >
       <div className="flex flex-col gap-1">
         <h2
