@@ -191,7 +191,7 @@ geri alır), `scripts/canlilik_taramasi.py` (taramayı elle çalıştırır), `s
 |---|---|---|
 | Backend | `pytest` | ~2.000 test: saf kurallar ve durum makinesi tabloları, her uç için 401 / 403 / 404, gerçek veritabanında geri alınan işlemler, Doğrulama'nın kasetli (çevrimdışı) değerlendirme seti. Gerçek LLM ya da Voyage çağrısı yapmaz |
 | Frontend | `npm test` | Vitest: yönlendirme, durum etiketleri, form ve e-posta taslağı gibi saf karar fonksiyonları |
-| Lint | `ruff check .` · `npm run lint` · `npx tsc --noEmit` | |
+| Lint ve tür denetimi | `ruff check .` · `npm run lint` · `npm run typecheck` | |
 | Migration | `alembic check` | Modeller ile migration'lar arasında fark yok |
 
 Hepsi her push'ta CI'da çalışır. Ücretli canlı ölçümler ayrı betiklerdir:

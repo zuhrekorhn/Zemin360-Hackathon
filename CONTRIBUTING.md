@@ -24,7 +24,7 @@ alembic check               # model değiştiyse: alembic revision --autogenerat
 Frontend (`frontend/` içinde):
 
 ```bash
-npm run lint && npx tsc --noEmit && npm test
+npm run lint && npm run typecheck && npm test
 ```
 
 Aynı kontroller her push'ta CI'da çalışır (`.github/workflows/ci.yml`).
