@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class Isbirligi(UUIDPrimaryKeyMixin, Base):
-    """Genç kabul edince açılan iş birliği (docs/faz-c-takip.md § 2).
+    """Genç kabul edince açılan iş birliği (docs/takip.md § 2).
 
     `durum`: plan_bekliyor → aktif → tamamlandi. Geçiş kuralları
     app/agents/takip_durumu.py'de; bu model yalnızca sonucu tutar.

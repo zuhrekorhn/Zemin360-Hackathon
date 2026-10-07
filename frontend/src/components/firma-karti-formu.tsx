@@ -13,7 +13,7 @@ const METIN_KUTUSU =
   "w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30";
 
 /**
- * Firma kartının alanları (docs/plans/firma-akisi.md § 5). Sohbetten gelen
+ * Firma kartının alanları (docs/kararlar.md F3). Sohbetten gelen
  * taslağın onayı ve kartın düzenlenmesi aynı parçayı kullanır; doğrulama
  * `lib/firma-karti.ts`'de. Firmaya "siz".
  */

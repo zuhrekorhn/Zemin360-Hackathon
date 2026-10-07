@@ -18,7 +18,8 @@ const gorunum: Record<Durum, { nokta: string; metin: string }> = {
 
 /**
  * Frontend ile backend'in gerçekten konuştuğunu doğrulayan küçük gösterge.
- * Faz 1 iskelet doğrulaması — ileride kaldırılabilir.
+ * Ana sayfanın altında durur; yerel kurulumda backend'in ayakta olup
+ * olmadığını tek bakışta gösterir.
  */
 export function BackendDurumu() {
   const [durum, setDurum] = useState<Durum>("kontrol_ediliyor");

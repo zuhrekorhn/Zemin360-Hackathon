@@ -1,4 +1,4 @@
-"""Ücretli dış servislerin dönemlik kullanım sayacı (plan § 14.4: aylık tavan).
+"""Ücretli dış servislerin dönemlik kullanım sayacı (docs/dogrulama.md § 14.4: aylık tavan).
 
 Sayaç kalıcıdır: tavan, silinen kanıtlar ya da süreç yeniden başlaması yüzünden
 aşılmasın. Artırma tek koşullu sorguyla (`servisler/servis_kullanimi.py`).

@@ -1,4 +1,4 @@
-"""Hesap bağlama: OAuth ve doğrulama kodu (docs/plans/dogrulama-iyilestirme.md § 6).
+"""Hesap bağlama: OAuth ve doğrulama kodu (docs/dogrulama.md § 6).
 
 Doğrulama kodu (§ 6.2): genç kodu profil açıklamasına yazar, `kodu_dogrula`
 profili okur. Kod bulunursa bağlanır; profil okunamazsa (bot engeli, giriş

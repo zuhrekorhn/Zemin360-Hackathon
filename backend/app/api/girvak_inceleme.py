@@ -1,4 +1,4 @@
-"""GİRVAK inceleme kuyruğu uçları (docs/plans/dogrulama-iyilestirme.md § 9).
+"""GİRVAK inceleme kuyruğu uçları (docs/dogrulama.md § 9).
 
 Yalnızca GİRVAK. Liste ve karar; işaret açmak bu uçların işi değil, sinyali
 gören servisin (itiraz, ad değişikliği talebi, ileride kanıt işaretleri).

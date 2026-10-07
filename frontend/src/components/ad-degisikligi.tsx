@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Kilitli ad ve değişiklik talebi (docs/plans/dogrulama-iyilestirme.md § 6.3).
+ * Kilitli ad ve değişiklik talebi (docs/dogrulama.md § 6.3).
  *
  * E-posta doğrulanınca ad profilden değişmez: başkasının adını yazıp onun
  * çalışmalarını sahiplenmek kapanır. Değişiklik GİRVAK'a talep olarak gider;

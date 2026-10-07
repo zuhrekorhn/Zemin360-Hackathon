@@ -1,7 +1,7 @@
 import { DOGRULANMIS_FIRMA } from "@/lib/firma-dogrulama";
 
 /**
- * "Doğrulanmış firma" işareti (docs/plans/firma-akisi.md § 0 karar 17).
+ * "Doğrulanmış firma" işareti (docs/kararlar.md F17).
  * Firma adının geçtiği yerde, yalnızca GİRVAK doğruladıysa görünür.
  */
 export function DogrulanmisFirma({ dogrulandi }: { dogrulandi: boolean }) {

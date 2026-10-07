@@ -108,7 +108,8 @@ async def _olcumlu_oku(
 
 
 def _okumalari_gozle(oturum: AsyncSession, hazirlik: Hazirlik, sureler_ms: list[int]) -> None:
-    """Her link okuması gözlem kaydına yazılır (plan § 10.3); dosya yüklenirken okunmuştur."""
+    """Her link okuması gözlem kaydına yazılır (docs/dogrulama.md § 10.3); dosya yüklenirken
+    okunmuştur."""
     ozet = hazirlik.ozet
     for parca, okunan, sure_ms in zip(
         hazirlik.parcalar, hazirlik.okunanlar, sureler_ms, strict=True
@@ -160,7 +161,7 @@ def _iddia_sorgulari(girdi: DegerlendirmeGirdisi) -> list[str]:
 
 
 def onbellekte_mi(cikti: SomutCikti, hazirlik: Hazirlik) -> bool:
-    """Aynı girdi daha önce değerlendirildiyse önceki sonuç geçerli (bulgu 15)."""
+    """Aynı girdi daha önce değerlendirildiyse önceki sonuç geçerli."""
     skor = cikti.guven_skoru
     return (
         skor is not None
@@ -198,9 +199,9 @@ async def degerlendir(
 ) -> OkunanKanit | None:
     """Çalışmayı değerlendirir ve göstergeyi yazar. Döner: son eklenen parçanın okunuşu.
 
-    Linksiz çalışma da değerlendirilir (karar 10): Sonuç ve Rol beyan tavanıyla,
-    Kanıt "—". Aynı girdi (iddia, kanıt okunuşu, itiraz notu, kural sürümü) için
-    önceki sonuç kullanılır, model çağrılmaz: itirazla zar atılamaz (bulgu 15).
+    Linksiz çalışma da değerlendirilir (docs/dogrulama.md § 17, Karar 10): Sonuç ve
+    Rol beyan tavanıyla, Kanıt "—". Aynı girdi (iddia, kanıt okunuşu, itiraz notu,
+    kural sürümü) için önceki sonuç kullanılır, model çağrılmaz: itirazla zar atılamaz.
     `cikti.kanit_parcalari`, `guven_skoru` ve `referans_istekleri` yüklenmiş olmalı.
     """
     hazirlik = await hazirla(oturum, cikti, itiraz_notu)
@@ -260,7 +261,7 @@ def _girdi(
         pay=cikti.kendi_rolu,
         yetenekler=tuple(kart.araclar_teknolojiler or ()) if kart else (),
         itiraz_notu=itiraz_notu,
-        # Güncel bir referansın ilgili soruya "evet"i bağımsız destektir (plan § 7).
+        # Güncel bir referansın ilgili soruya "evet"i bağımsız destektir (docs/dogrulama.md § 7).
         # Eski 1-5 yanıt soruya özgü olmadığı için destek sayılmaz.
         referans_sonuc_evet=destek.sonuc,
         referans_pay_evet=destek.pay,

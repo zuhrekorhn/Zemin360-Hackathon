@@ -120,7 +120,7 @@ def test_iddia_referans_kisiye_gosteriliyor():
     assert gorunum.baslik == "Mahalle kütüphanesi ödünç takip sistemi"
     assert gorunum.aciklama is not None
     assert gorunum.iddia_sahibi_adi == IDDIA_SAHIBI
-    # Pay ve sonuç ayrı satırlarda sorulur (bulgu 18).
+    # Pay ve sonuç ayrı satırlarda sorulur.
     assert gorunum.pay == "Veritabanını ve arayüzü ben yazdım."
     assert gorunum.sonuc is not None
 
@@ -298,7 +298,7 @@ def test_yanit_sonrasi_skor_yine_de_hesaplanir(gosterge_kancasi, kart_hazirlama_
 
     # evet -> 3, eski 2 -> 1 : ortalama 2
     assert cikti.guven_skoru.ucuncu_taraf_onayi == 2
-    # Gösterge değişti: kart sürümü artar, eşleşmeler arka planda tazelenir (bulgu 26).
+    # Gösterge değişti: kart sürümü artar, eşleşmeler arka planda tazelenir.
     assert gosterge_kancasi == [cikti.yetenek_karti_id]
     assert kart_hazirlama_arka_plani_yok == [(cikti.yetenek_karti_id, 2, False)]
 
@@ -320,7 +320,8 @@ def test_yanit_sonucu_semasi_yalnizca_baslik_ve_durum_tasir():
     assert set(ReferansYanitiSonucu.model_fields) == {"baslik", "durum"}
 
 
-# --- 4 soruluk form, koşullu yanıt, destek (plan § 7) ------------------------------------
+# --- 4 soruluk form, koşullu yanıt, destek (docs/dogrulama.md § 7)
+# ------------------------------------
 
 
 def test_ayni_anda_ikinci_yanit_409():

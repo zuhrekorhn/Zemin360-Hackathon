@@ -1,4 +1,4 @@
-"""Open Badges rozet çapası (plan § 4.2).
+"""Open Badges rozet çapası (docs/dogrulama.md § 4.2).
 
 Barındırılan (hosted) doğrulama: iddianın adresi güvenli istekle açılır;
 düzenleyenin sunduğu iddia aynı adresi taşımalı, iptal edilmemiş olmalı ve

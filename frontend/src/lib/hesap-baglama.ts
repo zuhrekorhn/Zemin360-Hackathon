@@ -1,5 +1,5 @@
 /**
- * Hesap bağlamanın metinleri (docs/plans/dogrulama-iyilestirme.md § 6).
+ * Hesap bağlamanın metinleri (docs/dogrulama.md § 6).
  * Saf fonksiyonlar; testleri hesap-baglama.test.ts'de. Gence "sen".
  *
  * Bağlı hesaptaki çalışma daha güçlü bir kanıt sayılır: çalışmanın sana ait

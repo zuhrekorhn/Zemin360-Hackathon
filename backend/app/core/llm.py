@@ -129,7 +129,8 @@ _TOPLAYICI: ContextVar[KullanimToplayici | None] = ContextVar("llm_kullanim", de
 
 @contextmanager
 def kullanim_topla() -> Iterator[KullanimToplayici]:
-    """İçerideki her model çağrısının token kullanımı toplayıcıya yazılır (gözlem, plan § 10.3).
+    """İçerideki her model çağrısının token kullanımı toplayıcıya yazılır (gözlem, docs/dogrulama.md
+    § 10.3).
 
     Çağrılar aynı görev içinde ya da `gather` ile açılan alt görevlerde olabilir:
     bağlam kopyalanır ama toplayıcı nesnesi paylaşılır.

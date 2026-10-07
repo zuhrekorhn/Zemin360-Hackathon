@@ -1,4 +1,4 @@
-"""Doğrulama koduyla hesap bağlama: platform stratejileri (plan § 6.1, § 6.2).
+"""Doğrulama koduyla hesap bağlama: platform stratejileri (docs/dogrulama.md § 6.1, § 6.2).
 
 Genç profil açıklamasına `z360-xxxxxxxx` yazar; profil okunur, kod aranır. Her
 platform bir `ProfilKoduPlatformu`'dur: verilen adresten kullanıcı adını çıkarır

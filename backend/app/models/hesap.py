@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from app.models.kullanici import Kullanici
     from app.models.kurum import Kurum
 
-# Token'daki `rol` claim'inin değer kümesi (docs/faz-b-kimlik-ve-dongu.md § 1)
+# Token'daki `rol` claim'inin değer kümesi (docs/kimlik-ve-dongu.md § 1)
 ROL_GENC = "genc"
 ROL_KURUM = "kurum"
 ROL_GIRVAK = "girvak"
@@ -39,11 +39,11 @@ class Hesap(UUIDPrimaryKeyMixin, Base):
     olusturma_tarihi: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    # KVKK aydınlatma metninin onaylandığı an (docs/plans/genc-akisi.md § 3.1).
+    # KVKK aydınlatma metninin onaylandığı an (docs/data-schema.md).
     # Hesapta, profilde değil: onay bir hesabın; firma hesapları da aynı alanı
     # kullanacak. Bu alandan önce açılmış hesaplarda NULL.
     kvkk_onay_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # Kayıt e-postasının doğrulandığı an (dogrulama-iyilestirme.md § 6.3). Gencin
+    # Kayıt e-postasının doğrulandığı an (docs/dogrulama.md § 6.3). Gencin
     # ad kilidi ayrıca saklanmaz, bu alandan türetilir (`app/agents/dogrulama/kimlik.py`).
     eposta_dogrulandi_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

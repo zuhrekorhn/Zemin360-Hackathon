@@ -1,4 +1,5 @@
-"""Dosya çapaları (plan § 4.2, § 6.3): seviye kuralı, QR okuma, doğrulama adresi ayıklama,
+"""Dosya çapaları (docs/dogrulama.md § 4.2, § 6.3): seviye kuralı, QR okuma, doğrulama adresi
+ayıklama,
 bilinen düzenleyen ve adres doğrulayıcısı."""
 
 import asyncio

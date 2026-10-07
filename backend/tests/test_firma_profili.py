@@ -1,4 +1,4 @@
-"""Firma kayıt formu ve profili (docs/plans/firma-akisi.md § 0 kararlar 1-2, 9; § 2)."""
+"""Firma kayıt formu ve profili (docs/kararlar.md F1-2, 9; § 2)."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ def test_firma_kayit_profili_zorunlular_ve_normalize():
         ("calisan_araligi", "10-20"),
         ("kurulus_yili", 1800),
         ("web_sitesi", "market x"),
-        # Bilinçli olarak toplanmayan alanlar (karar 2): sessizce yok sayılmaz.
+        # Bilinçli olarak toplanmayan alanlar (docs/kararlar.md F2): sessizce yok sayılmaz.
         ("vergi_no", "1234567890"),
         ("telefon", "5551234567"),
         ("adres", "Bir sokak"),
@@ -169,7 +169,7 @@ def test_firma_kaydi_profilsiz_ya_da_kvkksiz_422():
 
 
 def test_eski_firma_hesabi_bant_ve_tamamlama():
-    """Bu alanlardan önce açılmış firma: /me bant için eksikleri söyler (karar 9)."""
+    """Bu alanlardan önce açılmış firma: /me bant için eksikleri söyler (docs/kararlar.md F9)."""
 
     async def senaryo():
         async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:

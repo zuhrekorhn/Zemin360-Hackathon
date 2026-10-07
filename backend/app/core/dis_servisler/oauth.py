@@ -1,4 +1,4 @@
-"""Hesap bağlama için OAuth sağlayıcıları (Strategy + Adapter; plan § 6.1, § 14.3).
+"""Hesap bağlama için OAuth sağlayıcıları (Strategy + Adapter; docs/dogrulama.md § 6.1, § 14.3).
 
 Her sağlayıcı iki şey yapar: kullanıcıyı yönlendireceğimiz yetki adresini kurar
 ve dönen kodla hesabın kimliğini okur. Token yalnızca kimliği okumak için
@@ -140,7 +140,7 @@ class OrcidOAuth(_OAuthIstemcisi):
     """ORCID token yanıtı iD'yi zaten taşır; ayrıca kullanıcı isteği gerekmez.
 
     Bağlı ORCID iD'nin puana etkisi akademik okuyucuyla gelir (yazar listesinde
-    iD; plan § 8); bugün bağlantı saklanır.
+    iD; docs/dogrulama.md § 8); bugün bağlantı saklanır.
     """
 
     saglayici = "orcid"

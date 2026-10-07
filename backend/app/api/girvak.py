@@ -1,10 +1,10 @@
-"""GİRVAK paneli (docs/faz-b-kimlik-ve-dongu.md § 7).
+"""GİRVAK paneli (docs/kimlik-ve-dongu.md § 7).
 
-Firma akışı: firma doğrulaması (docs/plans/firma-akisi.md § 6). GİRVAK'ın
+Firma akışı: firma doğrulaması (docs/kararlar.md F6). GİRVAK'ın
 yazabildiği tek şey doğrulama kararı.
 
-Faz B'de yalnızca sayılar: hesap, kart, eşleşme, iş birliği. Hedefler ve
-grafikler Faz D'de bu uca eklenecek. Kişisel veri dönmez, yalnızca sayım.
+Sayılar (hesap, kart, eşleşme, iş birliği) ve program hedefleri
+(docs/canlilik.md § 7). Kişisel veri dönmez, yalnızca sayım.
 """
 
 from __future__ import annotations
@@ -107,7 +107,7 @@ async def sayilar(
 
 
 async def eslesme_kirilimi(oturum: AsyncSession) -> EslesmeKirilimi:
-    """Genç–firma ve firma–firma ayrı sayılır (docs/plans/firma-akisi.md § 0 karar 19)."""
+    """Genç–firma ve firma–firma ayrı sayılır (docs/kararlar.md F19)."""
     firma_mi = Eslesme.firma_karti_id.isnot(None).label("firma_mi")
     eslesmeler = await oturum.execute(
         select(firma_mi, Eslesme.durum, func.count())
@@ -145,9 +145,9 @@ async def kapanan_ihtiyaclar(oturum: AsyncSession) -> KapananIhtiyaclar:
 async def hedef_sayilari(
     oturum: AsyncSession, eslesme_durumlari: dict[str, int], isbirligi_durumlari: dict[str, int]
 ) -> list[HedefSayisi]:
-    """Program hedefleri, platformdaki ölçümleriyle (docs/faz-d-canlilik.md § 7).
+    """Program hedefleri, platformdaki ölçümleriyle (docs/canlilik.md § 7).
 
-    Yalnızca hesabı olan profiller sayılır (Faz B öncesi profil programın
+    Yalnızca hesabı olan profiller sayılır (hesapsız profil programın
     katılımcısı değil).
     """
     basvuru = await oturum.scalar(
@@ -178,7 +178,7 @@ async def hedef_sayilari(
     ]
 
 
-# --- Firma doğrulaması (docs/plans/firma-akisi.md § 0 karar 6, § 6) -------------------
+# --- Firma doğrulaması (docs/kararlar.md F6) -------------------
 
 FIRMA_BULUNAMADI = "Firma bulunamadı"
 DOGRULANDI_METNI = (
@@ -210,7 +210,7 @@ async def firmalar(
 ) -> list[OnayBekleyenFirma]:
     """Doğrulama durumuna göre firmalar (varsayılan: onay bekleyenler), en yeni kayıt önce.
 
-    Yalnızca hesabı olan firmalar (Faz B öncesi profil programın katılımcısı değil).
+    Yalnızca hesabı olan firmalar (hesapsız profil programın katılımcısı değil).
     """
     satirlar = await oturum.execute(
         select(Kurum, Hesap.olusturma_tarihi)

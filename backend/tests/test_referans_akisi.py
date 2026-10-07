@@ -1,4 +1,4 @@
-"""Referans akışı (docs/plans/dogrulama-iyilestirme.md § 7, adım 7).
+"""Referans akışı (docs/dogrulama.md § 7).
 
 Saf kurallar (form puanı, destek, güç işareti) tabloyla; isteme, engeller, geri
 çekme, e-posta ve Canlılık taramasındaki hatırlatma gerçek veritabanında.
@@ -50,7 +50,7 @@ def _y(iddia=None, pay=None, sonuc=None, puan=None) -> ReferansYaniti:
 @pytest.mark.parametrize(
     ("yanitlar", "beklenen"),
     [
-        ([], None),  # yanıt yok: "—", 0 değil (bulgu 19)
+        ([], None),  # yanıt yok: "—", 0 değil
         ([_y("evet", "evet", "evet")], 3),
         ([_y("evet", "kismen")], 2),  # (3 + 1) / 2
         ([_y("hayir", "bilmiyorum", "bilmiyorum")], 0),  # bilmiyorum ortalamaya girmez
@@ -140,7 +140,7 @@ def test_referans_istegi_eposta_gonderir_token_yanitta_yok(eposta_gonderilmez):
             )
             assert yanit.status_code == 201
             (istek,) = await _referanslar(oturum, cikti.id)
-            # Token ve yanıt linki hiçbir yanıtta yok (bulgu 31).
+            # Token ve yanıt linki hiçbir yanıtta yok.
             assert istek.token not in yanit.text
             assert "yanit_linki" not in yanit.text
             satir = yanit.json()["referanslar"][0]
@@ -283,7 +283,7 @@ def test_tarama_hatirlatir_ve_suresi_dolani_bildirir():
                 olusturma_tarihi=SIMDI - HATIRLATMA_GUN * gun,
                 gonderim_tarihi=SIMDI - HATIRLATMA_GUN * gun,
             )
-            eski_yol = ReferansIstegi(  # adım 7'den önce açılmış: e-posta gitmemişti
+            eski_yol = ReferansIstegi(  # sistem e-postasından önce açılmış: e-posta gitmemişti
                 somut_cikti_id=cikti.id,
                 referans_email="eski@ornek.com",
                 olusturma_tarihi=SIMDI - HATIRLATMA_GUN * gun,

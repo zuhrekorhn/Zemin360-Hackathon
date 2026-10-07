@@ -1,1 +1,1 @@
-"""Yedek okuyucu: Playwright ile sayfa okuyan ayrı servis (plan § 5.5)."""
+"""Yedek okuyucu: Playwright ile sayfa okuyan ayrı servis (docs/dogrulama.md § 5.5)."""

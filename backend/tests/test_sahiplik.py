@@ -1,4 +1,4 @@
-"""Sahiplik tablosu (docs/faz-b-kimlik-ve-dongu.md § 3), gerçek token'larla.
+"""Sahiplik tablosu (docs/kimlik-ve-dongu.md § 3), gerçek token'larla.
 
 Yerel veritabanında, geri alınan bir işlem içinde kurulan dünya:
 
@@ -160,8 +160,7 @@ def test_yetenek_karti_embedding_yalnizca_sahibi():
 
 
 def test_ihtiyac_karti_gorme():
-    """Genç, kendi kartına önerilmiş ihtiyacı görür (genç akışı, plan § 0 karar 1;
-    Faz B'de ancak kurum ilgilendikten sonra görüyordu). Başkasınınkini görmez."""
+    """Genç, kendi kartına önerilmiş ihtiyacı görür (docs/kararlar.md G1). Başkasınınkini görmez."""
 
     async def adimlar(istemci, d):
         await durumlar(
@@ -371,14 +370,14 @@ def test_yeni_sohbet_acanin_kimligini_checkpointe_yazar():
         assert yanit.status_code == 200
         assert len(girdiler) == 1
         assert girdiler[0]["sahip_hesap_id"] == str(yeni_genc.hesap.id)
-        # Kayıt formunun bilgileri bağlam olarak gider (plan § 5.3); profil boşsa None.
+        # Kayıt formunun bilgileri bağlam olarak gider (docs/dogrulama.md § 5.3); profil boşsa None.
         assert "profil_baglami" in girdiler[0]
 
     senaryo(adimlar)
 
 
 def test_karti_olan_genc_yeni_sohbet_acamaz():
-    """Gencin tek kartı var (madde 7): ikinci sohbet açılmaz."""
+    """Gencin tek kartı var (docs/kararlar.md G17): ikinci sohbet açılmaz."""
 
     async def adimlar(istemci, d):
         app.state.kesif_grafigi = SahipliGrafik(d.genc1.hesap.id)

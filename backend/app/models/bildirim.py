@@ -14,15 +14,15 @@ if TYPE_CHECKING:
     from app.models.eslesme import Eslesme
     from app.models.hesap import Hesap
 
-# `tur` değer kümesi (docs/faz-b-kimlik-ve-dongu.md § 6). Canlılık ve Takip
-# bildirimleri Faz C/D'de aynı tabloya kendi türleriyle yazılacak.
+# `tur` değer kümesi (docs/kimlik-ve-dongu.md § 6). Canlılık ve Takip
+# bildirimleri de aynı tabloya kendi türleriyle yazılır.
 TUR_YENI_ONERI = "yeni_oneri"
 TUR_ILGI = "ilgi"
 TUR_KABUL = "kabul"
 TUR_RED = "red"
 TUR_REFERANS_YANITI = "referans_yaniti"
 TUR_REFERANS_YANIT_YOK = "referans_yanit_yok"  # gence: referans süresinde yanıtlamadı (nötr)
-# Takip (docs/faz-c-takip.md § 7)
+# Takip (docs/takip.md § 7)
 TUR_PLAN_ONERILDI = "plan_onerildi"
 TUR_PLAN_DUZENLENDI = "plan_duzenlendi"
 TUR_PLAN_ONAYI = "plan_onayi"
@@ -31,19 +31,19 @@ TUR_ADIM_ISARETLENDI = "adim_isaretlendi"
 TUR_ADIM_TAMAMLANDI = "adim_tamamlandi"
 TUR_ISBIRLIGI_TAMAMLANDI = "isbirligi_tamamlandi"
 TUR_ISBIRLIGI_SONLANDI = "isbirligi_sonlandi"  # karşı tarafa: süreç sonlandı (nötr)
-# Gençten ilgi (docs/plans/genc-akisi.md § 7.1)
+# Gençten ilgi (docs/api-contracts.md)
 TUR_GENC_ILGI = "genc_ilgi"  # firmaya: bir genç ilgi gösterdi
 TUR_KARSILIKLI_ILGI = "karsilikli_ilgi"  # gence: firma da ilgilendi, iş birliği açıldı
 TUR_FIRSAT_KAPANDI = "firsat_kapandi"  # gence: bekleyen fırsat kapandı (nötr)
-# İlan düzenleme (docs/plans/ilan-duzenleme.md)
+# İlan düzenleme (docs/kararlar.md D1)
 TUR_FIRSAT_GUNCELLENDI = "firsat_guncellendi"  # aday tarafına: ilgilendiği ilan düzenlendi
-# Firma akışı (docs/plans/firma-akisi.md § 6)
+# Firma akışı (docs/kararlar.md F6)
 TUR_FIRMA_DOGRULANDI = "firma_dogrulandi"  # firmaya: GİRVAK doğruladı
-# GİRVAK inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9)
+# GİRVAK inceleme kuyruğu (docs/dogrulama.md § 9)
 TUR_INCELEME_SONUCU = "inceleme_sonucu"  # gence: çalışmasıyla ilgili işaret kapandı
 TUR_AD_DEGISIKLIGI_SONUCU = "ad_degisikligi_sonucu"  # gence: ad değişikliği talebi sonuçlandı
 TUR_HESAP_BAGLAMA_SONUCU = "hesap_baglama_sonucu"  # gence: GİRVAK doğrulama kodunu inceledi
-# Link çürümesi (docs/plans/dogrulama-iyilestirme.md § 10.4)
+# Link çürümesi (docs/dogrulama.md § 10.4)
 TUR_KANIT_CURUDU = "kanit_curudu"  # gence: kanıt linki art arda açılmadı (nötr)
 
 

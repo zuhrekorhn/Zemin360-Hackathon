@@ -43,11 +43,11 @@ class IhtiyacKarti(UUIDPrimaryKeyMixin, Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    # acik | kapandi (docs/plans/genc-akisi.md § 0, karar 4). Kapalı ihtiyaç
+    # acik | kapandi (docs/kararlar.md G4). Kapalı ihtiyaç
     # eşleştirmeye girmez; bekleyen ilgiler "kapandı" olur. Kapanan ilan tekrar
-    # açılmaz (docs/plans/firma-akisi.md § 0, karar 7).
+    # açılmaz (docs/kararlar.md F7).
     durum: Mapped[str] = mapped_column(String, default="acik", server_default=text("'acik'"))
-    # Kimi arıyor (docs/plans/firma-akisi.md § 0 kararlar 4-5): genc | firma.
+    # Kimi arıyor (docs/kararlar.md F4-5): genc | firma.
     # Mevcut ilanlar genç ilanı. Ortak ilanında aranan firma türleri (boş =
     # hepsi) ve iş birliği türü; çalışma modeli ve müsaitlik genç ilanına özel.
     aranan: Mapped[str] = mapped_column(String, default="genc", server_default=text("'genc'"))

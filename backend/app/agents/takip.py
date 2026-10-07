@@ -1,9 +1,9 @@
-"""Takip Ajanı — süreç kişiselleştirme ve durum özeti (docs/faz-c-takip.md § 4-5).
+"""Takip Ajanı — süreç kişiselleştirme ve durum özeti (docs/takip.md § 4-5).
 
 Sohbet ajanı değil: tek seferlik hesap (kartlar → istem → tek LLM çağrısı),
 Eşleştirme gerekçesiyle aynı desen. Ajan karar vermez.
 
-Süreç adımlarını ajan UYDURMAZ (docs/plans/takip-surecleri.md): adımlar
+Süreç adımlarını ajan UYDURMAZ (docs/kararlar.md T1): adımlar
 eşleşmenin türüne göre sabit şablondan gelir (app/agents/takip_surecleri.py).
 Ajan her adımın "ne olunca tamam sayılır" cümlesini ve hazırlık önerisini
 ilana ve karta göre kişiselleştirir. Kural kodda: model hata verirse, zaman
@@ -228,7 +228,7 @@ async def plan_hazirla(sablon: SurecSablonu, baslangic: dt.date, girdiler: dict)
     return kisisellestir(adimlar, oneri)
 
 
-# --- Durum özeti (docs/faz-c-takip.md § 5) — kesilebilir iş --------------------------------
+# --- Durum özeti (docs/takip.md § 5) — kesilebilir iş --------------------------------
 #
 # Döngü onsuz da tam çalışır: özet yalnızca `isbirligi.durum_ozeti`'ne yazılır,
 # hiçbir kural ona bakmaz. LLM yoksa alan boş kalır, arayüz zaman çizelgesini

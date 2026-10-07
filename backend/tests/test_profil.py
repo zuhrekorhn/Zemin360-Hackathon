@@ -1,8 +1,7 @@
 """Onay hesaba bağlı; profil güncellemesi boş gelenle eskisini silmez.
 
-Faz B'den önce onay e-postayla profili bulup oluşturuyordu (upsert). Artık
-kart token'daki hesabın profiline bağlanıyor, onay yalnızca eşleştirmeyi
-etkileyen alanları güncelliyor (docs/faz-b-kimlik-ve-dongu.md § 4). Hesabı
+Kart token'daki hesabın profiline bağlanıyor, onay yalnızca eşleştirmeyi
+etkileyen alanları güncelliyor (docs/kimlik-ve-dongu.md § 4). Hesabı
 olmayan profilin kartı eşleştirmeye girmiyor (§ 8).
 """
 
@@ -173,7 +172,7 @@ def test_yetenek_karti_hesabin_profiline_baglanir_ve_profil_bosla_silinmez(monke
 
 
 def test_ikinci_kart_acilmaz(monkeypatch):
-    """Gencin tek kartı var (madde 7): başka bir sohbetin onayı 409, kart sayısı bir."""
+    """Gencin tek kartı var (G17): başka bir sohbetin onayı 409, kart sayısı bir."""
     _embedding_sahte(monkeypatch)
 
     async def senaryo():

@@ -1,5 +1,5 @@
 """Zemin360 programının hedefleri ve bizim platformda neyi saydığımız
-(docs/faz-d-canlilik.md § 7).
+(docs/canlilik.md § 7).
 
 Etiket iki parçalı: programın kendi adı + platformda ölçtüğümüz şey. İkisi
 arasındaki fark gizlenmez: örneğin program "startup başvurusu" diyor, biz

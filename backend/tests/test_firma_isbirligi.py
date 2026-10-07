@@ -1,7 +1,7 @@
-"""Firma–firma iş birliği ve takip (docs/plans/firma-akisi.md § 9).
+"""Firma–firma iş birliği ve takip (docs/takip.md (Ek)).
 
 İş birliği ve takip aynı: aday firma, takip kurallarında aday tarafıdır
-(`genc_plan_onayi`, `genc_isaret`; karar 12). Plan önerisinin istemi ayrı,
+(`genc_plan_onayi`, `genc_isaret`; docs/kararlar.md F12). Plan önerisinin istemi ayrı,
 kuralları aynı. Tamamlanan iş birliği aday firmanın bonusuna girer.
 """
 
@@ -140,7 +140,7 @@ def test_iki_firma_plani_onaylar_tamamlar_bonusa_girer():
 
 
 def test_girvak_kirilimi_turleri_ayri_sayar():
-    """Toplamlar iki türü birlikte sayar; kırılım ayrı (firma-akisi § 0 karar 19).
+    """Toplamlar iki türü birlikte sayar; kırılım ayrı (docs/kararlar.md F19).
 
     Sayılar bütün veritabanını sayıyor (yerelde başka kayıtlar olabilir): fark ölçülür.
     """

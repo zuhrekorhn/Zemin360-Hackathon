@@ -1,4 +1,4 @@
-"""İlan (ihtiyaç kartı) yerinde düzenleme (docs/plans/ilan-duzenleme.md).
+"""İlan (ihtiyaç kartı) yerinde düzenleme (docs/kararlar.md D1).
 
 Kural app/agents/ihtiyac_duzenleme.py; burada kuralın sonucunu uygulayan iş:
 alanları yazmak, eski gerekçeleri sıfırlamak, ilgilenmiş aday tarafına nötr

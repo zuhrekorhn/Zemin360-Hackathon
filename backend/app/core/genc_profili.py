@@ -1,4 +1,4 @@
-"""Gencin kayıt/profil alanlarının kuralları (docs/plans/genc-akisi.md § 3.2, § 5.1).
+"""Gencin kayıt/profil alanlarının kuralları (docs/data-schema.md, § 5.1).
 
 Saf fonksiyonlar: veritabanı yok. Şemalar (app/schemas/profil.py) bunları
 doğrulayıcı olarak kullanır; /me de eksik alanları buradan sorar.
@@ -39,7 +39,7 @@ URL_EN_UZUN = 500
 METIN_EN_UZUN = 200
 
 # Profilde dolu olması gereken alanlar. Bu alanlardan önce açılmış hesaplarda
-# boş olabilirler; panel engellemeyen bir bantla ister (plan § 0, karar 10).
+# boş olabilirler; panel engellemeyen bir bantla ister (docs/kararlar.md G10).
 ZORUNLU_ALANLAR: tuple[str, ...] = (
     "sehir",
     "calisma_modelleri",

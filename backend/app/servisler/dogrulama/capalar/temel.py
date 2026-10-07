@@ -1,4 +1,4 @@
-"""Çapa doğrulayıcılarının ortak yüzü (Strategy; plan § 4.2, § 14.2).
+"""Çapa doğrulayıcılarının ortak yüzü (Strategy; docs/dogrulama.md § 4.2, § 14.2).
 
 Her doğrulayıcı dosyada kendi çapasını arar ve bulduğu her çapa için bir
 gerçek kaydı döner (`{"tur": "adres", "okundu": True, ...}`). Seviyeye karar

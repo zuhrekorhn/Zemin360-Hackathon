@@ -1,4 +1,4 @@
-"""İki taraflı döngü uçtan uca (docs/faz-b-kimlik-ve-dongu.md § 5), gerçek veritabanında.
+"""İki taraflı döngü uçtan uca (docs/kimlik-ve-dongu.md § 5), gerçek veritabanında.
 
 Dünya test_sahiplik.py'deki: E1 = I1 (kurum1) ↔ K1 (genc1, "Elif"), `onerildi`;
 E2 = I2 (kurum2) ↔ K2 (genc2), `ilgileniliyor`.
@@ -44,7 +44,7 @@ def test_kabul_yolu_ve_eposta_gizliligi():
         oneriler_yolu = f"/eslestirme/oneriler/{d.kurum1.profil.id}"
 
         # Kurum ilgi bildirmeden "bana gelen ilgiler" boş ve kabul edilecek bir şey yok.
-        # Genç akışında (plan § 0, karar 1) genç önerilen eşleşmeyi görür: 409, 404 değil.
+        # Genç akışında (docs/kararlar.md G1) genç önerilen eşleşmeyi görür: 409, 404 değil.
         assert (await istemci.get("/eslestirme/bana-gelenler", headers=d.genc1.baslik)).json() == []
         yanit = await istemci.post(f"/eslestirme/{e1}/kabul", headers=d.genc1.baslik)
         assert yanit.status_code == 409
@@ -94,7 +94,7 @@ def test_kabul_yolu_ve_eposta_gizliligi():
         assert govde["isbirligi_id"] is not None
         assert govde["iletisim"] == {
             "genc_email": d.genc1.hesap.email,
-            # Firma–firma alanı (firma-akisi § 3); genç eşleşmesinde boş.
+            # Firma–firma alanı (docs/kararlar.md F11); genç eşleşmesinde boş.
             "aday_firma_email": None,
             "kurum_email": d.kurum1.hesap.email,
         }

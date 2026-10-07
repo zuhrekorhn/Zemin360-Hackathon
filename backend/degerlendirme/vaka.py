@@ -24,7 +24,7 @@ BASLIKLAR: tuple[str, ...] = ("kanit", "sonuc", "rol", "referans")
 
 
 class Alan(StrEnum):
-    """Meslek alanları (plan § 8). Adalet ölçümü bu kırılımla yapılır."""
+    """Meslek alanları (docs/dogrulama.md § 8). Adalet ölçümü bu kırılımla yapılır."""
 
     YAZILIM = "yazilim"
     TASARIM = "tasarim"

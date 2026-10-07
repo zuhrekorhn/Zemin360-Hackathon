@@ -1,6 +1,6 @@
 /**
  * Firma kartı formu: dönüştürme, doğrulama, değişen alanlar ve panel çağrısı
- * (docs/plans/firma-akisi.md § 0 kararlar 3, 9; § 5). Saf fonksiyonlar;
+ * (docs/kararlar.md F3, F9). Saf fonksiyonlar;
  * testleri firma-karti.test.ts'de. Firmaya "siz".
  *
  * Backend son sözü söyler (app/schemas/firma_karti.py).
@@ -113,7 +113,7 @@ export function degisenKartAlanlari(
 }
 
 /**
- * Firma panelindeki çağrı (karar 9): kartı olmayan firma ortak olarak
+ * Firma panelindeki çağrı (docs/kararlar.md F9): kartı olmayan firma ortak olarak
  * önerilmez. Engellemez; yalnızca genç arayan firma için gerekli değil.
  */
 export function firmaKartiCagrisi(hesap: MeYaniti): string | null {

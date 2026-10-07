@@ -34,7 +34,7 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
 import { ILETISIM_ONAYI_KUTUSU, NEDEN_UYGUN, uyumMetni } from "@/lib/ilgi";
 
 /**
- * Firmanın aday olarak gördükleri (docs/plans/firma-akisi.md § 0 karar 8, § 8):
+ * Firmanın aday olarak gördükleri (docs/kararlar.md F8):
  * "Size uygun iş birliği fırsatları", "Size gelen ilgiler", "İlgilerimiz".
  * Yalnızca firma kartı olan firmada gösterilir (kartı olmayan aday olamaz).
  * Gencin ana sayfasındaki akışın aynısı; metinler firmaya "siz".

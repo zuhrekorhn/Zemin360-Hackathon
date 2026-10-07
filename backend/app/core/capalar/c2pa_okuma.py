@@ -1,4 +1,4 @@
-"""C2PA içerik kimlik bilgisinin okunması (plan § 4.3; `c2pa-python`).
+"""C2PA içerik kimlik bilgisinin okunması (docs/dogrulama.md § 4.3; `c2pa-python`).
 
 Varsa üretim aracı ve düzenleme eylemleri kaydedilir; yoksa hiçbir sonuç
 çıkarılmaz (çoğu dosyada yoktur). Seviyeyi etkilemez: bilgi kanıt satırında

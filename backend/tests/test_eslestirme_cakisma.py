@@ -53,7 +53,7 @@ class KayitTutanOturum:
         self.ifadeler.append(str(ifade))
 
     async def scalar(self, ifade, *args, **kwargs):
-        # Kilitten sonra ilanın durumu yeniden okunur (firma-akisi § 7).
+        # Kilitten sonra ilanın durumu yeniden okunur (docs/kararlar.md F7).
         self.ifadeler.append(str(ifade))
         return "acik"
 

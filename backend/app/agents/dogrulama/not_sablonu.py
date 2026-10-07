@@ -1,4 +1,4 @@
-"""Değerlendirme notu: son puanlardan şablonla (plan § 11.3, bulgu 11-13).
+"""Değerlendirme notu: son puanlardan şablonla (docs/dogrulama.md § 11.3).
 
 Not sayılarla hiçbir zaman çelişmez, çünkü onlardan kurulur; hitap ("sen") ve
 terimler rehbere sabittir (docs/icerik-rehberi.md). Referans başlığı notta yok:

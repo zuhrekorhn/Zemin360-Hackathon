@@ -1,4 +1,4 @@
-"""Durum özeti (docs/faz-c-takip.md § 5) — kesilebilir iş.
+"""Durum özeti (docs/takip.md § 5) — kesilebilir iş.
 
 Sabitlenenler: özet girdisi yalnızca yapılandırılmış bilgi (e-posta yok);
 yalnızca plan onaylanınca ve adım tamamlanınca sıraya konur; özet çökerse

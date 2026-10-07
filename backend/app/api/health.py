@@ -32,7 +32,8 @@ class ServisSagligi(BaseModel):
     dependencies=[Depends(rol_gerekli(ROL_GIRVAK))],
 )
 async def servis_sagligi() -> list[ServisSagligi]:
-    """Dış servislerin kipi ve süreç başından beri sonuçları (plan § 14.4). Yalnızca GİRVAK."""
+    """Dış servislerin kipi ve süreç başından beri sonuçları (docs/dogrulama.md § 14.4). Yalnızca
+    GİRVAK."""
     return [
         ServisSagligi(servis=servis, kip=kip, **vars(SAGLIK.oku(servis)))
         for servis, kip in servis_kipleri().items()

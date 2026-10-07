@@ -23,7 +23,7 @@ import {
 } from "@/lib/inceleme";
 
 /**
- * GİRVAK: inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9).
+ * GİRVAK: inceleme kuyruğu (docs/dogrulama.md § 9).
  *
  * Sistem işaret açar, karar GİRVAK'ın; işaret puanı kendiliğinden
  * değiştirmez. Karar gence bildirilir; not isteğe bağlıdır ve bildirimde

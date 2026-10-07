@@ -18,7 +18,7 @@ import {
 } from "@/lib/sabitler";
 
 /**
- * Gencin profil alanları (docs/plans/genc-akisi.md § 5.1). Kayıt formu ve
+ * Gencin profil alanları (docs/agent-specs.md § 1). Kayıt formu ve
  * profil sayfası aynı parçayı kullanır; doğrulama `lib/profil.ts`'de.
  *
  * Fotoğraf, yaş, cinsiyet, adres gibi alanlar bilinçli olarak yok: eşleştirme

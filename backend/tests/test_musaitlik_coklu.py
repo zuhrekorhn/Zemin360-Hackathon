@@ -1,4 +1,4 @@
-"""Gencin müsaitliği çoklu seçim (docs/plans/genc-akisi.md § 0, karar 2).
+"""Gencin müsaitliği çoklu seçim (docs/kararlar.md G2).
 
 Filtre: ihtiyacın tercihi gencin listesinde mi? Liste boşsa ("belirtilmedi")
 aday elenmez — çalışma modelindeki kural. Saf kural ile SQL aynı şeyi söylemeli.

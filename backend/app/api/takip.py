@@ -1,10 +1,10 @@
-"""Takip Ajanı uç noktaları (docs/faz-c-takip.md § 7).
+"""Takip Ajanı uç noktaları (docs/takip.md § 7).
 
 İş birliği sayfası iki tarafa aynı görünümdür; GİRVAK yalnızca okur ve
 e-postaları görmez. Kurallar iki saf fonksiyonda (app/agents/takip_durumu.py),
 bu modül yalnızca uygular: yetki, veritabanı, bildirim.
 
-Sahiplik (Faz B sözleşmesi): 401 token yok, 403 rol uygun değil (GİRVAK
+Sahiplik (docs/kimlik-ve-dongu.md § 3): 401 token yok, 403 rol uygun değil (GİRVAK
 yazamaz), 404 başkasının iş birliği.
 """
 
@@ -562,7 +562,7 @@ async def sonlandir(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> IsbirligiDetayi:
-    """Bir taraf süreci sonlandırır (docs/plans/takip-surecleri.md § Erken sonlanma).
+    """Bir taraf süreci sonlandırır (docs/kararlar.md T1 § Erken sonlanma).
 
     Tamamlanmış iş birliği 409; sonlanmış olanın tekrarı 200 ve yan etkisiz (ilk
     neden korunur). Karşı taraf nötr bir bildirim alır, neden yazılmaz.

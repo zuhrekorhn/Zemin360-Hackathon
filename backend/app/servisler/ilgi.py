@@ -1,4 +1,4 @@
-"""İlgi akışının paylaşılan yan etkileri (docs/plans/genc-akisi.md § 4, § 7.1).
+"""İlgi akışının paylaşılan yan etkileri (docs/kimlik-ve-dongu.md § 5, § 7.1).
 
 Geçiş kuralı app/agents/eslesme_durumu.py › gecis(). Burada kuralın sonucunu
 uygulayan, birden fazla yerin paylaştığı işler:
@@ -69,7 +69,7 @@ async def ihtiyaci_kapat(
     orada bir bekleyiş yoktu. Commit çağıranın işi.
 
     `neden` firmanın seçtiği kapanma nedeni (app/core/ilan.py); yalnızca
-    GİRVAK görür, bildirimde yazılmaz (docs/plans/firma-akisi.md § 7).
+    GİRVAK görür, bildirimde yazılmaz (docs/kararlar.md F7).
     """
     ihtiyac.durum = IHTIYAC_KAPANDI
     ihtiyac.kapanma_nedeni = neden

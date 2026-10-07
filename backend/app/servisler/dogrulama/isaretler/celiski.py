@@ -1,4 +1,4 @@
-"""Kanıt iddiayla çelişiyor (plan § 9, § 11.2): `kanit_celisiyor`.
+"""Kanıt iddiayla çelişiyor (docs/dogrulama.md § 9, § 11.2): `kanit_celisiyor`.
 
 Model "çelişiyor" dedi VE alıntısı kanıtın tam metninde bulundu (çekirdek,
 alıntısız çelişkiyi zaten atar). Puan tarafı çekirdekte: ilgili başlık en çok

@@ -1,4 +1,4 @@
-"""İlan (ihtiyaç kartı) düzenleme kuralları (docs/plans/ilan-duzenleme.md).
+"""İlan (ihtiyaç kartı) düzenleme kuralları (docs/kararlar.md D1).
 
 Saf fonksiyonlar: veritabanı yok. Uç (app/api/ihtiyac_kartlari.py) kuralı sorar,
 sonucu uygular. Tablo tests/test_ihtiyac_duzenleme.py'de sabit.
@@ -38,7 +38,7 @@ IHTIYAC_ALANLARI: tuple[str, ...] = (
 )
 
 # Gerekçesi yeniden yazılacaklar: pipeline'ın gerekçe ürettiği ve firmanın henüz
-# kesin karar vermediği kayıtlar. `genc_ilgilendi` karar 14 gereği dokunulmaz.
+# kesin karar vermediği kayıtlar. `genc_ilgilendi`'ye dokunulmaz (G14).
 _GEREKCESI_SIFIRLANANLAR = frozenset({DURUM_ONERILDI, DURUM_ILGILENILIYOR})
 
 # Aday tarafı bu ilanla ilgilenmiş, ayrıntının değiştiğini bilmeli.

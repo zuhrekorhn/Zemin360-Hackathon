@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Üst menü, role göre (docs/faz-b-kimlik-ve-dongu.md § 7):
+ * Üst menü, role göre (docs/kimlik-ve-dongu.md § 7):
  *   Girişsiz: Giriş yap, Kayıt ol (/ sayfasında karşılama menüsü)
  *   Genç:     Panelim, Kartım (yoksa Keşif), Profilim, Bildirimler (rozet), Çıkış
  *   Kurum:    Panelim, Yeni ihtiyaç, Firma kartı, Firma profili, Bildirimler, Çıkış
@@ -95,7 +95,7 @@ export function UstMenu() {
   if (rol === "genc") {
     baglantilar = [
       panel,
-      // Gencin tek kartı var (madde 7): "Yeni kart" değil, kendi kartı.
+      // Gencin tek kartı var (docs/kararlar.md G17): "Yeni kart" değil, kendi kartı.
       { yol: kartYolu(oturum.hesap.yetenek_karti), etiket: "Kartım" },
       { yol: "/profil", etiket: "Profilim" },
       bildirim,

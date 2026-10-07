@@ -262,7 +262,7 @@ def grafik_derle(checkpointer: BaseCheckpointSaver):
     return motor.grafik_derle(TANIMLAMA, TanimlamaDurumu, checkpointer, _cikarim_zinciri)
 
 
-# --- Ortak ilanı (docs/plans/firma-akisi.md § 0 karar 4, § 5) ---------------------------
+# --- Ortak ilanı (docs/kararlar.md F4) ---------------------------
 #
 # Aynı motor, aynı ihtiyaç kartı; ikinci bir soru seti. Firma "iş birliği ortağı"
 # kapısından gelince bu tanım kullanılır: çalışma modeli ve müsaitlik sorulmaz

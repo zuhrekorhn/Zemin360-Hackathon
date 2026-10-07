@@ -1,4 +1,4 @@
-"""GİRVAK inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9): saf geçiş kuralı,
+"""GİRVAK inceleme kuyruğu (docs/dogrulama.md § 9): saf geçiş kuralı,
 tek açık işaret, kuyruk ve karar uçları (401 / 403 / 404 / 409), bildirim.
 
 Dünya: test_sahiplik.py — genc1 "Elif"in kartı K1 ve çalışması C1 "Kütüphane sistemi".

@@ -1,5 +1,5 @@
 /**
- * Aday firmanın ilgi akışı (docs/plans/firma-akisi.md § 0 karar 8, § 8).
+ * Aday firmanın ilgi akışı (docs/kararlar.md F8).
  * Saf fonksiyonlar; testleri firma-ilgi.test.ts'de. Firmaya "siz".
  *
  * Durum makinesi gençtekiyle aynı: aday firma "aday tarafı"dır. `baslatan`

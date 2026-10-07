@@ -1,4 +1,4 @@
-"""Doğrulamanın kalıcı gözlemi (plan § 10.3, § 14.4): yazma ve okuma.
+"""Doğrulamanın kalıcı gözlemi (docs/dogrulama.md § 10.3, § 14.4): yazma ve okuma.
 
 Kayıtlar kişi ve adres taşımaz (`app/models/gozlem.py`). Kanıt okuma ve
 değerlendirme kayıtları çağıranın işlemine eklenir (commit çağıranın işi);

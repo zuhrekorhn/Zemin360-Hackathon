@@ -1,4 +1,4 @@
-"""Firma–firma eşleştirme (docs/plans/firma-akisi.md § 0 kararlar 5, 11-14, 18; § 3-4).
+"""Firma–firma eşleştirme (docs/kararlar.md F5, F11-14, 18; § 3-4).
 
 Aynı eşleşme tablosu, aynı pipeline: ortak ilanının adayları firma kartları.
 Kesin şartlar (tür, kendi firması, şehir) SQL'de; benzerlik alt sınırı ve

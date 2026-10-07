@@ -39,14 +39,14 @@ import { panelYolu } from "@/lib/yonlendirme";
  * referans eklenip dört bileşenli güven göstergesi okunuyor. Kart sahibinin
  * e-postası hiçbir yerde gösterilmiyor (§ 1.5).
  *
- * Kimin gördüğüne göre iki hâl (docs/faz-b-kimlik-ve-dongu.md § 3):
+ * Kimin gördüğüne göre iki hâl (docs/kimlik-ve-dongu.md § 3):
  *   - Kartın sahibi genç: kanıt durumu, kanıt/referans ekleme, itiraz.
  *   - Kurum (kart ona önerilmişse) ve GİRVAK: kartı salt okunur görür;
  *     kanıt ayrıntısı (referans e-postaları, yanıt linkleri) kuruma hiç
  *     gitmez — rubrik zaten çıktıların güven göstergesinde.
  * Genç yalnızca kendi kartını açabildiği için "genç" rolü sahiplik demek.
  *
- * Sahibi kartı burada düzenler (docs/plans/genc-akisi.md § 6): kart alanları,
+ * Sahibi kartı burada düzenler (docs/agent-specs.md § 1): kart alanları,
  * iş kalemi düzenle/sil/ekle. İçerik ya da link değişen işin güven göstergesi
  * sıfırlanır ve yeniden değerlendirilir; eski referans yanıtları geçmişte kalır.
  */

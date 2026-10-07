@@ -1,4 +1,4 @@
-"""Erken sonlanma (docs/plans/takip-surecleri.md § Erken sonlanma).
+"""Erken sonlanma (docs/kararlar.md T1 § Erken sonlanma).
 
 Kural saf (`takip_durumu.sonlanma_gecisi`, `_kapali_degil`); uç gerçek
 veritabanında: yetki, geri açılmama, karşı tarafa nedensiz nötr bildirim.

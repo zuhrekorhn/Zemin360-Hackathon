@@ -45,7 +45,7 @@ class GuvensizAdres(Exception):
 
 
 class AdresBulunamadi(GuvensizAdres):
-    """Alan adı çözülemedi: sayfa yok (güvenlik sorunu değil; bulgu 6).
+    """Alan adı çözülemedi: sayfa yok (güvenlik sorunu değil).
 
     `GuvensizAdres`'in alt sınıfı: istek yine atılmaz, ama okuyucu "adres
     bulunamadı" der, "güvensiz" değil.

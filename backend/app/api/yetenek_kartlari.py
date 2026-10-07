@@ -92,7 +92,7 @@ async def yetenek_karti_getir(
 
 def _kapali_dosyalari_gizle(yanit: YetenekKartiYaniti) -> None:
     """Firma dosyanın sonucunu (seviye, gösterge) görür; gencin "firmalar görebilir"
-    demediği dosyanın adını ve içerik bilgisini görmez (plan § 4.4)."""
+    demediği dosyanın adını ve içerik bilgisini görmez (docs/dogrulama.md § 4.4)."""
     for cikti in yanit.somut_ciktilar:
         for kanit in cikti.kanitlar:
             if kanit.tur in DOSYA_TURLERI and not kanit.gorunur_firmaya:

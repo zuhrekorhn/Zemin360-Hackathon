@@ -1,5 +1,5 @@
 /**
- * Firma doğrulaması (docs/plans/firma-akisi.md § 0 karar 6, § 6).
+ * Firma doğrulaması (docs/kararlar.md F6).
  * Saf fonksiyonlar; testleri firma-dogrulama.test.ts'de.
  *
  * İpucu sistemin önerisi, karar GİRVAK'ın. İpucu siteye bağlanmadan, yalnızca

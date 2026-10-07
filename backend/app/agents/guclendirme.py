@@ -1,4 +1,4 @@
-"""'Kartını güçlendir': kanıt eklemenin fırsatlardaki etkisi (docs/plans/genc-akisi.md § 7).
+"""'Kartını güçlendir': kanıt eklemenin fırsatlardaki etkisi (docs/api-contracts.md).
 
 Saf hesap, yapay zekâ yok. Sayılar gerçek skorlardan gelir; metin şablondur ve
 Canlılık'taki kuralla denetlenir: metinde girdide olmayan sayı geçemez.

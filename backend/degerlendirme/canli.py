@@ -1,4 +1,5 @@
-"""Canlı karne ile kayıtlı karne arasındaki sapma (plan § 10.1, § 16). Saf: ağ ve dosya yok.
+"""Canlı karne ile kayıtlı karne arasındaki sapma (docs/dogrulama.md § 10.1, § 16). Saf: ağ ve dosya
+yok.
 
 Kayıtlı (kasetli) karne dondurulmuş sayfalar ve model yanıtlarıyla ölçer; canlı
 karne bugünün sayfaları ve bugünün modeliyle. İkisinin farkı iki şeyin habercisidir:

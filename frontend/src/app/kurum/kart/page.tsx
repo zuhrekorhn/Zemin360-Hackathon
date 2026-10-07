@@ -35,7 +35,7 @@ import { hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
 
 /**
- * Firma kartı (docs/plans/firma-akisi.md § 0 kararlar 3, 9; § 5).
+ * Firma kartı (docs/kararlar.md F3, F9).
  *
  * Kart yoksa kısa bir sohbet: kayıt formundaki bilgiler sorulmaz. Taslak
  * gelince firma formda düzeltip onaylar; kart firma onaylamadan kaydedilmez.

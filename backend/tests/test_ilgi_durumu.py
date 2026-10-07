@@ -1,8 +1,8 @@
 """Gençten ilgi: durum makinesi, uçlar ve korunan kayıt.
 
-Plan: docs/plans/genc-akisi.md § 4 ve § 0 karar 14.
+Belgeler: docs/kimlik-ve-dongu.md § 5, docs/kararlar.md G14.
 
-Kurumun ilgisiyle başlayan Faz B akışı aynen duruyor (tests/test_eslesme_durumu.py);
+Firmanın ilgisiyle başlayan akış aynen duruyor (tests/test_eslesme_durumu.py);
 burada ikinci kapı: genç ilgi gösterir, kurum da ilgilenirse karşılıklı ilgi.
 """
 
@@ -82,7 +82,7 @@ GECERLI = {
     ("ilgileniliyor", OLAY_IHTIYAC_KAPANDI): "kapandi",
 }
 # Aynı geçişin tekrarı (200, yan etkisiz). `kabul_edildi` + ilgileniyorum yalnızca
-# karşılıklı ilgide (genç başlattı) tekrar; kurum başlattıysa Faz B'deki gibi 409.
+# karşılıklı ilgide (genç başlattı) tekrar; kurum başlattıysa 409.
 TEKRAR = {
     ("ilgileniliyor", OLAY_ILGILENIYORUM),
     ("kabul_edildi", OLAY_KABUL),
@@ -188,7 +188,7 @@ def test_karsilikli_ilgi_iletisimi_ve_is_birligini_acar(plan_arka_plan_isi_yok):
         )
         assert karsilik.status_code == 200
         assert karsilik.json()["durum"] == "kabul_edildi"
-        # `aday_firma_email` genç eşleşmesinde boş (firma-akisi § 3).
+        # `aday_firma_email` genç eşleşmesinde boş (docs/kararlar.md F11).
         assert set(karsilik.json()["iletisim"].values()) - {None} == epostalar
         assert karsilik.json()["isbirligi_id"] is not None
         assert plan_arka_plan_isi_yok == [uuid.UUID(karsilik.json()["isbirligi_id"])]
@@ -305,7 +305,7 @@ def test_ihtiyac_kapaninca_bekleyenler_kapanir_kararlar_kalir():
     senaryo(adimlar)
 
 
-# --- Karar 14: ilgi gösterilmiş kayıt korunur (gerçek pipeline) -------------------------------
+# --- G14: ilgi gösterilmiş kayıt korunur (gerçek pipeline) -------------------------------
 
 
 def _yon() -> list[float]:

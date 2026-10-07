@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class CanlilikOlayi(UUIDPrimaryKeyMixin, Base):
-    """Canlılık Ajanı'nın bir hatırlatması ya da fırsat bildirimi (docs/faz-d-canlilik.md).
+    """Canlılık Ajanı'nın bir hatırlatması ya da fırsat bildirimi (docs/canlilik.md).
 
     Tekrar kuralı (§ 3) bu tablodan okunur: aynı anahtar için kaydın son
     hareketinden SONRA yazılmış bir olay varsa yenisi yazılmaz.

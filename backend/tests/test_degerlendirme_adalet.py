@@ -1,4 +1,4 @@
-"""Adalet raporu (degerlendirme/adalet.py, plan § 10.2)."""
+"""Adalet raporu (degerlendirme/adalet.py, docs/dogrulama.md § 10.2)."""
 
 from degerlendirme.adalet import (
     SORUN_AZ_VAKA,

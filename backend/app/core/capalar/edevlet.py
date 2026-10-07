@@ -1,4 +1,4 @@
-"""e-Devlet barkodlu belgenin tanınması (plan § 4.2). Saf.
+"""e-Devlet barkodlu belgenin tanınması (docs/dogrulama.md § 4.2). Saf.
 
 e-Devlet'in doğrulama sayfası barkod ve T.C. kimlik no ister; sunucudan
 doğrulanamaz. Belge tanınır, barkod numarası ayıklanır ve GİRVAK'a elle

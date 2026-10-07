@@ -1,4 +1,4 @@
-"""Kanıtın değer türleri (plan § 2, § 5.2, § 13).
+"""Kanıtın değer türleri (docs/dogrulama.md § 2, § 5.2, § 13).
 
 Veritabanında düz metin olarak saklanır (projedeki `durum` alanlarıyla aynı
 alışkanlık); anlamları ve geçerli değerleri burada, tek yerde.
@@ -21,7 +21,7 @@ class ParcaTuru(StrEnum):
 
 
 class ErisimDurumu(StrEnum):
-    """Kanıtın okunabildiği ölçü (plan § 5.2). Puanı belirler:
+    """Kanıtın okunabildiği ölçü (docs/dogrulama.md § 5.2). Puanı belirler:
     `BULUNAMADI` ve `GUVENSIZ` Kanıt 0; okunamayan türler "—" (ceza değil)."""
 
     ACIK = "acik"
@@ -49,7 +49,7 @@ _OKUNAMAYANLAR = frozenset(
 
 
 class KaynakSeviyesi(StrEnum):
-    """Kanıtın kaynağının bağımsızlığı (plan § 2). Puan tavanını belirler.
+    """Kanıtın kaynağının bağımsızlığı (docs/dogrulama.md § 2). Puan tavanını belirler.
 
     A `DUZENLEYEN` > B `PLATFORM` > C `KAMUYA_ACIK` > D `BEYAN`.
     """
@@ -62,7 +62,7 @@ class KaynakSeviyesi(StrEnum):
 
 class SahiplikKaynagi(StrEnum):
     """Parçanın gence ait olduğunu neyin gösterdiği (ad değişikliğinde yeniden
-    değerlendirilecek parçaları bulmak için de kullanılır; plan § 6.3)."""
+    değerlendirilecek parçaları bulmak için de kullanılır; docs/dogrulama.md § 6.3)."""
 
     OAUTH = "oauth"
     PROFIL_KODU = "profil_kodu"
@@ -73,7 +73,7 @@ class SahiplikKaynagi(StrEnum):
 
 @dataclass(frozen=True)
 class HesapIzi:
-    """Kanıtta görünen bir platform hesabı (sahiplik sinyali, plan § 6).
+    """Kanıtta görünen bir platform hesabı (sahiplik sinyali, docs/dogrulama.md § 6).
 
     Kanıtın adresinden (`medium.com/@ayse`), platformun yanıtından (oEmbed yazar
     adresi) ya da platform verisinden (repo sahibi, katkıcılar) gelir. Gencin
@@ -88,7 +88,7 @@ class HesapIzi:
 
 @dataclass(frozen=True)
 class KanitBelgesi:
-    """Bir kanıt adresinin okunuşu (okuyucu zincirinin çıktısı, plan § 5.1).
+    """Bir kanıt adresinin okunuşu (okuyucu zincirinin çıktısı, docs/dogrulama.md § 5.1).
 
     `metin` modele ve alıntı denetimine gider: platformun verisi (repo açıklaması,
     yıldız, katkıcılar, README; video başlığı ve kanalı…) okunur biçimde yazılır.
@@ -113,5 +113,6 @@ class KanitBelgesi:
     # Yedek okuyucunun aldığı ekran görüntüleri (JPEG, § 5.5). Model okuması
     # değerlendirme katmanında yapılır (`agents/dogrulama/okuma.py`).
     ekran_goruntuleri: tuple[bytes, ...] = ()
-    # Sayfayı kimin okuduğu (gözlem, plan § 10.3): "dogrudan" | "yedek" (tarayıcı) | "uzak" (Jina).
+    # Sayfayı kimin okuduğu (gözlem, docs/dogrulama.md § 10.3): "dogrudan" | "yedek" (tarayıcı) |
+    # "uzak" (Jina).
     okuyucu: str = "dogrudan"

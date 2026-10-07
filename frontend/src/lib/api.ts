@@ -4,7 +4,7 @@
  *
  * Token varsa her isteğe `Authorization: Bearer` eklenir (lib/token.ts).
  * 401 gelirse token silinir: süresi dolmuş ya da geçersiz; kullanıcı yeniden
- * giriş yapmalı (docs/faz-b-kimlik-ve-dongu.md § 1).
+ * giriş yapmalı (docs/kimlik-ve-dongu.md § 1).
  */
 
 import type { AlanAdiIpucu } from "@/lib/firma-dogrulama";
@@ -77,7 +77,7 @@ export async function apiIstek<T>(
 
 export type SaglikYaniti = { status: string };
 
-/* --- Kimlik (docs/faz-b-kimlik-ve-dongu.md § 1) ---------------------------
+/* --- Kimlik (docs/kimlik-ve-dongu.md § 1) ---------------------------
    Tipler backend'deki app/schemas/auth.py ile birebir eşleşir. */
 
 export type Rol = "genc" | "kurum" | "girvak";
@@ -102,7 +102,7 @@ export type IhtiyacKartiOzeti = {
   problem_tanimi: string;
   olusturma_tarihi: string;
   embedding_var: boolean;
-  /** acik | kapandi (docs/plans/firma-akisi.md § 7) */
+  /** acik | kapandi (docs/kararlar.md F7) */
   durum: string;
   /** genc | firma: hangi kapıdan açıldı */
   aranan: "genc" | "firma";
@@ -117,7 +117,7 @@ export type MeYaniti = {
   ad: string | null;
   kullanici_id: string | null;
   kurum_id: string | null;
-  /** Gencin tek kartı (madde 7); Keşif'i tamamlamadıysa null. */
+  /** Gencin tek kartı (G17); Keşif'i tamamlamadıysa null. */
   yetenek_karti: YetenekKartiOzeti | null;
   ihtiyac_kartlari: IhtiyacKartiOzeti[];
   okunmamis_bildirim: number;
@@ -131,7 +131,7 @@ export type MeYaniti = {
   eposta_dogrulandi: boolean;
 };
 
-/* --- E-posta doğrulama (docs/plans/dogrulama-iyilestirme.md § 6.3) -------- */
+/* --- E-posta doğrulama (docs/dogrulama.md § 6.3) -------- */
 
 /** Bağlantıdaki token'la doğrular; giriş gerekmez. Tekrarı da başarılı döner. */
 export function epostaDogrula(
@@ -148,7 +148,7 @@ export async function dogrulamaBaglantisiGonder(): Promise<void> {
   await apiIstek("/auth/eposta-dogrulama/yeniden", { method: "POST" });
 }
 
-/* --- Genç profili (docs/plans/genc-akisi.md § 5.1, § 6.1) ------------------
+/* --- Genç profili (docs/agent-specs.md § 1, § 6.1) ------------------
    Tipler backend'deki app/schemas/profil.py ile birebir eşleşir. */
 
 export type KariyerDurumu = "ogrenci" | "mezun" | "calisiyor";
@@ -204,7 +204,7 @@ export type GencProfilGuncelleme = Partial<
   >
 > & { kvkk_onay?: boolean };
 
-/** Kilitli ad için GİRVAK'a değişiklik talebi (dogrulama-iyilestirme.md § 6.3). */
+/** Kilitli ad için GİRVAK'a değişiklik talebi (docs/dogrulama.md § 6.3). */
 export function adDegisikligiIste(
   yeniAd: string,
   gerekce: string | null,
@@ -230,7 +230,7 @@ export function profilGuncelle(
   });
 }
 
-/* --- Firma profili (docs/plans/firma-akisi.md § 2) ---------------------------
+/* --- Firma profili (docs/kararlar.md F2) ---------------------------
    Tipler backend'deki app/schemas/profil.py ile birebir eşleşir. */
 
 export type FirmaTuru = "girisim" | "kobi" | "kurumsal";
@@ -290,7 +290,7 @@ export function firmaProfiliGuncelle(
   });
 }
 
-/* --- Firma kartı (docs/plans/firma-akisi.md § 5) ---------------------------
+/* --- Firma kartı (docs/kararlar.md F3) ---------------------------
    Tipler backend'deki app/schemas/firma_karti.py ile birebir eşleşir. */
 
 export type FirmaKartiGirdisi = {
@@ -409,7 +409,7 @@ export function girisYap(email: string, sifre: string): Promise<TokenYaniti> {
   });
 }
 
-/* --- Bildirimler (docs/faz-b-kimlik-ve-dongu.md § 6) ---------------------- */
+/* --- Bildirimler (docs/kimlik-ve-dongu.md § 6) ---------------------- */
 
 export type BildirimTuru =
   | "yeni_oneri"
@@ -453,7 +453,7 @@ export function saglikKontrol(): Promise<SaglikYaniti> {
    Tipler backend'deki app/schemas/kesif.py ile birebir eşleşir. */
 
 /** İş kalemi taslağı. Sonuç ve rol ayrı alanlar; referans e-postası onayda
- *  iş kalemine referans isteği olarak bağlanır (docs/plans/genc-akisi.md § 5.4). */
+ *  iş kalemine referans isteği olarak bağlanır (docs/agent-specs.md § 1). */
 export type SomutCiktiTaslagi = {
   baslik: string;
   aciklama: string | null;
@@ -524,7 +524,7 @@ export type YetenekKartiYaniti = {
   versiyon: number;
   embedding_var: boolean;
   somut_ciktilar: SomutCiktiYaniti[];
-  /** Tamamlanmış iş birliği sayısı (Faz C); eşleşme skoruna bonus olarak girer. */
+  /** Tamamlanmış iş birliği sayısı; eşleşme skoruna bonus olarak girer. */
   tamamlanan_pilot: number;
 };
 
@@ -545,7 +545,7 @@ export function yetenekKartiHazirla(
   });
 }
 
-/* --- Kart düzenleme (docs/plans/genc-akisi.md § 6) ---------------------------
+/* --- Kart düzenleme (docs/agent-specs.md § 1) ---------------------------
    Yalnızca kartın sahibi. İçerik ya da link değişen iş kaleminin güven
    göstergesi sıfırlanır ve yeniden değerlendirilir. */
 
@@ -675,7 +675,7 @@ export type IhtiyacTaslagi = {
   /** Tek seçim: is_yerinde | hibrit | uzaktan. */
   calisma_modeli: string | null;
   musaitlik_tercihi: string | null;
-  /** Ortak ilanı (docs/plans/firma-akisi.md § 5); genç ilanında boş. */
+  /** Ortak ilanı (docs/kararlar.md F3); genç ilanında boş. */
   aranan_firma_turleri?: string[];
   isbirligi_turu?: string | null;
 };
@@ -702,7 +702,7 @@ export type KurumYaniti = {
   ad: string;
   sektor: string | null;
   sehir: string | null;
-  /** "Doğrulanmış firma" işareti (docs/plans/firma-akisi.md § 0 karar 17). */
+  /** "Doğrulanmış firma" işareti (docs/kararlar.md F17). */
   dogrulandi: boolean;
 };
 
@@ -742,7 +742,7 @@ export function ihtiyacKarti(kartId: string): Promise<IhtiyacKartiYaniti> {
   return apiIstek<IhtiyacKartiYaniti>(`/ihtiyac-kartlari/${kartId}`);
 }
 
-/** PATCH /ihtiyac-kartlari/{id} — açık ilanı yerinde düzenler (docs/plans/ilan-duzenleme.md).
+/** PATCH /ihtiyac-kartlari/{id} — açık ilanı yerinde düzenler (docs/kararlar.md D1).
  *  Kapalı ya da iş birliği başlamış ilan 409 (cümle backend'den). Kapı değişmez. */
 export function ihtiyacKartiDuzenle(
   kartId: string,
@@ -1088,7 +1088,7 @@ export type Oneri = {
   isbirligi_id?: string | null;
 };
 
-/** Gencin kabulüyle açılan e-postalar (docs/faz-b-kimlik-ve-dongu.md § 5). */
+/** Gencin kabulüyle açılan e-postalar (docs/kimlik-ve-dongu.md § 5). */
 export type Iletisim = {
   /** Genç ilanında gencin, ortak ilanında aday firmanın e-postası. */
   genc_email: string | null;
@@ -1096,7 +1096,7 @@ export type Iletisim = {
   kurum_email: string | null;
 };
 
-/** Ortak ilanında önerilen firma (docs/plans/firma-akisi.md § 0 kararlar 16-17). */
+/** Ortak ilanında önerilen firma (docs/kararlar.md F16-17). */
 export type FirmaAdayKarti = {
   firma_karti_id: string;
   kurum_id: string;
@@ -1169,7 +1169,7 @@ export function ilgileniyorum(eslesmeId: string): Promise<EslesmeDurumYaniti> {
   });
 }
 
-/* --- Gencin ana sayfası ve gençten ilgi (docs/plans/genc-akisi.md § 7) ----- */
+/* --- Gencin ana sayfası ve gençten ilgi (docs/api-contracts.md) ----- */
 
 /** Fırsat ya da gencin kendi ilgisi. `uyum` 0-1 ("%72 uyum" olarak yazılır). */
 export type GencEslesmesi = {
@@ -1218,7 +1218,7 @@ export function gencIlgi(eslesmeId: string): Promise<EslesmeDurumYaniti> {
   });
 }
 
-/* --- Firmalar arası ilgi: aday firmanın tarafı (docs/plans/firma-akisi.md § 0 karar 8) --- */
+/* --- Firmalar arası ilgi: aday firmanın tarafı (docs/kararlar.md F8) --- */
 
 /** `GET /eslestirme/firma-eslesmelerim` satırı. `baslatan`: "genc" = aday tarafı. */
 export type FirmaAdayEslesmesi = {
@@ -1274,7 +1274,7 @@ export function simdilikDegil(eslesmeId: string): Promise<EslesmeDurumYaniti> {
   );
 }
 
-/* --- Paneller (docs/faz-b-kimlik-ve-dongu.md § 5, § 7) -------------------- */
+/* --- Paneller (docs/kimlik-ve-dongu.md § 5, § 7) -------------------- */
 
 /** Gencin kartına gelen ilgi: kurum "ilgileniyorum" dedikten sonra görünür. */
 export type BanaGelenIlgi = {
@@ -1345,7 +1345,7 @@ export type IsbirligiOzeti = {
   durum: string;
   baslangic_tarihi: string | null;
   eslesme_id: string;
-  /** Aday tarafı: genç ya da ortak firma (docs/plans/firma-akisi.md § 9). */
+  /** Aday tarafı: genç ya da ortak firma (docs/takip.md (Ek)). */
   aday_turu: "genc" | "firma";
   aday_adi: string;
   /** Yalnızca genç adayında. */
@@ -1376,13 +1376,13 @@ export type GirvakSayilari = {
     reddedildi: number;
   };
   isbirligi: number;
-  /** `tamamlandi` = tamamlanmış pilot (Faz D hedefi: 5). */
+  /** `tamamlandi` = tamamlanmış iş birliği (program hedefi: 5). */
   isbirligi_durumlari: {
     plan_bekliyor: number;
     aktif: number;
     tamamlandi: number;
   };
-  /** Faz D: programın adı + platformda ne sayıldığı (fark gizlenmez). */
+  /** Programın adı + platformda ne sayıldığı (fark gizlenmez). */
   hedefler: ProgramHedefi[];
   /** Firma akışı: kapanan ilanlar, firmanın seçtiği nedene göre. */
   kapanan_ihtiyaclar: {
@@ -1392,7 +1392,7 @@ export type GirvakSayilari = {
     hatali_girildi: number;
     nedensiz: number;
   };
-  /** Toplamların eşleşme türüne göre kırılımı (docs/plans/firma-akisi.md § 0 karar 19). */
+  /** Toplamların eşleşme türüne göre kırılımı (docs/kararlar.md F19). */
   kirilim: { genc_firma: TurSayilari; firma_firma: TurSayilari };
 };
 
@@ -1411,8 +1411,8 @@ export type ProgramHedefi = {
   hedef: number;
 };
 
-/** GİRVAK'ın firma doğrulama listesi (docs/plans/firma-akisi.md § 6). */
-/* --- GİRVAK inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9) ---- */
+/** GİRVAK'ın firma doğrulama listesi (docs/kararlar.md F6). */
+/* --- GİRVAK inceleme kuyruğu (docs/dogrulama.md § 9) ---- */
 
 export type IncelemeDurumu = "acik" | "kapandi" | "dogrulanamadi";
 
@@ -1487,7 +1487,7 @@ export function girvakSayilari(): Promise<GirvakSayilari> {
   return apiIstek<GirvakSayilari>("/girvak/sayilar", { cache: "no-store" });
 }
 
-/* --- GİRVAK gözlem paneli (docs/plans/dogrulama-iyilestirme.md § 10.3) -------
+/* --- GİRVAK gözlem paneli (docs/dogrulama.md § 10.3) -------
    Tipler backend'deki app/schemas/gozlem.py ile birebir eşleşir. */
 
 export type PlatformErisimi = {
@@ -1527,7 +1527,7 @@ export function girvakGozlem(gun: number): Promise<GozlemYaniti> {
   });
 }
 
-/* --- Takip Ajanı (docs/faz-c-takip.md § 7) --------------------------------
+/* --- Takip Ajanı (docs/takip.md § 7) --------------------------------
    Tipler backend'deki app/schemas/takip.py ile birebir eşleşir. */
 
 export type Ilerleme = { tamamlanan: number; toplam: number; geciken: number };
@@ -1567,7 +1567,7 @@ export type IsbirligiDetayi = {
   tamamlanma_tarihi: string | null;
   eslesme_id: string;
   ihtiyac_karti_id: string;
-  /** Aday tarafı: genç ya da ortak firma (docs/plans/firma-akisi.md § 9). */
+  /** Aday tarafı: genç ya da ortak firma (docs/takip.md (Ek)). */
   aday_turu: "genc" | "firma";
   aday_adi: string;
   yetenek_karti_id: string | null;
@@ -1682,7 +1682,7 @@ export function milestoneIsaretiGeriAl(
   );
 }
 
-/* --- Canlılık (docs/faz-d-canlilik.md § 8) — yalnızca GİRVAK ---------------- */
+/* --- Canlılık (docs/canlilik.md § 8) — yalnızca GİRVAK ---------------- */
 
 export type TaramaSonucu = {
   tarih: string;
@@ -1731,7 +1731,7 @@ export function canlilikOlaylari(limit = 20): Promise<CanlilikOlayi[]> {
 
 export { API_URL };
 
-/* --- Hesap bağlama (docs/plans/dogrulama-iyilestirme.md § 6) ------------------
+/* --- Hesap bağlama (docs/dogrulama.md § 6) ------------------
    Tipler backend'deki app/schemas/hesap_baglama.py ile eşleşir. */
 
 export type BagliHesap = {

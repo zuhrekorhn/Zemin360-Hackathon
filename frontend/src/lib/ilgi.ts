@@ -1,5 +1,5 @@
 /**
- * İlgi akışının arayüz kararları (docs/plans/genc-akisi.md § 4, § 7).
+ * İlgi akışının arayüz kararları (docs/kimlik-ve-dongu.md § 5, § 7).
  * Saf fonksiyonlar; testleri ilgi.test.ts'de. Metinler docs/icerik-rehberi.md'ye
  * göre: durum etiketleri § 5.9'daki tablo, açıklama başlığı "Neden uygun?".
  */
@@ -45,7 +45,7 @@ export function uyumMetni(skor: number): string {
 
 /**
  * Gencin "İlgileniyorum" onayı. Açık onay: firma da ilgilenirse e-posta ayrıca
- * sorulmadan paylaşılır (plan § 7.1). Düğme onay kutusu işaretlenmeden açılmaz.
+ * sorulmadan paylaşılır (docs/kararlar.md G1). Düğme onay kutusu işaretlenmeden açılmaz.
  */
 export const ILETISIM_ONAYI =
   "Firma da ilgilenirse e-posta adresin, sana ayrıca sorulmadan firmayla paylaşılır.";

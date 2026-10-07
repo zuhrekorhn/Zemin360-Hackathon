@@ -2,7 +2,7 @@
 
 Her istek `app/core/guvenli_istek.py`'den geçer (SSRF engeli; sabit API uç noktaları
 dahil, tek kapı). Burada: gerçekçi tarayıcı başlıkları (bazı siteler tarayıcı kimliği
-olmayan isteği 403 ile reddediyor; bulgu 3, 51), gövdenin en çok `EN_BUYUK_GOVDE`'ye
+olmayan isteği 403 ile reddediyor), gövdenin en çok `EN_BUYUK_GOVDE`'ye
 kadar akışla okunması ve metne çevrilmesi.
 """
 

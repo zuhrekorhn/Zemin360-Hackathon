@@ -1,4 +1,4 @@
-"""Kart düzenleme kuralları (docs/plans/genc-akisi.md § 6.2-6.3).
+"""Kart düzenleme kuralları (docs/agent-specs.md § 1-6.3).
 
 Saf fonksiyonlar: veritabanı yok. Uçlar ve servis (app/servisler/kart_duzenleme.py)
 kuralı sorar, sonucu uygular. Tablo tests/test_kart_duzenleme.py'de sabit.
@@ -27,7 +27,7 @@ KART_ALANLARI: tuple[str, ...] = (
 
 # İş kaleminin (iddianın) düzenlenebilir alanları. Kanıt burada değil:
 # parçalar Doğrulama'nın tek kapısından eklenir ve kaldırılır
-# (app/servisler/dogrulama/parcalar.py; bulgu 25).
+# (app/servisler/dogrulama/parcalar.py).
 IS_KALEMI_ALANLARI: tuple[str, ...] = (
     "baslik",
     "aciklama",
@@ -39,7 +39,7 @@ IS_KALEMI_ALANLARI: tuple[str, ...] = (
 # Değişince güven göstergesini sıfırlayan ve referans yanıtlarını geçmişe atanlar:
 # iddianın kendisi. İş türü (proje, staj…) bir etiket; iddiayı değiştirmez. Kanıt
 # değişikliği de iddiayı değiştirmez: gösterge yeniden değerlendirilir ama referans
-# yanıtları geçerli kalır (plan § 2: kanıt eklemek puanı hiçbir zaman düşürmez).
+# yanıtları geçerli kalır (docs/dogrulama.md § 2: kanıt eklemek puanı hiçbir zaman düşürmez).
 DOGRULAMAYI_SIFIRLAYANLAR = frozenset({"baslik", "aciklama", "olculebilir_sonuc", "kendi_rolu"})
 
 # Değişince yeniden eşleştirme gerektiren profil alanları: sert filtreler.

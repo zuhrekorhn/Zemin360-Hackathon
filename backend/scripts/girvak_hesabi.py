@@ -1,4 +1,4 @@
-"""GİRVAK hesabı açar (docs/faz-b-kimlik-ve-dongu.md § 2).
+"""GİRVAK hesabı açar (docs/kimlik-ve-dongu.md § 2).
 
 GİRVAK açık kayıtla hesap açamaz; hesap bu betikle ya da demo tohumuyla açılır.
 Şifre komut satırında sorulur, hiçbir dosyaya yazılmaz.

@@ -1,4 +1,4 @@
-"""Dosya içeriğinin okunması (plan § 4.3): metin katmanı, model okuması, maskeleme,
+"""Dosya içeriğinin okunması (docs/dogrulama.md § 4.3): metin katmanı, model okuması, maskeleme,
 değerlendirme girdisi ve görselde alıntı kaynağı."""
 
 import asyncio

@@ -1,4 +1,5 @@
-"""Adresteki hesap ve sahiplik kuralı (plan § 2, § 6): bağlı hesap → B, bireysel kural."""
+"""Adresteki hesap ve sahiplik kuralı (docs/dogrulama.md § 2, § 6): bağlı hesap → B, bireysel
+kural."""
 
 import pytest
 

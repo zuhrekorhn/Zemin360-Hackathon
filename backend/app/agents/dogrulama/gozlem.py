@@ -1,4 +1,4 @@
-"""Gözlem özetleri (plan § 10.3). Saf: sayım satırlarından panel görünümü.
+"""Gözlem özetleri (docs/dogrulama.md § 10.3). Saf: sayım satırlarından panel görünümü.
 
 Veritabanı yalnızca (platform, erişim, sayı) üçlülerini verir; oranlar ve
 sıralama burada, böylece panelin her sayısı sınanabilir.

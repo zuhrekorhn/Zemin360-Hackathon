@@ -1,4 +1,5 @@
-"""Link çürümesi (plan § 10.4, adım 12): saf sayaç kuralları ve yoklamanın modele etkisi."""
+"""Link çürümesi (docs/dogrulama.md § 10.4): saf sayaç kuralları ve yoklamanın modele
+etkisi."""
 
 import asyncio
 import datetime as dt

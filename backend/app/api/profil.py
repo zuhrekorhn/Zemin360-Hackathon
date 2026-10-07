@@ -1,13 +1,13 @@
 """Genç ve firma profili: kayıt formu alanları, profil düzenleme ve kart onayıyla gelen güncelleme.
 
 - `GET /kurum/profil`, `PATCH /kurum/profil` (firma, yalnızca kendisi):
-  docs/plans/firma-akisi.md § 2. Gençteki kurallar: yalnızca gönderilen alan
+  docs/kararlar.md F2. Gençteki kurallar: yalnızca gönderilen alan
   değişir, zorunlu alan boşaltılamaz.
 
 - `GET /profil`, `PATCH /profil` (genç, yalnızca kendisi): kayıt formundaki
-  alanlar (docs/plans/genc-akisi.md § 6.1). Yalnızca gönderilen alan değişir.
-- Kart onayıyla gelen güncelleme (docs/faz-b-kimlik-ve-dongu.md § 4): onay
-  yalnızca eşleştirmeyi etkileyen alanları günceller. Kural (Faz A'dan): boş
+  alanlar (docs/agent-specs.md § 1). Yalnızca gönderilen alan değişir.
+- Kart onayıyla gelen güncelleme (docs/kimlik-ve-dongu.md § 4): onay
+  yalnızca eşleştirmeyi etkileyen alanları günceller. Kural: boş
   gelen alan kayıtlı değeri SİLMEZ. İkinci kartını onaylayan genç şehrini ya da
   müsaitliğini yeniden yazmak zorunda değil.
 """
@@ -175,7 +175,7 @@ async def ad_degisikligi_iste(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> GencProfilYaniti:
-    """Kilitli ad için GİRVAK'a talep (plan § 6.3). Ad onaya kadar değişmez.
+    """Kilitli ad için GİRVAK'a talep (docs/dogrulama.md § 6.3). Ad onaya kadar değişmez.
 
     Ad kilitli değilse ya da bekleyen talep varsa 409, aynı ad 422.
     """
@@ -200,7 +200,7 @@ def gencin_profilini_guncelle(kullanici: Kullanici, profil: GencProfili) -> None
         kullanici.musaitlikler = list(profil.musaitlikler)
 
 
-# --- Firma profili (docs/plans/firma-akisi.md § 2) ---------------------------------------
+# --- Firma profili (docs/kararlar.md F2) ---------------------------------------
 
 FIRMA_PROFIL_ALANLARI: tuple[str, ...] = (
     "ad",
@@ -282,7 +282,7 @@ async def firma_profili_guncelle(
     if "web_sitesi" in gonderilenler and firma_dogrulama.dogrulama_sifirlanir_mi(
         kurum.web_sitesi, gonderilenler["web_sitesi"]
     ):
-        # Doğrulama kimlikle ilgili: site değişince GİRVAK yeniden bakar (karar 15).
+        # Doğrulama kimlikle ilgili: site değişince GİRVAK yeniden bakar (docs/kararlar.md F6).
         kurum.dogrulama_durumu = firma_dogrulama.BEKLIYOR
         kurum.dogrulama_tarihi = None
     degisenler = degisen_alanlar(

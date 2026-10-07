@@ -22,7 +22,7 @@ class EslestirmeCalistirIstegi(BaseModel):
 
 
 class Iletisim(BaseModel):
-    """Kabulle açılan e-postalar (docs/faz-b-kimlik-ve-dongu.md § 5).
+    """Kabulle açılan e-postalar (docs/kimlik-ve-dongu.md § 5).
 
     Yalnızca `kabul_edildi` durumunda ve yalnızca eşleşmenin iki tarafına
     dolu döner; başka her durumda ve GİRVAK'a `iletisim` alanı `null`.
@@ -36,7 +36,7 @@ class Iletisim(BaseModel):
 
 
 class FirmaAdayKarti(BaseModel):
-    """Ortak ilanında önerilen firma (docs/plans/firma-akisi.md § 0 kararlar 16-17).
+    """Ortak ilanında önerilen firma (docs/kararlar.md F16-17).
 
     İletişim e-postası YOK: yalnızca karşılıklı ilgide `iletisim`'de açılır.
     Doğrulama durumunun kendisi değil, yalnızca işareti.
@@ -72,13 +72,13 @@ class OneriYaniti(BaseModel):
     # yanıtta yer almaz (kayıt saklanır ama okunmaz, app/agents/uygunluk.py).
     uygunluk: Literal["uygun", "kismen"] | None = None
     # Aday türü ilanın kapısına göre: genç ilanında yetenek kartı, ortak
-    # ilanında firma kartı (tam biri dolu; docs/plans/firma-akisi.md § 4).
+    # ilanında firma kartı (tam biri dolu; docs/kararlar.md F5).
     aday_turu: Literal["genc", "firma"] = "genc"
     yetenek_karti: YetenekKartiYaniti | None = None
     firma_karti: FirmaAdayKarti | None = None
     iletisim: Iletisim | None = None
     # Genç ilgi gösterdi, firmanın yanıtı bekleniyor. Skoru değiştirmez;
-    # firma ekranında ayrı bir işaret ve bölüm (plan § 7.1).
+    # firma ekranında ayrı bir işaret ve bölüm (docs/kararlar.md G14).
     genc_ilgi_gosterdi: bool = False
 
 
@@ -124,7 +124,7 @@ class GencEslesmesi(BaseModel):
     """Gencin ana sayfasındaki bir satır: fırsat (önerildi) ya da kendi ilgisi.
 
     `uyum` eşleşmenin skoru (0-1; arayüz "%72 uyum" yazar). `gerekce_metni`
-    firmaya yazılan açıklamanın aynısı (plan § 0 karar 9; başlık "Neden uygun?").
+    firmaya yazılan açıklamanın aynısı (docs/kararlar.md G9; başlık "Neden uygun?").
     E-posta yalnızca karşılıklı ilgide `iletisim`'de.
     """
 
@@ -141,12 +141,12 @@ class GencEslesmesi(BaseModel):
 
 
 class FirmaAdayEslesmesi(BaseModel):
-    """Aday firmanın gördüğü satır (docs/plans/firma-akisi.md § 0 karar 8).
+    """Aday firmanın gördüğü satır (docs/kararlar.md F8).
 
     Ortak ilanında önerildiği ya da ilgi gördüğü/gösterdiği her eşleşme:
     arayüz fırsatlar, gelen ilgiler ve ilgilerimiz diye ayırır. `baslatan`
     ilk ilgiyi kimin gösterdiği (`genc` = aday tarafı, `kurum` = ilan tarafı;
-    kolon adları karar 12 gereği değişmedi). E-posta yalnızca karşılıklı ilgide.
+    kolon adları F12 gereği değişmedi). E-posta yalnızca karşılıklı ilgide.
     """
 
     eslesme_id: uuid.UUID
@@ -207,7 +207,7 @@ class IsbirligiOzeti(BaseModel):
     durum: str
     baslangic_tarihi: dt.date | None
     eslesme_id: uuid.UUID
-    # Aday tarafı: genç ya da ortak firma (docs/plans/firma-akisi.md § 9).
+    # Aday tarafı: genç ya da ortak firma (docs/takip.md (Ek)).
     aday_turu: Literal["genc", "firma"] = "genc"
     aday_adi: str
     genc_adi: str | None = None
@@ -219,5 +219,5 @@ class IsbirligiOzeti(BaseModel):
     basari_kriteri: str | None = None
     calisma_basligi: str | None = None
     iletisim: Iletisim
-    # Takip (Faz C): plan_bekliyor | aktif | tamamlandi ve adım ilerlemesi.
+    # Takip: plan_bekliyor | aktif | tamamlandi ve adım ilerlemesi.
     ilerleme: Ilerleme

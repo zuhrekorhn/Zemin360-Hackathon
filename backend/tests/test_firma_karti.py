@@ -1,4 +1,4 @@
-"""Firma kartı: kurallar, okuma, düzenleme, hazırlama (firma-akisi.md § 0 kararlar 9-10, § 5).
+"""Firma kartı: kurallar, okuma, düzenleme, hazırlama (docs/kararlar.md F9-10, § 5).
 
 Kartın sohbetle oluşması 5b'de (tests/test_firma_karti_sohbeti.py); burada kart
 servisle yazılıp uçlar sınanıyor.
@@ -334,7 +334,7 @@ def test_karti_olmayan_firmada_profil_degisimi_hicbir_sey_calistirmaz(
 
 
 def test_sektor_degisince_yalnizca_onerildi_kararlari_sifirlanir():
-    """Karar verilmiş kayda (karar 14) dokunulmaz; kararsız öneri yeniden yargılanır."""
+    """Karar verilmiş kayda (docs/kararlar.md G14) dokunulmaz; kararsız öneri yeniden yargılanır."""
     from sqlalchemy import select
 
     from app.models.eslesme import Eslesme

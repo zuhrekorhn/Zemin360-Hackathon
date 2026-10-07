@@ -1,4 +1,4 @@
-"""Link çürümesi kuralları (plan § 10.4). Saf: ağ, model ve veritabanı yok.
+"""Link çürümesi kuralları (docs/dogrulama.md § 10.4). Saf: ağ, model ve veritabanı yok.
 
 Bir kanıt linki zamanla silinebilir ya da gizlenebilir. Haftalık yoklama
 (Canlılık taraması) linki yeniden açar ve bir sayaç tutar:

@@ -10,13 +10,13 @@ Uç ince: şema, sahiplik, commit, arka plan işi ve servis istisnalarının HTT
 
 Gösterge her değiştiğinde (kanıt, değerlendirme, itiraz, referans yanıtı) kart
 sürümü artar ve commit'ten sonra kart hazırlama arka planda çalışır: uyum skoru
-doğrulama bonusunu içerir, eşleşmeler de tazelenmeli (bulgu 26).
+doğrulama bonusunu içerir, eşleşmeler de tazelenmeli.
 
 Zaman aşımı için zamanlayıcı yok: `bekliyor` → `yanit_yok` geçişi kanıt
 durumu okunduğu anda ve Canlılık taramasında hesaplanıyor (cron'suz yaklaşım).
 
 Referans e-postası referansa doğrudan gider (yanıttan sonra, arka planda); yanıt
-linki ve token hiçbir yanıtta dönmez (bulgu 31).
+linki ve token hiçbir yanıtta dönmez.
 """
 
 from __future__ import annotations
@@ -117,7 +117,7 @@ async def kalem_durumu(
 
     Yalnızca çalışmanın sahibi genç ve GİRVAK. Kurum 403: göstergeyi kart
     görünümünden zaten görüyor; referans e-postaları ve token'lı yanıt
-    linkleri kuruma hiç gitmez (docs/faz-b-kimlik-ve-dongu.md § 3, not ²).
+    linkleri kuruma hiç gitmez (docs/kimlik-ve-dongu.md § 3, not ²).
     Zaman aşımına uğramış referans istekleri bu okuma sırasında `yanit_yok` olur.
     """
     await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id, girvak_okuyabilir=True)
@@ -134,7 +134,7 @@ async def kanit_linki_ekle(
 ) -> KanitDurumuYaniti:
     """Link parçası ekler ve çalışmayı hemen değerlendirir. Aynı link ikinci kez 409.
 
-    Kanıt iddiayı değiştirmez: referans yanıtları geçerli kalır (plan § 2).
+    Kanıt iddiayı değiştirmez: referans yanıtları geçerli kalır (docs/dogrulama.md § 2).
     """
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     try:
@@ -179,7 +179,7 @@ async def kanit_dosyasi_ekle(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
-    """PDF ya da görsel ekler (plan § 4): güvenli hale getirilir, depoya konur, çalışma
+    """PDF ya da görsel ekler (docs/dogrulama.md § 4): güvenli hale getirilir, depoya konur, çalışma
     hemen değerlendirilir. Kabul edilmeyen dosya 422, aynı dosya 409, depo kapalı 503."""
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     ham = await dosya.read(AZAMI_BOYUT + 1)
@@ -248,7 +248,7 @@ async def degerlendir(
     oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
     """Çalışmayı değerlendirir (henüz değerlendirilmemiş kalem için). Linksiz çalışmada
-    Sonuç ve Rol beyan tavanıyla değerlendirilir, Kanıt "—" (karar 10)."""
+    Sonuç ve Rol beyan tavanıyla değerlendirilir, Kanıt "—" (docs/dogrulama.md § 17)."""
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     with _hiz_siniri_429():
         kontrol = await dogrulama_servisi.degerlendir(oturum, cikti)
@@ -290,7 +290,7 @@ async def referans_iste(
     oturum: AsyncSession = Depends(get_session),
 ) -> KanitDurumuYaniti:
     """Referans ister; e-posta yanıttan sonra referansa gider. Göstergeye dokunmaz,
-    model çağrılmaz (bulgu 16). Gencin kendi adresi 422, aynı kişiden bekleyen istek 409."""
+    model çağrılmaz. Gencin kendi adresi 422, aynı kişiden bekleyen istek 409."""
     cikti = await _sahibinin_ciktisi(oturum, hesap, somut_cikti_id)
     try:
         eposta = await dogrulama_servisi.referans_iste(
@@ -352,7 +352,7 @@ async def referans_yaniti(
 
     cikti = sonuc.cikti
     baslik, durum = cikti.baslik, referans.durum
-    # Sonuç / Rol desteği değiştiyse kalem arka planda yeniden puanlanır (plan § 7).
+    # Sonuç / Rol desteği değiştiyse kalem arka planda yeniden puanlanır (docs/dogrulama.md § 7).
     await _gosterge_degisti(oturum, cikti, arka_plan, yeniden_puanla=sonuc.destek_degisti)
     return ReferansYanitiSonucu(baslik=baslik, durum=durum)
 
@@ -397,7 +397,7 @@ async def referans_yeniden_iste(
 ) -> KanitDurumuYaniti:
     """Aynı kişiye yeni bir istek açar (yeni token); eski yanıt geçmiş olarak kalır.
 
-    İş kalemi değişince eski yanıt puana girmiyor (plan § 0, karar 8); genç
+    İş kalemi değişince eski yanıt puana girmiyor (docs/kararlar.md G8); genç
     referansı işin güncel hâli için yeniden isteyebilir. Yalnızca kalemin sahibi.
     Rubrik yeniden çalışmaz: yalnızca referans isteği açılır.
     """

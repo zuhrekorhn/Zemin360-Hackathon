@@ -1,4 +1,4 @@
-"""Takip durum makineleri — docs/faz-c-takip.md § 3'teki tablolar, birebir."""
+"""Takip durum makineleri — docs/takip.md § 3'teki tablolar, birebir."""
 
 import datetime as dt
 import itertools

@@ -1,4 +1,4 @@
-"""Aynı kanıt başka bir hesapta (plan § 9, bulgu 43): `ayni_iddia_cok_hesapta`.
+"""Aynı kanıt başka bir hesapta (docs/dogrulama.md § 9): `ayni_iddia_cok_hesapta`.
 
 Üç yoldan aranır, hepsi başka bir gencin kanıt parçalarında:
   - link: aynı normalleştirilmiş adres (`normal_url`, indeksli);

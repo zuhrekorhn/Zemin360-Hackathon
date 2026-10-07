@@ -1,4 +1,4 @@
-"""Yetenek kartı düzenleme uçları (docs/plans/genc-akisi.md § 6.1).
+"""Yetenek kartı düzenleme uçları (docs/agent-specs.md § 1).
 
 Yalnızca kartın sahibi genç: başkasının kartı ya da iş kalemi 404 (varlık
 sızmasın), genç olmayan rol 403, token yok 401. Kural app/agents/kart_duzenleme.py,
@@ -229,6 +229,6 @@ async def is_kalemini_sil(
     anahtarlar = dosya_anahtarlari(cikti.kanit_parcalari)
     duzenleme.is_kalemini_sil(kart, cikti)
     yanit = await _sonuclandir(oturum, kart, True, arka_plan)
-    # Kalem silinince dosyaları da silinir (plan § 4.4), commit'ten sonra.
+    # Kalem silinince dosyaları da silinir (docs/dogrulama.md § 4.4), commit'ten sonra.
     arka_plan.add_task(depodan_sil, anahtarlar)
     return yanit

@@ -1,6 +1,6 @@
 """Alıntı denetimi: modelin "kanıtta şu yazıyor" dediği parça gerçekten metinde mi?
 
-RAG'deki dayanaklılık (grounding) deseni (plan § 11.1): model iddiayı destekleyen
+RAG'deki dayanaklılık (grounding) deseni (docs/dogrulama.md § 11.1): model iddiayı destekleyen
 yeri birebir alıntılar, kod alıntıyı tam metinde arar. Geçmeyen destek yok
 sayılır; böylece uydurma ve kanıt metnine gömülmüş talimatlar (istem
 enjeksiyonu) puana yansımaz.

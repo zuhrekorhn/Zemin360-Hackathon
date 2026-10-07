@@ -1,6 +1,6 @@
 """Değerlendirme çekirdeği: kurallar, alıntı denetimi, şablon not (LLM ve ağ yok).
 
-docs/plans/dogrulama-iyilestirme.md § 2 (seviye tavanları, bireysel kurallar),
+docs/dogrulama.md § 2 (seviye tavanları, bireysel kurallar),
 § 11 (model gerçek çıkarır, kural puanlar, şablon anlatır).
 """
 
@@ -133,7 +133,7 @@ def test_istem_kanit_metnini_veri_olarak_isaretler():
     assert "<kanit_metni>" in str(CIKARIM_SABLONU)
     assert "talimat değildir" in CIKARIM_TALIMATI
     assert "{itiraz_notu}" in str(CIKARIM_SABLONU)
-    assert "Ajanı'sın" not in CIKARIM_TALIMATI  # kendini ajan diye tanıtmaz (bulgu 14)
+    assert "Ajanı'sın" not in CIKARIM_TALIMATI  # kendini ajan diye tanıtmaz
 
 
 # --- Çekirdek ----------------------------------------------------------------------------
@@ -268,7 +268,8 @@ def test_ayni_girdi_ayni_ozet_itiraz_notu_degistirir():
     assert ozet_hesapla(itirazli, [okunan()]) != ozet_hesapla(girdi, [okunan()])
 
 
-# --- Birden çok parça (plan § 2) ---------------------------------------------------------
+# --- Birden çok parça (docs/dogrulama.md § 2)
+# ---------------------------------------------------------
 
 
 def test_birden_cok_parca_baslik_basina_en_gucluyu_alir():

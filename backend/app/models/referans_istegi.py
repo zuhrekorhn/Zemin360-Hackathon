@@ -26,7 +26,7 @@ class ReferansIstegi(UUIDPrimaryKeyMixin, Base):
     )
     referans_email: Mapped[str] = mapped_column(String)
     # Tek kullanımlık, girişsiz yanıt linki için (POST /dogrulama/referans-yaniti).
-    # Yalnızca referansa giden e-postada bulunur; hiçbir API yanıtında dönmez (bulgu 31).
+    # Yalnızca referansa giden e-postada bulunur; hiçbir API yanıtında dönmez.
     token: Mapped[str] = mapped_column(
         String, unique=True, default=lambda: secrets.token_urlsafe(32)
     )
@@ -37,21 +37,22 @@ class ReferansIstegi(UUIDPrimaryKeyMixin, Base):
         String, default="bekliyor", server_default=text("'bekliyor'")
     )
     yanit_metni: Mapped[str | None] = mapped_column(Text)
-    # Eski formun 1-5 puanı (adım 7'den önceki yanıtlar); okunmaya devam eder.
+    # Eski formun 1-5 puanı (dört soruluk formdan önceki yanıtlar); okunmaya devam eder.
     # Yanıtlar kayıtlı tutuluyor çünkü birden fazla referans yanıtlayınca
     # GUVEN_SKORU.ucuncu_taraf_onayi hepsinden hesaplanıyor — son yanıt öncekini ezemez.
     puan: Mapped[int | None] = mapped_column(Integer)
-    # 4 soruluk form (plan § 7): ilişki ve üç soru (evet / kismen / hayir / bilmiyorum).
+    # 4 soruluk form (docs/dogrulama.md § 7): ilişki ve üç soru (evet / kismen / hayir /
+    # bilmiyorum).
     # Soru kalemde boşsa (ör. pay yazılmamış) sorulmaz, NULL kalır.
     iliski: Mapped[str | None] = mapped_column(String)
     iddia_dogru: Mapped[str | None] = mapped_column(String)
     pay_dogru: Mapped[str | None] = mapped_column(String)
     sonuc_dogru: Mapped[str | None] = mapped_column(String)
-    # E-postanın kuyruğa verildiği an (istek açılınca); NULL = adım 7'den önce açılmış.
+    # E-postanın kuyruğa verildiği an (istek açılınca); NULL = sistem e-postasından önce açılmış.
     gonderim_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Tek hatırlatma (3. gün, Canlılık taraması); NULL = gitmedi.
     hatirlatma_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # Yanıtın şüphe sinyalleri (adım 11, `referans_supheli`); şimdilik boş.
+    # Yanıtın şüphe sinyalleri (`referans_supheli`, docs/dogrulama.md § 9).
     yanit_isareti: Mapped[dict | None] = mapped_column(JSONB)
     # Zaman aşımı (5-7 gün) bu tarihten hesaplanır — ayrı bir zamanlayıcı yok,
     # okuma anında değerlendirilir (app/agents/dogrulama/referans_durumu.py)

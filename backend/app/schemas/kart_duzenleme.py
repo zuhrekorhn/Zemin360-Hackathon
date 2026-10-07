@@ -1,4 +1,4 @@
-"""Kart düzenleme şemaları (docs/plans/genc-akisi.md § 6.1).
+"""Kart düzenleme şemaları (docs/agent-specs.md § 1).
 
 Yalnızca gönderilen alan değişir (`model_fields_set`). `extra="forbid"`:
 bilinmeyen alan sessizce yok sayılmaz.
@@ -64,7 +64,7 @@ class IsKalemiGuncelleme(BaseModel):
     """Yalnızca gönderilen alan değişir; opsiyonel alan `null` ya da `""` ile silinir.
 
     Kanıt linki burada yok: kanıt parçaları kart sayfasının kanıt bölümünden
-    (/dogrulama/kalem/{id}/kanit) eklenir ve kaldırılır (bulgu 25).
+    (/dogrulama/kalem/{id}/kanit) eklenir ve kaldırılır.
     """
 
     model_config = ConfigDict(extra="forbid")

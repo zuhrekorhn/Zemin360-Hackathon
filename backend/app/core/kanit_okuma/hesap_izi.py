@@ -1,4 +1,4 @@
-"""Adresteki platform hesabı: `medium.com/@ayse/…` → (medium, ayse) (plan § 6).
+"""Adresteki platform hesabı: `medium.com/@ayse/…` → (medium, ayse) (docs/dogrulama.md § 6).
 
 Aynı bilgi iki yerde kullanılır: kanıtın kimin hesabında durduğunu bulmak
 (sahiplik kuralı) ve profil kodu bağlamasında verilen profil adresinden
@@ -20,7 +20,7 @@ from app.core.kanit_okuma.belge import HesapIzi
 
 
 class Saglayici(StrEnum):
-    """Bağlanabilen hesap türleri (plan § 6.1)."""
+    """Bağlanabilen hesap türleri (docs/dogrulama.md § 6.1)."""
 
     GITHUB = "github"
     GITLAB = "gitlab"

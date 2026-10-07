@@ -1,4 +1,4 @@
-"""Okuyucu sözleşmesi (Strategy) ve okuma bağlamı (plan § 5.1).
+"""Okuyucu sözleşmesi (Strategy) ve okuma bağlamı (docs/dogrulama.md § 5.1).
 
 Her platform bir okuyucudur: `uygun_mu` adresi tanır, `oku` belgeyi döner ya da
 `None` ("ben okuyamadım, sıradakine geç"). Yeni platform = yeni sınıf + kayıt

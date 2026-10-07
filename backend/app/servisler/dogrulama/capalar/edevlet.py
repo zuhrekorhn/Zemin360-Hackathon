@@ -1,4 +1,4 @@
-"""e-Devlet barkodu çapası (plan § 4.2): GİRVAK elle doğrular.
+"""e-Devlet barkodu çapası (docs/dogrulama.md § 4.2): GİRVAK elle doğrular.
 
 Doğrulayıcı yalnızca barkodu kaydeder (`girvak_karari: None` → D). Dosya
 eklenince `edevlet_barkodu` işareti açılır (`isaret_ac`); GİRVAK kararı çapaya

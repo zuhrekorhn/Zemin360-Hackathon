@@ -1,10 +1,10 @@
-"""Yetenek kartını eşleştirmeye hazırlama (docs/plans/genc-akisi.md § 5.5, § 6.4).
+"""Yetenek kartını eşleştirmeye hazırlama (docs/agent-specs.md § 1, § 6.4).
 
 Kart onaylanınca ya da değişince yanıttan sonra arka planda çalışır:
 
   1. Embedding: yoksa (ya da kart değiştiyse) hesaplanır.
   2. Doğrulama: değerlendirilmemiş her iş kalemi değerlendirilir. Linksiz kalemde
-     Sonuç ve Rol beyan tavanıyla, Kanıt "—" (dogrulama-iyilestirme karar 10).
+     Sonuç ve Rol beyan tavanıyla, Kanıt "—" (docs/dogrulama.md § 17).
   3. Yeniden eşleştirme: kartla konu olarak ilgili (benzerlik alt sınırını
      geçen) açık ihtiyaç kartları ve kartın hâlâ `onerildi` önerisi olan
      ihtiyaç kartları için mevcut pipeline çalışır. Bu, "sonradan gelen genç
@@ -78,7 +78,7 @@ async def kalemi_yeniden_puanla(kart_id: uuid.UUID, cikti_id: uuid.UUID, versiyo
 
 
 async def kalemleri_yeniden_oku(kart_id: uuid.UUID) -> None:
-    """Arka plan işi: gencin bağlı hesapları değişti (hesap bağlama, plan § 6)."""
+    """Arka plan işi: gencin bağlı hesapları değişti (hesap bağlama, docs/dogrulama.md § 6)."""
     async with get_sessionmaker()() as oturum:
         try:
             await kalemleri_yeniden_oku_oturumla(oturum, kart_id)
@@ -153,7 +153,7 @@ async def _ciktiyi_puanla_bir_kez(
         .with_for_update(of=SomutCikti)
         .execution_options(populate_existing=True)
     )
-    # Değerlendirilmemiş her kalem (linksiz de, karar 10); değerlendirilmiş olan atlanır.
+    # Değerlendirilmemiş her kalem (linksiz de); değerlendirilmiş olan atlanır.
     if cikti is None or (degerlendirildi_mi(cikti) and not zorla):
         await oturum.rollback()  # kilidi bırak
         return
@@ -189,7 +189,7 @@ async def ilgili_ihtiyac_kartlari(oturum: AsyncSession, kart_id: uuid.UUID) -> l
         select(IhtiyacKarti.id).where(
             IhtiyacKarti.embedding.isnot(None),
             IhtiyacKarti.durum == IHTIYAC_ACIK,
-            # Yetenek kartı yalnızca genç ilanlarına aday (firma-akisi § 4).
+            # Yetenek kartı yalnızca genç ilanlarına aday (docs/kararlar.md F5).
             IhtiyacKarti.aranan == ARANAN_GENC,
             or_(uzaklik <= 1.0 - BENZERLIK_ALT_SINIRI, IhtiyacKarti.id.in_(onerildigi)),
         )

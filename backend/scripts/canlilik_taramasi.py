@@ -1,4 +1,4 @@
-"""Canlılık taramasını yerelde çalıştırır (docs/faz-d-canlilik.md § 4).
+"""Canlılık taramasını yerelde çalıştırır (docs/canlilik.md § 4).
 
 Canlıda bu işi platform cron'u yapar (`POST /canlilik/tarama`, başlıkta
 TARAMA_ANAHTARI); yerelde ve demoda GİRVAK panelindeki düğme ya da bu betik.

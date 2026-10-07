@@ -1,4 +1,5 @@
-"""Yüklenen kanıt dosyalarının deposu: arayüz, R2, yerel disk ve kapalı kip (plan § 4.4).
+"""Yüklenen kanıt dosyalarının deposu: arayüz, R2, yerel disk ve kapalı kip (docs/dogrulama.md
+§ 4.4).
 
 Servisler yalnızca `Depo`'ya bağlıdır; hangi sınıfın kullanılacağına
 `kurulum.py` karar verir. Anahtar rastgeledir, dosya adı kullanıcıdan alınmaz.

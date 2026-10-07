@@ -18,7 +18,7 @@ class GuvenSkoru(UUIDPrimaryKeyMixin, Base):
     """Dört bileşenli güven göstergesi; her bileşen 0-3 (agent-specs.md), tek sayıya indirilmez.
 
     NULL = "—": başlık değerlendirilmedi, değerlendirilemedi ya da yanıt yok.
-    0 ile karıştırılmaz (docs/plans/dogrulama-iyilestirme.md § 1, İ4).
+    0 ile karıştırılmaz (docs/dogrulama.md § 1, İ4).
     """
 
     __tablename__ = "guven_skoru"
@@ -40,7 +40,7 @@ class GuvenSkoru(UUIDPrimaryKeyMixin, Base):
     rol_netligi: Mapped[int | None] = mapped_column(Integer)
     ucuncu_taraf_onayi: Mapped[int | None] = mapped_column(Integer)
     gerekce_metni: Mapped[str | None] = mapped_column(Text)
-    # Aynı girdiye aynı sonuç (itiraz önbelleği, plan § 11.4) ve hangi kuralla
+    # Aynı girdiye aynı sonuç (itiraz önbelleği, docs/dogrulama.md § 11.4) ve hangi kuralla
     # hesaplandığı: kural sürümü değişince eski göstergeler ayırt edilir.
     girdi_ozeti: Mapped[str | None] = mapped_column(String)
     kural_surumu: Mapped[str | None] = mapped_column(String)

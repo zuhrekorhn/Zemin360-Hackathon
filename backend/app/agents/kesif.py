@@ -12,10 +12,10 @@ docs/agent-specs.md § 1. Sınırlar oradan geliyor; üç sayaç birbirinden ayr
     soru, her biri BİR kez. Kullanıcı bilmiyorsa ısrar edilmez, sıradakine
     geçilir.
   - Kayıt formunda alınan bilgiler (şehir, çalışma modeli, müsaitlik, durum,
-    okul) bağlam olarak verilir ve SORULMAZ (docs/plans/genc-akisi.md § 5.3).
+    okul) bağlam olarak verilir ve SORULMAZ (docs/agent-specs.md § 1).
   - "Hiç projem yok" → 2 soruluk fallback zinciri, hâlâ yoksa deneyim_seviyesi
-    "potansiyel" ile kart oluşur (madde 4).
-  - Kart taslağı kullanıcıya gösterilir, kaydetme onaydan sonra olur (madde 3).
+    "potansiyel" ile kart oluşur (docs/agent-specs.md § 1, madde 4).
+  - Kart taslağı kullanıcıya gösterilir, kaydetme onaydan sonra olur (agent-specs § 1, madde 3).
 
 Doğrulama ve puanlama bu ajanın işi değil — kanıt linki sadece toplanır,
 değerlendirilmez.
@@ -274,7 +274,7 @@ def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
     Zorunlu alan değiller: kullanıcı bilmiyorsa kart yine kurulur. Ama
     sorulmazsa Doğrulama Ajanı'nın bileşenleri kesin düşük kalıyor. Kanıt ve
     referans tek soruda soruluyor ki sohbet uzamasın; kanıt iş kalemine bağlı
-    kaydedilir (plan § 5.4). Sıra: çalışma çalışma, her birinde sonuç → pay →
+    kaydedilir (docs/agent-specs.md § 1). Sıra: çalışma çalışma, her birinde sonuç → pay →
     kanıt.
     """
     return [

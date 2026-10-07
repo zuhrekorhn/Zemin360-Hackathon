@@ -1,9 +1,9 @@
-"""Firmanın kayıt/profil alanlarının kuralları (docs/plans/firma-akisi.md § 0 kararlar 1-2, § 2).
+"""Firmanın kayıt/profil alanlarının kuralları (docs/kararlar.md F1-2, § 2).
 
 Saf fonksiyonlar: veritabanı yok. Şemalar (app/schemas/profil.py) bunları
 doğrulayıcı olarak kullanır; /me de eksik alanları buradan sorar.
 
-Vergi numarası, adres ve telefon BİLİNÇLİ OLARAK toplanmaz (karar 2, seçenek A):
+Vergi numarası, adres ve telefon BİLİNÇLİ OLARAK toplanmaz (docs/kararlar.md F2):
 kayıt kısa kalsın, hassas veri tutulmasın. Gönderilirse şema 422 döner.
 """
 
@@ -32,7 +32,7 @@ KURULUS_EN_ESKI = 1900
 TANITIM_EN_UZUN = 300
 
 # Profilde dolu olması gereken alanlar. Bu alanlardan önce açılmış firma
-# hesaplarında boş olabilirler; panel engellemeyen bir bantla ister (karar 9).
+# hesaplarında boş olabilirler; panel engellemeyen bir bantla ister (docs/kararlar.md F9).
 ZORUNLU_ALANLAR: tuple[str, ...] = ("tur", "sektor", "sehir")
 
 

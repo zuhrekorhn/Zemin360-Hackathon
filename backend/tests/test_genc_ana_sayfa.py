@@ -1,4 +1,4 @@
-"""Genç ana sayfası: fırsatlar, ilgiler, 'Kartını güçlendir' (docs/plans/genc-akisi.md § 7)."""
+"""Genç ana sayfası: fırsatlar, ilgiler, 'Kartını güçlendir' (docs/api-contracts.md)."""
 
 import pytest
 
@@ -23,7 +23,7 @@ def test_sira():
 
 def test_bonus_farki_tek_kanitsiz_calisma():
     """Göstergesiz tek çalışma: kanıt 3/3 olursa bonus 3/12, skora 0.25 × 0.25."""
-    # (3, 0, 0, —) → 3/9; 0.25 × 1/3. Referans "—" paydaya girmez.
+    ## (3, 0, 0, —) → 3/9; 0.25 × 1/3. Referans "—" paydaya girmez.
     assert bonus_farki({"a": None}, "a", 0) == pytest.approx(0.25 / 3)
 
 

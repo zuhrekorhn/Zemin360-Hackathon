@@ -1,4 +1,4 @@
-"""Kayıt, giriş ve /me şemaları (docs/faz-b-kimlik-ve-dongu.md § 1-2)."""
+"""Kayıt, giriş ve /me şemaları (docs/kimlik-ve-dongu.md § 1-2)."""
 
 from __future__ import annotations
 
@@ -21,10 +21,10 @@ class KayitIstegi(BaseModel):
     rol: Literal["genc", "kurum"]
     # Gencin adı ya da kurumun adı; profil bununla açılır.
     ad: DoluMetin
-    # Genç için zorunlu: kayıt formunun yapısal alanları (docs/plans/genc-akisi.md
-    # § 5.1). Firma kaydı bunu göndermez.
+    # Genç için zorunlu: kayıt formunun yapısal alanları (docs/kimlik-ve-dongu.md
+    # § 2). Firma kaydı bunu göndermez.
     genc_profili: GencKayitProfili | None = None
-    # Firma için zorunlu (docs/plans/firma-akisi.md § 0, karar 2).
+    # Firma için zorunlu (docs/kararlar.md F2).
     firma_profili: FirmaKayitProfili | None = None
     # KVKK aydınlatma metni onayı; iki rol için de zorunlu. Sunucu onay anını yazar.
     kvkk_onay: bool = False
@@ -90,18 +90,18 @@ class MeYaniti(BaseModel):
     ad: str | None
     kullanici_id: uuid.UUID | None = None
     kurum_id: uuid.UUID | None = None
-    # Gencin tek kartı (madde 7); Keşif'i tamamlamadıysa None.
+    # Gencin tek kartı (G17); Keşif'i tamamlamadıysa None.
     yetenek_karti: YetenekKartiOzeti | None = None
     ihtiyac_kartlari: list[IhtiyacKartiOzeti] = Field(default_factory=list)
-    # Bildirimler Faz B'nin 5. adımında; o zamana kadar 0.
+    # Okunmamış bildirim sayısı (menüdeki rozet).
     okunmamis_bildirim: int = 0
     # Genç: doldurulması gereken zorunlu profil alanları ve KVKK onayı. Bu
     # alanlardan önce açılmış hesaplara panel engellemeyen bir bant gösterir.
     eksik_profil_alanlari: list[str] = Field(default_factory=list)
     kvkk_onayli: bool = True
-    # Firma: firma kartı var mı? Yoksa panel "Firma kartınızı oluşturun" der (karar 9).
+    # Firma: firma kartı var mı? Yoksa panel "Firma kartınızı oluşturun" der (F9).
     firma_karti_var: bool = False
-    # Kayıt e-postası doğrulandı mı (dogrulama-iyilestirme.md § 6.3). Doğrulanmamış
+    # Kayıt e-postası doğrulandı mı (docs/dogrulama.md § 6.3). Doğrulanmamış
     # hesap her şeyi kullanır; menü bir uyarı ve "yeniden gönder" gösterir.
     eposta_dogrulandi: bool = False
 

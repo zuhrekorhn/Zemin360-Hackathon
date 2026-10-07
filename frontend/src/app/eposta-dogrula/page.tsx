@@ -13,7 +13,7 @@ import { panelYolu } from "@/lib/yonlendirme";
 
 /**
  * Kayıt e-postasındaki bağlantının açtığı sayfa
- * (docs/plans/dogrulama-iyilestirme.md § 6.3). Giriş gerekmez: e-posta başka
+ * (docs/dogrulama.md § 6.3). Giriş gerekmez: e-posta başka
  * bir cihazda açılabilir, kimliği bağlantı taşır. Aynı bağlantının ikinci
  * açılışı da başarılıdır. Ziyaretçiye "sen" (rehber § 3).
  */

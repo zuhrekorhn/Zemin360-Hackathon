@@ -1,4 +1,5 @@
-"""Zincirin yedek basamağı: tarayıcıyla okuma ve ekran görüntüsü kuralları (plan § 5.1, § 5.5).
+"""Zincirin yedek basamağı: tarayıcıyla okuma ve ekran görüntüsü kuralları (docs/dogrulama.md § 5.1,
+§ 5.5).
 
 Platform okuyucusu ya da genel okuyucu bir sonuç verdikten sonra çalışır:
   - Sonuç "engellendi" ya da "içerik yok" ise sayfa tarayıcıda yeniden açılır

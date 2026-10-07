@@ -1,4 +1,5 @@
-"""Üçüncü taraf sayfa okuma servisi: arayüz, Jina Reader ve kapalı kip (plan § 5.1, § 14.4).
+"""Üçüncü taraf sayfa okuma servisi: arayüz, Jina Reader ve kapalı kip (docs/dogrulama.md § 5.1,
+§ 14.4).
 
 Zincirin son basamağı: yalnızca bayrak açıksa (`UZAK_OKUYUCU=jina`, varsayılan
 kapalı) ve kendi yedek okuyucumuz (Playwright) sayfayı okuyamadıysa çağrılır.

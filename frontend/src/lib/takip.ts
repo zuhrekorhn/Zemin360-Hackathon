@@ -1,5 +1,5 @@
 /**
- * İş birliği sayfasının saf görünüm kuralları (docs/faz-c-takip.md § 8).
+ * İş birliği sayfasının saf görünüm kuralları (docs/takip.md § 8).
  * Kural backend'de (app/agents/takip_durumu.py); burada yalnızca "ekranda ne
  * yazsın" var. Testleri takip.test.ts'de.
  */

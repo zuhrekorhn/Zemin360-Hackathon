@@ -27,7 +27,7 @@ class SomutCikti(UUIDPrimaryKeyMixin, Base):
     aciklama: Mapped[str | None] = mapped_column(Text)
     # Kanıt bu tabloda değil: `kanit_parcalari` (link, dosya, görsel; birden çok olabilir).
     tarih: Mapped[date | None] = mapped_column(Date)
-    # İş kalemi alanları (docs/plans/genc-akisi.md § 3.4). Eskiden rol ve sonuç
+    # İş kalemi alanları (docs/data-schema.md). Eskiden rol ve sonuç
     # `aciklama`'ya birleştiriliyordu; düzenlenebilsinler diye ayrı. Eski
     # satırlarda NULL, birleşik metin `aciklama`'da duruyor.
     # proje | staj | is | gonulluluk | yarisma
@@ -36,7 +36,7 @@ class SomutCikti(UUIDPrimaryKeyMixin, Base):
     olculebilir_sonuc: Mapped[str | None] = mapped_column(Text)
     # İddianın (başlık, açıklama, rol, sonuç) son değiştiği an.
     # NULL = oluşturulduğundan beri değişmedi. Bu andan önce verilmiş referans
-    # yanıtları puana girmez (plan § 0, karar 8).
+    # yanıtları puana girmez (docs/kararlar.md G8).
     icerik_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # "Yeni iş ekle" sohbeti; tekil: aynı sohbet ikinci kez onaylanınca yeni iş
     # kalemi açılmaz (YetenekKarti.oturum_id ile aynı kural).

@@ -1,8 +1,8 @@
-"""İş birliklerim (docs/faz-b-kimlik-ve-dongu.md § 3, § 5).
+"""İş birliklerim (docs/kimlik-ve-dongu.md § 3, § 5).
 
 İş birliği gencin kabulüyle açılır; bu liste iki tarafa da aynı görünümü
-verir, e-postalar dahil (kabul edilmiş eşleşme, iletişim açık). Milestone
-ve zaman çizelgesi Takip Ajanı'nın işi (Faz D).
+verir, e-postalar dahil (kabul edilmiş eşleşme, iletişim açık). Plan ve
+adımlar Takip'in işi (docs/takip.md).
 """
 
 from __future__ import annotations
@@ -86,7 +86,7 @@ async def isbirliklerim(
         eslesme = isbirligi.eslesme
         acik = iletisim(eslesme, hesap)
         if acik is None:
-            # Faz B öncesi akışta gencin kabulü olmadan açılmış iş birliği:
+            # Gencin kabulü olmadan açılmış eski iş birliği:
             # durum `kabul_edildi` değilse e-postalar açılmaz, satır gösterilmez.
             continue
         ozetler.append(

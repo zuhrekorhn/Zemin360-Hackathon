@@ -1,4 +1,4 @@
-"""Kanıt adresinin okunması ve değerlendirmeye hazırlanması (plan § 5).
+"""Kanıt adresinin okunması ve değerlendirmeye hazırlanması (docs/dogrulama.md § 5).
 
 Okuyucu zinciri (`app/core/kanit_okuma/`) belgeyi verir; burada çekirdeğin
 girdisine (`OkunanKanit`) çevrilir ve uzun metinde modelin göreceği parçalar
@@ -118,7 +118,7 @@ async def dosya_okunusu(
     iddia_sorgulari: list[str],
     gom: Gomucu = embedding_listesi_uret,
 ) -> OkunanKanit:
-    """Yüklenmiş dosyanın değerlendirme girdisi (plan § 4). Dosya yüklenirken bir kez
+    """Yüklenmiş dosyanın değerlendirme girdisi (docs/dogrulama.md § 4). Dosya yüklenirken bir kez
     okunmuştur (`servisler/dogrulama/dosyalar.py`); burada ağ ve model yok.
 
     Model betimi ve metni birlikte görür (görselin çalışmayla ilgisi betimden

@@ -115,12 +115,12 @@ def test_ozet_dort_bileseni_de_tasir():
 
 
 def test_ozet_yanit_yok_ile_olumsuz_yaniti_ayirir():
-    """Bulgu 19: "yanıt yok" (None) ile "olumsuz yanıt" (0) aynı cümleye düşmez."""
+    """İ4 (docs/dogrulama.md § 1): "yanıt yok" (None) ile "olumsuz" (0) aynı cümleye düşmez."""
     assert "referans iddiayı doğrulamadı" in dogrulama_ozeti(kart(skor(ucuncu=0)))
 
 
 def test_ozet_degerlendirilmemis_basligi_uydurmaz():
-    """Bulgu 17: linksiz kalemde yalnızca Referans doluysa "sonuç belirtilmemiş" denmez."""
+    """Linksiz kalemde yalnızca Referans doluysa "sonuç belirtilmemiş" denmez."""
     ozet = dogrulama_ozeti(kart(skor(orijinallik=None, olculebilirlik=None, rol=None, ucuncu=3)))
     assert "sonuç belirtilmemiş" not in ozet
     assert "sonuç henüz değerlendirilmedi" in ozet

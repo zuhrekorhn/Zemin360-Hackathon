@@ -1,4 +1,5 @@
-"""Değerlendirme çekirdeği: model gerçek çıkarır, kural puanlar, şablon anlatır (plan § 11).
+"""Değerlendirme çekirdeği: model gerçek çıkarır, kural puanlar, şablon anlatır (docs/dogrulama.md
+§ 11).
 
 Tek giriş noktası `kalemi_degerlendir`. Model çağrısı dışarıdan verilir
 (bağımlılığın tersine çevrilmesi): uygulama gerçek zinciri, değerlendirme seti
@@ -43,7 +44,7 @@ class DegerlendirmeGirdisi:
     pay: str | None = None
     yetenekler: Sequence[str] = ()
     itiraz_notu: str | None = None
-    # Referansın yapılandırılmış yanıtları (4 soruluk form, adım 7): "evet" bağımsız destektir.
+    # Referansın yapılandırılmış yanıtları (4 soruluk form): "evet" bağımsız destektir.
     referans_sonuc_evet: bool = False
     referans_pay_evet: bool = False
 
@@ -68,7 +69,7 @@ class DegerlendirmeSonucu:
     # Parça başına işaretler (`okunanlar` sırasıyla; kanıtsız kalemde boş)
     parca_isaretleri: tuple[tuple[str, ...], ...] = ()
     # Parça başına alıntısı denetimden geçmiş çelişkiler ({"iddia", "alinti"};
-    # `kanit_celisiyor` işareti bunlardan açılır, plan § 11.2)
+    # `kanit_celisiyor` işareti bunlardan açılır, docs/dogrulama.md § 11.2)
     parca_celiskileri: tuple[tuple[dict, ...], ...] = ()
 
 
@@ -100,7 +101,7 @@ def _kanit_adresi(okunan: OkunanKanit | None) -> str:
 
 
 def girdi_ozeti(alanlar: dict[str, str], okunan: OkunanKanit | None, ek: dict) -> str:
-    """Aynı girdi → aynı özet → önceki sonuç (itiraz önbelleği, plan § 11.4)."""
+    """Aynı girdi → aynı özet → önceki sonuç (itiraz önbelleği, docs/dogrulama.md § 11.4)."""
     ham = {
         "kural": KURAL_SURUMU,
         "alanlar": alanlar,
@@ -226,7 +227,7 @@ async def parcayi_degerlendir(
 async def kalemi_degerlendir(
     girdi: DegerlendirmeGirdisi, okunanlar: Sequence[OkunanKanit], cikar: Cikarici
 ) -> DegerlendirmeSonucu:
-    """Her parça ayrı puanlanır; başlık başına en güçlü parça (plan § 2: parçalar
+    """Her parça ayrı puanlanır; başlık başına en güçlü parça (docs/dogrulama.md § 2: parçalar
     toplanmaz, kanıt eklemek puanı düşürmez). Not, Kanıt'ı veren parçadan yazılır.
     Kanıtsız kalemde iddia tek başına değerlendirilir (Kanıt "—")."""
     liste: list[OkunanKanit | None] = list(okunanlar) or [None]

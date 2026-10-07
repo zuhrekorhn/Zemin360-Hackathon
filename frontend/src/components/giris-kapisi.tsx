@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Giriş gerektiren sayfaların kapısı (docs/faz-b-kimlik-ve-dongu.md § 7).
+ * Giriş gerektiren sayfaların kapısı (docs/kimlik-ve-dongu.md § 7).
  *
  *   - Girişsiz açılırsa `/giris?sonra=<yol>`'a gider; girişten sonra geri döner.
  *   - Rolü uymayan sayfa (ör. kurumun /kesif'i açması) kendi paneline gider.

@@ -1,4 +1,5 @@
-"""Görsel kaynak aramasının kuralları (plan § 4.3, § 9 `gorsel_baskasinda`, § 14.4). Saf.
+"""Görsel kaynak aramasının kuralları (docs/dogrulama.md § 4.3, § 9 `gorsel_baskasinda`, § 14.4).
+Saf.
 
 İki soru:
   - Aranır mı? Yalnızca tasarım / fotoğraf alanındaki gençlerin görsellerinde

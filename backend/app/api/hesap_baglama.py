@@ -1,4 +1,4 @@
-"""Hesap bağlama uçları (docs/plans/dogrulama-iyilestirme.md § 6).
+"""Hesap bağlama uçları (docs/dogrulama.md § 6).
 
 Yalnızca genç. Orkestrasyon `app/servisler/hesap_baglama.py`'de; burada şema,
 sahiplik ve hata çevirisi. Bağlantı değişince linkli çalışmalar yanıttan sonra

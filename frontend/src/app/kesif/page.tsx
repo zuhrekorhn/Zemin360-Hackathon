@@ -18,7 +18,7 @@ import { kartYolu } from "@/lib/yonlendirme";
  *
  * Akış: sohbet → taslak gözden geçirme → onay formu → kaydedilen kart
  * (durum makinesi: components/kesif/use-kesif-sohbeti.ts). Kayıttan hemen
- * sonra buraya gelinir (`?ilk=1`, docs/plans/genc-akisi.md § 5.2); "Şimdilik
+ * sonra buraya gelinir (`?ilk=1`, docs/agent-specs.md § 1); "Şimdilik
  * atla" panele götürür, kartı olmayan genç eşleştirmeye girmez ve panel onu
  * kart tamamlamaya çağırır. Kayıt formundaki bilgiler sohbette sorulmaz.
  *
@@ -39,7 +39,7 @@ export default function KesifSayfasi() {
 }
 
 /**
- * Gencin tek kartı var (madde 7): kartı olan genç sohbet yerine kartına
+ * Gencin tek kartı var (docs/kararlar.md G17): kartı olan genç sohbet yerine kartına
  * gider. Karar sayfanın açıldığı anki duruma göre verilir: onaydan sonra
  * oturum tazelenince genç "Kartın kaydedildi" ekranından atılmasın.
  */

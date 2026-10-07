@@ -66,7 +66,7 @@ def test_ikinci_guclu_referans_puani_dusurmez():
 
 
 def test_yanitlamis_referans_yoksa_bos():
-    """ "Yanıt yok" "—"dur, 0 değil: 0 olumsuz yanıt demek (bulgu 19)."""
+    """ "Yanıt yok" "—"dur, 0 değil: 0 olumsuz yanıt demek."""
     assert ucuncu_taraf_onayi_hesapla([]) is None
 
 

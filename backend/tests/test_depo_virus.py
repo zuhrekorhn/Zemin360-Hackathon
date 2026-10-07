@@ -1,4 +1,4 @@
-"""Dosya deposu ve virüs tarayıcı adaptörleri (plan § 4.4, § 14.4)."""
+"""Dosya deposu ve virüs tarayıcı adaptörleri (docs/dogrulama.md § 4.4, § 14.4)."""
 
 import asyncio
 import datetime as dt

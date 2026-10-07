@@ -60,7 +60,7 @@ logger = logging.getLogger("zemin360.eslestirme")
 BENZERLIK_AGIRLIGI = 0.75
 DOGRULAMA_AGIRLIGI = 0.25
 TOP_N = 5
-# Tamamlanmış pilot (Faz C, docs/faz-c-takip.md § 6): doğrulama bonusuna
+# Tamamlanmış pilot (docs/takip.md § 6): doğrulama bonusuna
 # toplamsal eklenir, tavan 1.0. Pilotu olmayan kartın skoru değişmez; pilot
 # skora en çok 0.25 × 0.5 = +0.125 ekler. Alakayı yaratmaz: benzerlik alt
 # sınırı skordan önce uygulanmaya devam ediyor.
@@ -85,9 +85,9 @@ DURUM_ONERILDI = "onerildi"
 DURUM_ILGILENILIYOR = "ilgileniliyor"
 DURUM_KABUL_EDILDI = "kabul_edildi"
 DURUM_REDDEDILDI = "reddedildi"
-# Gençten ilgi (docs/plans/genc-akisi.md § 4): genç ilgi gösterdi, kurumun yanıtı
+# Gençten ilgi (docs/kimlik-ve-dongu.md § 5): genç ilgi gösterdi, kurumun yanıtı
 # bekleniyor. Karar verilmiş kayıt sayılır: pipeline silmez, skorunu ve
-# gerekçesini değiştirmez (plan § 0, karar 14).
+# gerekçesini değiştirmez (docs/kararlar.md G14).
 DURUM_GENC_ILGILENDI = "genc_ilgilendi"
 # Kurum "şimdilik değil" dedi ya da ihtiyaç kapandı. Gence "Kapandı" görünür.
 DURUM_KAPANDI = "kapandi"
@@ -159,7 +159,7 @@ class Aday:
         return self.yetenek_karti.id
 
 
-# --- Firma adayı (docs/plans/firma-akisi.md § 0 kararlar 5, 13; § 4) -------------------
+# --- Firma adayı (docs/kararlar.md F5, F13) -------------------
 #
 # Ortak ilanının adayları firma kartları. Aynı formül ve aynı iki sınır
 # (benzerlik alt sınırı, ilk N); bonus firmaya göre: GİRVAK'ın doğruladığı firma
@@ -204,7 +204,7 @@ def gosterge_orani(bilesenler: Sequence[int | None]) -> float | None:
     """Bir çalışmanın göstergesini 0-1'e indirger; yalnızca dolu başlıklar sayılır.
 
     "—" (None) başlık ne cezadır ne bonus: değerlendirilmemiş başlık 0 sayılsaydı
-    referans eklemek bile oranı düşürürdü (bulgu 17). Hiç dolu başlık yoksa None:
+    referans eklemek bile oranı düşürürdü. Hiç dolu başlık yoksa None:
     çalışma ortalamaya girmez. Dört başlık doluysa sonuç eski `toplam / 12`'nin aynısı.
     """
     dolu = [b for b in bilesenler if b is not None]
@@ -222,7 +222,7 @@ def dogrulama_bonusu(
     (docs/matching-algorithm.md § 4). Kanıtsız kart elenmez.
 
     Tamamlanmış pilot (en az bir) `PILOT_BONUSU` ekler, toplam 1.0'ı geçmez.
-    Pilotu olmayan kart için sonuç Faz C öncesiyle birebir aynı.
+    Pilotu olmayan kartın sonucu değişmez.
     """
     guven = 0.0
     oranlar = [o for g in guven_skorlari if (o := gosterge_orani(g)) is not None]
@@ -367,7 +367,7 @@ ROL_IFADELERI = {
 }
 UCUNCU_TARAF_IFADELERI = {
     None: "referans istenmedi ya da yanıt gelmedi",
-    # 0 artık "olumsuz yanıt" demek; "yanıt yok" None (bulgu 19).
+    # 0 artık "olumsuz yanıt" demek; "yanıt yok" None.
     0: "referans iddiayı doğrulamadı",
     1: "referansın yanıtı zayıf ya da çekimser",
     2: "bir referans olumlu yanıt verdi",
@@ -394,7 +394,7 @@ def kart_guclu_kanitli_mi(kart: YetenekKarti) -> bool:
 
 
 def pilot_ozeti(tamamlanan_pilot: int) -> str:
-    """Gerekçe istemine giden tamamlanmış pilot satırı (Faz C)."""
+    """Gerekçe istemine giden tamamlanmış pilot satırı (docs/takip.md § 6)."""
     if tamamlanan_pilot < 1:
         return "Tamamlanmış pilot: yok."
     return (
@@ -464,8 +464,8 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
         .options(selectinload(YetenekKarti.somut_ciktilar).selectinload(SomutCikti.guven_skoru))
         .where(YetenekKarti.embedding.isnot(None))
         # Hesabı olmayan profilin kartı önerilmez: kurum ilgilense bile kabul
-        # edecek kimse yok, döngü çıkmaz sokakta biterdi. Faz B öncesi
-        # profiller böyle (docs/faz-b-kimlik-ve-dongu.md § 8).
+        # edecek kimse yok, döngü çıkmaz sokakta biterdi. Kimlik tablosundan
+        # önceki profiller böyle (docs/kimlik-ve-dongu.md § 8).
         .where(Kullanici.hesap_id.isnot(None))
         # Alaka alt sınırı SQL'de de uygulanıyor: havuz embedding hesabından
         # sonra ama Python'a taşınmadan daralsın. Kural yine de saf
@@ -529,7 +529,7 @@ async def adaylari_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[Ad
 async def tamamlanan_pilot_sayilari(
     oturum: AsyncSession, kart_idler: Sequence[uuid.UUID]
 ) -> dict[uuid.UUID, int]:
-    """Kart başına tamamlanmış iş birliği sayısı (Faz C sinyali).
+    """Kart başına tamamlanmış iş birliği sayısı (docs/takip.md § 6).
 
     Saklanmıyor, hesaplanıyor: tek doğruluk kaynağı `isbirligi.durum`; kartta
     ayrıca bir sayaç tutulsaydı iki kaynak ayrışabilirdi.
@@ -635,7 +635,7 @@ async def gerekce_uret(ihtiyac: IhtiyacKarti, aday: Aday) -> str | None:
 
 
 async def firma_adaylarini_getir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list[FirmaAdayi]:
-    """Ortak ilanının firma adayları (docs/plans/firma-akisi.md § 0 karar 5, § 4).
+    """Ortak ilanının firma adayları (docs/kararlar.md F5).
 
     Kesin şartlar SQL'de: kartı ve hesabı olan firma, ilanı açan firma değil,
     ilan tür seçtiyse o türlerden, ilan şehir şartı koyduysa o şehirde (şehir

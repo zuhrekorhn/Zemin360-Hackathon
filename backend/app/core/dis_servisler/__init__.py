@@ -1,4 +1,4 @@
-"""Dış servis arayüzleri ve kurulumu (docs/plans/dogrulama-iyilestirme.md § 14.4).
+"""Dış servis arayüzleri ve kurulumu (docs/dogrulama.md § 14.4).
 
 Her servis bir arayüzün arkasındadır, bir `.env` bayrağı vardır ve hatası akışı
 düşürmez. Somut sınıflar yalnızca `kurulum.py`'de seçilir.

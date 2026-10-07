@@ -1,6 +1,6 @@
 """Kanıt okuma: erişim tespiti, HTML özeti, okuyucu zinciri, parça seçimi (ağ yok).
 
-docs/plans/dogrulama-iyilestirme.md § 5. Okuyucular kayıtlı yanıtlarla (MockTransport)
+docs/dogrulama.md § 5. Okuyucular kayıtlı yanıtlarla (MockTransport)
 sınanır; DNS çözümleyici sahtedir.
 """
 
@@ -112,7 +112,7 @@ def test_yazarlar_meta_citation_ve_json_ld_den():
 
 
 def test_buyuk_sayfada_dogrusal_surer():
-    """Eski regex bu girdide felaket geri izlemeye düşüyordu (bulgu 50)."""
+    """Eski regex bu girdide felaket geri izlemeye düşüyordu."""
     girdi = '<html><head><title>Kanal</title><meta content="' + '"a ' * 20_000
     baslangic = time.perf_counter()
     assert html_ozeti(girdi).baslik == "Kanal"
@@ -146,7 +146,7 @@ def test_bot_engeli_ve_alan_adi_yok():
         oku("x.org/p", {"x.org/p": html("<title>Attention Required!</title>", 403)}).erisim
         is E.ENGELLENDI
     )
-    assert oku("olmayan.example/p", {}).erisim is E.BULUNAMADI  # bulgu 6: "güvensiz" değil
+    assert oku("olmayan.example/p", {}).erisim is E.BULUNAMADI  # "güvensiz" değil: alan adı yok
 
 
 def test_javascript_sayfasi_meta_varsa_acik_yoksa_icerik_yok():

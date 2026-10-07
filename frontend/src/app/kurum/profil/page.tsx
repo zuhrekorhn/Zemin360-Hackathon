@@ -25,7 +25,7 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
 
 /**
- * Firmanın profil düzenleme sayfası (docs/plans/firma-akisi.md § 0 kararlar 2, 9).
+ * Firmanın profil düzenleme sayfası (docs/kararlar.md F2, F9).
  *
  * Kayıt formundaki alanlar; yalnızca kendi profili (token'ın firması). Bu
  * alanlardan önce açılmış firma hesapları paneldeki banttan buraya gelir ve

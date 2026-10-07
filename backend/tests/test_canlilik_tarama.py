@@ -1,4 +1,4 @@
-"""Canlılık taraması (docs/faz-d-canlilik.md § 1-4), gerçek veritabanında.
+"""Canlılık taraması (docs/canlilik.md § 1-4), gerçek veritabanında.
 
 Dünya: test_sahiplik.py — E1 = I1 (kurum1 "Koop Bir") ↔ K1 (genc1 "Elif"),
 `onerildi`; E2 = I2 (kurum2 "Koop İki") ↔ K2 (genc2 "Can"), `ilgileniliyor`.
@@ -110,7 +110,7 @@ def test_yanitsiz_ilgi_iki_kademe():
 
 def test_genc_ilgisi_yanitsiz_firmaya_bir_kez():
     """Genç ilgi gösterdi, firma 5 gündür yanıt vermedi: firmaya tek hatırlatma,
-    tekrar yok; gence gitmez (genç akışı, plan § 7.1)."""
+    tekrar yok; gence gitmez (docs/kararlar.md G6)."""
 
     async def adimlar(istemci, d):
         d.E1.durum, d.E1.baslatan = "genc_ilgilendi", "genc"
@@ -288,7 +288,7 @@ def test_yeni_ihtiyac_eski_karta_firsat_bir_kez():
         [bildirim] = await bildirimleri(d, d.genc1)
         assert bildirim.tur == "yeni_firsat"
         assert "eğitim" in bildirim.metin
-        # Genç önerilmiş fırsatı zaten görüyor (genc-akisi.md § 0 karar 1): firma adı var.
+        # Genç önerilmiş fırsatı zaten görüyor (docs/kararlar.md G1): firma adı var.
         assert "Koop Bir" in bildirim.metin
         assert bildirim.eslesme_id is None  # bağlantı fırsatlar bölümüne
 

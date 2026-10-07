@@ -1,4 +1,4 @@
-"""İlan (ihtiyaç kartı) kapatma nedenleri (docs/plans/firma-akisi.md § 0 karar 7, § 7).
+"""İlan (ihtiyaç kartı) kapatma nedenleri (docs/kararlar.md F7).
 
 Neden yalnızca GİRVAK'a görünür (program başarısı sayılır); karşı taraf
 yalnızca "fırsat kapandı" görür. Kapanan ilan tekrar açılmaz.
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-# İlanın kimi aradığı (docs/plans/firma-akisi.md § 0 kararlar 4-5). Aynı ihtiyaç
+# İlanın kimi aradığı (docs/kararlar.md F4-5). Aynı ihtiyaç
 # kartı, aynı pipeline ve aynı ilgi kuralları; fark aday kaynağında.
 ARANAN_GENC = "genc"
 ARANAN_FIRMA = "firma"

@@ -1,4 +1,5 @@
-"""Yüklenen kanıt dosyasının güvenli hale getirilmesi (plan § 4.4; Pipeline deseni, § 14.3).
+"""Yüklenen kanıt dosyasının güvenli hale getirilmesi (docs/dogrulama.md § 4.4; Pipeline deseni,
+§ 14.3).
 
 Sıra tek yerde, her adım tek iş yapar:
   1. Tür: ilk baytlardan (`filetype`); uzantıya ve istemcinin söylediğine bakılmaz.
@@ -70,7 +71,7 @@ class HazirDosya:
     ham: bytes = field(repr=False)
     icerik_turu: str
     parca_turu: ParcaTuru
-    # Ham dosyanın SHA-256'sı (tekrar denetimi, plan § 4.4)
+    # Ham dosyanın SHA-256'sı (tekrar denetimi, docs/dogrulama.md § 4.4)
     ozet: str
     tarama: TaramaSonucu
     # Ön okuyucuların çıktısı: {"exif": {...}, "c2pa": {...}, ...}
@@ -207,7 +208,7 @@ def _heif_kaydet() -> None:
 
 @on_okuyucu("exif")
 def exif_oku(ham: bytes, icerik_turu: str) -> dict[str, Any] | None:
-    """Zayıf sinyal (plan § 4.3): cihaz, yazılım, çekim tarihi. Konum OKUNMAZ."""
+    """Zayıf sinyal (docs/dogrulama.md § 4.3): cihaz, yazılım, çekim tarihi. Konum OKUNMAZ."""
     if not icerik_turu.startswith("image/"):
         return None
     from PIL import ExifTags, Image

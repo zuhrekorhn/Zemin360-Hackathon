@@ -1,4 +1,4 @@
-"""Kart hazırlama: otomatik puanlama ve yeniden eşleştirme (docs/plans/genc-akisi.md § 5.5).
+"""Kart hazırlama: otomatik puanlama ve yeniden eşleştirme (docs/agent-specs.md § 1).
 
 Açık: sonradan gelen genç, önceden açılmış ihtiyaçlarla eşleşmiyordu (eşleştirme
 yalnızca ihtiyaç kartı onaylanınca çalışıyordu). Kart hazırlama mevcut
@@ -139,7 +139,7 @@ def test_sonradan_gelen_genc_mevcut_ihtiyacla_eslesir_ve_is_idempotent(sahte_dis
             )
             assert bildirimler == 1
 
-            # Her kalem bir kez değerlendirildi; linksiz kalem de (karar 10).
+            # Her kalem bir kez değerlendirildi; linksiz kalem de.
             assert sorted(sahte_dis_servisler) == ["Linkli iş", "Linksiz iş"]
             ciktilar = {
                 c.baslik: c

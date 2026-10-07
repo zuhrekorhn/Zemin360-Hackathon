@@ -1,7 +1,7 @@
 """GitHub reposu: REST API'den sahip, açıklama, yıldız, katkıcılar ve README.
 
 Sayfanın HTML'i yerine API: veriler yapılandırılmış ve platformun ölçtüğü
-(yıldız, commit sayıları; seviye B için bağımsız destek adayı, adım 8). API
+(yıldız, commit sayıları; seviye B için bağımsız destek adayı). API
 okuyamazsa (hız sınırı, ağ) `None`: zincir genel okuyucuya geçer.
 """
 

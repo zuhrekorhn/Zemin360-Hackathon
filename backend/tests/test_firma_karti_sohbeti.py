@@ -1,4 +1,4 @@
-"""Firma kartı sohbeti (docs/plans/firma-akisi.md § 0 karar 3, § 5).
+"""Firma kartı sohbeti (docs/kararlar.md F3).
 
 Karar mantığı LLM olmadan (Tanımlama testleriyle aynı yaklaşım); uçlar sahte
 grafikle ve gerçek veritabanıyla.

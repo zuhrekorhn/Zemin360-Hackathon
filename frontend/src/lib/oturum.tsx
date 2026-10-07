@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Giriş yapmış hesabın durumu (docs/faz-b-kimlik-ve-dongu.md § 1, § 7).
+ * Giriş yapmış hesabın durumu (docs/kimlik-ve-dongu.md § 1, § 7).
  *
  * Tek kaynak `GET /me`: rol, ad, kartlar ve okunmamış bildirim sayısı. Ne
  * zaman yeniden okunur:

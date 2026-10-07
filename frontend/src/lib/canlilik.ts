@@ -1,5 +1,5 @@
 /**
- * Canlılık ve GİRVAK paneli görünüm kuralları (docs/faz-d-canlilik.md § 7).
+ * Canlılık ve GİRVAK paneli görünüm kuralları (docs/canlilik.md § 7).
  * Kural backend'de (app/agents/canlilik_kurallari.py); burada yalnızca
  * "ekranda ne yazsın". Testleri canlilik.test.ts'de.
  */

@@ -1,4 +1,4 @@
-"""Kimlik: şifre hash'i, JWT, kayıt, giriş, /me (docs/faz-b-kimlik-ve-dongu.md § 1-2).
+"""Kimlik: şifre hash'i, JWT, kayıt, giriş, /me (docs/kimlik-ve-dongu.md § 1-2).
 
 Saf kısımlar ağsız; kayıt/giriş/me yerel veritabanında geri alınan bir işlem
 içinde (tests/veritabani.py), veritabanı yoksa atlanır.

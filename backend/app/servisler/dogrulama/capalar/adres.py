@@ -1,4 +1,4 @@
-"""QR / doğrulama adresi çapası (plan § 4.2).
+"""QR / doğrulama adresi çapası (docs/dogrulama.md § 4.2).
 
 Adres güvenli istekle açılır (`core/kanit_okuma/istek.getir`, SSRF engeli).
 Genel okuyucunun "en az metin" eşiği burada yok: doğrulama sayfaları çoğu

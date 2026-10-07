@@ -1,4 +1,4 @@
-"""Uygulama içi bildirimlerin okuma uçları (docs/faz-b-kimlik-ve-dongu.md § 6).
+"""Uygulama içi bildirimlerin okuma uçları (docs/kimlik-ve-dongu.md § 6).
 
 Bildirimi yazan ve sayan fonksiyonlar `app/servisler/bildirim.py`'de: bildirimi
 olayın kendisi, olayla aynı işlemde yazar.

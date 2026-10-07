@@ -1,6 +1,6 @@
 /**
  * Gencin profil formu: doğrulama, dönüştürme ve uyarı bandı kararı
- * (docs/plans/genc-akisi.md § 5.1, § 0 karar 10). Saf fonksiyonlar; testleri
+ * (docs/agent-specs.md § 1, docs/kararlar.md G10). Saf fonksiyonlar; testleri
  * profil.test.ts'de. Kayıt sayfası ve profil sayfası aynı formu kullanır.
  *
  * Backend son sözü söyler (app/schemas/profil.py); buradaki kontrol yalnızca

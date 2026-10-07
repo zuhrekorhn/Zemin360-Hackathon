@@ -1,4 +1,4 @@
-"""Görselin algısal özeti (pHash; plan § 9, `ayni_iddia_cok_hesapta`).
+"""Görselin algısal özeti (pHash; docs/dogrulama.md § 9, `ayni_iddia_cok_hesapta`).
 
 SHA-256 yalnızca birebir aynı dosyayı yakalar; yeniden kaydedilmiş, küçültülmüş
 ya da biçimi değişmiş görselin özeti başkadır. Algısal özet görünüşe bakar:

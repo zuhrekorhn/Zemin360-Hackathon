@@ -60,7 +60,7 @@ async def embedding_listesi_uret(
 ) -> list[list[float]]:
     """Birden çok metni tek istekte vektörlere çevirir (sıra korunur).
 
-    Uzun kanıt metninin parçaları için (docs/plans/dogrulama-iyilestirme.md § 5.4).
+    Uzun kanıt metninin parçaları için (docs/dogrulama.md § 5.4).
     """
     ayarlar = get_settings()
     if not ayarlar.voyage_api_key:
@@ -120,7 +120,7 @@ def firma_temsil_metni(
     onceki_isler: str | None,
     sektor: str | None,
 ) -> str:
-    """Firma kartını embedding'e verilecek düz metne çevirir (docs/plans/firma-akisi.md § 4).
+    """Firma kartını embedding'e verilecek düz metne çevirir (docs/kararlar.md F5).
 
     Firmanın **ne yaptığı**: iş birliği ortağı arayan ilanın problemiyle
     karşılaştırılır. Aradığı ortak ve iş birliği türü bilinçli olarak DIŞARIDA

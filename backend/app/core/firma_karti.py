@@ -1,8 +1,8 @@
-"""Firma kartının alanları ve kuralları (docs/plans/firma-akisi.md § 0 kararlar 3, 10; § 2, § 5).
+"""Firma kartının alanları ve kuralları (docs/kararlar.md F3, F10).
 
 Firma kartı, firmanın başka firmalara "biz bunu yapıyoruz" dediği karttır:
 iş birliği ortağı arayan bir ilanın adayı olarak eşleştirmeye girer. Genç
-arayan firmanın karta ihtiyacı yok (karar 9).
+arayan firmanın karta ihtiyacı yok (docs/kararlar.md F9).
 
 Saf fonksiyonlar: veritabanı yok.
 """
@@ -78,5 +78,5 @@ def eksik_kart_alanlari(ne_yapiyoruz: str | None, yetkinlikler: Sequence[str]) -
 
 # Embedding'i etkileyen alanlar: değişirse kart yeniden hazırlanır. `aranan_isbirligi`
 # ve `isbirligi_turleri` firmanın ne aradığını söyler, ne yaptığını değil;
-# benzerlik metnine girmez (docs/plans/firma-akisi.md § 4).
+# benzerlik metnine girmez (docs/kararlar.md F5).
 EMBEDDING_ALANLARI: frozenset[str] = frozenset({"ne_yapiyoruz", "yetkinlikler", "onceki_isler"})

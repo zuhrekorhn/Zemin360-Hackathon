@@ -1,4 +1,4 @@
-"""GİRVAK gözlem paneli ucu (docs/plans/dogrulama-iyilestirme.md § 10.3, § 14.4).
+"""GİRVAK gözlem paneli ucu (docs/dogrulama.md § 10.3, § 14.4).
 
 Yalnızca GİRVAK, yalnızca okuma. İki görünüm: platform bazında kanıt erişim
 dağılımı ve kalıcı dış servis sağlığı (+ değerlendirme süresi / token özeti).

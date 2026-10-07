@@ -45,7 +45,7 @@ import {
 import { panelYolu } from "@/lib/yonlendirme";
 
 /**
- * İş birliği sayfası, Takip Ajanı (docs/faz-c-takip.md § 8). Kullanıcıya
+ * İş birliği sayfası, Takip Ajanı (docs/takip.md § 8). Kullanıcıya
  * "ajan" denmez; hitap bakan hesaba göre (rehber § 3).
  *
  * İki tarafa aynı sayfa. Üç hâl:
@@ -74,7 +74,7 @@ function IsbirligiIcerigi() {
   const { tazele } = useOturum();
   const hitap = useHitap();
   // Taraf rolden değil eşleşmeden: ortak firmanın rolü de "kurum"
-  // (docs/plans/firma-akisi.md § 9). Detay gelene kadar rolden tahmin.
+  // (docs/takip.md (Ek)). Detay gelene kadar rolden tahmin.
   const rolTarafi = tarafim(hesap.rol);
 
   const [detay, setDetay] = useState<IsbirligiDetayi | null>(null);

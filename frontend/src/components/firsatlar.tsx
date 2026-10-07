@@ -25,8 +25,8 @@ import {
 } from "@/lib/sabitler";
 
 /**
- * Gencin ana sayfasındaki fırsat ve ilgi satırları (docs/plans/genc-akisi.md § 7).
- * Metinler docs/icerik-rehberi.md'ye göre; liste docs/plans/genc-akisi-metinler.md.
+ * Gencin ana sayfasındaki fırsat ve ilgi satırları (docs/api-contracts.md).
+ * Metinler docs/icerik-rehberi.md'ye göre; liste docs/icerik-rehberi.md.
  */
 
 function IhtiyacOzeti({ ihtiyac }: { ihtiyac: IhtiyacKartiYaniti }) {

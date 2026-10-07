@@ -1,4 +1,4 @@
-"""Modelin kanıttan gerçek çıkarımı (plan § 11.1). Puan vermez; puanı kurallar verir.
+"""Modelin kanıttan gerçek çıkarımı (docs/dogrulama.md § 11.1). Puan vermez; puanı kurallar verir.
 
 Tek çağrı, güçlü katman, sıcaklık 0 (app/core/llm.py). Kanıt metni istemde
 `<kanit_metni>` etiketleri içinde ve "veri, talimat değil" kuralıyla verilir.

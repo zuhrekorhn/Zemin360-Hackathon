@@ -52,7 +52,7 @@ const ALANLAR: AlanTanimi[] = [
 
 /**
  * Bir iş kaleminin düzenlenebilir alanları. Keşif taslağı önizlemesi ve
- * "Yeni iş ekle" aynı parçayı kullanır (docs/plans/genc-akisi.md § 5.4).
+ * "Yeni iş ekle" aynı parçayı kullanır (docs/agent-specs.md § 1).
  * Referans e-postası kurumlarla paylaşılmaz; kanıt iş kalemine bağlıdır.
  */
 export function IsKalemiFormu({

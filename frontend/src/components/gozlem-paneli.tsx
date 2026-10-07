@@ -24,7 +24,7 @@ import {
 } from "@/lib/gozlem";
 
 /**
- * GİRVAK: gözlem (docs/plans/dogrulama-iyilestirme.md § 10.3).
+ * GİRVAK: gözlem (docs/dogrulama.md § 10.3).
  *
  * İki görünüm: kanıt linklerinin platform bazında açılma oranı ve dış
  * servislerin kalıcı durumu. Kayıtlar kişi ve adres taşımaz; 90 gün saklanır.

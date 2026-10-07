@@ -1,4 +1,4 @@
-"""İşaretleme, tamamlanma kuralı ve ortak görünüm (docs/faz-c-takip.md § 3, § 7).
+"""İşaretleme, tamamlanma kuralı ve ortak görünüm (docs/takip.md § 3, § 7).
 
 Gerçek veritabanında, geri alınan işlemde. Dünya: test_sahiplik.py + takip_dunyasi.py.
 """
@@ -104,7 +104,7 @@ def test_ortak_gorunum_gecikme_ve_eposta():
         genc = await istemci.get(_yol(isb), headers=d.genc1.baslik)
         kurum = await istemci.get(_yol(isb), headers=d.kurum1.baslik)
         assert genc.status_code == kurum.status_code == 200
-        # İki tarafa aynı görünüm; yalnızca isteyenin tarafı farklı (firma-akisi § 9).
+        # İki tarafa aynı görünüm; yalnızca isteyenin tarafı farklı (docs/takip.md, Ek).
         assert (genc.json()["tarafim"], kurum.json()["tarafim"]) == ("genc", "kurum")
         assert {**genc.json(), "tarafim": None} == {**kurum.json(), "tarafim": None}
         govde = genc.json()

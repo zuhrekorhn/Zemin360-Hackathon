@@ -1,4 +1,4 @@
-"""Eşleşme durum makinesi — docs/faz-b-kimlik-ve-dongu.md § 5'teki tablo, birebir.
+"""Eşleşme durum makinesi — docs/kimlik-ve-dongu.md § 5'teki tablo, birebir.
 
 Her (durum, olay, rol) üçlüsü sınanıyor: tablodaki geçişler, aynı geçişin
 tekrarı (yan etkisiz), geçersiz geçişler (409) ve yanlış rol.
@@ -68,5 +68,5 @@ def test_gecersiz_gecis_mevcut_durumu_soyler(durum, olay):
 
 
 def test_ilgileniyorum_artik_isbirligi_durumuna_gecmez():
-    """Faz B öncesi "ilgileniyorum" doğrudan kabul_edildi yapıyordu."""
+    """Eskiden "ilgileniyorum" doğrudan kabul_edildi yapıyordu; artık gencin kabulü gerekir."""
     assert gecis("onerildi", OLAY_ILGILENIYORUM, "kurum").durum == "ilgileniliyor"

@@ -1,4 +1,4 @@
-"""İsteğin izi: IP ve tarayıcının tuzlu özeti (plan § 9, `referans_supheli`).
+"""İsteğin izi: IP ve tarayıcının tuzlu özeti (docs/dogrulama.md § 9, `referans_supheli`).
 
 Ham IP ve tarayıcı bilgisi SAKLANMAZ; yalnızca uygulamanın gizli anahtarından
 türeyen anahtarla HMAC özeti (geri çevrilemez, başka sistemin özetiyle

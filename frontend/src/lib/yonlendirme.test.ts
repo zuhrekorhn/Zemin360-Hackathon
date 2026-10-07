@@ -103,7 +103,7 @@ describe("bildirimHedefi — Canlılık", () => {
 
   it("öneri ve fırsat", () => {
     expect(bildirimHedefi("oneri_bekliyor")).toBe("/kurum#ihtiyaclar");
-    // Genç akışında genç fırsatları görüyor (plan § 0, karar 1).
+    // Genç akışında genç fırsatları görüyor (docs/kararlar.md G1).
     expect(bildirimHedefi("yeni_firsat")).toBe("/genc#firsatlar");
     expect(bildirimHedefi("genc_ilgi")).toBe("/kurum#ihtiyaclar");
     expect(bildirimHedefi("genc_ilgisi_yanitsiz")).toBe("/kurum#ihtiyaclar");

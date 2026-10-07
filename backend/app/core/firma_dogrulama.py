@@ -1,4 +1,4 @@
-"""Firma doğrulaması: durumlar ve alan adı ipucu (docs/plans/firma-akisi.md § 0 karar 6, § 6).
+"""Firma doğrulaması: durumlar ve alan adı ipucu (docs/kararlar.md F6).
 
 Sistem yalnızca **ipucu** verir, kararı GİRVAK verir. İpucu kayıt e-postasının
 alan adıyla web sitesinin alan adını karşılaştırır; **siteye bağlanılmaz**, ağ
@@ -94,7 +94,7 @@ def alan_adi_ipucu(eposta: str | None, web_sitesi: str | None) -> str:
 
 
 def dogrulama_sifirlanir_mi(oncesi: str | None, sonrasi: str | None) -> bool:
-    """Web sitesi değişti mi? Değiştiyse GİRVAK'ın kararı yeniden beklenir (karar 15).
+    """Web sitesi değişti mi? Değiştiyse GİRVAK'ın kararı yeniden beklenir (docs/kararlar.md F6).
 
     Karşılaştırma alan adı üzerinden: `https://marketx.com/` → `marketx.com` değişiklik değil.
     """

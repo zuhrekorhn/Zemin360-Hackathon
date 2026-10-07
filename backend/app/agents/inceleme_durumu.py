@@ -1,4 +1,4 @@
-"""GİRVAK inceleme işaretinin durumu (docs/plans/dogrulama-iyilestirme.md § 9).
+"""GİRVAK inceleme işaretinin durumu (docs/dogrulama.md § 9).
 
 Eşleşme, takip ve referans durum makineleriyle aynı desen: geçiş kuralı tek
 yerde ve saf; servis yalnızca söyleneni uygular.
@@ -46,7 +46,7 @@ class _Karar(Protocol):
 
 
 def gecerli_dogrulanamadilar(isaretler: Iterable[_Karar]) -> list[_Karar]:
-    """Kalemin "Doğrulanamadı" etiketi (plan § 9): türünün SON kararı "doğrulanamadı"
+    """Kalemin "Doğrulanamadı" etiketi (docs/dogrulama.md § 9): türünün SON kararı "doğrulanamadı"
     olan işaretler. Açık işaret etiketi kaldırmaz (karar inceleme bitene dek
     geçerli); gencin itirazı aynı türden yeni bir işaret açar, GİRVAK onu "sorun
     yok" diye kapatırsa etiket kalkar. Puan değişmez (İ1)."""

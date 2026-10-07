@@ -19,7 +19,7 @@ from types import SimpleNamespace
 from app.api.kimlik import mevcut_hesap
 from app.main import app
 
-# Genç kaydının geçerli ek alanları (docs/plans/genc-akisi.md § 5.1): kayıt
+# Genç kaydının geçerli ek alanları (docs/agent-specs.md § 1): kayıt
 # gövdesine `**GENC_KAYIT_EKI` ile eklenir.
 GENC_KAYIT_EKI = {
     "genc_profili": {
@@ -31,7 +31,7 @@ GENC_KAYIT_EKI = {
     "kvkk_onay": True,
 }
 
-# Firma kaydının geçerli ek alanları (docs/plans/firma-akisi.md § 0 karar 2).
+# Firma kaydının geçerli ek alanları (docs/kararlar.md F2).
 FIRMA_KAYIT_EKI = {
     "firma_profili": {"tur": "kobi", "sektor": "Sivil toplum", "sehir": "İstanbul"},
     "kvkk_onay": True,

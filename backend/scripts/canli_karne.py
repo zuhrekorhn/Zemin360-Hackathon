@@ -1,4 +1,4 @@
-"""Haftalık canlı karne (docs/plans/dogrulama-iyilestirme.md § 10.1, § 16).
+"""Haftalık canlı karne (docs/dogrulama.md § 10.1, § 16).
 
 Değerlendirme setini bugünün sayfaları ve bugünün modeliyle ölçer ve kayıtlı
 (kasetli) karneyle karşılaştırır: link çürümesi, sayfa değişimi ve model kayması

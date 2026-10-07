@@ -12,7 +12,7 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
 import { platformAdi } from "@/lib/hesap-baglama";
 
 /**
- * OAuth sağlayıcısının döndüğü sayfa (docs/plans/dogrulama-iyilestirme.md § 6.1).
+ * OAuth sağlayıcısının döndüğü sayfa (docs/dogrulama.md § 6.1).
  *
  * Sağlayıcı `?code&state` ile buraya yönlendirir; sayfa ikisini giriş yapmış
  * gencin token'ıyla backend'e iletir. Durum bağlantıyı başlatan hesaba

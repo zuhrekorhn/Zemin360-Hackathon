@@ -7,7 +7,7 @@ import type {
 
 /**
  * Referans formunun ve referans satırının metinleri
- * (docs/plans/dogrulama-iyilestirme.md § 7). Sayfa ve kanıt bölümü aynı
+ * (docs/dogrulama.md § 7). Sayfa ve kanıt bölümü aynı
  * etiketleri buradan alır; değer kümeleri backend'deki şemayla aynı.
  */
 
@@ -72,7 +72,7 @@ export function referansOzeti(referans: ReferansDurumu): {
   for (const [ad, cevap] of sorular) {
     if (cevap) yanitlar.push(`${ad}: ${CEVAP_ADLARI[cevap]}`);
   }
-  // Eski formun 1-5 yanıtı (adım 7'den önce).
+  // Eski formun 1-5 yanıtı (dört soruluk formdan önce).
   if (yanitlar.length === 0 && referans.puan !== null) {
     yanitlar.push(`${referans.puan}/5`);
   }

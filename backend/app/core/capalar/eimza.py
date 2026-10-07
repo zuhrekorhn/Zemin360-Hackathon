@@ -1,4 +1,4 @@
-"""PDF'teki elektronik imzaların (PAdES) okunması (plan § 4.2; `pyHanko`).
+"""PDF'teki elektronik imzaların (PAdES) okunması (docs/dogrulama.md § 4.2; `pyHanko`).
 
 Ham dosyadan çalışır: temizlik PDF'i yeniden yazdığı için imzanın bayt aralığını
 bozar. Doğrulama yereldir: iptal listesi / OCSP için ağ isteği atılmaz

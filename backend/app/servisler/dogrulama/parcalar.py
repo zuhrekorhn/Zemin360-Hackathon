@@ -1,16 +1,16 @@
-"""Kanıt parçalarının modele yazılması: tek kapı (plan § 1 İ7, bulgu 25).
+"""Kanıt parçalarının modele yazılması: tek kapı (docs/dogrulama.md § 1 İ7).
 
 Kanıt yalnızca buradan eklenir ve kaldırılır: kart sayfasının kanıt bölümü,
 "çalışma ekle" formu ve Keşif onayı aynı fonksiyonları çağırır. Saf model
 işlemi: veritabanı sorgusu, LLM ve commit yok; bu yüzden hem Doğrulama hem
 kart düzenleme servisi döngüsüz kullanabilir.
 
-Kanıt değişince ne olur (plan § 2: kanıt eklemek puanı hiçbir zaman düşürmez):
+Kanıt değişince ne olur (docs/dogrulama.md § 2: kanıt eklemek puanı hiçbir zaman düşürmez):
   - Göstergenin değerlendirme kısmı (Kanıt, Sonuç, Rol, not) sıfırlanır ve
     yeniden değerlendirilir; Referans başlığı korunur.
   - `icerik_tarihi` İLERLEMEZ: kanıt iddiayı değiştirmez, referans yanıtları
     geçerli kalır. Referansları geçmişe atan yalnızca iddianın kendisinin
-    (başlık, açıklama, sonuç, pay) değişmesidir (genc-akisi § 0, karar 8).
+    (başlık, açıklama, sonuç, pay) değişmesidir (docs/kararlar.md G8).
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ class DosyaSiniri(ValueError):
     """Çalışmanın dosya sınırı doldu (uçta 422); mesaj gence gösterilir."""
 
 
-# Çalışma başına en çok dosya / görsel (plan § 4.4)
+# Çalı# Çalı# Çalışma başına en çok dosya / görsel (docs/dogrulama.md § 4.4)
 KALEM_BASINA_DOSYA = 5
 DOSYA_TURLERI = frozenset({ParcaTuru.DOSYA.value, ParcaTuru.GORSEL.value})
 
@@ -116,8 +116,8 @@ def parca_sil(cikti: SomutCikti, parca_id: uuid.UUID) -> KanitParcasi:
 
 def okunabilir_mi(parca: KanitParcasi) -> bool:
     """Değerlendirmenin okuyacağı parça mı? Her parça okunur, başlık başına en
-    güçlüsü kullanılır (plan § 2). Dosya ve görsel yüklenirken okunmuştur.
-    Çürümüş link (silinmiş ya da gizlenmiş, plan § 10.4) okunmaz: Kanıt "—" olur."""
+    güçlüsü kullanılır (docs/dogrulama.md § 2). Dosya ve görsel yüklenirken okunmuştur.
+    Çürümüş link (silinmiş ya da gizlenmiş, docs/dogrulama.md § 10.4) okunmaz: Kanıt "—" olur."""
     if parca.tur == ParcaTuru.LINK.value:
         return bool(parca.url) and not curumus_mu(parca.curume_sayaci or 0)
     return parca.tur in DOSYA_TURLERI

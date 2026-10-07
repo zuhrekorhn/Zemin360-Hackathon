@@ -1,4 +1,4 @@
-"""Erişim durumunun tespiti (plan § 5.2). Saf: ağ yok, kalıp tablosuyla test edilir.
+"""Erişim durumunun tespiti (docs/dogrulama.md § 5.2). Saf: ağ yok, kalıp tablosuyla test edilir.
 
 Okunamayan (giriş duvarı, bot engeli, boş sayfa, ağ hatası) ile "yok" (404,
 alan adı yok) ayrılır: ilki puanda "—", ikincisi 0.

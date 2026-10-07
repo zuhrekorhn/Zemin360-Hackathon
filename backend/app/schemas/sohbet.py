@@ -17,7 +17,7 @@ DoluMetin = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1
 
 
 class SohbetBaslatIstegi(BaseModel):
-    """Şimdilik gövde boş — oturum sunucuda açılır. Auth Faz 3'te gelecek."""
+    """Gövde boş: oturum sunucuda açılır, sahibi token'daki hesaptır."""
 
 
 class SohbetCevapIstegi(BaseModel):

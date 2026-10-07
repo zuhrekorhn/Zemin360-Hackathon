@@ -1,5 +1,5 @@
 /**
- * GİRVAK inceleme kuyruğunun metinleri (docs/plans/dogrulama-iyilestirme.md § 9).
+ * GİRVAK inceleme kuyruğunun metinleri (docs/dogrulama.md § 9).
  * Saf fonksiyonlar; testleri inceleme.test.ts'de. GİRVAK'a "siz".
  */
 

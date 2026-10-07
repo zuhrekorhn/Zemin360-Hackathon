@@ -1,4 +1,4 @@
-"""Şüpheli referans yanıtı (plan § 9, bulgu 21): `referans_supheli`.
+"""Şüpheli referans yanıtı (docs/dogrulama.md § 9): `referans_supheli`.
 
 İzler `referans_istegi.yanit_isareti` JSONB'sinde (yeni tablo yok):
   - `istek_izi`: genç isteği açarken (oturum açmış gencin IP / tarayıcı özeti);

@@ -1,4 +1,4 @@
-"""GİRVAK paneli uçları (docs/faz-d-canlilik.md § 7-8), gerçek veritabanında.
+"""GİRVAK paneli uçları (docs/canlilik.md § 7-8), gerçek veritabanında.
 
 Dünya: test_sahiplik.py — E1 (kurum1 "Koop Bir" ↔ genc1 "Elif") `onerildi`,
 E2 (kurum2 "Koop İki" ↔ genc2 "Can") `ilgileniliyor`. Yerel veritabanında

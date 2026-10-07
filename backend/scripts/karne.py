@@ -1,4 +1,4 @@
-"""Doğrulama değerlendirme setinin karnesi (docs/plans/dogrulama-iyilestirme.md § 10.1).
+"""Doğrulama değerlendirme setinin karnesi (docs/dogrulama.md § 10.1).
 
     python -m scripts.karne                      # çevrimdışı: kayıtlı yanıtlarla
     python -m scripts.karne --model kaydet       # kayıtlı ağ, eksik model çağrıları gerçek

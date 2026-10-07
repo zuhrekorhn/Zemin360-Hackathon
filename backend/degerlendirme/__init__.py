@@ -1,6 +1,6 @@
 """Doğrulama değerlendirme seti: vakalar, kaset, değerlendiriciler, karne.
 
-Uygulamanın parçası değil, geliştirme aracıdır (docs/plans/dogrulama-iyilestirme.md
+Uygulamanın parçası değil, geliştirme aracıdır (docs/dogrulama.md
 § 10.1). Her puanlama değişikliği etiketli vakalar üzerinde önce ve sonra
 çalıştırılır; ağ ve model yanıtları kayıtlıdır, karne çevrimdışı üretilir.
 

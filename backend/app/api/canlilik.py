@@ -1,4 +1,4 @@
-"""Canlılık Ajanı — tarama (docs/faz-d-canlilik.md § 1-4, § 8).
+"""Canlılık Ajanı — tarama (docs/canlilik.md § 1-4, § 8).
 
 Taramanın asıl işi bir uç nokta (Eşleştirme'nin "arka plan işi bir endpoint"
 deseni; CLAUDE.md "zamanlayıcı yok"). Kim çağırır:
@@ -76,7 +76,7 @@ logger = logging.getLogger("zemin360.canlilik")
 # Tarama özetindeki referans sayaçları (canlılık olayı değil).
 REFERANS_HATIRLATMA = "referans_hatirlatma"
 REFERANS_YANIT_YOK = "referans_yanit_yok"
-# Link çürümesi yoklaması (plan § 10.4): yoklanan ve çürüyen link sayıları.
+# Link çürümesi yoklaması (docs/dogrulama.md § 10.4): yoklanan ve çürüyen link sayıları.
 LINK_YOKLANDI = "link_yoklandi"
 LINK_CURUDU = "link_curudu"
 
@@ -212,7 +212,7 @@ async def pasif_adaylar(
             .where(
                 Eslesme.durum.in_([DURUM_ONERILDI, DURUM_ILGILENILIYOR, DURUM_GENC_ILGILENDI]),
                 Eslesme.son_aktivite_tarihi <= esik,
-                # Firma–firma eşleşmeleri taranmaz (docs/plans/firma-akisi.md § 0 karar 18).
+                # Firma–firma eşleşmeleri taranmaz (docs/kararlar.md F18).
                 Eslesme.yetenek_karti_id.isnot(None),
                 gorunur_kosulu() if yalniz_gorunur else true(),
             )
@@ -308,7 +308,7 @@ async def adaylari_topla(
     for eslesme, h, baglam in adaylar:
         alici = _taraf_hesabi(eslesme, h.alici)
         if alici is None:
-            continue  # hesabı olmayan (Faz B öncesi) profil: okuyacak kimse yok
+            continue  # hesabı olmayan profil: okuyacak kimse yok
         son = son_olaylar.get(_anahtar(eslesme.id, h.tur, alici, h.milestone_id))
         if tekrar_mi(h.tur, son, eslesme.son_aktivite_tarihi):
             continue
@@ -333,8 +333,8 @@ async def firsat_adaylari(oturum: AsyncSession, simdi: dt.datetime) -> list[Aday
 
     Son 7 günde açılmış ihtiyaç kartlarının `onerildi` önerileri; önerilen
     kart en az 14 gün önce oluşturulmuşsa kartın sahibine fırsat, firmanın
-    adıyla. Genç fırsatı zaten ana sayfasında firmanın adıyla görüyor (genç
-    akışı karar 1); bildirimde adı gizlemenin gerekçesi kalmadı.
+    adıyla. Genç fırsatı zaten ana sayfasında firmanın adıyla görüyor (docs/kararlar.md
+    G1); bildirimde adı gizlemenin gerekçesi kalmadı.
     """
     eslesmeler = await oturum.scalars(
         select(Eslesme)
@@ -448,11 +448,12 @@ async def tarama_yap(oturum: AsyncSession, simdi: dt.datetime | None = None) -> 
         olaylar[REFERANS_HATIRLATMA] = len(referans.hatirlatmalar)
     if referans.zaman_asimi:
         olaylar[REFERANS_YANIT_YOK] = referans.zaman_asimi
-    # Referans isteklerindeki IP / tarayıcı özetleri 90 gün tutulur (plan § 9).
+    # Referans isteklerindeki IP / tarayıcı özetleri 90 gün tutulur (docs/dogrulama.md § 9).
     await referans_suphesi.eski_izleri_temizle(oturum, simdi)
-    # Gözlem kayıtları (okuma, değerlendirme, servis günlüğü) 90 gün saklanır (plan § 10.3).
+    # Gözlem kayıtları (okuma, değerlendirme, servis günlüğü) 90 gün saklanır (docs/dogrulama.md
+    # § 10.3).
     await gozlem.eski_gozlemleri_temizle(oturum, simdi)
-    # Kanıt linklerinin haftalık yoklaması (plan § 10.4); arızası taramayı düşürmez.
+    # Kanıt linklerinin haftalık yoklaması (docs/dogrulama.md § 10.4); arızası taramayı düşürmez.
     try:
         async with oturum.begin_nested():
             curume = await dogrulama_servisi.curume_yoklamasi(oturum, simdi)

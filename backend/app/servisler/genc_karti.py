@@ -1,4 +1,4 @@
-"""Gencin tek yetenek kartı (madde 7, 1 Eki).
+"""Gencin tek yetenek kartı (docs/kararlar.md G17).
 
 Bir gencin tek kartı olur; kural veritabanında (`yetenek_karti.kullanici_id`
 tekil). Kartı bulmanın tek yolu burası: Keşif ve `/me` kendi sorgusunu

@@ -1,7 +1,7 @@
 """HTML'den başlık, açıklama, yazarlar ve ana metin (standart kütüphane; doğrusal süre).
 
 Regex yok: büyük sayfalarda felaket geri izlemeye düşen eski başlık okuması
-sunucuyu donduruyordu (bulgu 50). Ana metin için script, stil ve sayfa iskeleti
+sunucuyu donduruyordu. Ana metin için script, stil ve sayfa iskeleti
 (nav, header, footer, aside) atlanır. Yazarlar `meta author`, `article:author`,
 akademik sayfaların `citation_author` etiketleri (DergiPark, arXiv…) ve JSON-LD'den
 okunur. Karakter kodları (`&#x2019;`) çözülür.

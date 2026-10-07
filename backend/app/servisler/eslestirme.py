@@ -187,7 +187,7 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
     if guncel_durum != IHTIYAC_ACIK:
         raise HTTPException(status_code=409, detail=IHTIYAC_KAPALI_MESAJI)
 
-    # Aday kaynağı ilana göre (docs/plans/firma-akisi.md § 4): genç ilanında
+    # Aday kaynağı ilana göre (docs/kararlar.md F5): genç ilanında
     # yetenek kartları, ortak ilanında firma kartları. Gençler ortak ilanına,
     # firmalar genç ilanına önerilmez. İki yolda da benzerlik tabanını geçen ilk
     # YARGI_N aday yapay zekâ tarafından yargılanır (docs/matching-algorithm.md § 8).
@@ -218,7 +218,7 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
         elif eslesme.durum != DURUM_GENC_ILGILENDI:
             # Kurumun verdiği karar (ilgileniliyor/kabul/red) ezilmez;
             # yalnızca skor tazelenir. Gencin ilgi gösterdiği kaydın skoru da
-            # değişmez (plan § 0, karar 14): genç o uyumu görerek ilgilendi.
+            # değişmez (docs/kararlar.md G14): genç o uyumu görerek ilgilendi.
             eslesme.skor = aday.skor
 
     # Eklenenler ON CONFLICT ile yazıldı; ORM nesneleri yeniden okunarak alınır.
@@ -237,7 +237,7 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
         for aday in secilenler
         if aday.aday_kimligi in guncel
         and guncel[aday.aday_kimligi].gerekce_metni is None
-        # Adayın ilgi gösterdiği kaydın gerekçesi değiştirilmez (karar 14).
+        # Adayın ilgi gösterdiği kaydın gerekçesi değiştirilmez (G14).
         and guncel[aday.aday_kimligi].durum != DURUM_GENC_ILGILENDI
         # Öneri gerekçesini yargı çağrısı yazar (başarısızsa sonraki hesapta yeniden
         # denenir); burada yalnızca karar verilmiş kayıtların eksik gerekçesi eski
@@ -278,7 +278,7 @@ def yargilanmali_mi(eslesme: Eslesme | None) -> bool:
     Kayıt yoksa evet. `onerildi` kayıt kararsızsa (eski kayıt, hata almış çağrı,
     kart değişince sıfırlanmış) evet. Kararı olan kayıt bir daha yargılanmaz; karar
     verilmiş kayıt (ilgileniliyor, genc_ilgilendi, kabul_edildi, reddedildi, kapandi)
-    hiçbir zaman yargılanmaz (karar 14).
+    hiçbir zaman yargılanmaz (docs/kararlar.md G14).
     """
     if eslesme is None:
         return True

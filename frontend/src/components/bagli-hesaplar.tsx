@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Profildeki "Bağlı hesaplar" bölümü (docs/plans/dogrulama-iyilestirme.md § 6).
+ * Profildeki "Bağlı hesaplar" bölümü (docs/dogrulama.md § 6).
  *
  * İki yol: giriş yaparak bağlama (GitHub, GitLab, ORCID; ayarı olmayan
  * görünmez) ve doğrulama kodu (kod profil açıklamasına yazılır, sonra kontrol

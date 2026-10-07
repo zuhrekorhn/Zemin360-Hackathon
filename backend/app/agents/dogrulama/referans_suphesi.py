@@ -1,4 +1,4 @@
-"""Referans yanıtının şüphe sinyalleri (plan § 9 `referans_supheli`, bulgu 21). Saf.
+"""Referans yanıtının şüphe sinyalleri (docs/dogrulama.md § 9 `referans_supheli`). Saf.
 
 Sinyal hüküm değildir: puanı değiştirmez (İ1), GİRVAK'ın bakması için kuyruğa
 düşer. Sinyaller:
@@ -23,7 +23,7 @@ SINYAL_COK_GENC = "cok_gence_yanit"
 HIZLI_YANIT_SN = 20
 # Bu kadar farklı gence yanıt veren aynı kişi (bu genç dahil)
 COK_GENC_ESIGI = 3
-# IP ve tarayıcı özetlerinin saklanma süresi (plan § 9)
+# IP ve tarayıcı özetlerinin saklanma süresi (docs/dogrulama.md § 9)
 IZ_SAKLAMA_GUN = 90
 
 

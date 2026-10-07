@@ -117,7 +117,7 @@ async def ihtiyac_karti_kapat(
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> IhtiyacKartiYaniti:
-    """Firma ilanını kapatır (docs/plans/firma-akisi.md § 0 karar 7, § 7).
+    """Firma ilanını kapatır (docs/kararlar.md F7).
 
     Bekleyen ilgiler "kapandı" olur ve nötr bildirim gider (app/servisler/ilgi.py).
     Kapanan ilan tekrar açılmaz; ikinci istek 200 döner ve yan etkisizdir (ilk
@@ -147,7 +147,7 @@ async def ihtiyac_karti_duzenle(
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> IhtiyacKartiYaniti:
-    """Firma açık ilanını yerinde düzenler (docs/plans/ilan-duzenleme.md).
+    """Firma açık ilanını yerinde düzenler (docs/kararlar.md D1).
 
     Onay formundaki gövdenin tamamı gelir; `aranan` (kapı) değişmez. Kapalı
     ilan ya da iş birliği başlamış ilan 409. Değişmeyen düzenleme yan etkisiz.

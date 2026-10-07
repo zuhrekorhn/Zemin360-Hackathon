@@ -1,4 +1,4 @@
-"""Kayıt e-postası doğrulama bağlantısı (docs/plans/dogrulama-iyilestirme.md § 6.3).
+"""Kayıt e-postası doğrulama bağlantısı (docs/dogrulama.md § 6.3).
 
 Token'ın kendisi saklanmaz, SHA-256 özeti saklanır: veritabanı sızsa da
 bağlantı üretilemez. Doğrulama sonrası satır süresi dolana kadar kalır; aynı

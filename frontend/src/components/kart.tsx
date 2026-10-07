@@ -253,7 +253,7 @@ export function CiktiOzeti({
 }
 
 /**
- * Tamamlanmış pilot rozeti (docs/faz-c-takip.md § 6): iki tarafın her adımı
+ * Tamamlanmış pilot rozeti (docs/takip.md § 6): iki tarafın her adımı
  * onayladığı iş birliği. Bağlantı rengi — "bağlantı anı". Sıfırsa çizilmez.
  */
 export function PilotRozeti({ sayi }: { sayi: number }) {

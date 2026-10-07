@@ -1,4 +1,4 @@
-"""Kayıt, giriş ve /me (docs/faz-b-kimlik-ve-dongu.md § 1-2).
+"""Kayıt, giriş ve /me (docs/kimlik-ve-dongu.md § 1-2).
 
 Kayıt hesabı ve boş profili birlikte açar: genç için `kullanici(ad)`, kurum
 için `kurum(ad)`. Profilin e-postası iletişim bilgisidir, hesap e-postasıyla
@@ -67,8 +67,8 @@ async def hesap_olustur(
 ) -> Hesap:
     """Hesabı ve (genç/kurum için) profilini açar, commit eder.
 
-    E-posta normalize edilir. Aynı e-posta bir hesapta ya da Faz B öncesinden
-    kalan hesapsız bir profilde varsa `EpostaKayitli`. Hesapsız profil
+    E-posta normalize edilir. Aynı e-posta bir hesapta ya da kimlik tablosundan
+    önce kalan hesapsız bir profilde varsa `EpostaKayitli`. Hesapsız profil
     sahiplenilmez: e-posta doğrulaması yok, başkasının eski kartlarını
     e-postasını yazarak almak mümkün olmamalı.
 

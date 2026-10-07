@@ -65,10 +65,10 @@ class SohbetYaniti(BaseModel):
 
 
 class GencProfili(BaseModel):
-    """Kart onayıyla gelen profil güncellemesi (docs/faz-b-kimlik-ve-dongu.md § 4).
+    """Kart onayıyla gelen profil güncellemesi (docs/kimlik-ve-dongu.md § 4).
 
     Kimlik artık token'daki hesaptan geliyor; ad ve e-posta kayıtta alındı,
-    burada yok. Boş gelen alan kayıtlı değeri SİLMEZ (Faz A'daki kural):
+    burada yok. Boş gelen alan kayıtlı değeri SİLMEZ:
     profili kayıt formunda dolduran gencin onayı boş profil gönderir.
     """
 
@@ -119,7 +119,7 @@ class YetenekKartiYaniti(BaseModel):
     E-posta BURADA YOK — agent-specs.md § 1.5: iletişim bilgisi kuruma
     varsayılan olarak gösterilmez, gencin kabulüyle açılır ve ayrı bir
     `iletisim` alanında taşınır (schemas/eslestirme.py). Gencin adı iletişim
-    bilgisi sayılmıyor, baştan görünür (docs/faz-b-kimlik-ve-dongu.md § 5).
+    bilgisi sayılmıyor, baştan görünür (docs/kimlik-ve-dongu.md § 5).
     """
 
     id: uuid.UUID
@@ -134,7 +134,7 @@ class YetenekKartiYaniti(BaseModel):
     versiyon: int
     embedding_var: bool
     somut_ciktilar: list[SomutCiktiYaniti]
-    # Faz C: iki tarafın her adımı onayladığı tamamlanmış iş birliği sayısı.
+    # İki tarafın her adımı onayladığı tamamlanmış iş birliği sayısı.
     # Kurum adı taşımaz; eşleşme skoruna doğrulama bonusu olarak girer.
     tamamlanan_pilot: int = 0
 

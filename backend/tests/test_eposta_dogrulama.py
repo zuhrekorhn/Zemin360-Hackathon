@@ -1,4 +1,4 @@
-"""Kayıt e-postasının doğrulanması (docs/plans/dogrulama-iyilestirme.md § 6.3), gerçek
+"""Kayıt e-postasının doğrulanması (docs/dogrulama.md § 6.3), gerçek
 veritabanında: kayıt bağlantıyı gönderir, bağlantı hesabı doğrular, tekrarı yan
 etkisiz, süresi dolan ya da yenisiyle geçersizleşen bağlantı 400, yeniden gönderme
 kuralları (401 / 409 / 429)."""

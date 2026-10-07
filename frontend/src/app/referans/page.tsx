@@ -31,7 +31,7 @@ import {
  * İddia formdan ÖNCE gösteriliyor: neyi onayladığını bilmeden yanıt vermek
  * anlamsız olurdu. Harcanmış ya da geçersiz bir link form açmıyor.
  *
- * Dört soru (docs/plans/dogrulama-iyilestirme.md § 7): ilişki; çalışma, pay ve
+ * Dört soru (docs/dogrulama.md § 7): ilişki; çalışma, pay ve
  * sonuç doğru mu. Pay ve sonuç ayrı satırlarda gösterilir; kalemde yazılmamışsa
  * o soru sorulmaz.
  */

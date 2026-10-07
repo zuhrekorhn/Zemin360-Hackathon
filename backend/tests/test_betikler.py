@@ -1,4 +1,4 @@
-"""Geliştirme betikleri: yerel sıfırlama ve demo hesapları (docs/faz-b-kimlik-ve-dongu.md § 8-9).
+"""Geliştirme betikleri: yerel sıfırlama ve demo hesapları (docs/kimlik-ve-dongu.md § 8-9).
 
 Sıfırlamanın kendisi (TRUNCATE) burada çalıştırılmıyor: geri alınan işlem
 içinde bile yerel veritabanının tamamını kilitler. Sınanan, neyi sileceği ve
@@ -129,7 +129,7 @@ def test_demo_hesaplari_acilir_tekrar_calismasi_guvenli_ve_kartlar_eslesir(monke
                 ("genc", True),
                 ("kurum", True),
                 ("girvak", True),
-                # Firma akışı demosu: girişim ve kurumsal (firma-akisi § 0 karar 20).
+                # Firma akışı demosu: girişim ve kurumsal (docs/kararlar.md F20).
                 ("kurum", True),
                 ("kurum", True),
             ]
@@ -236,7 +236,7 @@ def test_zaman_kaydirma_pasiflesmeyi_gosterir(monkeypatch):
 
 
 def test_demo_firmalari_birbirine_uyar():
-    """Firma akışı demosu (firma-akisi § 0 karar 20): kurumsalın ortak ilanı yalnızca
+    """Firma akışı demosu (docs/kararlar.md F20): kurumsalın ortak ilanı yalnızca
     girişim arıyor, demo girişim kesin şartlardan geçer; ipucu "uyuşuyor"."""
     from app.core.firma_dogrulama import UYUSUYOR, alan_adi_ipucu
     from app.core.firma_profili import eksik_firma_alanlari

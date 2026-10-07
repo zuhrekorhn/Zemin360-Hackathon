@@ -1,4 +1,4 @@
-"""Ortak ilanı ve iki kapı (docs/plans/firma-akisi.md § 0 kararlar 4-5, § 5).
+"""Ortak ilanı ve iki kapı (docs/kararlar.md F4-5, § 5).
 
 Aynı motor, aynı ihtiyaç kartı; ikinci soru seti. Kapı sohbetin başında
 seçilir, durumda saklanır; sonraki istekler grafiği durumdan seçer. Firma

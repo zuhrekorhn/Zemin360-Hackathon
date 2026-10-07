@@ -1,4 +1,5 @@
-"""Kalıcı gözlem (plan § 10.3, § 14.4, adım 12): kayıtlar, panel ucu, saklama süresi."""
+"""Kalıcı gözlem (docs/dogrulama.md § 10.3, § 14.4): kayıtlar, panel ucu, saklama
+süresi."""
 
 import asyncio
 import contextlib

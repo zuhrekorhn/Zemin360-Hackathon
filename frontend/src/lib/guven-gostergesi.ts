@@ -1,5 +1,5 @@
 /**
- * Güven göstergesinin bir başlığının gösterimi (docs/plans/dogrulama-iyilestirme.md § 1, İ4).
+ * Güven göstergesinin bir başlığının gösterimi (docs/dogrulama.md § 1, İ4).
  *
  * null = "—": başlık değerlendirilmedi ya da (Referans'ta) yanıt yok. 0 ile
  * karıştırılmaz: 0 bir değerlendirmenin sonucudur (ör. referans olumsuz yanıt

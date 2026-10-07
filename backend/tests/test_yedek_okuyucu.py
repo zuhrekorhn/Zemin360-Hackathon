@@ -1,4 +1,4 @@
-"""Yedek okuyucu (plan § 5.1, § 5.5): zincirdeki kuralları, ekran görüntüsü okunuşu,
+"""Yedek okuyucu (docs/dogrulama.md § 5.1, § 5.5): zincirdeki kuralları, ekran görüntüsü okunuşu,
 servis adaptörü, profil kodu okuması ve üçüncü taraf okuma (Jina, bayrakla). Ağ yok:
 sayfalar MockTransport'tan, yedek okuyucu sahte.
 """

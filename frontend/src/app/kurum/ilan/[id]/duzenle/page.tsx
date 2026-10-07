@@ -19,7 +19,7 @@ import {
 import { type Hata, hatayaCevir } from "@/lib/hata";
 
 /**
- * İlan düzenleme (docs/plans/ilan-duzenleme.md). Onaydaki formun aynısı;
+ * İlan düzenleme (docs/kararlar.md D1). Onaydaki formun aynısı;
  * kapı (genç / iş birliği ortağı) değişmez. Kapalı ya da iş birliği başlamış
  * ilanda backend 409 ve nedenini döner, o cümle gösterilir.
  */

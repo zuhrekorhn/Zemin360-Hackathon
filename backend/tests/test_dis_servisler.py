@@ -1,4 +1,4 @@
-"""Dış servis katmanı (plan § 14.4): Resend adaptörü, zarif düşüş, sarmalayıcılar,
+"""Dış servis katmanı (docs/dogrulama.md § 14.4): Resend adaptörü, zarif düşüş, sarmalayıcılar,
 kurulum bayrakları ve GİRVAK'a açık sağlık ucu."""
 
 import asyncio

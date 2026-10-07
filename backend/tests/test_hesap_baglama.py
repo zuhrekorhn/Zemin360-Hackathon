@@ -1,4 +1,4 @@
-"""Hesap bağlama (docs/plans/dogrulama-iyilestirme.md § 6.1): OAuth adaptörleri, kurulum,
+"""Hesap bağlama (docs/dogrulama.md § 6.1): OAuth adaptörleri, kurulum,
 uçlar (başlat → dönüş → tamamla), tekillik, sahiplik ve arka planda yeniden okuma.
 
 Dünya: test_sahiplik.py — genc1 "Elif", kartı K1; genc2 "Can", kartı K2.

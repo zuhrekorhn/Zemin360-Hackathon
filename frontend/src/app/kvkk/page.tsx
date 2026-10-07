@@ -1,5 +1,5 @@
 /**
- * KVKK aydınlatma metni (docs/plans/genc-akisi.md § 5.1).
+ * KVKK aydınlatma metni (docs/agent-specs.md § 1).
  *
  * İçerik platformun gerçekte ne topladığını ve ne yaptığını anlatıyor; hukuki
  * gözden geçirmeden geçmedi. Yayına almadan önce veri sorumlusunun (GİRVAK)

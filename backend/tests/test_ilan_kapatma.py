@@ -1,4 +1,4 @@
-"""İlan kapatma (docs/plans/firma-akisi.md § 0 karar 7, § 7).
+"""İlan kapatma (docs/kararlar.md F7).
 
 Kural `ihtiyaci_kapat`'ta (tests/test_ilgi_durumu.py); burada uç: yetki,
 neden, tekrar, bildirimde neden olmaması, GİRVAK sayısı ve kapalı ilana

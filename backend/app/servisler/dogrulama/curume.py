@@ -1,4 +1,4 @@
-"""Link çürümesi yoklaması (plan § 10.4): Canlılık taramasının bir adımı.
+"""Link çürümesi yoklaması (docs/dogrulama.md § 10.4): Canlılık taramasının bir adımı.
 
 Kurallar saf (`app/agents/dogrulama/curume.py`); burada linkin yeniden açılması
 ve sonucun modele yazılması. Yoklama modeli çağırmaz; yalnızca eşiği geçen

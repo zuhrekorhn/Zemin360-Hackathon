@@ -1,8 +1,8 @@
-"""Yüklenen dosyada zararlı içerik taraması: arayüz, ClamAV ve kapalı kip (plan § 4.4).
+"""Yüklenen dosyada zararlı içerik taraması: arayüz, ClamAV ve kapalı kip (docs/dogrulama.md § 4.4).
 
 ClamAV ayrı bir konteynerde çalışır; `clamd`'nin INSTREAM komutu TCP üzerinden
 kullanılır (ek kütüphane yok). Tarayıcı kapalıysa ya da hata verirse dosya
-yine kabul edilir (karar, 3 Eki): PDF temizliği ve görselin yeniden
+yine kabul edilir (bilinçli karar): PDF temizliği ve görselin yeniden
 kodlanması her durumda çalışır, dosya yalnızca indirme olarak sunulur;
 taranmadığı sağlık ucunda ve log'da görünür. Yalnızca "zararlı" sonucu reddeder.
 """

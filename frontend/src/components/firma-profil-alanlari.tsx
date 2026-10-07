@@ -13,7 +13,7 @@ import { SEHIR_SECENEKLERI } from "@/lib/sabitler";
 import { cn } from "@/lib/utils";
 
 /**
- * Firmanın profil alanları (docs/plans/firma-akisi.md § 0 karar 2). Kayıt
+ * Firmanın profil alanları (docs/kararlar.md F2). Kayıt
  * formu ve /kurum/profil aynı parçayı kullanır; doğrulama `lib/firma-profil.ts`'de.
  *
  * Vergi numarası, adres ve telefon bilinçli olarak yok. Firmaya "siz".

@@ -38,7 +38,7 @@ import { referansSatiri } from "@/lib/kart-duzenleme";
 import { REFERANS_DURUMLARI, referansOzeti } from "@/lib/referans";
 
 /**
- * Bir çalışmanın kanıt bölümü (docs/plans/dogrulama-iyilestirme.md § 3).
+ * Bir çalışmanın kanıt bölümü (docs/dogrulama.md § 3).
  *
  * Dört iş, dört ayrı eylem:
  *   - Kanıtlar: link, PDF ya da görsel eklenir (çalışma hemen değerlendirilir)
@@ -47,7 +47,7 @@ import { REFERANS_DURUMLARI, referansOzeti } from "@/lib/referans";
  *     varsayılan olarak yalnızca genç ve GİRVAK görür, genç firmalara açabilir.
  *   - Değerlendirme: linki olup henüz değerlendirilmemiş çalışma için.
  *   - Referans: istemek değerlendirmeyi yeniden çalıştırmaz. E-postayı sistem
- *     gönderir; yanıt linki gence gösterilmez (plan § 7, adım 7). Yanlış
+ *     gönderir; yanıt linki gence gösterilmez (docs/dogrulama.md § 7). Yanlış
  *     adrese giden bekleyen istek geri çekilebilir.
  *   - İtiraz: değerlendirmeyi eksik bulan genç yeniden baktırır.
  */
@@ -259,7 +259,7 @@ function KanitSatiri({
   );
 }
 
-/** Okunamayan link için açıklama ve gencin yapabilecekleri (plan § 3). */
+/** Okunamayan link için açıklama ve gencin yapabilecekleri (docs/dogrulama.md § 3). */
 function SecenekKutusu({ kutu }: { kutu: SecenekKutusuVerisi }) {
   return (
     <div className="flex flex-col gap-1 rounded-sm border border-kenar bg-muted/40 px-3 py-2 text-sm">
@@ -515,7 +515,7 @@ function ReferansFormu({
 }
 
 /**
- * GİRVAK'ın "doğrulanamadı" kararı (plan § 9). Puanı değiştirmez; genç kararı
+ * GİRVAK'ın "doğrulanamadı" kararı (docs/dogrulama.md § 9). Puanı değiştirmez; genç kararı
  * görür ve itiraz edebilir. GİRVAK "sorun yok" derse etiket kalkar.
  */
 function DogrulanamadiEtiketi({ notlar }: { notlar: string[] }) {
@@ -569,7 +569,7 @@ function Degerlendirme({
       ) : null}
 
       {incelemeBekliyor ? (
-        // İtiraz hakkı doldu; son itiraz GİRVAK'ta (plan § 9). Karar bildirimle gelir.
+        // İtiraz hakkı doldu; son itiraz GİRVAK'ta (docs/dogrulama.md § 9). Karar bildirimle gelir.
         <p className="text-sm text-muted-foreground text-pretty" role="status">
           İtirazın GİRVAK’a iletildi; inceleyip sonucu sana bildirecek. Yeni bir
           kanıt eklersen çalışman yeniden değerlendirilir.
@@ -649,7 +649,7 @@ function ReferansSatiri({
   onYenidenIste: () => void;
   onGeriCek: () => void;
 }) {
-  // İş değiştiyse eski yanıt geçmişte kalır (docs/plans/genc-akisi.md § 0, karar 8).
+  // İş değiştiyse eski yanıt geçmişte kalır (docs/kararlar.md G8).
   const { not, yenidenIstenebilir } = referansSatiri(referans);
   const { yanitlar, isaretler } = referansOzeti(referans);
   const [onayAcik, setOnayAcik] = useState(false);

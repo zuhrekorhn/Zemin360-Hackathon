@@ -1,4 +1,4 @@
-"""E-posta gönderimi: arayüz, Resend adaptörü, log ve kapalı kip (plan § 14.4).
+"""E-posta gönderimi: arayüz, Resend adaptörü, log ve kapalı kip (docs/dogrulama.md § 14.4).
 
 Servisler yalnızca `EpostaGonderici.gonder`'e bağlıdır; hangi sınıfın
 kullanılacağına `kurulum.py` karar verir. Gönderim hatası akışı düşürmez

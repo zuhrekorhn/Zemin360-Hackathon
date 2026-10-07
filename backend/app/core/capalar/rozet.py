@@ -1,4 +1,4 @@
-"""Open Badges rozet verisinin okunması (plan § 4.2).
+"""Open Badges rozet verisinin okunması (docs/dogrulama.md § 4.2).
 
 Rozet PNG'sinin içine gömülü veri (`openbadges` iTXt / tEXt bloğu; OB 1.0 / 2.0)
 ham dosyadan okunur: yeniden kodlama onu siler. Veri ya iddianın kendisidir

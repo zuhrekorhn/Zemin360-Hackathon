@@ -67,7 +67,7 @@ export default function TanimlamaSayfasi() {
 }
 
 function TanimlamaSohbeti() {
-  // İki kapı (docs/plans/firma-akisi.md § 0 karar 4): ortak ilanı `?aranan=firma`.
+  // İki kapı (docs/kararlar.md F4): ortak ilanı `?aranan=firma`.
   const aranan: Aranan = arananParametresi(useSearchParams().get("aranan"));
   const ortak = aranan === "firma";
   const [asama, setAsama] = useState<Asama>("sohbet");

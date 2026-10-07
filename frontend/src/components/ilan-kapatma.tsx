@@ -9,7 +9,7 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
 import { KAPANMA_NEDENLERI, type KapanmaNedeni } from "@/lib/ilan";
 
 /**
- * İlanı kapatma (docs/plans/firma-akisi.md § 0 karar 7, § 7).
+ * İlanı kapatma (docs/kararlar.md F7).
  *
  * Tarayıcının onay penceresi değil, sayfa içi alan: rehber § 5.6 eylem adlı
  * butonlar istiyor ("Kapat" / "Vazgeç") ve neden seçimi aynı yerde. Firmaya "siz".

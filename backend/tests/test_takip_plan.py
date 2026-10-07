@@ -1,4 +1,4 @@
-"""Takip Ajanı — süreç planı (docs/faz-c-takip.md § 4, docs/plans/takip-surecleri.md).
+"""Takip Ajanı — süreç planı (docs/takip.md § 4, docs/kararlar.md T1).
 
 Saf kısım (şablon seçimi, kişiselleştirme kuralı, istem girdileri) DB'siz; uç
 nokta ve arka plan işi gerçek veritabanında, geri alınan işlemde. Model

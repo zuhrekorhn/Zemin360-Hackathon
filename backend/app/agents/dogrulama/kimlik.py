@@ -1,4 +1,4 @@
-"""Ad ve kimlik bütünlüğü kuralları (docs/plans/dogrulama-iyilestirme.md § 6.3, bulgu 48).
+"""Ad ve kimlik bütünlüğü kuralları (docs/dogrulama.md § 6.3).
 
 Saf: veritabanı ve ağ yok. Üç soru:
   - Ad kilitli mi? E-posta doğrulanınca kilitlenir; kilit ayrıca saklanmaz.

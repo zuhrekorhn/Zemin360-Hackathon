@@ -71,7 +71,7 @@ class IhtiyacTaslagi(BaseModel):
     # filtresi uygulanmaz.
     calisma_modeli: str | None = None
     musaitlik_tercihi: HosgoruluMusaitlik = None
-    # Ortak ilanı (docs/plans/firma-akisi.md § 5); genç ilanında boş.
+    # Ortak ilanı (docs/kararlar.md F3); genç ilanında boş.
     aranan_firma_turleri: list[str] = []
     isbirligi_turu: str | None = None
 
@@ -124,7 +124,7 @@ class TanimlamaSohbetDurumu(TanimlamaSohbetYaniti):
 
 
 class KurumProfili(BaseModel):
-    """İhtiyaç kartı onayıyla gelen kurum profili güncellemesi (Faz B not § 4).
+    """İhtiyaç kartı onayıyla gelen kurum profili güncellemesi (docs/kimlik-ve-dongu.md § 4).
 
     Kimlik token'daki hesaptan; kurumun adı ve iletişim e-postası kayıtta
     alındı. Boş gelen alan kayıtlı değeri silmez.
@@ -151,7 +151,7 @@ class KurumYaniti(BaseModel):
 
     id: uuid.UUID
     ad: str
-    # "Doğrulanmış firma" işareti (docs/plans/firma-akisi.md § 0 karar 17).
+    # "Doğrulanmış firma" işareti (docs/kararlar.md F17).
     # Durumun kendisi (bekliyor / şimdilik değil) yalnızca GİRVAK'a.
     dogrulandi: bool = False
     sektor: str | None
@@ -180,14 +180,14 @@ class IhtiyacKartiYaniti(BaseModel):
     kurum: KurumYaniti
     # acik | kapandi. Kapanma nedeni burada yok: yalnızca GİRVAK görür.
     durum: str = "acik"
-    # genc | firma (docs/plans/firma-akisi.md § 0 kararlar 4-5)
+    # genc | firma (docs/kararlar.md F4-5)
     aranan: str = "genc"
     aranan_firma_turleri: list[str] = []
     isbirligi_turu: str | None = None
 
 
 class IhtiyacKartiKapatIstegi(BaseModel):
-    """Kapatma nedeni zorunlu (docs/plans/firma-akisi.md § 0 karar 7)."""
+    """Kapatma nedeni zorunlu (docs/kararlar.md F7)."""
 
     model_config = ConfigDict(extra="forbid")
 

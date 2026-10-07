@@ -1,4 +1,4 @@
-"""Doğrulamanın kalıcı gözlem kayıtları (plan § 10.3, § 14.4).
+"""Doğrulamanın kalıcı gözlem kayıtları (docs/dogrulama.md § 10.3, § 14.4).
 
 Üç tablo, hiçbiri kişi ya da adres taşımaz: yalnızca "ne oldu, ne kadar sürdü".
   - `kanit_gozlemi`: bir kanıt parçasının her okunuşu (platform, okuyucu, erişim, seviye);

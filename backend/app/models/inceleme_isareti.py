@@ -1,4 +1,4 @@
-"""GİRVAK inceleme kuyruğundaki işaret (docs/plans/dogrulama-iyilestirme.md § 9).
+"""GİRVAK inceleme kuyruğundaki işaret (docs/dogrulama.md § 9).
 
 İşaret puanı kendiliğinden değiştirmez (İ1): ajan sinyal toplar, karar
 GİRVAK'ındır. Durum geçişleri `app/agents/inceleme_durumu.py`'de, kararın türe

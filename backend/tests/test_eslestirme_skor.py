@@ -54,7 +54,7 @@ def test_birden_fazla_cikti_ortalamasi_alinir():
 
 
 def test_bos_baslik_bonusu_dusurmez():
-    """Referans eklemek kartı zayıflatmamalı (bulgu 17): linksiz kalemde yalnızca
+    """Referans eklemek kartı zayıflatmamalı: linksiz kalemde yalnızca
     Referans doluysa (—, —, —, 3) oran 1.0; eskiden (0, 0, 0, 3) = 0.25 sayılıyordu."""
     tam = (3, 3, 3, None)
     assert dogrulama_bonusu([tam]) == 1.0

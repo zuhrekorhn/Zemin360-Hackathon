@@ -1,6 +1,7 @@
-"""Bilinen belge düzenleyenleri (plan § 4.2): doğrulama adresi bu alan adlarından birindeyse
+"""Bilinen belge düzenleyenleri (docs/dogrulama.md § 4.2): doğrulama adresi bu alan adlarından
+birindeyse
 belgeyi bağımsız bir kurumun doğruladığı kabul edilir. Alt alan adları da sayılır
-(`www.`, `learn.` …). Liste veridir: yeni düzenleyen = yeni satır (karar, 3 Eki:
+(`www.`, `learn.` …). Liste veridir: yeni düzenleyen = yeni satır (bilinçli karar:
 küçük bir başlangıç listesi, GİRVAK genişletir).
 """
 

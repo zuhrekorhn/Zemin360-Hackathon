@@ -1,4 +1,5 @@
-"""Sayfayı gerçek bir tarayıcıda açar: işlenmiş HTML ve gerekirse ekran görüntüsü (plan § 5.5).
+"""Sayfayı gerçek bir tarayıcıda açar: işlenmiş HTML ve gerekirse ekran görüntüsü (docs/dogrulama.md
+§ 5.5).
 
 JavaScript ile çizilen sayfa (Kaggle, GrabCAD) ve tarayıcı olmayan istemciyi
 reddeden site (Behance, Dribbble) burada okunur. Tarayıcının bütün ağı süzgeçli

@@ -1,4 +1,4 @@
-"""İş birliği süreç şablonları (docs/plans/takip-surecleri.md).
+"""İş birliği süreç şablonları (docs/kararlar.md T1).
 
 Saf modül: veritabanı ve LLM yok. Eşleşmenin türüne göre gerçek hayattaki
 adımlar burada sabit; Takip Ajanı adımları UYDURMAZ, yalnızca her adımın

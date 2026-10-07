@@ -1,5 +1,5 @@
 /**
- * İlan (ihtiyaç kartı) kapatma (docs/plans/firma-akisi.md § 0 karar 7, § 7).
+ * İlan (ihtiyaç kartı) kapatma (docs/kararlar.md F7).
  * Saf fonksiyonlar; testleri ilan.test.ts'de. Firmaya "siz".
  *
  * Neden yalnızca GİRVAK'a görünür; karşı taraf "fırsat kapandı" görür.
@@ -35,7 +35,7 @@ export function ilanlariSirala<T extends Pick<IhtiyacKartiOzeti, "durum">>(
   ];
 }
 
-/* --- İki kapı (docs/plans/firma-akisi.md § 0 kararlar 4-5) --------------- */
+/* --- İki kapı (docs/kararlar.md F4-5) --------------- */
 
 export type Aranan = "genc" | "firma";
 

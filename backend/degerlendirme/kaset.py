@@ -34,7 +34,7 @@ from app.core.dis_servisler.yedek_okuyucu import EkranKurali, TarayiciSayfasi, Y
 
 KASET_KLASORU = Path(__file__).resolve().parent.parent / "tests" / "degerlendirme_seti" / "kaset"
 
-# Kayıtta saklanan en büyük gövde. Okuyucular 2 MB'a kadar okuyacak (plan § 5.3).
+# Kayıtta saklanan en büyük gövde. Okuyucular 2 MB'a kadar okuyacak (docs/dogrulama.md § 5.3).
 EN_BUYUK_GOVDE = 3_000_000
 SAKLANAN_BASLIKLAR = ("content-type", "location", "content-encoding")
 # Gövde gerçek ağdaki gibi parça parça akar. Tek parça vermek okuyucunun

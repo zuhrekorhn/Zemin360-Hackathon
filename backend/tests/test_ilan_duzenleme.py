@@ -1,4 +1,4 @@
-"""İlan düzenleme ucu (docs/plans/ilan-duzenleme.md).
+"""İlan düzenleme ucu (docs/kararlar.md D1).
 
 Kural tablosu tests/test_ihtiyac_duzenleme_kurallari.py'de; burada uç: yetki,
 409'lar, değişmeyen düzenlemenin yan etkisizliği, gencin ilgisinin korunması,

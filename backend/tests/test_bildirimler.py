@@ -1,4 +1,4 @@
-"""Uygulama içi bildirimler (docs/faz-b-kimlik-ve-dongu.md § 6), gerçek veritabanında.
+"""Uygulama içi bildirimler (docs/kimlik-ve-dongu.md § 6), gerçek veritabanında.
 
 Dünya test_sahiplik.py'deki: E1 = I1 (kurum1, "Koop Bir") ↔ K1 (genc1, "Elif"),
 `onerildi`; E2 = I2 (kurum2) ↔ K2 (genc2, "Can"), `ilgileniliyor`.

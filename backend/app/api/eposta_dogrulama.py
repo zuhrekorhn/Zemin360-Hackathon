@@ -1,4 +1,4 @@
-"""Kayıt e-postasının doğrulanması (docs/plans/dogrulama-iyilestirme.md § 6.3).
+"""Kayıt e-postasının doğrulanması (docs/dogrulama.md § 6.3).
 
 Bağlantıyı açan kişi giriş yapmış olmak zorunda değil (e-postayı başka
 cihazda açabilir): kimliği bağlantının kendisi taşır. Yeni bağlantı isteği

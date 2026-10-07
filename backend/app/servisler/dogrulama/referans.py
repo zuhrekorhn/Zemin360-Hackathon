@@ -1,5 +1,5 @@
 """Referans isteklerinin orkestrasyonu: isteme, yanıt, geri çekme, zaman aşımı,
-hatırlatma, yeniden isteme (docs/plans/dogrulama-iyilestirme.md § 7).
+hatırlatma, yeniden isteme (docs/dogrulama.md § 7).
 
 Kurallar `app/agents/dogrulama/` (durum makinesi, form puanı, destek, geçerlilik);
 burada modele uygulanmaları. Commit ve e-postanın gönderimi çağıranın işi: servis
@@ -89,7 +89,7 @@ def _simdi() -> dt.datetime:
 
 
 def referans_guncel_mi(cikti: SomutCikti, referans: ReferansIstegi) -> bool:
-    """Bu referans yanıtı iş kaleminin güncel hâli için mi? (genc-akisi § 0, karar 8)"""
+    """Bu referans yanıtı iş kaleminin güncel hâli için mi? (docs/kararlar.md G8)"""
     return referans_gecerli_mi(referans.yanit_tarihi, cikti.icerik_tarihi)
 
 
@@ -171,7 +171,7 @@ async def referans_taramasi(
 ) -> ReferansTaramasi:
     """Canlılık taramasının referans kısmı: 3. gün tek hatırlatma, 7. gün "yanıt yok".
 
-    Hatırlatma yalnızca sistemin e-posta gönderdiği isteklere gider (adım 7'den
+    Hatırlatma yalnızca sistemin e-posta gönderdiği isteklere gider (sistem e-postasından
     önce açılanların linki gence verilmişti). E-postalar döner; tarama commit'ten
     sonra gönderir.
     """
@@ -245,7 +245,7 @@ async def referans_yanitla(
     """Yanıtı koşullu güncellemeyle yazar, Referans başlığını günceller, gence bildirir.
 
     İki sekmeden aynı anda gelen yanıtın yalnızca biri kaydedilir:
-    `UPDATE … WHERE durum = 'bekliyor' RETURNING id` (bulgu 24). Geçersiz geçişte
+    `UPDATE … WHERE durum = 'bekliyor' RETURNING id`. Geçersiz geçişte
     (yanıtlanmış, süresi dolmuş, geri çekilmiş) `GecersizReferansGecisi`. Zaman
     aşımını çağıran önce işler: GET ve POST aynı kuralı uygulasın diye.
     Yanıtın şüphe sinyalleri (`referans_supheli`) aynı işlemde yazılır; puanı
@@ -281,7 +281,7 @@ async def referans_yanitla(
 
     if cikti.guven_skoru is None:
         # Kanıt değerlendirilmeden referans gelirse yalnızca Referans başlığı
-        # dolar; Kanıt, Sonuç ve Rol "—" kalır (bulgu 17).
+        # dolar; Kanıt, Sonuç ve Rol "—" kalır.
         cikti.guven_skoru = GuvenSkoru()
     # Birden fazla referans yanıtlamış olabilir; son gelen öncekini ezmesin.
     cikti.guven_skoru.ucuncu_taraf_onayi = ucuncu_taraf_puani(cikti)
@@ -355,7 +355,7 @@ def yeni_istek_ac(
 ) -> ReferansIstegi:
     """Engelleri uygular ve isteği açar (e-postası `istek_epostasi_kur` ile kurulur).
 
-    Göstergeye dokunmaz, model çağrılmaz (bulgu 16).
+    Göstergeye dokunmaz, model çağrılmaz.
     """
     isteme_engeli(cikti, referans_email, gencin_epostasi)
     return _yeni_istek(cikti, referans_email, istek_izi)

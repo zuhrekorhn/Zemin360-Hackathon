@@ -1,6 +1,6 @@
 /**
  * Genç, kurum ve GİRVAK panellerinin ortak parçaları
- * (docs/faz-b-kimlik-ve-dongu.md § 7).
+ * (docs/kimlik-ve-dongu.md § 7).
  *
  * Görsel dil (docs/design-language.md): panel bir "belge"; bölümler hairline
  * çizgiyle ayrılır, aynı yuvarlak kart kalıbı her yere basılmaz. Boş bölüm
@@ -86,7 +86,7 @@ export function IletisimSatiri({
     karsiTaraf === "kurum"
       ? [{ etiket: "Firmanın e-postası", eposta: iletisim.kurum_email }]
       : iletisim.aday_firma_email
-        ? // Firma–firma: karşı taraf ortak firma (docs/plans/firma-akisi.md § 9).
+        ? // Firma–firma: karşı taraf ortak firma (docs/takip.md (Ek)).
           [
             {
               etiket: "Ortak firmanın e-postası",

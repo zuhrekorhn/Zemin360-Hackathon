@@ -1,4 +1,4 @@
-"""Firmalar arası ilgi (docs/plans/firma-akisi.md § 0 karar 8, § 3, § 10).
+"""Firmalar arası ilgi (docs/kararlar.md F8).
 
 Aynı durum makinesi: aday firma makinenin aday tarafının geçişlerini yapar.
 İki yönlü: ilan sahibi ilk ilgiyi gösterebilir (aday kabul/ret eder) ya da

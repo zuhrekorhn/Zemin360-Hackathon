@@ -1,4 +1,4 @@
-"""Kayıt e-postasının doğrulanması ve ad kilidi (docs/plans/dogrulama-iyilestirme.md § 6.3,
+"""Kayıt e-postasının doğrulanması ve ad kilidi (docs/dogrulama.md § 6.3,
 bulgular 37 ve 48).
 
 Akış: kayıt → `baglanti_olustur` (aynı istekte) → e-posta yanıttan sonra gider
@@ -114,7 +114,7 @@ async def dogrula(oturum: AsyncSession, token: str) -> Hesap:
 
 async def dogrulama_sonrasi_kart(oturum: AsyncSession, hesap: Hesap) -> uuid.UUID | None:
     """E-posta doğrulanınca kimlik koşulu değişir: çapalı dosyası olan gencin kalemleri
-    yeniden okunmalı (dosya seviyesi okuma anında kimlikle hesaplanır, plan § 6.3).
+    yeniden okunmalı (dosya seviyesi okuma anında kimlikle hesaplanır, docs/dogrulama.md § 6.3).
     Döner: yeniden okunacak kart; yoksa None."""
     return await oturum.scalar(
         select(YetenekKarti.id)
@@ -153,7 +153,8 @@ async def epostayi_gonder(eposta: Eposta) -> None:
     await dusmeden_gonder(kurulum.eposta_gonderici(), eposta)
 
 
-# --- Ad kilidi ve değişiklik talebi (plan § 6.3) -------------------------------------------
+# --- Ad kilidi ve değişiklik talebi (docs/dogrulama.md § 6.3)
+# -------------------------------------------
 
 AD_KILITLI = (
     "E-postanı doğruladığın için adın kilitli. Değiştirmek için ad değişikliği "

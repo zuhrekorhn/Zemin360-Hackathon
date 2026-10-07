@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class Milestone(UUIDPrimaryKeyMixin, Base):
-    """İş birliği planının bir adımı (docs/faz-c-takip.md § 2-3).
+    """İş birliği planının bir adımı (docs/takip.md § 2-3).
 
     İki taraf ayrı ayrı "tamamlandı" der; ikisi de derse `durum` tamamlandi.
     Gecikme saklanmaz, okuma anında hesaplanır (hedef_tarih < bugün).

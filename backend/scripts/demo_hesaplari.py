@@ -1,7 +1,7 @@
-"""Demo hesaplarını açar (docs/faz-b-kimlik-ve-dongu.md § 9).
+"""Demo hesaplarını açar (docs/kimlik-ve-dongu.md § 9).
 
 Beş hesap: genç, kurum, GİRVAK ve firma akışı için iki firma (bir girişim,
-bir kurumsal; docs/plans/firma-akisi.md § 0 karar 20). Şifre `.env`'deki
+bir kurumsal; docs/kararlar.md F20). Şifre `.env`'deki
 DEMO_SIFRESI'nden; repoda şifre yok. Genç hesabına bir yetenek kartı, kuruma
 bir ihtiyaç kartı yazılır. Girişimin doğrulanmış bir firma kartı, kurumsalın
 yalnızca girişim arayan açık bir ortak ilanı olur: iki kart birbirine önerilir.
@@ -73,7 +73,7 @@ KURUM_PROFILI = FirmaKayitProfili(
     tanitim="Kadıköy'de gıda bankası ve dayanışma mutfağı işleten bir kooperatif.",
 )
 
-# Firma akışı (docs/plans/firma-akisi.md § 0 karar 20). Web sitesi e-postanın
+# Firma akışı (docs/kararlar.md F20). Web sitesi e-postanın
 # alan adıyla aynı: GİRVAK'ın listesinde ipucu "uyuşuyor" görünür.
 GIRISIM_ADI = "Tazele Analitik"
 GIRISIM_PROFILI = FirmaKayitProfili(
@@ -156,7 +156,7 @@ def gencin_karti(kullanici_id) -> YetenekKarti:
     )
 
 
-# Kayıt formunun alanları (docs/plans/genc-akisi.md § 5.1); eşleştirme yalnızca
+# Kayıt formunun alanları (docs/agent-specs.md § 1); eşleştirme yalnızca
 # şehir, çalışma modeli ve müsaitliğe bakar, gerisi profilde görünür.
 GENC_PROFILI = GencKayitProfili(
     sehir="İstanbul",
@@ -256,8 +256,8 @@ async def demo_ac(sifre: str) -> list[Sonuc]:
             sonuclar.append(Sonuc(KURUM_EPOSTA, ROL_KURUM, yeni=False))
             ihtiyac = None
         else:
-            # Firma kayıt formunun alanları dolu (docs/plans/firma-akisi.md § 0
-            # kararlar 2, 20): demo hesabı "Profilinizi tamamlayın" bandı görmesin.
+            # Firma kayıt formunun alanları dolu (docs/kararlar.md
+            # F2, F20): demo hesabı "Profilinizi tamamlayın" bandı görmesin.
             hesap = await hesap_olustur(
                 oturum,
                 email=KURUM_EPOSTA,

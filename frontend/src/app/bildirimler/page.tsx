@@ -27,7 +27,7 @@ const BOS_METINLERI: Record<string, string> = {
 };
 
 /**
- * Bildirimler (docs/faz-b-kimlik-ve-dongu.md § 6): en yeni önce. Bildirime
+ * Bildirimler (docs/kimlik-ve-dongu.md § 6): en yeni önce. Bildirime
  * tıklamak onu okundu sayar ve ilgili yere götürür; "Hepsini okundu say"
  * menüdeki rozeti sıfırlar. Gerçek e-posta yok.
  */

@@ -322,7 +322,7 @@ def test_karar_verilmis_kayit_yargilanmaz_ve_korunur(yargici):
             "kabul_edildi",
         ]
         assert [kayit[ad].uygunluk for ad in ("F0", "F1", "F2")] == [None, None, None]
-        # İlgi gösterilmiş kaydın skoru ve gerekçesi değişmez (karar 14).
+        # İlgi gösterilmiş kaydın skoru ve gerekçesi değişmez (docs/kararlar.md G14).
         assert (kayit["F1"].skor, kayit["F1"].gerekce_metni) == (
             0.99,
             "ilgi gösterirken görülen gerekçe",

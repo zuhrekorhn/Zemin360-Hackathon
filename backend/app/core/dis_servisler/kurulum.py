@@ -1,4 +1,4 @@
-"""Dış servislerin tek kurulum noktası (plan § 14.2, bağımlılığın tersine çevrilmesi).
+"""Dış servislerin tek kurulum noktası (docs/dogrulama.md § 14.2, bağımlılığın tersine çevrilmesi).
 
 Servisler somut sınıfı tanımaz; buradaki fabrikadan alır. Hangi sınıfın
 seçileceği `.env` bayraklarına bağlıdır. Testler fabrikayı sahteyle değiştirir

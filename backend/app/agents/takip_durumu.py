@@ -1,7 +1,7 @@
-"""Takip Ajanı durum makineleri (docs/faz-c-takip.md § 3).
+"""Takip Ajanı durum makineleri (docs/takip.md § 3).
 
 İki kural, ikisi de saf fonksiyon; uç noktalar yalnızca sonucu uygular
-(Faz B'deki `eslesme_durumu.gecis` deseni). Tablo
+(`eslesme_durumu.gecis` deseni). Tablo
 tests/test_takip_durumu.py'de birebir sabitlenmiş.
 
     Plan:       plan_bekliyor ──(iki taraf onaylar)──▶ aktif ──(son adım)──▶ tamamlandi
@@ -22,7 +22,7 @@ from app.models.hesap import ROL_GENC, ROL_KURUM
 ISBIRLIGI_PLAN_BEKLIYOR = "plan_bekliyor"
 ISBIRLIGI_AKTIF = "aktif"
 ISBIRLIGI_TAMAMLANDI = "tamamlandi"
-# Erken sonlanma (docs/plans/takip-surecleri.md): görüşmeden sonra "şimdilik değil"
+# Erken sonlanma (docs/kararlar.md T1): görüşmeden sonra "şimdilik değil"
 # olağan bir sonuç. Tamamlanmış sayılmaz (pilot bonusu yalnızca `tamamlandi`).
 ISBIRLIGI_SONLANDI = "sonlandi"
 SONLANMA_NEDENLERI: tuple[str, ...] = (

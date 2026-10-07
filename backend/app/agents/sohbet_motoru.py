@@ -66,7 +66,7 @@ class SohbetDurumu(TypedDict, total=False):
 
     mesajlar: Annotated[list[AnyMessage], add_messages]
     taslak: dict[str, Any]
-    # Sohbeti açan hesap (Faz B). Sonraki cevap ve onay istekleri token'daki
+    # Sohbeti açan hesap. Sonraki cevap ve onay istekleri token'daki
     # hesapla karşılaştırılır; başkasının sohbeti 404 (app/servisler/sahiplik.py).
     sahip_hesap_id: str
     # Zorunlu alan takip turları
@@ -105,10 +105,10 @@ class SohbetDurumu(TypedDict, total=False):
     taslak_degisti: bool
     # Sohbetin başında bilinen, SORULMAYACAK bilgiler (Keşif'te kayıt formunun
     # profil alanları). Çıkarımda sistem talimatının ardından ayrı bir sistem
-    # mesajı olarak gider; boşsa hiç gitmez (docs/plans/genc-akisi.md § 5.3).
+    # mesajı olarak gider; boşsa hiç gitmez (docs/agent-specs.md § 1).
     profil_baglami: str | None
     # İhtiyaç sohbetinde ilanın kimi aradığı (genc | firma); hangi soru setinin
-    # (grafik) devam edeceğini belirler (docs/plans/firma-akisi.md § 5).
+    # (grafik) devam edeceğini belirler (docs/kararlar.md F3).
     aranan: str | None
 
 
@@ -512,7 +512,7 @@ def zorunlu_alan_sorusu(tanim: AjanTanimi, durum: dict[str, Any], eksikler: list
 
 async def karar(tanim: AjanTanimi, durum: dict[str, Any]) -> dict[str, Any]:
     """Takip sorusu mu, ajana özel dal mı, yoksa taslak mı — tek karar noktası."""
-    # 0) Kullanıcı soruyu anlamadıysa sıradaki soruya geçilmez: aynı soru
+    ## 0) Kullanıcı soruyu anlamadıysa sıradaki soruya geçilmez: aynı soru
     #    açıklamayla yeniden sorulur.
     if aciklama_gerekli(durum):
         return aciklama_durumu(tanim, durum)

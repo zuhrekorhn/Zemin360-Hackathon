@@ -105,7 +105,8 @@ def test_coklu_islemde_hicbir_istek_atlanmaz(bildirimler):
     assert len(bildirimler) == 2
 
 
-# --- Geri çekme ve hatırlatma (plan § 7) -------------------------------------------------
+# --- Geri çekme ve hatırlatma (docs/dogrulama.md § 7)
+# -------------------------------------------------
 
 
 def test_bekleyen_istek_geri_cekilir_ve_form_kapanir():

@@ -49,7 +49,7 @@ def test_kart_gorunumu_eposta_tasimaz_ad_tasir():
     """agent-specs.md § 1.5 — e-posta kabulle açılır, ayrı `iletisim` alanında.
 
     Gencin adı iletişim bilgisi sayılmıyor, baştan görünür
-    (docs/faz-b-kimlik-ve-dongu.md § 5).
+    (docs/kimlik-ve-dongu.md § 5).
     """
     alanlar = set(YetenekKartiYaniti.model_fields) | set(SomutCiktiYaniti.model_fields)
     assert not {"email", "iletisim_email", "telefon", "iletisim"} & alanlar

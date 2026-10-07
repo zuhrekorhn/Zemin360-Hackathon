@@ -1,4 +1,4 @@
-"""GİRVAK gözlem paneli şemaları (plan § 10.3)."""
+"""GİRVAK gözlem paneli şemaları (docs/dogrulama.md § 10.3)."""
 
 from __future__ import annotations
 

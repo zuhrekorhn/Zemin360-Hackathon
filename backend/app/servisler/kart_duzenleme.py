@@ -1,4 +1,4 @@
-"""Kart ve iş kalemi düzenlemesinin uygulanması (docs/plans/genc-akisi.md § 6).
+"""Kart ve iş kalemi düzenlemesinin uygulanması (docs/agent-specs.md § 1).
 
 Kural app/agents/kart_duzenleme.py'de; burada modele yazılması. Commit ve arka
 plan işi (kart hazırlama) uçların işi: değişiklik ve yan etkileri aynı işlemde.
@@ -92,7 +92,7 @@ async def kart_degisti(oturum: AsyncSession, kart: YetenekKarti) -> int:
     - Bu kartın yalnızca `onerildi` önerilerinin gerekçesi ve uygunluk kararı
       boşaltılır (karar gerekçeye dayanır); pipeline ikisini yeniden yazar. Gizli
       (`uygun_degil`) kayıt da yeniden yargılanır. Karar verilmiş kayıtlara (genç ilgi
-      gösterdi, kurum ilgilendi, kabul, red) dokunulmaz (plan § 0, karar 14).
+      gösterdi, kurum ilgilendi, kabul, red) dokunulmaz (docs/kararlar.md G14).
     """
     kart.versiyon += 1
     # Bayrağın hesabı için kalemlerin parçaları ve referans istekleri yüklü olmalı.
@@ -112,8 +112,8 @@ async def gosterge_degisti(oturum: AsyncSession, kart_id: uuid.UUID) -> int:
     Kart değişikliğinin ortak kısmı uygulanır: sürüm artar, `kanit_bekleyen`
     tazelenir, `onerildi` önerilerin gerekçesi boşalır. Çağıran uç commit'ten
     sonra kart hazırlamayı (yeniden eşleştirme) arka plana alır: uyum skoru
-    doğrulama bonusunu içerir, gösterge değişince eşleşmeler de tazelenmeli
-    (bulgu 26). Döner: yeni sürüm.
+    doğrulama bonusunu içerir, gösterge değişince eşleşmeler de tazelenmeli.
+    Döner: yeni sürüm.
     """
     kart = await oturum.scalar(
         select(YetenekKarti)

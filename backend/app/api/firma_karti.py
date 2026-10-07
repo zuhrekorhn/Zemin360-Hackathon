@@ -1,4 +1,4 @@
-"""Firma kartı uçları (docs/plans/firma-akisi.md § 0 kararlar 3, 9, 10; § 5).
+"""Firma kartı uçları (docs/kararlar.md F3, F9, F10).
 
 Kart sohbetle oluşur (`/sohbet/baslat`, `/sohbet/cevap`, `/onayla`; Keşif ve
 Tanımlama ile aynı motor ve aynı desen), sonra formla düzenlenir. Yalnızca
@@ -77,7 +77,7 @@ async def kartim(
     hesap: Hesap = Depends(rol_gerekli(ROL_KURUM)),
     oturum: AsyncSession = Depends(get_session),
 ) -> FirmaKartiYaniti | None:
-    """Firmanın kartı; yoksa `null` (kart isteğe bağlı, karar 9: hata değil)."""
+    """Firmanın kartı; yoksa `null` (kart isteğe bağlı, F9: hata değil)."""
     kart = await servis.kurumun_karti(oturum, hesap.kurum.id)
     return kart_yaniti(kart) if kart else None
 
@@ -121,7 +121,7 @@ async def karti_duzenle(
     return kart_yaniti(kart)
 
 
-# --- Sohbet (docs/plans/firma-akisi.md § 5) ----------------------------------------------
+# --- Sohbet (docs/kararlar.md F3) ----------------------------------------------
 
 
 def _grafik(request: Request):

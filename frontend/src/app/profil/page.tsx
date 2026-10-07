@@ -22,12 +22,12 @@ import {
 } from "@/lib/profil";
 
 /**
- * Gencin profil düzenleme sayfası (docs/plans/genc-akisi.md § 6.1).
+ * Gencin profil düzenleme sayfası (docs/agent-specs.md § 1).
  *
  * Kayıt formundaki alanlar; yalnızca kendi profili (token'ın profili). Bu
  * alanlardan önce açılmış hesaplar paneldeki banttan buraya gelir ve eksikleri
  * ile KVKK onayını burada tamamlar. Altında bağlı hesaplar bölümü
- * (dogrulama-iyilestirme.md § 6).
+ * (docs/dogrulama.md § 6).
  */
 export default function ProfilSayfasi() {
   return (

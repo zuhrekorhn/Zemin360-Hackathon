@@ -1,4 +1,4 @@
-"""Tamamlanmış pilot sinyali (docs/faz-c-takip.md § 6).
+"""Tamamlanmış pilot sinyali (docs/takip.md § 6).
 
 Geri besleme döngüsü: iş birliği tamamlanınca gencin kartında sinyal görünür
 ve Eşleştirme'nin doğrulama bonusuna girer. Karar: toplamsal, tavanlı formül —

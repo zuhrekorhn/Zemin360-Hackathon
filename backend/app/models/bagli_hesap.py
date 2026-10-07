@@ -1,4 +1,5 @@
-"""Gencin bağladığı platform hesabı ve bekleyen doğrulama kodu (plan § 6.1, § 6.2, § 13).
+"""Gencin bağladığı platform hesabı ve bekleyen doğrulama kodu (docs/dogrulama.md § 6.1, § 6.2,
+§ 13).
 
 Bağlı hesaptaki çalışma seviye B'dir (`agents/dogrulama/hesap_sahipligi.py`).
 Bir platform hesabı iki gence bağlanamaz: (`saglayici`, `dis_kimlik`) tekil.

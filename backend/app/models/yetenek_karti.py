@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class YetenekKarti(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "yetenek_karti"
 
-    # Gencin tek kartı (madde 7, 1 Eki): kart genç büyüdükçe düzenlenir ve
+    # Gencin tek kartı (docs/kararlar.md G17): kart genç büyüdükçe düzenlenir ve
     # çalışma eklenerek güçlenir, yenisi açılmaz. Kural veritabanında ki
     # eşzamanlı iki onay da ikinci kartı açamasın; tekillik indeksi aramaları
     # da karşılıyor, ayrı indeks gerekmiyor.
@@ -52,8 +52,8 @@ class YetenekKarti(UUIDPrimaryKeyMixin, Base):
     # yeni kart açılmaz, bu kart döner (çift tıklama, embedding hatası sonrası
     # yeniden deneme). Sohbet dışından gelen kartlarda NULL.
     oturum_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), unique=True)
-    # Faz D: Canlılık'ın "eski kart" kuralı (yeni fırsat) bu tarihe bakar.
-    # Faz D öncesi kartlar migration anının tarihini aldı.
+    # Canlılık'ın "eski kart" kuralı (yeni fırsat) bu tarihe bakar
+    # (docs/canlilik.md § 2).
     olusturma_tarihi: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

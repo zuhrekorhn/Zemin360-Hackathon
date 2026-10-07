@@ -1,10 +1,9 @@
-"""Yerel veritabanını boşaltır (docs/faz-b-kimlik-ve-dongu.md § 8).
+"""Yerel veritabanını boşaltır (docs/kimlik-ve-dongu.md § 8).
 
 Uygulama tablolarını ve LangGraph sohbet checkpoint'lerini TRUNCATE eder;
 şemaya dokunmaz (alembic_version ve checkpoint_migrations kalır, migration
-yeniden çalıştırmak gerekmez). Faz B öncesi, gencin onayı olmadan
-`kabul_edildi` olmuş kayıtlar yeni modele uymuyor; tarayıcı denemesi temiz
-veriyle başlasın diye.
+yeniden çalıştırmak gerekmez). Tarayıcı denemesi ve demo temiz veriyle
+başlasın diye; ardından `scripts/demo_hesaplari.py`.
 
 Onay sorar (veritabanı adını yazdırır); `APP_ENV=production` ise çalışmaz.
 

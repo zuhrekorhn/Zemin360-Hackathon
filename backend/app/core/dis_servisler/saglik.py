@@ -1,4 +1,4 @@
-"""Dış servislerin süreç içi sağlık kaydı (plan § 14.4).
+"""Dış servislerin süreç içi sağlık kaydı (docs/dogrulama.md § 14.4).
 
 `gozlemli` sarmalayıcısı her çağrının sonucunu buraya yazar; `GET
 /saglik/servisler` buradan okur. Bellekte tutulur: süreç yeniden başlayınca

@@ -92,12 +92,12 @@ async def sohbet_baslat(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC)),
     oturum: AsyncSession = Depends(get_session),
 ) -> SohbetYaniti:
-    # Gencin tek kartı var (madde 7): kartı olana ikinci sohbet açılmaz.
+    # Gencin tek kartı var (docs/kararlar.md G17): kartı olana ikinci sohbet açılmaz.
     if await gencin_karti(oturum, hesap.kullanici.id) is not None:
         raise HTTPException(status_code=409, detail=KART_ZATEN_VAR)
     oturum_id = uuid.uuid4()
     # Oturumu açan hesap checkpoint'e yazılır; cevap ve onay yalnızca ondan.
-    # Kayıt formundan bilinenler bağlam olarak gider ve sorulmaz (plan § 5.3).
+    # Kayıt formundan bilinenler bağlam olarak gider ve sorulmaz (docs/dogrulama.md § 5.3).
     baslangic = {**sohbet_baslangici(hesap), "profil_baglami": profil_baglami(hesap.kullanici)}
     durum = await _grafik(request).ainvoke(
         baslangic, config={"configurable": {"thread_id": str(oturum_id)}}
@@ -182,7 +182,7 @@ async def kart_onayla(
         raise HTTPException(status_code=422, detail=KART_EKSIK) from hata
 
     # Kart token'daki hesabın profiline bağlanır; onay yalnızca eşleştirmeyi
-    # etkileyen alanları günceller (docs/faz-b-kimlik-ve-dongu.md § 4).
+    # etkileyen alanları günceller (docs/kimlik-ve-dongu.md § 4).
     kullanici = hesap.kullanici
     gencin_profilini_guncelle(kullanici, istek.profil)
     if not kullanici.sehir:

@@ -37,13 +37,13 @@ import {
 import { type Hata, hatayaCevir } from "@/lib/hata";
 
 /**
- * GİRVAK paneli (docs/faz-d-canlilik.md § 7).
+ * GİRVAK paneli (docs/canlilik.md § 7).
  *
  *   1. Program hedefleri — programın kendi adıyla ve platformda neyi
  *      saydığımızla; aradaki fark gizlenmez.
  *   2. Canlılık — "Taramayı şimdi çalıştır" (canlıda aynı işi cron yapar),
  *      şu an pasifleşen bağlantılar, son Canlılık olayları.
- *   3. Platform sayıları (Faz B).
+ *   3. Platform sayıları.
  * Kişisel veri yalnızca ad; e-posta yok.
  */
 

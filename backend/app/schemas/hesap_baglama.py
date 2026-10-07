@@ -1,4 +1,4 @@
-"""Hesap bağlama şemaları (docs/plans/dogrulama-iyilestirme.md § 6)."""
+"""Hesap bağlama şemaları (docs/dogrulama.md § 6)."""
 
 from __future__ import annotations
 

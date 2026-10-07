@@ -1,4 +1,4 @@
-"""Firma kartı: yazma, düzenleme ve eşleştirmeye hazırlama (docs/plans/firma-akisi.md § 4, § 5).
+"""Firma kartı: yazma, düzenleme ve eşleştirmeye hazırlama (docs/kararlar.md F5, § 5).
 
 Kural app/core/firma_karti.py'de; burada veritabanı ve arka plan işi.
 

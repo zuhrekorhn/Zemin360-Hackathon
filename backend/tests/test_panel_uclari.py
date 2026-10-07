@@ -1,4 +1,4 @@
-"""Panellerin okuduğu uçlar (docs/faz-b-kimlik-ve-dongu.md § 7), gerçek veritabanında.
+"""Panellerin okuduğu uçlar (docs/kimlik-ve-dongu.md § 7), gerçek veritabanında.
 
 Dünya test_sahiplik.py'deki: E1 = I1 (kurum1) ↔ K1 (genc1, "Elif"), `onerildi`;
 E2 = I2 (kurum2) ↔ K2 (genc2, "Can"), `ilgileniliyor`.

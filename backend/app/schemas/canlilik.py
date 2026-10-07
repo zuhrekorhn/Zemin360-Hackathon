@@ -1,4 +1,4 @@
-"""Canlılık uç noktalarının şemaları (docs/faz-d-canlilik.md § 8)."""
+"""Canlılık uç noktalarının şemaları (docs/canlilik.md § 8)."""
 
 from __future__ import annotations
 

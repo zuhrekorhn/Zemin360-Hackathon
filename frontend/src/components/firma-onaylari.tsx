@@ -16,7 +16,7 @@ import { type Hata, hatayaCevir } from "@/lib/hata";
 import { cn } from "@/lib/utils";
 
 /**
- * GİRVAK: onay bekleyen firmalar (docs/plans/firma-akisi.md § 0 karar 6, § 6).
+ * GİRVAK: onay bekleyen firmalar (docs/kararlar.md F6).
  *
  * Sistem ipucu verir, karar GİRVAK'ın. "Onayla" firmaya bildirim gönderir;
  * "Şimdilik değil" sessizdir. Tam e-posta gösterilmez, yalnızca uzantısı.

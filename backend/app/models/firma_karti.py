@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class FirmaKarti(UUIDPrimaryKeyMixin, Base):
-    """Firmanın yetkinlik kartı (docs/plans/firma-akisi.md § 0 karar 10, § 2).
+    """Firmanın yetkinlik kartı (docs/kararlar.md F10).
 
     Firma başına bir kart. Yetenek kartı genişletilmedi: onun alanları (rol,
     deneyim, çalışmalar, güven göstergesi) gence özel. Paylaşılan kısım eşleşme,
@@ -54,7 +54,7 @@ class FirmaKarti(UUIDPrimaryKeyMixin, Base):
     )
 
     kurum: Mapped[Kurum] = relationship(back_populates="firma_karti")
-    # Ortak ilanlarına aday olarak (docs/plans/firma-akisi.md § 0 karar 11).
+    # Ortak ilanlarına aday olarak (docs/kararlar.md F11).
     eslesmeler: Mapped[list[Eslesme]] = relationship(
         back_populates="firma_karti", cascade="all, delete-orphan"
     )

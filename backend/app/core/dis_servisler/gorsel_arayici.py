@@ -1,4 +1,5 @@
-"""Görselin internetteki kaynağını arama: arayüz, Cloud Vision ve kapalı kip (plan § 4.3, § 14.4).
+"""Görselin internetteki kaynağını arama: arayüz, Cloud Vision ve kapalı kip (docs/dogrulama.md
+§ 4.3, § 14.4).
 
 Yüklenen görselin birebir eşi başka bir sayfada var mı? (`gorsel_baskasinda`.)
 Varsayılan kapalı (`GORSEL_ARAYICI=kapali`); açıkken yalnızca tasarım / fotoğraf
@@ -6,7 +7,7 @@ alanındaki görsellerde ve aylık tavan dolmadıysa çağrılır (karar servisi
 Görsel yurt dışındaki bir servise gider; KVKK aydınlatma metninde listelidir.
 
 Cloud Vision Web Detection tarih vermez: "daha eski tarihte" sorusu yanıtsız
-kalır, GİRVAK sayfayı açıp bakar (plan § 18). Anahtar URL'de değil başlıkta
+kalır, GİRVAK sayfayı açıp bakar (docs/dogrulama.md § 18). Anahtar URL'de değil başlıkta
 gider (log'a düşmesin). Görsel gönderilmeden önce küçültülür (istek sınırı
 10 MB; kaynak araması için 1024 px yeter).
 

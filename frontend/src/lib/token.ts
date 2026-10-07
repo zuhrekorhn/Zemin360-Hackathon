@@ -1,5 +1,5 @@
 /**
- * Oturum token'ı (docs/faz-b-kimlik-ve-dongu.md § 1).
+ * Oturum token'ı (docs/kimlik-ve-dongu.md § 1).
  *
  * JWT localStorage'da tutulur ve her istekte `Authorization: Bearer` ile
  * gider (lib/api.ts). Çıkış = token'ı silmek; sunucuda iptal listesi yok.

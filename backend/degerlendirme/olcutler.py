@@ -1,4 +1,4 @@
-"""Karne ölçütleri (plan § 10.1, § 10.2). Saf fonksiyonlar: ağ, model, dosya yok.
+"""Karne ölçütleri (docs/dogrulama.md § 10.1, § 10.2). Saf fonksiyonlar: ağ, model, dosya yok.
 
 Kabul eşikleri:
   - sahte (kötü niyetli) vakada yanlış 3 = 0     (en kritik ölçüt)

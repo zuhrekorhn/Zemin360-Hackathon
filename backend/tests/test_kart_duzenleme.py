@@ -1,4 +1,4 @@
-"""Kart ve profil düzenleme (docs/plans/genc-akisi.md § 6).
+"""Kart ve profil düzenleme (docs/agent-specs.md § 1).
 
 Temel kural: doğrulanmış bir iş kaleminin içeriği ya da linki değişirse o
 kalemin güven göstergesi sıfırlanır; değişmeyenlerinki korunur. Değişiklikten
@@ -66,7 +66,7 @@ def test_degisen_alanlar_yalnizca_gercek_degisiklik():
     [
         ({"aciklama"}, True),
         # Kanıt iddianın alanı değil: değişince gösterge yeniden değerlendirilir ama
-        # iddia sıfırlanmaz, referanslar geçerli kalır (plan § 2; parcalar.py).
+        # iddia sıfırlanmaz, referanslar geçerli kalır (docs/dogrulama.md § 2; parcalar.py).
         ({"kanit_linki"}, False),
         ({"olculebilir_sonuc"}, True),
         ({"kendi_rolu"}, True),
@@ -228,7 +228,7 @@ def test_referans_yeniden_istenir_ve_yeni_yanit_sayilir(kart_hazirlama_arka_plan
     async def senaryo():
         async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
             hesap, _, kart, a, _ = await _genc_ve_kart(oturum)
-            # İddia değişti: eski referans yanıtı geçmişte kalır (karar 8).
+            # İddia değişti: eski referans yanıtı geçmişte kalır (docs/kararlar.md G8).
             await istemci.patch(
                 f"/yetenek-kartlari/{kart.id}/ciktilar/{a.id}",
                 headers=_baslik(hesap),
@@ -306,7 +306,7 @@ def test_kart_alanlari_ve_is_kalemi_ekle_sil(kart_hazirlama_arka_plani_yok):
 
 
 def test_duzenleme_yalnizca_onerildi_gerekcesini_bosaltir(kart_hazirlama_arka_plani_yok):
-    """Kararı verilmiş kayıtlara dokunulmaz (plan § 0, karar 14)."""
+    """Kararı verilmiş kayıtlara dokunulmaz (docs/kararlar.md G14)."""
 
     async def senaryo():
         async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:

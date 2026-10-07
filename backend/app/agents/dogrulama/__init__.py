@@ -10,14 +10,14 @@ docs/agent-specs.md § 4. Sınırlar oradan:
   - Üçüncü taraf onayını zorunlu kılmaz — zaman aşımı bir ceza değil, nötr
     bir durumdur (docs/sequence-diagrams.md § Akış 2, else dalı).
   - Rubrik kriterleri objektif ve kontrol edilebilir olmalı; "ne kadar
-    etkileyici yazılmış" gibi öznel kriterler önyargı üretir (madde 5).
+    etkileyici yazılmış" gibi öznel kriterler önyargı üretir (docs/agent-specs.md § 4).
 
-Paket düzeni (docs/plans/dogrulama-iyilestirme.md § 14.1):
+Paket düzeni (docs/dogrulama.md § 14.1):
   - `referans_durumu`: referans isteğinin durumları, geçişleri, zaman aşımı
   - `kurallar`: saf kurallar (referans puanı, üçüncü taraf onayı, geçerlilik)
   - `okuma`: kanıt adresinin okunması (okuyucu zinciri: app/core/kanit_okuma/)
   - `cikarim`, `alinti`, `not_sablonu`, `cekirdek`: model gerçek çıkarır, kural
-    puanlar, şablon anlatır (adım 4)
+    puanlar, şablon anlatır
 
 Dışarıya açılan adlar burada toplanır; içe aktaranlar alt modülü bilmek zorunda değil.
 """

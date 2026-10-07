@@ -1,4 +1,4 @@
-"""Dış servisin aylık tavanı (plan § 14.4): çağrıdan önce hak alınır.
+"""Dış servisin aylık tavanı (docs/dogrulama.md § 14.4): çağrıdan önce hak alınır.
 
 Artırma ve tavan denetimi tek sorguda (`INSERT … ON CONFLICT DO UPDATE … WHERE
 sayi < tavan RETURNING`): eşzamanlı iki yükleme tavanı birlikte aşamaz. Hak,

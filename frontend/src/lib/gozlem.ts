@@ -1,5 +1,5 @@
 /**
- * GİRVAK gözlem paneli görünüm kuralları (docs/plans/dogrulama-iyilestirme.md § 10.3).
+ * GİRVAK gözlem paneli görünüm kuralları (docs/dogrulama.md § 10.3).
  * Sayılar backend'den gelir (`GET /girvak/gozlem`); burada yalnızca "ekranda ne
  * yazsın". Testleri gozlem.test.ts'de.
  */

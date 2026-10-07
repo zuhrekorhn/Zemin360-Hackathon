@@ -2,7 +2,7 @@
 
 /**
  * Kayıt e-postası doğrulanmamışsa panelde görünen bant
- * (docs/plans/dogrulama-iyilestirme.md § 6.3). Engellemez: hesap her şeyi
+ * (docs/dogrulama.md § 6.3). Engellemez: hesap her şeyi
  * kullanır; bant yalnızca bağlantıyı hatırlatır ve yenisini gönderir.
  */
 

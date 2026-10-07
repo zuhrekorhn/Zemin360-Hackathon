@@ -1,4 +1,4 @@
-"""Firma kartı şemaları (docs/plans/firma-akisi.md § 0 karar 10, § 2, § 5).
+"""Firma kartı şemaları (docs/kararlar.md F10).
 
 `extra="forbid"`: tanınmayan alan sessizce yok sayılmaz, 422 döner.
 """

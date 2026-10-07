@@ -1,11 +1,11 @@
-"""Canlılık Ajanı — pasiflik ve tekrar kuralları (docs/faz-d-canlilik.md § 1-3).
+"""Canlılık Ajanı — pasiflik ve tekrar kuralları (docs/canlilik.md § 1-3).
 
 Saf fonksiyonlar: veritabanı ve LLM yok. Tarama (app/api/canlilik.py) aday
 kayıtları toplar, bu modüle sorar, cevabı uygular. Tablo
 tests/test_canlilik_kurallari.py'de birebir sabitlenmiş.
 
 Pasiflik saklanmaz; mevcut alanlardan okuma anında hesaplanır:
-- hareket: eşleşmenin `son_aktivite_tarihi` (Faz B-C her geçişte günceller),
+- hareket: eşleşmenin `son_aktivite_tarihi` (her geçiş ve her Takip eylemi günceller),
 - gecikme: milestone'un `hedef_tarih`'i.
 
 Canlılık hiçbir kaydın durumunu değiştirmez: hatırlatır, karar vermez.
@@ -27,7 +27,7 @@ PLAN_ONAYSIZ = "plan_onaysiz"
 ISBIRLIGI_HAREKETSIZ = "isbirligi_hareketsiz"
 ADIM_GECIKTI = "adim_gecikti"
 YENI_FIRSAT = "yeni_firsat"
-# Genç ilgi gösterdi, firma yanıt vermedi (docs/plans/genc-akisi.md § 7.1).
+# Genç ilgi gösterdi, firma yanıt vermedi (docs/api-contracts.md).
 GENC_ILGISI_YANITSIZ = "genc_ilgisi_yanitsiz"
 
 TURLER = (
@@ -50,7 +50,7 @@ ESIKLER: dict[str, int] = {
     PLAN_ONAYSIZ: 5,
     ISBIRLIGI_HAREKETSIZ: 14,
     ADIM_GECIKTI: 1,  # hedef tarihten sonra
-    # Genç akışı (plan § 0, karar 6): firmaya, tek kademe, sabit.
+    # Genç akışı (docs/kararlar.md G6): firmaya, tek kademe, sabit.
     GENC_ILGISI_YANITSIZ: 5,
 }
 # Yeni fırsat (§ 2): son bu kadar günde açılmış ihtiyaç kartı…
@@ -91,7 +91,7 @@ def eslesme_hatirlatmalari(durum: str, hareketsiz_gun: int) -> list[Hatirlatma]:
             return [Hatirlatma(ILGI_YANITSIZ_1, ROL_GENC)]
     if durum == DURUM_GENC_ILGILENDI:
         # Tek kademe: firma bir kez hatırlatılır; yanıt vermezse kayıt korunur
-        # (karar 14), ısrar edilmez.
+        # (docs/kararlar.md G14), ısrar edilmez.
         if hareketsiz_gun >= ESIKLER[GENC_ILGISI_YANITSIZ]:
             return [Hatirlatma(GENC_ILGISI_YANITSIZ, ROL_KURUM)]
     return []

@@ -1,7 +1,7 @@
-"""Referans kişiye giden e-postalar: istek ve tek hatırlatma (plan § 7).
+"""Referans kişiye giden e-postalar: istek ve tek hatırlatma (docs/dogrulama.md § 7).
 
 Yanıt bağlantısı yalnızca bu e-postada bulunur; hiçbir API yanıtı token
-taşımaz (bulgu 31). Referans kişiye "siz" diye hitap edilir (firmaya giden
+taşımaz. Referans kişiye "siz" diye hitap edilir (firmaya giden
 metinlerle aynı, docs/icerik-rehberi.md). Gönderim yanıttan sonra arka planda;
 hata akışı düşürmez (İ9).
 """

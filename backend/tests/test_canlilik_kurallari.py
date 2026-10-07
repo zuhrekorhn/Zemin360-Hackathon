@@ -1,4 +1,4 @@
-"""Canlılık kuralları — docs/faz-d-canlilik.md § 1-3'teki tablolar, birebir."""
+"""Canlılık kuralları — docs/canlilik.md § 1-3'teki tablolar, birebir."""
 
 import datetime as dt
 
@@ -36,7 +36,7 @@ def test_esikler_onayli_tablo():
         PLAN_ONAYSIZ: 5,
         ISBIRLIGI_HAREKETSIZ: 14,
         ADIM_GECIKTI: 1,
-        GENC_ILGISI_YANITSIZ: 5,  # genç akışı, plan § 0 karar 6
+        GENC_ILGISI_YANITSIZ: 5,  # genç akışı, docs/kararlar.md G6
     }
 
 

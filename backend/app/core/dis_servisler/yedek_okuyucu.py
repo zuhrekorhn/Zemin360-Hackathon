@@ -1,4 +1,5 @@
-"""Yedek okuyucu servisi (Playwright): arayüz, HTTP istemcisi ve kapalı kip (plan § 5.1, § 5.5).
+"""Yedek okuyucu servisi (Playwright): arayüz, HTTP istemcisi ve kapalı kip (docs/dogrulama.md
+§ 5.1, § 5.5).
 
 Servis ayrı bir uygulamadır (`backend/yedek_okuyucu/`, ayrı süreç); sayfayı gerçek
 bir tarayıcıda açar, işlenmiş HTML'i ve istenirse ekran görüntüsünü döner. Bizim

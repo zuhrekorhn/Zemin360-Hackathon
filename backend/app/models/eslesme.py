@@ -34,7 +34,7 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
     # açılıyordu; pipeline artık bu kısıta ON CONFLICT ile dayanıyor.
     #
     # Aday ya bir yetenek kartı (genç ilanı) ya bir firma kartıdır (ortak ilanı,
-    # docs/plans/firma-akisi.md § 0 karar 11): tam biri dolu. Aynı tablo, aynı
+    # docs/kararlar.md F11): tam biri dolu. Aynı tablo, aynı
     # durum makinesi, aynı iş birliği ilişkisi.
     __table_args__ = (
         # Adlar açık: kuraldaki "uq" adı yalnızca ilk sütunu içerdiği için iki
@@ -76,7 +76,7 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    # İlginin kaydı (docs/plans/genc-akisi.md § 3.5). Karar `durum`'da; bu alanlar
+    # İlginin kaydı (docs/data-schema.md). Karar `durum`'da; bu alanlar
     # yalnızca "kim, ne zaman" bilgisini taşır, hiçbir kural onlara bakmaz.
     # genc | kurum: ilk ilgiyi kim gösterdi (eski kurum ilgileri migration'da "kurum")
     baslatan: Mapped[str | None] = mapped_column(String)

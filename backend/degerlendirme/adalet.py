@@ -1,4 +1,4 @@
-"""Adalet raporu (plan § 10.2). Saf fonksiyonlar: ağ, model, dosya yok.
+"""Adalet raporu (docs/dogrulama.md § 10.2). Saf fonksiyonlar: ağ, model, dosya yok.
 
 Soru: "her meslek aynı güçte bir yolla Kanıt 3'e ulaşabiliyor mu?" (İ5).
 Yalnızca dürüst (kötü niyetli olmayan) ve etiketli vakalara bakılır. Alan başına:

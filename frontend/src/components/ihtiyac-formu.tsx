@@ -19,7 +19,7 @@ import {
 
 /**
  * İhtiyaç kartı formu: Tanımlama'daki taslak onayı ve panelden ilan düzenleme
- * aynı formu kullanır (docs/plans/ilan-duzenleme.md). `aranan` (kapı) formda
+ * aynı formu kullanır (docs/kararlar.md D1). `aranan` (kapı) formda
  * yok, değiştirilemez.
  */
 
@@ -37,8 +37,8 @@ export function IhtiyacFormu({
   duzenleme?: boolean;
   onGonder: (kurumProfili: KurumProfili, taslak: IhtiyacTaslagi) => void;
 }) {
-  // Firmanın sektörü ve şehri kayıtta alınıyor (docs/plans/firma-akisi.md
-  // § 0 karar 2); onayda yalnızca bu alanlardan önce açılmış hesaplarda sorulur.
+  // Firmanın sektörü ve şehri kayıtta alınıyor (docs/kararlar.md
+  // F2); onayda yalnızca bu alanlardan önce açılmış hesaplarda sorulur.
   const eksikAlanlar = useGirisliHesap().eksik_profil_alanlari;
   const firmaBilgisiSor =
     !duzenleme && onaydaFirmaBilgisiSorulmali(eksikAlanlar);
@@ -69,7 +69,7 @@ export function IhtiyacFormu({
   const [mevcutDeger, setMevcutDeger] = useState(olcut.mevcut_deger ?? "");
   const [hedefDeger, setHedefDeger] = useState(olcut.hedef_deger ?? "");
   const [sure, setSure] = useState(olcut.sure ?? "");
-  // Ortak ilanı (docs/plans/firma-akisi.md § 5): aranan firma türleri ve iş
+  // Ortak ilanı (docs/kararlar.md F3): aranan firma türleri ve iş
   // birliği türü; çalışma modeli ve müsaitlik sorulmaz.
   const [firmaTurleri, setFirmaTurleri] = useState<string[]>(
     taslak.aranan_firma_turleri ?? [],
@@ -238,7 +238,7 @@ export function IhtiyacFormu({
               >
                 {SEHIR_SECENEKLERI.map((secenek) => (
                   <option key={secenek.deger} value={secenek.deger}>
-                    {/* Ortak ilanında şehir varsayılan olarak fark etmez (karar 5). */}
+                    {/* Ortak ilanında şehir varsayılan olarak fark etmez (docs/kararlar.md F5). */}
                     {ortak && secenek.deger === ""
                       ? "Fark etmez"
                       : secenek.etiket}
@@ -348,7 +348,7 @@ export function IhtiyacFormu({
             </p>
           )}
 
-          {/* Genç akışı (docs/plans/genc-akisi.md § 0 karar 1): eşik üstü
+          {/* Genç akışı (docs/kararlar.md G1): eşik üstü
               adaylar ihtiyacı fırsat olarak görür. */}
           <p className="text-sm text-pretty text-muted-foreground">
             {duzenleme

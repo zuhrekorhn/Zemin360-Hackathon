@@ -33,7 +33,7 @@ import { useOturum } from "@/lib/oturum";
 import { ISBIRLIGI_DURUM_ETIKETLERI, ilerlemeMetni } from "@/lib/takip";
 
 /**
- * Kurum paneli (docs/faz-b-kimlik-ve-dongu.md § 7): ihtiyaç kartlarım (her
+ * Kurum paneli (docs/kimlik-ve-dongu.md § 7): ihtiyaç kartlarım (her
  * biri kendi önerilerine gider), önerilerim (durumları ve gencin adıyla),
  * iş birliklerim (e-postalarla).
  *
@@ -87,7 +87,7 @@ function KurumPaneliIcerigi() {
         aciklama="İhtiyaçlarınız, adaylarınız ve iş birlikleriniz burada."
       />
 
-      {/* İki kapı (docs/plans/firma-akisi.md § 0 karar 9). */}
+      {/* İki kapı (docs/kararlar.md F9). */}
       <nav aria-label="Ne arıyorsunuz?" className="grid gap-3 sm:grid-cols-2">
         {KAPILAR.map((kapi) => (
           <Link
@@ -106,7 +106,7 @@ function KurumPaneliIcerigi() {
       </nav>
 
       {kartCagrisi ? (
-        // Engellemez (karar 9): yalnızca iş birliği ortağı olarak bulunmak için gerekli.
+        // Engellemez (docs/kararlar.md F9): yalnızca iş birliği ortağı olarak bulunmak için gerekli.
         <div
           role="note"
           className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm text-pretty"
@@ -121,7 +121,7 @@ function KurumPaneliIcerigi() {
       <EpostaDogrulamaBandi hesap={hesap} />
 
       {bant ? (
-        // Engellemez (docs/plans/firma-akisi.md § 0, karar 9): eski hesaplar için.
+        // Engellemez (docs/kararlar.md F9): eski hesaplar için.
         <div
           role="note"
           className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm text-pretty"
@@ -245,7 +245,7 @@ function KurumPaneliIcerigi() {
                         {oneri.aday_adi}
                       </Link>
                     ) : (
-                      // Firma adayı: kartı öneriler sayfasında (firma-akisi § 8).
+                      // Firma adayı: kartı öneriler sayfasında (docs/kararlar.md F9).
                       <span className="font-medium text-ana">
                         {oneri.aday_adi}
                       </span>
@@ -314,7 +314,7 @@ function KurumPaneliIcerigi() {
               >
                 <div className="flex flex-wrap items-baseline gap-x-3">
                   {/* Karşı taraf: ilanı açtıysak aday (genç ya da ortak firma),
-                      ortak firmaysak ilanı açan firma (firma-akisi § 9). */}
+                      ortak firmaysak ilanı açan firma (docs/takip.md, Ek). */}
                   <span className="font-medium text-ana">
                     {isbirligi.tarafim === "genc"
                       ? isbirligi.kurum_adi

@@ -1,4 +1,4 @@
-"""Canlılık hatırlatma metni (docs/faz-d-canlilik.md § 5) — kişiselleştirme kesilebilir.
+"""Canlılık hatırlatma metni (docs/canlilik.md § 5) — kişiselleştirme kesilebilir.
 
 Sabitlenenler: her türün şablonu var; LLM metni kurala uymazsa (boş, uzun,
 e-posta, girdide olmayan sayı) ya da LLM çökerse şablon gider; tarama

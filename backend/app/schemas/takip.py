@@ -1,4 +1,4 @@
-"""Takip Ajanı uç noktalarının şemaları (docs/faz-c-takip.md § 7)."""
+"""Takip Ajanı uç noktalarının şemaları (docs/takip.md § 7)."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ class IsbirligiDetayi(BaseModel):
     id: uuid.UUID
     # plan_bekliyor | aktif | tamamlandi | sonlandi
     durum: str
-    # Süreç şablonu ve görünen adı (docs/plans/takip-surecleri.md); eski kayıtta None.
+    # Süreç şablonu ve görünen adı (docs/kararlar.md T1); eski kayıtta None.
     surec: str | None = None
     surec_adi: str | None = None
     baslangic_tarihi: dt.date | None
@@ -42,7 +42,7 @@ class IsbirligiDetayi(BaseModel):
     eslesme_id: uuid.UUID
     ihtiyac_karti_id: uuid.UUID
     # Aday tarafı: genç (yetenek kartı) ya da ortak firma (firma kartı);
-    # adı `aday_adi`'nda (docs/plans/firma-akisi.md § 9). `genc_*` alanları
+    # adı `aday_adi`'nda (docs/takip.md (Ek)). `genc_*` alanları
     # yalnızca genç adayında dolu.
     aday_turu: Literal["genc", "firma"] = "genc"
     aday_adi: str
@@ -53,7 +53,7 @@ class IsbirligiDetayi(BaseModel):
     rol_alani: str | None = None
     # İsteyenin eşleşmedeki tarafı (genc = aday tarafı, kurum = ilan tarafı);
     # GİRVAK'ta None. Ortak firmanın rolü de "kurum": arayüz tarafı rolden değil
-    # buradan okur (docs/plans/firma-akisi.md § 3, § 9).
+    # buradan okur (docs/kararlar.md F12, § 9).
     tarafim: Literal["genc", "kurum"] | None = None
     problem_tanimi: str
     basari_kriteri: str | None

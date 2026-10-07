@@ -18,16 +18,16 @@ if TYPE_CHECKING:
 class Kullanici(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "kullanici"
 
-    # Profilin sahibi olan hesap (1-1). Nullable: Faz B öncesi profillerin
-    # hesabı yok ve onlar için hesap uydurulmuyor; hesapsız profilin kartı
-    # eşleştirmeye girmez (docs/faz-b-kimlik-ve-dongu.md § 8).
+    # Profilin sahibi olan hesap (1-1). Nullable: kimlik tablosundan önceki
+    # profillerin hesabı yok ve onlar için hesap uydurulmuyor; hesapsız profilin kartı
+    # eşleştirmeye girmez (docs/kimlik-ve-dongu.md § 8).
     hesap_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("hesap.id", ondelete="CASCADE"), unique=True
     )
     ad: Mapped[str] = mapped_column(String)
     # İletişim bilgisi (kimlik değil: kimlik `hesap`ta). Kayıtta hesap
     # e-postasıyla doldurulur; kuruma yalnızca eşleşme kabul edilince görünür
-    # (docs/faz-b-kimlik-ve-dongu.md § 5). Tekil ve normalize.
+    # (docs/kimlik-ve-dongu.md § 5). Tekil ve normalize.
     email: Mapped[str] = mapped_column(String, unique=True)
     sehir: Mapped[str | None] = mapped_column(String)
     # Kabul ettiği çalışma modelleri (is_yerinde | hibrit | uzaktan).
@@ -38,11 +38,11 @@ class Kullanici(UUIDPrimaryKeyMixin, Base):
     )
     # Kabul ettiği çalışma tipleri, çoklu (app/core/musaitlik.py kodları:
     # tam_zamanli | yarim_zamanli | proje_bazli | staj). Boş liste "belirtilmedi":
-    # eşleştirmede elenmez (docs/plans/genc-akisi.md § 0, karar 2).
+    # eşleştirmede elenmez (docs/kararlar.md G2).
     musaitlikler: Mapped[list[str]] = mapped_column(
         ARRAY(Text), default=list, server_default=text("'{}'")
     )
-    # Kayıt formunun yapısal alanları (docs/plans/genc-akisi.md § 3.2). Eşleştirme
+    # Kayıt formunun yapısal alanları (docs/data-schema.md). Eşleştirme
     # bunlara bakmaz: yalnızca yetkinliğe dayanıyor. Fotoğraf, yaş, cinsiyet gibi
     # alanlar bilinçli olarak YOK. Bu alanlardan önce açılmış profillerde NULL.
     # ogrenci | mezun | calisiyor

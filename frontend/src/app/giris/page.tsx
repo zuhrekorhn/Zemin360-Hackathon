@@ -15,7 +15,7 @@ import { tokenYaz } from "@/lib/token";
 import { giristenSonra } from "@/lib/yonlendirme";
 
 /**
- * Giriş (docs/faz-b-kimlik-ve-dongu.md § 1, § 7).
+ * Giriş (docs/kimlik-ve-dongu.md § 1, § 7).
  *
  * `?sonra=<yol>`: giriş gerektiren bir sayfadan gelindiyse girişten sonra
  * oraya dönülür; yoksa rolün paneline. Zaten giriş yapmışsa form gösterilmez.

@@ -1,4 +1,4 @@
-"""Şifre hash'i ve JWT (docs/faz-b-kimlik-ve-dongu.md § 1).
+"""Şifre hash'i ve JWT (docs/kimlik-ve-dongu.md § 1).
 
 - Şifre: argon2id (`argon2-cffi` varsayılan parametreleri). bcrypt'in 72
   baytlık sessiz kesme sınırı yok.

@@ -1,10 +1,10 @@
-"""İtiraz: genç değerlendirmeyi eksik bulursa yeniden baktırır (plan § 11.4).
+"""İtiraz: genç değerlendirmeyi eksik bulursa yeniden baktırır (docs/dogrulama.md § 11.4).
 
 Not zorunlu ve beyandır: kanıt yerine geçmez, tek başına destek sayılmaz. Aynı
 not ve aynı girdi önceki sonucu döndürür (önbellek, model çağrılmaz); içerik
 sürümü başına en çok `ITIRAZ_SINIRI` itiraz yapılır; sonrakiler model çağırmaz,
 GİRVAK inceleme kuyruğuna `itiraz_siniri` işaretiyle gider (kalem başına tek
-açık işaret, notlar birikir; plan § 9). Kalemde GİRVAK'ın "doğrulanamadı"
+açık işaret, notlar birikir; docs/dogrulama.md § 9). Kalemde GİRVAK'ın "doğrulanamadı"
 kararı varsa itiraz o karara yapılmış sayılır: model çağrılmaz, aynı türden
 yeni bir işaretle GİRVAK'a gider (genç kararı görür ve itiraz edebilir, § 9).
 Çalışma ya da kanıt değişince sayaç sıfırlanır (parcalar.py, kart düzenleme). Üçüncü taraf onayı

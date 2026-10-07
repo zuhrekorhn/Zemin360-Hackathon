@@ -1,4 +1,4 @@
-"""Belge tekilliği (plan § 4.2, § 9, bulgu 48): aynı doğrulama adresi (QR / sertifika /
+"""Belge tekilliği (docs/dogrulama.md § 4.2, § 9): aynı doğrulama adresi (QR / sertifika /
 rozet) ikinci bir hesapta kullanılırsa reddedilmez, `ayni_belge_iki_hesapta`
 işaretiyle GİRVAK kuyruğuna düşer. İşaret puanı değiştirmez (İ1).
 

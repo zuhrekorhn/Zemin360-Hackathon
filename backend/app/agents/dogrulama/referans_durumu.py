@@ -11,7 +11,7 @@ import datetime as dt
 # Referans yanıtı için tanınan süre (docs/agent-specs.md § 4.2: 5-7 gün).
 # Üst sınır seçildi: erken "yanıt yok" demek referans kişiyi cezalandırır.
 REFERANS_TIMEOUT_GUN = 7
-# Tek hatırlatma e-postası bu günde gider (plan § 7; Canlılık taraması).
+# Tek hatırlatma e-postası bu günde gider (docs/dogrulama.md § 7; Canlılık taraması).
 HATIRLATMA_GUN = 3
 
 DURUM_BEKLIYOR = "bekliyor"

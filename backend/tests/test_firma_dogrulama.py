@@ -1,4 +1,4 @@
-"""Firma doğrulaması (docs/plans/firma-akisi.md § 0 kararlar 6, 15, 17; § 6).
+"""Firma doğrulaması (docs/kararlar.md F6, F15, F17).
 
 Sistem ipucu verir (ağ isteği yok), GİRVAK karar verir. Doğrulanmamış firma
 her şeyi kullanır; yalnızca işareti olmaz.

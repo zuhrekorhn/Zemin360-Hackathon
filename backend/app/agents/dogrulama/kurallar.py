@@ -33,7 +33,7 @@ def ucuncu_taraf_onayi_hesapla(puanlar: Sequence[int]) -> int | None:
     """Yanıtlamış tüm referanslardan tek bir 0-3 puanı üretir; yanıt yoksa None ("—").
 
     "Yanıt yok" ile "olumsuz yanıt" (0) ayrı şeylerdir: ikisi de 0 olsaydı
-    referans istememiş genç, olumsuz yanıt almış gibi görünürdü (bulgu 19).
+    referans istememiş genç, olumsuz yanıt almış gibi görünürdü.
 
     Ortalama alınıyor, en yüksek değil: en yüksek, "olumlu diyen birini
     bulana kadar referans sor" davranışını ödüllendirirdi. Ortalama, zayıf
@@ -55,7 +55,7 @@ def _ortalama(degerler: Sequence[float]) -> int | None:
     return math.floor(sum(degerler) / len(degerler) + 0.5)
 
 
-# --- 4 soruluk form (docs/plans/dogrulama-iyilestirme.md § 7) ------------------------------
+# --- 4 soruluk form (docs/dogrulama.md § 7) ------------------------------
 # (2) çalışma, (3) pay, (4) sonuç için yanıtlar. "Bilmiyorum" bir değerlendirme değil:
 # ortalamaya girmez. "Kısmen" 1: anlatılanın bir kısmı doğruysa iddia büyütülmüş demektir.
 
@@ -89,7 +89,7 @@ def referans_yeniden_istenebilir_mi(
     return None
 
 
-# --- Referans yanıtının geçerliliği (docs/plans/genc-akisi.md § 0, karar 8) ---------
+# --- Referans yanıtının geçerliliği (docs/kararlar.md G8) ---------
 # İş kalemi değişince eski yanıt geçmişte kalır, puana girmez. Kart düzenleme
 # (sıfırlama) ve Doğrulama (üçüncü taraf onayı) aynı kuralı buradan kullanır.
 
@@ -149,7 +149,7 @@ def referans_yanit_puani(yanit: ReferansYaniti) -> float | None:
 def referans_basligi(yanitlar: Iterable[ReferansYaniti]) -> int | None:
     """Referans başlığı: güncel yanıtların kişi başına ortalaması (0.5 yukarı).
 
-    Yanıt yoksa ya da herkes "bilmiyorum" dediyse None ("—"), 0 değil (bulgu 19).
+    Yanıt yoksa ya da herkes "bilmiyorum" dediyse None ("—"), 0 değil.
     """
     puanlar = [p for p in map(referans_yanit_puani, yanitlar) if p is not None]
     return _ortalama(puanlar)
@@ -177,7 +177,7 @@ def referans_destegi(yanitlar: Iterable[ReferansYaniti]) -> ReferansDestegi:
 # --- Güç işaretleri (puan değil, satırda görünür; § 7) ---------------------------------------
 # Ücretsiz posta sağlayıcısı dışındaki alan adı "kurumsal" sayılır. Plan alan adının
 # kuruluşun web sitesiyle aynı olmasını söylüyor; kalemde kuruluşun sitesi tutulmadığı
-# için bugünkü yaklaşım bu (bilinen sınır, plan § 18).
+# için bugünkü yaklaşım bu (bilinen sınır, docs/dogrulama.md § 18).
 UCRETSIZ_POSTA = frozenset(
     {
         "gmail.com",
@@ -215,7 +215,7 @@ def eposta_gucu(eposta: str) -> str | None:
     return GUC_KURUMSAL
 
 
-# --- Puan kuralları (docs/plans/dogrulama-iyilestirme.md § 2, § 11.2) ---------------------
+# --- Puan kuralları (docs/dogrulama.md § 2, § 11.2) ---------------------
 # Model gerçekleri çıkarır (cikarim.py), puanı buradaki saf fonksiyonlar verir: aynı
 # gerçekler her zaman aynı puanı üretir ve kural tabloyla test edilir.
 
@@ -234,7 +234,7 @@ CELISKI_TAVANI = 1
 
 @dataclass(frozen=True)
 class OkunanKanit:
-    """Bir kanıt parçasının okunuşu (adım 5'te okuyucu zinciri üretir)."""
+    """Bir kanıt parçasının okunuşu (okuyucu zinciri üretir, docs/dogrulama.md § 5)."""
 
     erisim: ErisimDurumu
     seviye: KaynakSeviyesi
@@ -252,7 +252,7 @@ class OkunanKanit:
     # ParcaTuru: link | dosya | gorsel
     tur: str = "link"
     # Alıntı denetiminin kaynağı, `metin`'den farklıysa: görselde betim modelin
-    # yazdığıdır, alıntı yalnızca görselde yazan metinden olabilir (plan § 4.3).
+    # yazdığıdır, alıntı yalnızca görselde yazan metinden olabilir (docs/dogrulama.md § 4.3).
     alinti_metni: str | None = None
     # Yüklenen dosyanın görünen adı (modele "kanıt adresi" yerine)
     dosya_adi: str | None = None

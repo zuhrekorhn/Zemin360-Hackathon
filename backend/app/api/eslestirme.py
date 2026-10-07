@@ -97,7 +97,7 @@ from app.servisler.sahiplik import kurum_id as hesabin_kurumu
 router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
 IHTIYAC_YOK = "İhtiyaç bulunamadı."
-# Faz B'de yalnızca kurum ilgi gösterebiliyordu: bu durumlardaki eski kayıtlar
+# Eskiden yalnızca firma ilgi gösterebiliyordu: bu durumlardaki eski kayıtlar
 # kurumun ilgisiyle başladı.
 KURUM_ILGISI_DURUMLARI = ("ilgileniliyor", "kabul_edildi", "reddedildi")
 ESLESME_BULUNAMADI = "Eşleşme bulunamadı"
@@ -139,8 +139,8 @@ async def oneriler(
 ) -> OnerilerYaniti:
     """Hesaplanmış önerileri sıralı döner; hiç hesaplanmamışsa pipeline'ı tetikler.
 
-    `?ihtiyac_karti_id=` verilmezse kurumun en son ihtiyaç kartı (Faz B
-    öncesi davranış); kurum panelinde her kart kendi önerilerine gider.
+    `?ihtiyac_karti_id=` verilmezse kurumun en son ihtiyaç kartı;
+    kurum panelinde her kart kendi önerilerine gider.
     """
     kurum_id = _hedef_kurum(hesap, kurum_id)
     ihtiyac = await _ihtiyac_karti(oturum, kurum_id, ihtiyac_karti_id)
@@ -210,10 +210,10 @@ async def ilgileniyorum(
     """Kurum ilgilendiğini söyler. İki kapı:
 
     - `onerildi` → `ilgileniliyor`: iş birliği AÇILMAZ, gencin kabulünü bekler
-      (docs/faz-b-kimlik-ve-dongu.md § 5). Gence bildirim gider.
+      (docs/kimlik-ve-dongu.md § 5). Gence bildirim gider.
     - `genc_ilgilendi` → `kabul_edildi` (karşılıklı ilgi): genç onayını ilgi
       gösterirken verdi; iş birliği açılır, e-postalar iki tarafa görünür,
-      yanıttan sonra plan önerilir (docs/plans/genc-akisi.md § 4).
+      yanıttan sonra plan önerilir (docs/kimlik-ve-dongu.md § 5).
     """
     eslesme = await _ilan_tarafinin_eslesmesi(oturum, hesap, istek.eslesme_id)
     karsilikli = eslesme.durum == DURUM_GENC_ILGILENDI
@@ -335,7 +335,7 @@ async def kabul(
 ) -> EslesmeDurumYaniti:
     """Genç kurumun ilgisini kabul eder: iş birliği açılır, e-postalar görünür.
 
-    Yanıttan sonra Takip Ajanı planı önerir (docs/faz-c-takip.md § 4).
+    Yanıttan sonra Takip Ajanı planı önerir (docs/takip.md § 4).
     """
     eslesme = await _gencin_eslesmesi(oturum, hesap, eslesme_id)
     degisti = _gecisi_uygula(eslesme, OLAY_KABUL, TARAF_ADAY)
@@ -448,7 +448,7 @@ async def firsatlarim(
     oturum: AsyncSession = Depends(get_session),
 ) -> list[GencEslesmesi]:
     """Sana uygun fırsatlar: gencin kartlarının açık ihtiyaçlardaki henüz ilgi
-    gösterilmemiş önerileri, uyum sırasıyla (plan § 7). Öneri kaydı zaten
+    gösterilmemiş önerileri, uyum sırasıyla (docs/kararlar.md G1). Öneri kaydı zaten
     benzerlik tabanını geçmiş adaya yazılıyor; burada ayrıca skor süzülmez.
 
     Yalnızca okur, eşleştirme çalıştırmaz. Açık bir ilan panosu değil: genç
@@ -495,7 +495,7 @@ async def _eslesmeyi_kilitle(oturum: AsyncSession, eslesme_id: uuid.UUID) -> Esl
 async def _gencin_eslesmesi(oturum: AsyncSession, hesap: Hesap, eslesme_id: uuid.UUID) -> Eslesme:
     """Gencin kendi kartına ait eşleşme; değilse 404 (varlık sızdırılmaz).
 
-    Genç akışında (plan § 0, karar 1) genç kendi kartının bütün eşleşmelerini
+    Genç akışında (docs/kararlar.md G1) genç kendi kartının bütün eşleşmelerini
     görür (sahiplik.GENCE_ACIK_DURUMLAR).
     """
     eslesme = await _eslesmeyi_kilitle(oturum, eslesme_id)
@@ -522,7 +522,7 @@ def _gecisi_uygula(eslesme: Eslesme, olay: str, taraf: str) -> bool:
     """Kuralı `gecis()`'e sorar; değiştiyse durumu ve aktivite tarihini yazar.
 
     `taraf`: eşleşmedeki taraf (aday / ilan), hesabın rolü değil
-    (docs/plans/firma-akisi.md § 3). Çağıran tarafı sahiplikle doğrulamış olmalı.
+    (docs/kararlar.md F12). Çağıran tarafı sahiplikle doğrulamış olmalı.
 
     Döner: geçiş gerçekten oldu mu. False = aynı geçişin tekrarı; çağıran yan
     etkiyi (iş birliği, bildirim) tekrarlamaz. Commit çağıranın işi: yan
@@ -638,7 +638,7 @@ def _firma_aday_karti(eslesme: Eslesme, tamamlanan_isbirligi: int) -> FirmaAdayK
     )
 
 
-# --- Firmalar arası ilgi: aday firmanın tarafı (docs/plans/firma-akisi.md § 0 karar 8, § 3) ---
+# --- Firmalar arası ilgi: aday firmanın tarafı (docs/kararlar.md F8) ---
 #
 # Durum makinesi aynı; aday firma makinenin "aday tarafı"nın geçişlerini yapar
 # (genç uçlarının aynısı). Uçlar ayrı ve ince: rol firma, taraf aday. Metinler

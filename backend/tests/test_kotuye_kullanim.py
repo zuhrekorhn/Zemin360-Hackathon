@@ -1,4 +1,4 @@
-"""Kötüye kullanım işaretleri (plan § 9, adım 11): sinyal GİRVAK kuyruğuna düşer,
+"""Kötüye kullanım işaretleri (docs/dogrulama.md § 9): sinyal GİRVAK kuyruğuna düşer,
 puan değişmez (İ1); aynı sinyal bir kez düşer."""
 
 import asyncio

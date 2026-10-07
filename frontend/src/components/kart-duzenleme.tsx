@@ -25,9 +25,9 @@ import {
 } from "@/lib/kart-duzenleme";
 
 /**
- * Gencin kendi kartını düzenlemesi (docs/plans/genc-akisi.md § 6.1). Her kayıt
+ * Gencin kendi kartını düzenlemesi (docs/agent-specs.md § 1). Her kayıt
  * kartı sunucuda yeniden hazırlatır (eşleşmeler ve güven göstergesi güncellenir).
- * Metinler: docs/plans/genc-akisi-metinler.md.
+ * Metinler: docs/icerik-rehberi.md.
  */
 
 // Rehber § 5.8: ne beklendiğini söyler, kesin süre vermez.

@@ -1,4 +1,4 @@
-"""Dosya ve görselin modele okutulması (plan § 4.3; hızlı katman, sıcaklık 0).
+"""Dosya ve görselin modele okutulması (docs/dogrulama.md § 4.3; hızlı katman, sıcaklık 0).
 
 İki adımlı okumanın ilk adımı: model yalnızca görür ve yazar, değerlendirmez.
   - `gorsel_metni`: belgede / görselde yazan metin, olduğu gibi. Alıntı
@@ -6,7 +6,7 @@
   - `betim`: ne görüldüğü, tarafsız birkaç cümle. Çalışmayla ilgisini anlamak
     için değerlendirmeye bağlam olarak gider; alıntı kaynağı değildir.
 İkinci adım (iddia karşılaştırması) her kanıtın geçtiği çekirdekte
-(`cekirdek.py`). Yapay zekâ ile üretilmiş mi tespiti yapılmaz (plan § 4.3).
+(`cekirdek.py`). Yapay zekâ ile üretilmiş mi tespiti yapılmaz (docs/dogrulama.md § 4.3).
 Yedek okuyucunun aldığı sayfa ekran görüntüleri de aynı okumadan geçer (§ 5.5):
 parçalar tek çağrıda, yukarıdan aşağı sırayla.
 """

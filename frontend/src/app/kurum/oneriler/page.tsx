@@ -42,12 +42,12 @@ import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
  * Eşleştirme önerileri — kurum tarafı (docs/agent-specs.md § 3).
  *
  * Kurum "ilgileniyorum" der, genç kabul ya da red eder; iş birliği ve
- * e-postalar yalnızca kabulle açılır (docs/faz-b-kimlik-ve-dongu.md § 5).
+ * e-postalar yalnızca kabulle açılır (docs/kimlik-ve-dongu.md § 5).
  *
  * Skor ve gerekçe birlikte gösteriliyor — matching-algorithm.md § 6'nın
  * kararı: kuruma "şu yüzden" denmeden bir isim listesi sunulmuyor.
  *
- * Genç akışı (docs/plans/genc-akisi.md § 7.1): ilgi gösteren adaylar ayrı
+ * Genç akışı (docs/api-contracts.md): ilgi gösteren adaylar ayrı
  * bölümde, uyum sırası değişmeden; firma onlara "İlgileniyorum" (karşılıklı
  * ilgi, iş birliği açılır) ya da "Şimdilik değil" der. Durum etiketleri
  * docs/icerik-rehberi.md § 5.9 (lib/ilgi.ts).
@@ -155,7 +155,7 @@ function OnerilerIcerigi() {
   const gosterilenKart = veri
     ? hesap.ihtiyac_kartlari.find((kart) => kart.id === veri.ihtiyac_karti_id)
     : undefined;
-  // Ortak ilanının adayları firmalar (docs/plans/firma-akisi.md § 4).
+  // Ortak ilanının adayları firmalar (docs/kararlar.md F5).
   const ortak = gosterilenKart?.aranan === "firma";
 
   return (
@@ -493,7 +493,7 @@ function OneriKarti({
 }
 
 /**
- * Ortak ilanında önerilen firma (docs/plans/firma-akisi.md § 0 kararlar 8, 16-17).
+ * Ortak ilanında önerilen firma (docs/kararlar.md F8, F16-17).
  * Eylemler genç adayındakiyle aynı kurala bağlı (`firmaEylemleri`); metinler
  * karşı tarafı "firma" diye anar.
  */

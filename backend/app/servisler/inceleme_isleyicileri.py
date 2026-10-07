@@ -1,4 +1,4 @@
-"""İşaret türü → kararın etkisi (Strategy; docs/plans/dogrulama-iyilestirme.md § 9).
+"""İşaret türü → kararın etkisi (Strategy; docs/dogrulama.md § 9).
 
 Kalem işaretleri (itiraz sınırı, ileride kanıt işaretleri) aynı işleyiciyi
 kullanır: karar puanı değiştirmez, gence sonucu bildirir. Etkisi farklı olan

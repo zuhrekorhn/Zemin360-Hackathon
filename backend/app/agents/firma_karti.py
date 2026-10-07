@@ -1,6 +1,6 @@
 """Firma kartı sohbeti: firmanın "biz ne yapıyoruz" anlatımını karta çevirir.
 
-docs/plans/firma-akisi.md § 0 karar 3, § 5. Belgelerde Keşif'in firma soru seti
+docs/kararlar.md F3. Belgelerde Keşif'in firma soru seti
 olarak geçer: Keşif ve Tanımlama ile AYNI sohbet motorunu paylaşır
 (app/agents/sohbet_motoru.py); yeni bir grafik iskeleti yok, yalnızca bir
 `AjanTanimi`: soru seti, çıkarım şeması ve ek sorular.

@@ -1,4 +1,4 @@
-"""Ad ve kimlik bütünlüğü (docs/plans/dogrulama-iyilestirme.md § 6.3, bulgu 48): saf ad
+"""Ad ve kimlik bütünlüğü (docs/dogrulama.md § 6.3): saf ad
 eşleşmesi ve seviye A koşulu; e-posta doğrulanınca ad kilidi; ad değişikliği talebi
 GİRVAK kuyruğuna gider, onay adı uygular ve adla sahipliği kurulmuş kanıtı yeniden açar.
 

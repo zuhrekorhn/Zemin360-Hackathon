@@ -28,15 +28,15 @@ import { cn } from "@/lib/utils";
 import { giristenSonra, kayittanSonra } from "@/lib/yonlendirme";
 
 /**
- * Kayıt (docs/faz-b-kimlik-ve-dongu.md § 2, § 7).
+ * Kayıt (docs/kimlik-ve-dongu.md § 2, § 7).
  *
  * Rol kayıtta seçilir: genç ya da kurum. GİRVAK açık kayıtla açılamaz.
  * Kayıtla birlikte giriş yapılmış olur. Genç kayıtta yapısal profil alanlarını
  * (şehir, çalışma modeli, müsaitlik, durum…) ve KVKK onayını verir
- * (docs/plans/genc-akisi.md § 5.1); yetkinlikler Keşif sohbetinde toplanır.
+ * (docs/agent-specs.md § 1); yetkinlikler Keşif sohbetinde toplanır.
  * Firma kayıtta türünü, sektörünü, şehrini ve isteğe bağlı tanıtım bilgilerini
- * verir; KVKK onayı iki rol için de zorunlu (docs/plans/firma-akisi.md § 0
- * kararlar 1-2). Ana sayfadaki düğmeler `?rol=` ile gelir.
+ * verir; KVKK onayı iki rol için de zorunlu (docs/kararlar.md
+ * F1-F2, G2). Ana sayfadaki düğmeler `?rol=` ile gelir.
  */
 
 const SIFRE_EN_AZ = 8;

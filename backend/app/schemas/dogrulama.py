@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 
 from app.core.kanit_okuma.adres import KANIT_LINKI_UZUNLUGU
 
-# Referans formu (plan § 7); değer kümeleri app/agents/dogrulama/kurallar.py ile aynı.
+# Referans formu (docs/dogrulama.md § 7); değer kümeleri app/agents/dogrulama/kurallar.py ile aynı.
 Iliski = Literal["yonetici", "takim_arkadasi", "ogretmen_danisman", "musteri", "diger"]
 FormCevabi = Literal["evet", "kismen", "hayir", "bilmiyorum"]
 
@@ -86,7 +86,7 @@ class GuvenSkoruYaniti(BaseModel):
 
 class ReferansDurumuYaniti(BaseModel):
     """Gencin (ve GİRVAK'ın) gördüğü referans satırı. Token ve yanıt linki yok:
-    e-posta referansa doğrudan gider (bulgu 31)."""
+    e-posta referansa doğrudan gider."""
 
     id: uuid.UUID
     referans_email: str
@@ -103,10 +103,10 @@ class ReferansDurumuYaniti(BaseModel):
     # Güç işareti (puan değil): "kurumsal_eposta" | "egitim_eposta" | null
     guc: str | None = None
     # False: yanıt iş kaleminin önceki hâli için verildi; geçmiş olarak görünür,
-    # güven göstergesine girmez (plan § 0, karar 8). Genç yeniden isteyebilir.
+    # güven göstergesine girmez (docs/kararlar.md G8). Genç yeniden isteyebilir.
     guncel: bool = True
     # "Referansı yeniden iste" düğmesi; kural backend'de tek yerde
-    # (referans_yeniden_istenebilir_mi), arayüz tekrar etmez (bulgu 30).
+    # (referans_yeniden_istenebilir_mi), arayüz tekrar etmez.
     yeniden_istenebilir: bool = False
     # "Geri çek" düğmesi (yalnızca bekleyen istek).
     geri_cekilebilir: bool = False
@@ -125,9 +125,9 @@ class KanitDurumuYaniti(BaseModel):
     guven_skoru: GuvenSkoruYaniti | None
     referanslar: list[ReferansDurumuYaniti]
     # Kartın "Kanıt bekliyor" rozeti: kanıt ya da referans eklenince arayüz
-    # sayfayı yenilemeden günceller (bulgu 28).
+    # sayfayı yenilemeden günceller.
     kart_kanit_bekleyen: bool
-    # Gencin itirazı GİRVAK'ta bekliyor (hak doldu ya da karara itiraz; plan § 9);
+    # Gencin itirazı GİRVAK'ta bekliyor (hak doldu ya da karara itiraz; docs/dogrulama.md § 9);
     # arayüz itirazı kapatır.
     inceleme_bekliyor: bool = False
     # GİRVAK'ın geçerli "doğrulanamadı" kararı (kalemin etiketi; puan değişmez, İ1).
@@ -172,7 +172,7 @@ class ReferansYanitiIstegi(BaseModel):
     """
 
     token: str
-    # 4 soruluk form (plan § 7): (1) ilişki, (2) çalışma, (3) pay, (4) sonuç.
+    # 4 soruluk form (docs/dogrulama.md § 7): (1) ilişki, (2) çalışma, (3) pay, (4) sonuç.
     # Kalemde pay ya da sonuç yazılmamışsa o soru sorulmaz (null).
     iliski: Iliski
     iddia_dogru: FormCevabi
@@ -197,9 +197,9 @@ class ReferansYanitiSonucu(BaseModel):
 
 class ItirazIstegi(BaseModel):
     """Değerlendirmeye itiraz. Yeni kanıt burada değil, kanıt bölümünden parça olarak
-    eklenir (tek kapı, bulgu 25)."""
+    eklenir (tek kapı)."""
 
     model_config = ConfigDict(extra="forbid")
 
-    # Zorunlu: neyin gözden kaçtığı yazılmadan itiraz zar atmaya döner (bulgu 15).
+    # Zorunlu: neyin gözden kaçtığı yazılmadan itiraz zar atmaya döner.
     aciklama: str = Field(min_length=3, max_length=1000)

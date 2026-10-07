@@ -1,4 +1,4 @@
-"""Dosya ve görsel kanıtı uçları (plan § 4): yükleme, tekrar, sınırlar, indirme adresi,
+"""Dosya ve görsel kanıtı uçları (docs/dogrulama.md § 4): yükleme, tekrar, sınırlar, indirme adresi,
 görünürlük, silme ve sahiplik üçlüsü (401 / 403 / 404)."""
 
 import asyncio

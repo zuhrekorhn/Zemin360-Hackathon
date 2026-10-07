@@ -1,4 +1,5 @@
-"""Her dış servis çağrısına aynı biçimde uygulanan sarmalayıcılar (Decorator, plan § 14.3).
+"""Her dış servis çağrısına aynı biçimde uygulanan sarmalayıcılar (Decorator, docs/dogrulama.md
+§ 14.3).
 
     @gozlemli("eposta")
     @zaman_asimli(10)

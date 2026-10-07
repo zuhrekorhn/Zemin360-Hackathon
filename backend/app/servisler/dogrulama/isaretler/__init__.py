@@ -1,4 +1,5 @@
-"""Kötüye kullanım sinyalleri (plan § 9): sinyali gören kod işareti açar, karar GİRVAK'ın.
+"""Kötüye kullanım sinyalleri (docs/dogrulama.md § 9): sinyali gören kod işareti açar, karar
+GİRVAK'ın.
 
 İşaretler puanı kendiliğinden değiştirmez (İ1). Her sinyal kendi modülünde;
 değerlendirmeden sonra çalışanlar burada tek yerden çağrılır (`kanit.uygula`).

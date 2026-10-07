@@ -1,4 +1,4 @@
-"""Keşif sohbetinin genç akışı eklemeleri (docs/plans/genc-akisi.md § 5.3-5.4).
+"""Keşif sohbetinin genç akışı eklemeleri (docs/agent-specs.md § 1-5.4).
 
 - Kayıt formundaki bilgiler bağlam olarak gider ve sorulmaz.
 - İş kalemi başına kanıt ve referans da sorulur (tek soruda), iş kalemine bağlanır.

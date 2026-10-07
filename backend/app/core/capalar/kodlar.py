@@ -1,4 +1,5 @@
-"""Dosyadaki QR ve barkodların okunması, doğrulama adreslerinin ayıklanması (plan § 4.2).
+"""Dosyadaki QR ve barkodların okunması, doğrulama adreslerinin ayıklanması (docs/dogrulama.md
+§ 4.2).
 
 PDF'in ilk sayfaları görüntüye çevrilir (`pypdfium2`), kodlar `zxing-cpp` ile
 okunur. Ön okuyucu olarak kayıtlıdır (`core/dosya_hatti.py`): yeniden

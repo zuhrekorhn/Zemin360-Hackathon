@@ -1,4 +1,4 @@
-"""GİRVAK inceleme kuyruğu: işaret açma ve karar (docs/plans/dogrulama-iyilestirme.md § 9).
+"""GİRVAK inceleme kuyruğu: işaret açma ve karar (docs/dogrulama.md § 9).
 
 İşaret puanı kendiliğinden değiştirmez (İ1). Akış iki parçalı:
   - `isaret_ac`: sinyali gören servis çağırır. Aynı konu için açık işaret

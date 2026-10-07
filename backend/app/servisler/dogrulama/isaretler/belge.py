@@ -1,4 +1,4 @@
-"""Belge tutarsız (plan § 9): `belge_tutarsiz`.
+"""Belge tutarsız (docs/dogrulama.md § 9): `belge_tutarsiz`.
 
 Yükleme anında, çapalar doğrulandıktan sonra: bozuk e-imza ya da gencin adının
 geçmediği doğrulama sayfası. Kural saf (`agents/dogrulama/capalar.belge_tutarsizliklari`);

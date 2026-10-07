@@ -1,4 +1,4 @@
-"""Yedek okuyucu servisi (plan § 5.5): süzgeçli vekil ve tarayıcının ağ kapısı.
+"""Yedek okuyucu servisi (docs/dogrulama.md § 5.5): süzgeçli vekil ve tarayıcının ağ kapısı.
 
 Vekil testleri ağa çıkmaz: çözümleyici sahte, bağlantı yerel bir sunucuya
 yönlendirilir. Tarayıcı testi Chromium kuruluysa çalışır (yoksa atlanır).

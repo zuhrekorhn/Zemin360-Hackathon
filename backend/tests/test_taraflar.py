@@ -1,4 +1,4 @@
-"""Eşleşmenin tarafları (docs/plans/firma-akisi.md § 3, karar 12).
+"""Eşleşmenin tarafları (docs/kararlar.md F12).
 
 Durum makinesindeki roller hesabın rolü değil, eşleşmedeki taraf. Bu adımda
 davranış değişmiyor: aday tarafı gencin, ilan tarafı ihtiyacın firmasının.

@@ -31,7 +31,7 @@ class Kurum(UUIDPrimaryKeyMixin, Base):
     # normalize; NULL birden fazla olabilir (UNIQUE NULL'ları eşit saymaz).
     iletisim_email: Mapped[str | None] = mapped_column(String, index=True, unique=True)
 
-    # Kayıt formu (docs/plans/firma-akisi.md § 2). Kural ve değer kümeleri
+    # Kayıt formu (docs/kararlar.md F2). Kural ve değer kümeleri
     # app/core/firma_profili.py'de. Eski hesaplarda boş olabilir (bant).
     # girisim | kobi | kurumsal
     tur: Mapped[str | None] = mapped_column(String)
@@ -44,7 +44,7 @@ class Kurum(UUIDPrimaryKeyMixin, Base):
     yetkili_ad: Mapped[str | None] = mapped_column(String)
     yetkili_gorev: Mapped[str | None] = mapped_column(String)
 
-    # Firma doğrulaması (docs/plans/firma-akisi.md § 6): bekliyor | dogrulandi |
+    # Firma doğrulaması (docs/kararlar.md F6): bekliyor | dogrulandi |
     # simdilik_degil. Karar GİRVAK'ın; alan adı ipucu saklanmaz
     # (app/core/firma_dogrulama.py). Web sitesi değişince `bekliyor`a döner.
     dogrulama_durumu: Mapped[str] = mapped_column(
@@ -53,7 +53,7 @@ class Kurum(UUIDPrimaryKeyMixin, Base):
     dogrulama_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     hesap: Mapped[Hesap | None] = relationship(back_populates="kurum")
-    # Firma kartı (firma başına bir tane, isteğe bağlı; karar 9).
+    # Firma kartı (firma başına bir tane, isteğe bağlı; docs/kararlar.md F9).
     firma_karti: Mapped[FirmaKarti | None] = relationship(
         back_populates="kurum", uselist=False, cascade="all, delete-orphan"
     )

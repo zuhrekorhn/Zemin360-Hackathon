@@ -1,4 +1,4 @@
-"""Dosyadaki doğrulanabilir çapalar (plan § 4.2): QR / doğrulama adresi, e-imza,
+"""Dosyadaki doğrulanabilir çapalar (docs/dogrulama.md § 4.2): QR / doğrulama adresi, e-imza,
 Open Badges, e-Devlet barkodu.
 
 `capalari_dogrula` kayıtlı doğrulayıcıları sırayla çalıştırır; biri hata

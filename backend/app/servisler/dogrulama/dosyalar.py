@@ -1,4 +1,5 @@
-"""Dosya ve görsel kanıtının orkestrasyonu (plan § 4): sınırlar → yükleme hattı → içerik
+"""Dosya ve görsel kanıtının orkestrasyonu (docs/dogrulama.md § 4): sınırlar → yükleme hattı →
+içerik
 okuma → çapa doğrulaması → depo → tek kapıdan parça → değerlendirme.
 
 İçerik yükleme anında bir kez okunur ve maskelenmiş olarak saklanır (`tam_metin`,
@@ -213,7 +214,8 @@ async def parca_indirme_adresi(parca: KanitParcasi) -> str:
 
 
 def gorunurlugu_degistir(cikti: SomutCikti, parca_id: uuid.UUID, gorunur: bool) -> KanitParcasi:
-    """Genç dosyayı firmaların görüp göremeyeceğini seçer (plan § 4.4). Gösterge değişmez."""
+    """Genç dosyayı firmaların görüp göremeyeceğini seçer (docs/dogrulama.md § 4.4). Gösterge
+    değişmez."""
     parca = parca_bul(cikti, parca_id)
     if not parca.dosya_anahtari:
         raise KanitBulunamadi(parca_id)

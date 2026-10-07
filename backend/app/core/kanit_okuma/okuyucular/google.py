@@ -1,8 +1,8 @@
-"""Google Drive ve Docs: dışa aktarma adresleriyle içerik (plan § 5.6).
+"""Google Drive ve Docs: dışa aktarma adresleriyle içerik (docs/dogrulama.md § 5.6).
 
 Paylaşımı "Bağlantıya sahip olan herkes" olmayan dosya giriş sayfasına yönlenir:
 `GIRIS_GEREKLI` (gence paylaşım ayarı söylenir). Sunum ve Drive'daki PDF'lerin
-içeriği dosya hattında okunur (adım 9).
+içeriği dosya hattında okunur.
 """
 
 from __future__ import annotations

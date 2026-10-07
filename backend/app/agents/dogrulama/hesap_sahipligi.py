@@ -1,7 +1,7 @@
-"""Kanıt gencin bağlı hesabında mı? Seviye ve bireysel kural (plan § 2, § 6).
+"""Kanıt gencin bağlı hesabında mı? Seviye ve bireysel kural (docs/dogrulama.md § 2, § 6).
 
-Sahiplik yalnızca OAuth ya da profil koduyla bağlanmış hesaptan gelir (bulgu 2,
-36): beyan edilen kullanıcı adı ya da sayfada geçen ad seviye B'ye çıkarmaz.
+Sahiplik yalnızca OAuth ya da profil koduyla bağlanmış hesaptan gelir (docs/dogrulama.md
+§ 6): beyan edilen kullanıcı adı ya da sayfada geçen ad seviye B'ye çıkarmaz.
 Saf fonksiyon: ağ ve veritabanı yok; uygulama ve değerlendirme seti aynı kuralı
 kullanır.
 

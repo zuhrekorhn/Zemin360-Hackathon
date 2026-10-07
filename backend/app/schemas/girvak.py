@@ -1,4 +1,4 @@
-"""GİRVAK paneli şemaları (docs/faz-b-kimlik-ve-dongu.md § 7)."""
+"""GİRVAK paneli şemaları (docs/kimlik-ve-dongu.md § 7)."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ class TurSayilari(BaseModel):
 
 
 class EslesmeKirilimi(BaseModel):
-    """Toplam sayıların eşleşme türüne göre kırılımı (docs/plans/firma-akisi.md § 0 karar 19).
+    """Toplam sayıların eşleşme türüne göre kırılımı (docs/kararlar.md F19).
 
     Toplamlar (`eslesme`, `isbirligi_durumlari`, hedefler) iki türü birlikte sayar.
     """
@@ -52,7 +52,7 @@ class EslesmeKirilimi(BaseModel):
 
 
 class KapananIhtiyaclar(BaseModel):
-    """Kapanan ilanlar, firmanın seçtiği nedene göre (firma-akisi § 0 karar 7).
+    """Kapanan ilanlar, firmanın seçtiği nedene göre (docs/kararlar.md F7).
 
     `nedensiz`: neden alanı eklenmeden kapanmış ilanlar.
     """
@@ -81,9 +81,9 @@ class Sayilar(BaseModel):
     ihtiyac_karti: int
     eslesme: EslesmeSayilari
     isbirligi: int
-    # Faz C: duruma göre; `tamamlandi` = tamamlanmış pilot (Faz D hedefi: 5).
+    # Duruma göre; `tamamlandi` = tamamlanmış iş birliği (program hedefi: 5).
     isbirligi_durumlari: IsbirligiSayilari
-    # Faz D: program hedefleri (app/core/program.py), sabit sırayla.
+    # Program hedefleri (app/core/program.py), sabit sırayla.
     hedefler: list[HedefSayisi]
     # Firma akışı: kapanan ilanlar nedenleriyle ve eşleşme türüne göre kırılım.
     kapanan_ihtiyaclar: KapananIhtiyaclar = KapananIhtiyaclar()
@@ -91,7 +91,7 @@ class Sayilar(BaseModel):
 
 
 class OnayBekleyenFirma(BaseModel):
-    """GİRVAK'ın doğrulama listesi (docs/plans/firma-akisi.md § 6).
+    """GİRVAK'ın doğrulama listesi (docs/kararlar.md F6).
 
     Tam e-posta dönmez; yalnızca alan adı (ipucunun dayanağı). İletişim
     bilgisi GİRVAK'ın işi değil (eşleşmedeki kuralla aynı).
@@ -116,7 +116,7 @@ class FirmaDogrulamaIstegi(BaseModel):
     karar: GirvakKarari
 
 
-# --- İnceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9) -----------------------------
+# --- İnceleme kuyruğu (docs/dogrulama.md § 9) -----------------------------
 
 
 class IncelemeSatiri(BaseModel):

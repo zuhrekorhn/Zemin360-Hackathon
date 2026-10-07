@@ -1,4 +1,4 @@
-"""Canlılık Ajanı — hatırlatma metinleri (docs/faz-d-canlilik.md § 5).
+"""Canlılık Ajanı — hatırlatma metinleri (docs/canlilik.md § 5).
 
 Her türün sabit bir şablon metni var: LLM kişiselleştirmesi (kesilebilir)
 yanıt vermezse ya da kesilirse hatırlatma bu metinle aynen gider, asla
@@ -105,7 +105,7 @@ def sablon_metni(b: HatirlatmaBaglami) -> str:
         )
     if b.tur == YENI_FIRSAT:
         alan = f" ({b.sektor})" if b.sektor else ""
-        # Genç önerilmiş fırsatı zaten görüyor (genc-akisi.md § 0 karar 1): ad gizlenmez.
+        # Genç önerilmiş fırsatı zaten görüyor (docs/kararlar.md G1): ad gizlenmez.
         return (
             f"{b.karsi_ad}{alan} yeni bir fırsat açtı; kartına uyuyor. Kanıt eklemek "
             "kartını öne çıkarır."

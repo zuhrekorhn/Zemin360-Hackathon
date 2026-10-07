@@ -46,13 +46,13 @@ import {
 } from "@/lib/sabitler";
 
 /**
- * Genç paneli (docs/faz-b-kimlik-ve-dongu.md § 7): tek kartı (madde 7),
+ * Genç paneli (docs/kimlik-ve-dongu.md § 7): tek kartı (docs/kararlar.md G17),
  * güçlendirme, bana gelen ilgiler (kabul et / reddet), iş birliklerim.
  *
  * Kabulden önce kurum gencin e-postasını görmez; kabul edince iki tarafın
  * e-postası açılır ve iş birliği başlar (§ 5).
  *
- * Genç akışı (docs/plans/genc-akisi.md § 7): açık ilan panosu yok. Sana uygun
+ * Genç akışı (docs/api-contracts.md): açık ilan panosu yok. Sana uygun
  * fırsatlar (kendi kartına önerilmiş, eşik üstü ihtiyaçlar), kartını güçlendir
  * (sayılar gerçek skorlardan), ilgilerim. Gencin ilgisi açık onayla gider.
  */
@@ -80,7 +80,7 @@ function GencPaneliIcerigi() {
   const [guclendirmeler, setGuclendirmeler] = useState<Guclendirme[]>([]);
   const [hata, setHata] = useState<Hata | null>(null);
   const okundu = useRef(false);
-  // Gencin tek kartı (madde 7); Keşif'i tamamlamadıysa null.
+  // Gencin tek kartı (G17); Keşif'i tamamlamadıysa null.
   const kart = hesap.yetenek_karti;
   const kartId = kart?.id ?? null;
 
@@ -176,7 +176,7 @@ function GencPaneliIcerigi() {
       />
 
       {kartCagrisi ? (
-        // Onaylı kartı olmayan genç eşleştirmeye girmez (plan § 5.2).
+        // Onaylı kartı olmayan genç eşleştirmeye girmez.
         <div className="flex flex-wrap items-center gap-3 rounded-sm border border-baglanti bg-card px-4 py-3">
           <span className="font-medium text-ana">{kartCagrisi}</span>
           <Button asChild size="sm">

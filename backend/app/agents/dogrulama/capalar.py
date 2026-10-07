@@ -1,5 +1,5 @@
 """Dosyanın kaynak seviyesi: dosyanın kendisi değil, içindeki doğrulanabilir çapa kanıttır
-(plan § 4.1, § 4.2, § 6.3). Saf kural.
+(docs/dogrulama.md § 4.1, § 4.2, § 6.3). Saf kural.
 
 Çapa doğrulayıcıları (`app/core/capalar/`) yalnızca gerçekleri yazar
 (`kanit_parcasi.belge["capalar"]`): adres hangi alan adında, sayfada ad ya da
@@ -105,7 +105,8 @@ def dosya_seviyesi(belge: Mapping[str, Any], kimlik: KimlikDurumu | None = None)
     return dosya_sonucu(belge.get("capalar", ()), kimlik or KimlikDurumu())
 
 
-# --- Belge tutarsızlığı (plan § 9 `belge_tutarsiz`) ---------------------------------------
+# --- Belge tutarsızlığı (docs/dogrulama.md § 9 `belge_tutarsiz`)
+# ---------------------------------------
 
 NEDEN_BOZUK_IMZA = "bozuk_imza"
 NEDEN_AD_ESLESMEDI = "ad_eslesmedi"

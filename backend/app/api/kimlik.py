@@ -1,4 +1,4 @@
-"""İstekten hesabı bulan FastAPI bağımlılıkları (docs/faz-b-kimlik-ve-dongu.md § 1, § 3).
+"""İstekten hesabı bulan FastAPI bağımlılıkları (docs/kimlik-ve-dongu.md § 1, § 3).
 
     mevcut_hesap            — geçerli token yoksa 401
     rol_gerekli("kurum")    — rol uymuyorsa 403

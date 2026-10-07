@@ -1,4 +1,4 @@
-"""Kartın bir yeteneğinin en güçlü kanıtı (plan § 11.1).
+"""Kartın bir yeteneğinin en güçlü kanıtı (docs/dogrulama.md § 11.1).
 
 Model çıkarımı yalnızca kartta yazılı yeteneklerden, alıntıyla seçer; burada
 yetenek başına en güçlü puan tutulur. Eşleştirme bonusunun ileride bu veriye

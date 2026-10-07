@@ -1,4 +1,4 @@
-"""Kanıt okuma: okuyucu zinciri (Strategy + Chain of Responsibility; plan § 5.1).
+"""Kanıt okuma: okuyucu zinciri (Strategy + Chain of Responsibility; docs/dogrulama.md § 5.1).
 
 `kaniti_oku(adres)` adresi tanıyan ilk platform okuyucusunu dener; okuyamazsa
 (`None`) sıradakine, en sonunda genel okuyucuya geçer. Sonuç engel ya da boş

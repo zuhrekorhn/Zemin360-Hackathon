@@ -1,4 +1,4 @@
-"""Elektronik imza çapası (plan § 4.2).
+"""Elektronik imza çapası (docs/dogrulama.md § 4.2).
 
 İmzanın gerçekleri `core/capalar/eimza.py`'den; burada kimlik gerçekleri
 eklenir: belgede gencin adı geçiyor mu (`ad_eslesti`) ve imzalayan gencin

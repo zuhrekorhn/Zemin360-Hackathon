@@ -1,4 +1,4 @@
-"""Yerel veritabanındaki bütün zamanları N gün geriye çeker (docs/faz-d-canlilik.md § 6).
+"""Yerel veritabanındaki bütün zamanları N gün geriye çeker (docs/canlilik.md § 6).
 
 Pasifleşme günlerce beklemeden yerelde gösterilsin diye: eşleşmelerin son
 hareketi, kartların oluşturulma tarihi, adımların hedef tarihi, onay ve işaret
@@ -7,7 +7,7 @@ için birbirlerine göre sıraları korunur: tekrar kuralı ("son hareketten son
 hatırlatıldı mı") kaydırmadan sonra da doğru çalışır.
 
 Yalnızca yerel: APP_ENV=production'da çalışmaz. Onay sorar (--evet ile sormaz).
-Canlıda bu işi tohum veri hazır getirir (Faz E).
+Demo havuzu için tohum verinin tarihleri de böyle geri alınır.
 
     .venv/Scripts/python.exe scripts/zamani_geri_al.py --gun 8
     .venv/Scripts/python.exe scripts/canlilik_taramasi.py   # ya da paneldeki düğme
@@ -54,7 +54,8 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("referans_istegi", "gonderim_tarihi"),
     ("referans_istegi", "hatirlatma_tarihi"),
     ("somut_cikti", "icerik_tarihi"),
-    # Doğrulama (plan § 13): parçanın eklenme ve okunma anı, göstergenin hesaplandığı an
+    # Doğrulama (docs/dogrulama.md § 13): parçanın eklenme ve okunma anı, göstergenin hesaplandığı
+    # an
     ("kanit_parcasi", "olusturma_tarihi"),
     ("kanit_parcasi", "okuma_tarihi"),
     ("guven_skoru", "degerlendirme_tarihi"),
@@ -65,13 +66,14 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("ihtiyac_karti", "kapanma_tarihi"),
     ("kurum", "dogrulama_tarihi"),
     ("firma_karti", "olusturma_tarihi"),
-    # Kimlik (plan § 6.3): bağlantının süresi ve yeniden gönderme aralığı birlikte kaysın.
+    # Kimlik (docs/dogrulama.md § 6.3): bağlantının süresi ve yeniden gönderme aralığı birlikte
+    # kaysın.
     ("hesap", "eposta_dogrulandi_tarihi"),
     ("eposta_dogrulama", "olusturma_tarihi"),
     ("eposta_dogrulama", "son_gecerlilik"),
     ("inceleme_isareti", "olusturma_tarihi"),
     ("inceleme_isareti", "kapanma_tarihi"),
-    # Hesap bağlama (plan § 6.2): doğrulama kodunun 48 saati de kaysın.
+    # Hesap bağlama (docs/dogrulama.md § 6.2): doğrulama kodunun 48 saati de kaysın.
     ("bagli_hesap", "baglanma_tarihi"),
     ("profil_kodu", "son_gecerlilik"),
 )

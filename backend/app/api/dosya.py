@@ -1,4 +1,5 @@
-"""Yerel depodaki kanıt dosyasının indirilmesi (plan § 4.4; yalnızca `DEPO_SAGLAYICI=yerel`).
+"""Yerel depodaki kanıt dosyasının indirilmesi (docs/dogrulama.md § 4.4; yalnızca
+`DEPO_SAGLAYICI=yerel`).
 
 Yetki token'dadır: imzalı adresi yalnızca dosyayı görmeye yetkili kullanıcı
 alır (`app/api/dogrulama.py`), adres birkaç dakika geçerlidir. Bu yüzden uç

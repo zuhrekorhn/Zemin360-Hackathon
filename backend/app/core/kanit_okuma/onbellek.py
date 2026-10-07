@@ -1,4 +1,4 @@
-"""Süreç içi, süreli önbellek (plan § 5.1 `onbellek.py`).
+"""Süreç içi, süreli önbellek (docs/dogrulama.md § 5.1 `onbellek.py`).
 
 Bugün yalnızca sayfa ekran görüntülerinin model okunuşu için kullanılıyor: aynı
 adres her değerlendirmede yeniden okutulmasın (maliyet) ve betim her seferinde

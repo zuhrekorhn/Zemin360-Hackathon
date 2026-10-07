@@ -1,7 +1,7 @@
-"""Bir iş kalemine eklenmiş kanıt parçası: link, dosya ya da görsel (plan § 13).
+"""Bir iş kalemine eklenmiş kanıt parçası: link, dosya ya da görsel (docs/dogrulama.md § 13).
 
 Bir kalemin birden çok parçası olabilir; güven göstergesinde her başlık için
-en güçlü parça kullanılır, parçalar toplanmaz (plan § 2). Parçanın okunuşu
+en güçlü parça kullanılır, parçalar toplanmaz (docs/dogrulama.md § 2). Parçanın okunuşu
 (erişim, seviye, platform, okunan metin) burada saklanır; itiraz ve yeniden
 değerlendirme sayfayı yeniden okumaz.
 """
@@ -55,7 +55,7 @@ class KanitParcasi(UUIDPrimaryKeyMixin, Base):
     url: Mapped[str | None] = mapped_column(String)
     # Kimlik için tek biçim; başka hesapta aynı kanıtı bulmak için de indeksli.
     normal_url: Mapped[str | None] = mapped_column(String, index=True)
-    # Dosya / görsel (adım 9): depodaki anahtar, içerik özeti, algısal özet
+    # Dosya / görsel: depodaki anahtar, içerik özeti, algısal özet
     dosya_anahtari: Mapped[str | None] = mapped_column(String)
     dosya_ozeti: Mapped[str | None] = mapped_column(String, index=True)
     phash: Mapped[str | None] = mapped_column(String)
@@ -70,7 +70,7 @@ class KanitParcasi(UUIDPrimaryKeyMixin, Base):
     tam_metin: Mapped[str | None] = mapped_column(Text)
     gorsel_metni: Mapped[str | None] = mapped_column(Text)
     okuma_tarihi: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # Link çürümesi: üst üste "silinmiş ya da gizlenmiş" yoklama sayısı (plan § 10.4)
+    # Link çürümesi: üst üste "silinmiş ya da gizlenmiş" yoklama sayısı (docs/dogrulama.md § 10.4)
     curume_sayaci: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
     gorunur_firmaya: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=text("false")
@@ -95,7 +95,7 @@ class KanitParcasi(UUIDPrimaryKeyMixin, Base):
 
     @property
     def uretim_araci(self) -> str | None:
-        """C2PA içerik kimlik bilgisindeki üretim aracı (varsa; plan § 4.3)."""
+        """C2PA içerik kimlik bilgisindeki üretim aracı (varsa; docs/dogrulama.md § 4.3)."""
         return ((self.belge or {}).get("c2pa") or {}).get("arac")
 
     @property
@@ -114,7 +114,7 @@ class KanitParcasi(UUIDPrimaryKeyMixin, Base):
 
 
 class KanitMetinParcasi(UUIDPrimaryKeyMixin, Base):
-    """Uzun kanıt metninin embedding'li parçası (plan § 5.4); bir kez hesaplanır."""
+    """Uzun kanıt metninin embedding'li parçası (docs/dogrulama.md § 5.4); bir kez hesaplanır."""
 
     __tablename__ = "kanit_metin_parcasi"
     __table_args__ = (UniqueConstraint("kanit_parcasi_id", "sira"),)

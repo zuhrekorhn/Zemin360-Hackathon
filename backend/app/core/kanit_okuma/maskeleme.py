@@ -1,9 +1,9 @@
-"""Dosyadan çıkarılan metinde kişisel verilerin maskelenmesi (plan § 4.4, KVKK).
+"""Dosyadan çıkarılan metinde kişisel verilerin maskelenmesi (docs/dogrulama.md § 4.4, KVKK).
 
 Saklanan metin (`kanit_parcasi.tam_metin`, `gorsel_metni`) maskelenmiştir:
 T.C. kimlik numarası (sağlama haneleriyle doğrulanmış 11 hane), telefon ve
 açık adres kalıpları. Adres tanıma kalıba dayanır (mahalle / cadde / sokak +
-numara); her adresi yakalamaz, bu bilinen bir sınırdır (plan § 18).
+numara); her adresi yakalamaz, bu bilinen bir sınırdır (docs/dogrulama.md § 18).
 Saf fonksiyon.
 """
 

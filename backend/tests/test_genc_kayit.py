@@ -1,4 +1,4 @@
-"""Genç kayıt formu ve profil düzenleme (docs/plans/genc-akisi.md § 5.1, § 6.1)."""
+"""Genç kayıt formu ve profil düzenleme (docs/agent-specs.md § 1, § 6.1)."""
 
 import asyncio
 import datetime as dt
@@ -106,7 +106,7 @@ def test_genc_kaydi_profil_ve_kvkk_ister():
 
 
 def test_kurum_kaydi_genc_profili_tasimaz():
-    # Firma kaydı artık firma profili ve KVKK onayı ister (firma-akisi § 0 karar 2).
+    # Firma kaydı artık firma profili ve KVKK onayı ister (docs/kararlar.md F2).
     assert KayitIstegi(**_kayit(rol="kurum", **FIRMA_KAYIT_EKI)).genc_profili is None
     with pytest.raises(ValidationError):
         KayitIstegi(**_kayit(rol="kurum", genc_profili=PROFIL, **FIRMA_KAYIT_EKI))

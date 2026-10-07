@@ -18,14 +18,14 @@ class Settings(BaseSettings):
     # Frontend origin'leri, virgülle ayrılmış (CORS). Varsayılan: Next.js dev sunucusu.
     cors_origins: str = "http://localhost:3000"
 
-    # Kimlik (docs/faz-b-kimlik-ve-dongu.md § 1). JWT'yi imzalayan gizli anahtar.
+    # Kimlik (docs/kimlik-ve-dongu.md § 1). JWT'yi imzalayan gizli anahtar.
     # Varsayılanı YOK: tanımlı değilse uygulama açılmaz — tahmin edilebilir bir
     # anahtarla imzalanmış token herkesin her hesabı taklit etmesine izin verir.
     jwt_gizli_anahtar: str
     # Demo hesaplarının ortak şifresi (scripts/demo_hesaplari.py). Yalnızca betik
     # okur; repoda şifre yok. Boşsa betik çalışmaz.
     demo_sifresi: str = ""
-    # Canlılık taraması için cron kimliği (docs/faz-d-canlilik.md § 4). Canlıdaki
+    # Canlılık taraması için cron kimliği (docs/canlilik.md § 4). Canlıdaki
     # zamanlanmış görev `POST /canlilik/tarama`'yı `X-Tarama-Anahtari` başlığıyla
     # çağırır — kullanıcı token'ı değil: GİRVAK'ın token'ı 7 günde düşer ve tarama
     # sessizce durur. Boşsa başlık yolu kapalıdır, uç yalnızca GİRVAK token'ıyla.
@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     # Kanıt okuma: GitHub API uygulama tokenı (yalnızca okuma). Boşsa anonim (saatte 60 istek).
     github_token: str = ""
 
-    # Dış servisler (docs/plans/dogrulama-iyilestirme.md § 14.4). Somut sınıf
+    # Dış servisler (docs/dogrulama.md § 14.4). Somut sınıf
     # app/core/dis_servisler/kurulum.py'de bu bayraklara göre seçilir.
     # E-posta: resend | brevo | log (gönderilmez, log'a yazılır) | kapali.
     eposta_saglayici: Literal["resend", "brevo", "log", "kapali"] = "log"
@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     eposta_zaman_asimi_sn: float = 10
     # E-postadaki bağlantıların açtığı frontend adresi (sonda / yok).
     uygulama_adresi: str = "http://localhost:3000"
-    # Hesap bağlama (plan § 6.1). Kimliği ya da gizli anahtarı boş sağlayıcı kapalıdır:
+    # Hesap bağlama (docs/dogrulama.md § 6.1). Kimliği ya da gizli anahtarı boş sağlayıcı kapalıdır:
     # arayüzde görünmez. Dönüş adresi: {uygulama_adresi}/hesap-baglama/{saglayici}.
     github_oauth_istemci: str = ""
     github_oauth_gizli: str = ""
@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     # Doğrulama kodunu YouTube kanal açıklamasında okumak için (Data API, uygulama
     # anahtarı). Boşsa kanal sayfası okunur.
     youtube_api_anahtari: str = ""
-    # Dosya ve görsel kanıtı (plan § 4.4). Yerel: dosyalar `depo_klasoru`'nda, indirme
+    # Dosya ve görsel kanıtı (docs/dogrulama.md § 4.4). Yerel: dosyalar `depo_klasoru`'nda, indirme
     # backend'in /dosya ucundan (`api_adresi`). R2: kalıcı diski olmayan sunucuda.
     depo_saglayici: Literal["r2", "yerel", "kapali"] = "yerel"
     depo_klasoru: str = "yuklemeler"
@@ -105,7 +105,7 @@ class Settings(BaseSettings):
     eimza_kok_klasoru: str = ""
     # Kullanıcı başına günlük dosya yükleme sınırı
     gunluk_dosya_siniri: int = 30
-    # Yedek okuyucu (plan § 5.5): Playwright servisi (backend/yedek_okuyucu/). Düz
+    # Yedek okuyucu (docs/dogrulama.md § 5.5): Playwright servisi (backend/yedek_okuyucu/). Düz
     # istekle okunamayan ya da görsel ağırlıklı sayfa onunla açılır. Servis ayakta
     # değilse okuma önceki sonuçla biter (zarif düşüş). Anahtar servisinkiyle aynı.
     yedek_okuyucu: Literal["playwright", "kapali"] = "playwright"
@@ -117,7 +117,7 @@ class Settings(BaseSettings):
     uzak_okuyucu: Literal["jina", "kapali"] = "kapali"
     jina_api_anahtari: str = ""
     uzak_okuyucu_zaman_asimi_sn: float = 30
-    # Görsel kaynak araması (Cloud Vision Web Detection, plan § 4.3): yüklenen görselin
+    # Görsel kaynak araması (Cloud Vision Web Detection, docs/dogrulama.md § 4.3): yüklenen görselin
     # birebir eşi başka sayfada var mı. Varsayılan kapalı: görsel yurt dışına gider
     # (KVKK metninde listeli). Açıkken yalnızca tasarım / fotoğraf alanındaki
     # görsellerde ve ayda en çok `gorsel_arama_aylik_tavan` çağrı.

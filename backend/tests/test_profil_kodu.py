@@ -1,4 +1,4 @@
-"""Doğrulama koduyla hesap bağlama (docs/plans/dogrulama-iyilestirme.md § 6.2): kod,
+"""Doğrulama koduyla hesap bağlama (docs/dogrulama.md § 6.2): kod,
 platform stratejileri (adresi biz kurarız), profil okuma, uçlar ve GİRVAK'ın elle
 doğrulaması.
 

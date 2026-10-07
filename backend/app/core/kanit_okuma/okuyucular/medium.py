@@ -1,4 +1,4 @@
-"""Medium yazısı: yazarın RSS akışından (sayfa Cloudflare engeline takılıyor; bulgu 3).
+"""Medium yazısı: yazarın RSS akışından (sayfa Cloudflare engeline takılıyor).
 
 Akış yazarın son yazılarını içerir; aranan yazı akışta yoksa `None` (genel okuyucu
 dener). Akış yalnızca medium.com'dan geldiği için XML güvenilir kaynaktandır.

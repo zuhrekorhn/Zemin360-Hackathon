@@ -1,5 +1,5 @@
 /**
- * Kart düzenleme ekranının karar mantığı (docs/plans/genc-akisi.md § 6).
+ * Kart düzenleme ekranının karar mantığı (docs/agent-specs.md § 1).
  * Saf fonksiyonlar; testleri kart-duzenleme.test.ts'de.
  */
 

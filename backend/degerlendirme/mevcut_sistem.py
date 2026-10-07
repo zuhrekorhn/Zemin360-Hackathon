@@ -1,4 +1,4 @@
-"""Uygulamadaki Doğrulama'nın adaptörü (plan § 15): karne her adımda bununla ölçer.
+"""Uygulamadaki Doğrulama'nın adaptörü (docs/dogrulama.md § 15): karne her adımda bununla ölçer.
 
 Uygulamanın yolunu izler: okuyucu zinciri ve yedek okuyucu (`okuma.kanit_oku`),
 dosya hattı (`dosya_hatti` → `dosyalar.dosyayi_isle` → `okuma.dosya_okunusu`), uzun

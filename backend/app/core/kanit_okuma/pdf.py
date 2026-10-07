@@ -1,4 +1,4 @@
-"""PDF'in metin katmanı (plan § 4.3). Metin katmanı yoksa ya da sayfa başına çok azsa
+"""PDF'in metin katmanı (docs/dogrulama.md § 4.3). Metin katmanı yoksa ya da sayfa başına çok azsa
 (taranmış belge, görsel ağırlıklı portfolyo) PDF modele okutulur; o karar burada.
 """
 

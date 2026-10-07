@@ -1,4 +1,4 @@
-"""Tanımlama incelemesinin kalanları (docs/plans/tanimlama-kalanlar.md). LLM/DB yok."""
+"""Tanımlama incelemesinin kalanları (docs/kararlar.md S1-S4). LLM/DB yok."""
 
 import asyncio
 from types import SimpleNamespace

@@ -1,6 +1,6 @@
 /**
  * Firmanın profil formu: doğrulama, dönüştürme ve uyarı bandı kararı
- * (docs/plans/firma-akisi.md § 0 kararlar 1-2, 9). Saf fonksiyonlar; testleri
+ * (docs/kararlar.md F1-2, 9). Saf fonksiyonlar; testleri
  * firma-profil.test.ts'de. Kayıt sayfası ve /kurum/profil aynı formu kullanır.
  *
  * Backend son sözü söyler (app/schemas/profil.py); buradaki kontrol yalnızca
@@ -133,7 +133,7 @@ export function firmaProfilindenForma(profil: FirmaProfil): FirmaProfilFormu {
 
 /**
  * Firma panelinin üstündeki engellemeyen bant: bu alanlardan önce açılmış
- * firma hesapları için (karar 9). Gösterilecek bir şey yoksa null.
+ * firma hesapları için (docs/kararlar.md F9). Gösterilecek bir şey yoksa null.
  */
 export function firmaProfilBandi(hesap: MeYaniti): string | null {
   if (hesap.rol !== "kurum") return null;

@@ -1,5 +1,5 @@
 /**
- * Girişe ve role göre yönlendirme kuralları (docs/faz-b-kimlik-ve-dongu.md § 7).
+ * Girişe ve role göre yönlendirme kuralları (docs/kimlik-ve-dongu.md § 7).
  * Saf fonksiyonlar; testleri yonlendirme.test.ts'de.
  */
 
@@ -13,7 +13,7 @@ export function panelYolu(rol: Rol): string {
 }
 
 /**
- * Gencin "Kartım"ı (madde 7: gencin tek kartı var). Kartı varsa kart
+ * Gencin "Kartım"ı (G17: gencin tek kartı var). Kartı varsa kart
  * sayfası, yoksa kartı oluşturduğu Keşif sohbeti.
  */
 export function kartYolu(kart: Pick<YetenekKartiOzeti, "id"> | null): string {
@@ -22,7 +22,7 @@ export function kartYolu(kart: Pick<YetenekKartiOzeti, "id"> | null): string {
 
 const GIRIS_SAYFALARI = ["/giris", "/kayit"];
 
-/** Canlılık'ın iş birliğine bağlı hatırlatmaları (Faz D): iş birliği sayfasına. */
+/** Canlılık'ın iş birliğine bağlı hatırlatmaları: iş birliği sayfasına. */
 const CANLILIK_ISBIRLIGI = new Set([
   "plan_onaysiz",
   "isbirligi_hareketsiz",
@@ -59,7 +59,7 @@ export function giristenSonra(rol: Rol, sonra: string | null): string {
 }
 
 /**
- * Kayıttan sonra nereye (docs/plans/genc-akisi.md § 5.2): genç doğrudan Keşif
+ * Kayıttan sonra nereye (docs/agent-specs.md § 1): genç doğrudan Keşif
  * sohbetine (onboarding; "Şimdilik atla" oradan panele), diğerleri panele.
  * Güvenli bir `sonra` varsa o öncelikli.
  */
@@ -70,11 +70,11 @@ export function kayittanSonra(rol: Rol, sonra: string | null): string {
 }
 
 /**
- * Bildirime tıklayınca nereye (docs/faz-b-kimlik-ve-dongu.md § 6).
+ * Bildirime tıklayınca nereye (docs/kimlik-ve-dongu.md § 6).
  * Gence gidenler (ilgi, referans yanıtı) genç paneline; kuruma gidenler
  * (yeni öneri, red) kurum paneline. İş birliği olan bildirim (kabul ve
- * Takip'in bütün türleri, Faz C) doğrudan iş birliği sayfasına. Bilinmeyen
- * tür (Faz D'de eklenecekler) bildirim sayfasında kalır.
+ * Takip'in bütün türleri) doğrudan iş birliği sayfasına. Bilinmeyen
+ * tür bildirim sayfasında kalır.
  */
 export function bildirimHedefi(
   tur: string,
@@ -90,7 +90,7 @@ export function bildirimHedefi(
   ) {
     return `/isbirligi/${isbirligiId}`;
   }
-  // Firmalar arası ilgi (docs/plans/firma-akisi.md § 8): aday firmaya giden
+  // Firmalar arası ilgi (docs/kararlar.md F9): aday firmaya giden
   // ilgi bildirimleri gencin değil firmanın panelindeki bölümlere.
   if (rol === "kurum") {
     if (tur === "ilgi") return "/kurum#gelen-ilgiler";
@@ -98,7 +98,7 @@ export function bildirimHedefi(
       return "/kurum#ilgilerimiz";
   }
   switch (tur) {
-    // Canlılık (Faz D). Yanıtsız ilginin son hatırlatması iki tarafa aynı
+    // Canlılık. Yanıtsız ilginin son hatırlatması iki tarafa aynı
     // türle gider: genç ilgiler bölümüne, kurum önerilerine.
     case "oneri_bekliyor":
       return "/kurum#ihtiyaclar";
@@ -108,7 +108,7 @@ export function bildirimHedefi(
       return rol === "kurum" ? "/kurum#oneriler" : "/genc#ilgiler";
     case "yeni_firsat":
       return "/genc#firsatlar";
-    // Gençten ilgi (docs/plans/genc-akisi.md § 7.1)
+    // Gençten ilgi (docs/api-contracts.md)
     case "genc_ilgi":
     case "genc_ilgisi_yanitsiz":
       return "/kurum#ihtiyaclar";
@@ -128,7 +128,7 @@ export function bildirimHedefi(
       return "/kurum#oneriler";
     case "firma_dogrulandi":
       return "/kurum/profil";
-    // GİRVAK inceleme kuyruğu (docs/plans/dogrulama-iyilestirme.md § 9)
+    // GİRVAK inceleme kuyruğu (docs/dogrulama.md § 9)
     case "inceleme_sonucu":
       return "/genc#kart";
     case "ad_degisikligi_sonucu":

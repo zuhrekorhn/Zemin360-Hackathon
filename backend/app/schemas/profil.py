@@ -1,6 +1,6 @@
 """Genç ve firma profil şemaları: kayıt formu ve profil düzenleme.
 
-Genç: docs/plans/genc-akisi.md § 5.1. Firma: docs/plans/firma-akisi.md § 2.
+Genç: docs/agent-specs.md § 1. Firma: docs/kararlar.md F2.
 
 `extra="forbid"`: toplanmayan bir alan (cinsiyet, doğum tarihi…) gönderilirse
 sessizce yok sayılmaz, 422 döner — toplanmadığı açık olsun.
@@ -133,7 +133,7 @@ class GencProfilYaniti(BaseModel):
     kvkk_onay_tarihi: dt.datetime | None
     # Doldurulması gereken zorunlu alanlar (eski hesaplar için bant)
     eksik_alanlar: list[str]
-    # Ad kilidi (dogrulama-iyilestirme.md § 6.3): e-posta doğrulanınca ad profilden
+    # Ad kilidi (docs/dogrulama.md § 6.3): e-posta doğrulanınca ad profilden
     # değişmez, talep GİRVAK'a gider. Bekleyen talebin istediği ad.
     ad_kilitli: bool = False
     bekleyen_ad: str | None = None
@@ -159,7 +159,7 @@ class AdDegisikligiIstegi(BaseModel):
         return " ".join(v.split()) or None if v is not None else None
 
 
-# --- Firma (docs/plans/firma-akisi.md § 0 kararlar 1-2) ---------------------------------
+# --- Firma (docs/kararlar.md F1-2) ---------------------------------
 
 KurulusYili = Annotated[int | None, AfterValidator(kurulus_yili_dogrula)]
 Tanitim = Annotated[str | None, BeforeValidator(tanitim_temizle)]

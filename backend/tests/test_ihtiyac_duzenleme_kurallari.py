@@ -1,4 +1,4 @@
-"""İlan düzenleme kuralları (docs/plans/ilan-duzenleme.md § Kurallar). LLM/DB yok."""
+"""İlan düzenleme kuralları (docs/kararlar.md D1 § Kurallar). LLM/DB yok."""
 
 import pytest
 

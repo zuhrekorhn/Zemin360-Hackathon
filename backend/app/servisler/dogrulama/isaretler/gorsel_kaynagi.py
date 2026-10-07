@@ -1,4 +1,4 @@
-"""Görsel başka bir sayfada (plan § 4.3, § 9): `gorsel_baskasinda`.
+"""Görsel başka bir sayfada (docs/dogrulama.md § 4.3, § 9): `gorsel_baskasinda`.
 
 Yükleme anında, görsel parça eklendikten sonra çağrılır. Kaynak araması
 (`GorselArayici`, Cloud Vision) yalnızca: servis açıksa, genç tasarım /

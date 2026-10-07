@@ -1,4 +1,4 @@
-"""Eşleşme durum makinesi (docs/faz-b-kimlik-ve-dongu.md § 5, docs/plans/genc-akisi.md § 4).
+"""Eşleşme durum makinesi (docs/kimlik-ve-dongu.md § 5, docs/kimlik-ve-dongu.md § 5).
 
 Geçiş kuralı tek yerde ve saf: uç noktalar ve servisler yalnızca `gecis()`'in
 söylediğini uygular (iş birliği aç, aktivite tarihini güncelle…). Tablo
@@ -51,7 +51,7 @@ GECISLER: dict[tuple[str, str], tuple[str, str]] = {
     (OLAY_ILGILENIYORUM, DURUM_ONERILDI): (ROL_KURUM, DURUM_ILGILENILIYOR),
     (OLAY_KABUL, DURUM_ILGILENILIYOR): (ROL_GENC, DURUM_KABUL_EDILDI),
     (OLAY_RED, DURUM_ILGILENILIYOR): (ROL_GENC, DURUM_REDDEDILDI),
-    # Gençten ilgi (genc-akisi § 4)
+    # Gençten ilgi (docs/kimlik-ve-dongu.md § 5)
     (OLAY_GENC_ILGI, DURUM_ONERILDI): (ROL_GENC, DURUM_GENC_ILGILENDI),
     (OLAY_ILGIYI_GERI_CEK, DURUM_GENC_ILGILENDI): (ROL_GENC, DURUM_ONERILDI),
     (OLAY_ILGILENIYORUM, DURUM_GENC_ILGILENDI): (ROL_KURUM, DURUM_KABUL_EDILDI),
@@ -112,7 +112,7 @@ def gecis(durum: str, olay: str, rol: str, baslatan: str | None = None) -> Gecis
     Yalnızca bir yerde fark eder: kurumun `kabul_edildi` bir eşleşmeye yeniden
     "ilgileniyorum" demesi. Eşleşme karşılıklı ilgiyle açıldıysa (genç başlattı)
     bu, kurumun kendi geçişinin tekrarıdır (200). Kurum başlattıysa `kabul_edildi`
-    gencin kabulüdür, kurumun geçişi değil: Faz B'deki gibi 409.
+    gencin kabulüdür, kurumun geçişi değil: 409.
     """
     if rol != OLAYIN_ROLU[olay]:
         raise RolUygunDegil(olay)

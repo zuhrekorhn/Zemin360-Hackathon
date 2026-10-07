@@ -1,7 +1,7 @@
 """İş kalemi (somut çıktı): türleri ve rubriğe/embedding'e giden birleşik metin.
 
 Keşif sonucu ve kişinin kendi payını ayrı alanlarda topluyor (düzenlenebilsinler
-diye; docs/plans/genc-akisi.md § 3.4). Doğrulama rubriği, embedding temsil metni
+diye; docs/data-schema.md). Doğrulama rubriği, embedding temsil metni
 ve eşleştirme gerekçesi ise işi tek metin olarak okuyor: birleştirme burada,
 tek yerde.
 """

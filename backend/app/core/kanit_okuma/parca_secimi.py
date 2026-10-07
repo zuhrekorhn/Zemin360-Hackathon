@@ -1,4 +1,4 @@
-"""Uzun kanıt metni: kesme yok, seçme var (plan § 5.4).
+"""Uzun kanıt metni: kesme yok, seçme var (docs/dogrulama.md § 5.4).
 
 8.000 karakteri aşmayan metin olduğu gibi kullanılır. Aşan metin ~1.500
 karakterlik, 200 karakter örtüşen parçalara bölünür; her iddia (iş, sonuç, pay)

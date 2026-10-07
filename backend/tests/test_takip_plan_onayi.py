@@ -1,4 +1,4 @@
-"""Plan düzenleme ve iki taraflı onay (docs/faz-c-takip.md § 3, § 7), gerçek veritabanında.
+"""Plan düzenleme ve iki taraflı onay (docs/takip.md § 3, § 7), gerçek veritabanında.
 
 Sabitlenenler:
 - Taslakta adım eklenir/düzenlenir/silinir; her düzenleme iki onayı sıfırlar.

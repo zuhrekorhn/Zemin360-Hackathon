@@ -3,7 +3,7 @@
 Keşif ile aynı desen: sohbet durumu LangGraph checkpointer'ında, `oturum_id`
 thread_id olarak kullanılıyor.
 
-İki kapı (docs/plans/firma-akisi.md § 0 kararlar 4-5, § 5): genç yetenek
+İki kapı (docs/kararlar.md F4-5, § 5): genç yetenek
 (varsayılan) ve iş birliği ortağı. Aynı motor, iki soru seti (iki grafik), tek
 checkpointer; kapı sohbetin başında seçilir ve durumda (`aranan`) saklanır.
 Sonraki istekler grafiği durumdan seçer; eski sohbetlerde alan yoksa genç.
@@ -181,7 +181,7 @@ async def kart_onayla(
         )
     ortak = _aranan(mevcut.values) == ARANAN_FIRMA
 
-    # Kart token'daki hesabın kurumuna bağlanır (docs/faz-b-kimlik-ve-dongu.md § 4).
+    # Kart token'daki hesabın kurumuna bağlanır (docs/kimlik-ve-dongu.md § 4).
     kurum_id = hesap.kurum.id
     kurumun_profilini_guncelle(hesap.kurum, istek.kurum_profili)
 

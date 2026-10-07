@@ -15,7 +15,7 @@ def sayfadan_belge(url: str, sayfa: Sayfa, platform: str = "web") -> KanitBelges
     """Getirilmiş bir sayfayı belgeye çevirir (Google okuyucusu da kullanır)."""
     tur = sayfa.icerik_turu.lower()
     if "pdf" in tur:
-        # PDF içeriği dosya hattında okunur (adım 9); bugün içerik okunamadı.
+        # PDF içeriği dosya hattında okunur; bugün içerik okunamadı.
         return KanitBelgesi(url=url, erisim=ErisimDurumu.ICERIK_YOK, platform="pdf")
     if "html" in tur or not tur:
         ozet = html_ozeti(sayfa.metin)

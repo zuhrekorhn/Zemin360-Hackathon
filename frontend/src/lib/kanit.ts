@@ -1,5 +1,5 @@
 /**
- * Kanıt parçalarının görünüm mantığı (docs/plans/dogrulama-iyilestirme.md § 2, § 3).
+ * Kanıt parçalarının görünüm mantığı (docs/dogrulama.md § 2, § 3).
  * Saf fonksiyonlar; testleri kanit.test.ts'de.
  */
 
@@ -89,7 +89,7 @@ function googleMu(parca: KanitParcasi): boolean {
 
 /**
  * Okunamayan link için gence gösterilen açıklama ve seçenekler
- * (docs/plans/dogrulama-iyilestirme.md § 3). Okunan ya da henüz okunmamış
+ * (docs/dogrulama.md § 3). Okunan ya da henüz okunmamış
  * linkte null.
  */
 export function okunamayanSecenekleri(

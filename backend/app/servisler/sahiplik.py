@@ -1,6 +1,6 @@
 """Kaynak sahipliği: kim hangi kartı, eşleşmeyi, sohbeti görebilir ya da değiştirebilir.
 
-Kuralların tablosu: docs/faz-b-kimlik-ve-dongu.md § 3. Uç noktalar ve servisler
+Kuralların tablosu: docs/kimlik-ve-dongu.md § 3. Uç noktalar ve servisler
 kaynağı okuyup buradaki fonksiyonlara sorar; tek kaynak burası. HTTP'den bağımsızdır:
 "göremez" kararını uç 404'e çevirir (app/api/kimlik.py › bulunamadi; 403 değil,
 kaynağın var olduğu sızmasın).
@@ -23,9 +23,8 @@ from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.yetenek_karti import YetenekKarti
 
-# Gencin görebildiği eşleşme durumları. Faz B'de genç eşleşmeyi ancak kurum
-# ilgilendikten sonra görüyordu; genç akışında (docs/plans/genc-akisi.md § 0,
-# karar 1) eşik üstü öneriler gence "fırsat" olarak baştan görünür, yani kendi
+# Gencin görebildiği eşleşme durumları: önerildiği andan itibaren (docs/kararlar.md
+# G1) öneriler gence "fırsat" olarak baştan görünür, yani kendi
 # kartının bütün eşleşmeleri. E-posta yine yalnızca karşılıklı ilgide açılır.
 GENCE_ACIK_DURUMLAR = (
     "onerildi",
@@ -36,7 +35,7 @@ GENCE_ACIK_DURUMLAR = (
     "kapandi",
 )
 
-# Eşleşmenin iki tarafı (docs/plans/firma-akisi.md § 3, karar 12). Durum
+# Eşleşmenin iki tarafı (docs/kararlar.md F12). Durum
 # makinesindeki roller bu iki taraftır, hesabın rolü değil: aday tarafı bugün
 # yetenek kartının genci, firma–firma eşleşmede aday firma olacak. Değerler
 # eski rol adlarıyla aynı: `eslesme.baslatan` ve `gecis()` tablosu değişmesin.
@@ -68,7 +67,7 @@ def sohbet_baslangici(hesap: Hesap) -> dict[str, str]:
 
 
 def sohbetin_sahibi_mi(degerler: dict[str, Any], hesap: Hesap) -> bool:
-    """Checkpoint'teki sohbeti bu hesap mı açtı? Faz B öncesi sohbetlerin sahibi yok."""
+    """Checkpoint'teki sohbeti bu hesap mı açtı? Eski sohbetlerin sahibi yok."""
     return degerler.get(SOHBET_SAHIBI) == str(hesap.id)
 
 
@@ -169,7 +168,7 @@ async def ihtiyac_kartini_gorebilir_mi(
     """Kurum kendi kartını, genç yalnızca kendisine önerilmiş ihtiyacı, GİRVAK hepsini.
 
     Firma, kendi firma kartına önerilmiş ortak ilanını da görür
-    (docs/plans/firma-akisi.md § 0 karar 16).
+    (docs/kararlar.md F16).
     """
     if girvak_mi(hesap) or ihtiyac_kartinin_sahibi_mi(hesap, kart):
         return True

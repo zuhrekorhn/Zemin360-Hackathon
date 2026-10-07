@@ -1,4 +1,4 @@
-"""Yükleme hattı (plan § 4.4): tür, boyut, virüs, ön okuma, temizlik."""
+"""Yükleme hattı (docs/dogrulama.md § 4.4): tür, boyut, virüs, ön okuma, temizlik."""
 
 import asyncio
 import io

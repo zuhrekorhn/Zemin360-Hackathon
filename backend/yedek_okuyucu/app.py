@@ -1,4 +1,5 @@
-"""Yedek okuyucu servisi: backend'in okuyamadığı sayfayı tarayıcıda açar (plan § 5.1, § 5.5).
+"""Yedek okuyucu servisi: backend'in okuyamadığı sayfayı tarayıcıda açar (docs/dogrulama.md § 5.1,
+§ 5.5).
 
     POST /oku     {"url", "ekran": "her_zaman" | "metin_azsa" | "hayir", "en_az_metin"}
                   → {"durum", "son_url", "html", "ekran_goruntuleri": [base64 JPEG], "hata"}

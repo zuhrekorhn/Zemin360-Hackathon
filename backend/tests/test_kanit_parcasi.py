@@ -1,8 +1,8 @@
 """Kanıt parçaları: tek kapı, gösterge ve referansın birbirine etkisi (gerçek veritabanı).
 
-docs/plans/dogrulama-iyilestirme.md § 2 (kanıt eklemek puanı düşürmez), § 12
-bulgu 16 (referans istemek yeniden değerlendirmez), 25 (link tek yoldan), 26
-(gösterge değişince eşleşmeler tazelenir), 28 (kanıt bekliyor rozeti).
+docs/dogrulama.md § 2: kanıt eklemek puanı düşürmez, referans istemek yeniden
+değerlendirmez, link tek yoldan değişir, gösterge değişince eşleşmeler tazelenir,
+"kanıt bekliyor" rozeti yanıtla gelir.
 Link kontrolü ve rubrik sahte: ağ ve model çağrılmaz, rubrik çağrıları sayılır.
 """
 
@@ -125,14 +125,14 @@ def test_kanit_eklemek_degerlendirir_ve_referansi_gecersiz_kilmaz(
             govde = yanit.json()
             assert [k["url"] for k in govde["kanitlar"]] == ["github.com/elif/kutuphane"]
             assert govde["guven_skoru"]["kanit_orijinalligi"] == 2
-            # Referans yanıtı geçerli kaldı: kanıt iddiayı değiştirmez (plan § 2).
+            # Referans yanıtı geçerli kaldı: kanıt iddiayı değiştirmez (docs/dogrulama.md § 2).
             assert govde["guven_skoru"]["ucuncu_taraf_onayi"] == 3
             assert govde["kart_kanit_bekleyen"] is False
 
             kalem = await _kalemi_oku(oturum, kalem_id)
             assert kalem.icerik_tarihi is None
             assert kalem.guven_skoru.degerlendirme_tarihi is not None
-            # Gösterge değişti: sürüm arttı, kart hazırlama sıraya girdi (bulgu 26).
+            # Gösterge değişti: sürüm arttı, kart hazırlama sıraya girdi.
             kart = await oturum.get(YetenekKarti, kart_id, populate_existing=True)
             assert kart.versiyon == 2
             assert kart_hazirlama_arka_plani_yok == [(kart_id, 2, False)]
@@ -176,7 +176,7 @@ def test_son_linki_kaldirmak_kaniti_bosaltir_referansi_korur(
             )
             assert yanit.status_code == 200
             skor = yanit.json()["guven_skoru"]
-            # Kanıt kalmadı: Kanıt "—", Sonuç ve Rol iddiayla (beyan tavanı 2), karar 10.
+            # Kanıt kalmadı: Kanıt "—", Sonuç ve Rol iddiayla (beyan tavanı 2).
             assert skor["kanit_orijinalligi"] is None
             assert (skor["sonuc_olculebilirligi"], skor["rol_netligi"]) == (2, 2)
             assert skor["ucuncu_taraf_onayi"] == 3  # referans korunur
@@ -234,9 +234,9 @@ def test_referans_istemek_degerlendirmez_ve_rozeti_gunceller(
                 json={"referans_email": "hoca@ornek.edu.tr"},
             )
             assert yanit.status_code == 201
-            assert sahte_degerlendirme == []  # bulgu 16: model çağrılmadı
+            assert sahte_degerlendirme == []  # referans istemek modeli çağırmaz
             assert yanit.json()["guven_skoru"] is None
-            assert yanit.json()["kart_kanit_bekleyen"] is False  # bulgu 28
+            assert yanit.json()["kart_kanit_bekleyen"] is False  # rozet yanıtla gelir
             assert kart_hazirlama_arka_plani_yok == []  # gösterge değişmedi
 
     asyncio.run(senaryo())
@@ -307,7 +307,7 @@ def test_yeni_calisma_formundaki_link_parca_olur(kart_hazirlama_arka_plani_yok):
             yeni = next(c for c in yanit.json()["somut_ciktilar"] if c["baslik"] == "Kulüp sitesi")
             assert [k["url"] for k in yeni["kanitlar"]] == ["https://kulup.org"]
 
-            # İddia düzenleme formu link almaz (kanıt tek kapıdan, bulgu 25).
+            # İddia düzenleme formu link almaz (kanıt tek kapıdan).
             duzenle = await istemci.patch(
                 f"/yetenek-kartlari/{kart_id}/ciktilar/{yeni['id']}",
                 headers=baslik,
