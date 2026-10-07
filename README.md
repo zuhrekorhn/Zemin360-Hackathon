@@ -212,7 +212,7 @@ npx shadcn@latest add <bilesen>   # yeni shadcn/ui bileşeni ekle
 | **Tanımlama** | Çalışıyor. Sokratik sohbet → ihtiyaç kartı. Arayüz: `/tanimlama` |
 | **Eşleştirme** | Çalışıyor. Sert filtre → benzerlik alt sınırı → skor → gerekçe. İhtiyaç ve yetenek kartı onayında/düzenlemesinde arka planda. İlgi iki taraflı. Arayüz: `/kurum/oneriler`, `/genc` |
 | **Doğrulama** | Çalışıyor. Link, dosya ve görsel okuma (platform okuyucuları, yedek okuyucu), hesap bağlama, referans e-postası, kötüye kullanım işaretleri, link çürümesi yoklaması, itiraz. Linkli çalışma otomatik puanlanır, düzenlenince sıfırlanır. Arayüz: `/kart/{id}`, `/referans`, GİRVAK'ta gözlem paneli |
-| **Takip** | Çalışıyor. Plan önerisi, iki taraflı onay ve işaretleme, tamamlanma sinyali. Arayüz: `/isbirligi/{id}` |
+| **Takip** | Çalışıyor. Süreç şablonundan plan (işe alım, staj, proje; deneme işi, tedarik, iş birliği), ajan adımları kişiselleştirir; iki taraflı onay ve işaretleme, erken sonlandırma, tamamlanma sinyali. Arayüz: `/isbirligi/{id}` |
 | **Canlılık** | Çalışıyor. Hareketsizlik hatırlatmaları (yanıtsız genç ilgisi dahil), yeni fırsat, GİRVAK paneli. Arayüz: `/girvak` |
 
 Genç akışının kararları ve bilinen sınırları: [`docs/plans/genc-akisi.md`](docs/plans/genc-akisi.md), firma akışınınki: [`docs/plans/firma-akisi.md`](docs/plans/firma-akisi.md). Elle deneme senaryoları: [`genc-akisi-deneme.md`](docs/plans/genc-akisi-deneme.md), [`firma-akisi-deneme.md`](docs/plans/firma-akisi-deneme.md). Arayüz metinleri [`docs/icerik-rehberi.md`](docs/icerik-rehberi.md)'ye uyar.
@@ -223,7 +223,7 @@ Genç akışının kararları ve bilinen sınırları: [`docs/plans/genc-akisi.m
 
 İki sohbet ajanı aynı motoru paylaşıyor (`backend/app/agents/sohbet_motoru.py`): grafik iskeleti, taslak birleştirme ve yedek modele düşen LLM zinciri orada; soru seti, çıkarım şeması ve ajana özel dallar ajan dosyasında.
 
-**Takip kapsamı:** ajan plan ve özet önerir, karar vermez; tamamlanma bir kuraldır (son adım iki tarafça tamamlanınca). Onaylanan plan kilitlidir. Tamamlanmış pilot, Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125; pilotsuz kartın skoru değişmez, alakayı yaratmaz). Durum özeti kesilebilir iş: çökerse ya da kesilirse döngü aynen çalışır.
+**Takip kapsamı:** adımlar kodda sabit süreç şablonlarından gelir (genç ilanında müsaitliğe göre işe alım, staj ya da proje; ortak ilanında deneme işi, tedarik ya da genel iş birliği), ajan yalnızca her adımın "ne olunca tamam" tanımını ve hazırlık önerisini kişiselleştirir; model hata verirse şablon metni kalır, plan hiç boş kalmaz. Taraflardan biri süreci nedenle erken sonlandırabilir ("Süreci sonlandır", `sonlandi`, geri açılmaz, karşı tarafa nedensiz bildirim; tamamlanmış sayılmaz). Ajan plan ve özet önerir, karar vermez; tamamlanma bir kuraldır (son adım iki tarafça tamamlanınca). Onaylanan plan kilitlidir. Tamamlanmış pilot, Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125; pilotsuz kartın skoru değişmez, alakayı yaratmaz). Durum özeti kesilebilir iş: çökerse ya da kesilirse döngü aynen çalışır.
 
 Kanıt linki kontrolü iç ağa istek atmaz (SSRF engeli, `backend/app/core/guvenli_istek.py`). Toplu metin denetimi tamamlandı (30 Eyl). Sırada: elle deneme, tohum veri ve yayına alma.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
