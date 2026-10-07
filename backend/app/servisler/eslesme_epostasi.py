@@ -1,4 +1,4 @@
-"""Karşılıklı ilgiden sonra giden "eşleştiniz" e-postası (docs/plans/eposta-notlari.md § 3).
+"""Karşılıklı ilgiden sonra giden "eşleştiniz" e-postası (docs/api-contracts.md).
 
 Yalnızca bildirimi alan tarafa gider (olayı yapan tarafın e-postaya ihtiyacı yok).
 Gövdede karşı tarafın e-posta adresi olmaz: adres yalnızca sitede, `iletisim`

@@ -1,5 +1,5 @@
 /**
- * "E-posta yaz" düğmesinin taslağı (docs/plans/eposta-notlari.md § 4).
+ * "E-posta yaz" düğmesinin taslağı (docs/api-contracts.md, "Eşleşmeden sonra e-posta").
  *
  * Şablon, LLM yok. Metinler docs/icerik-rehberi.md'ye uyar: gence "sen",
  * firmaya "siz". `mailto:` bağlantısı uzun olursa bazı e-posta programları

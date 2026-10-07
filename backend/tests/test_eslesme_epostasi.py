@@ -1,4 +1,4 @@
-"""Karşılıklı ilgiden sonra giden "eşleştiniz" e-postası (docs/plans/eposta-notlari.md § 3).
+"""Karşılıklı ilgiden sonra giden "eşleştiniz" e-postası (docs/api-contracts.md).
 
 Dünya test_sahiplik.py'deki: E1 = I1 (kurum1 "Koop Bir") ↔ K1 (genc1 "Elif"), `onerildi`.
 Gönderici sahte (`eposta_gonderilmez`): ağ yok, gönderilenler kaydedilir.
