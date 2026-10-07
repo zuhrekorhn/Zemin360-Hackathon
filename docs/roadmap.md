@@ -27,8 +27,8 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 | Kimlik ve iki taraflı döngü (Faz B) | JWT, üç rol, paneller, karşılıklı onay, bildirimler | `kimlik-ve-dongu.md` |
 | Takip (Faz C) | Plan, iki taraflı onay ve işaret, tamamlanma sinyali (pilot bonusu) | `takip.md` |
 | Canlılık + GİRVAK paneli (Faz D) | Tarama, hatırlatma, yeni fırsat, program hedefleri | `canlilik.md` |
-| Genç akışı | Kayıt formu, tek kart, otomatik puanlama, gençten ilgi | `plans/genc-akisi.md` |
-| Firma akışı | Firma kaydı ve profili (`/kurum/profil`), firma kartı, iki kapı, firma–firma eşleşme, firma doğrulaması | `plans/firma-akisi.md` |
+| Genç akışı | Kayıt formu, tek kart, otomatik puanlama, gençten ilgi | `kararlar.md` G1-G17 |
+| Firma akışı | Firma kaydı ve profili (`/kurum/profil`), firma kartı, iki kapı, firma–firma eşleşme, firma doğrulaması | `kararlar.md` F1-F20 |
 | Güvenlik | SSRF engeli (`app/core/guvenli_istek.py`) | `agent-specs.md` § 4 |
 | Toplu metin denetimi (30 Eyl) | Hitap, onaylar, LLM istem dili | `icerik-rehberi.md` |
 | Doğrulama incelemesi (1-5 Eki) | 14 adım: link/dosya/görsel okuma, hesap bağlama, referans, kötüye kullanım, gözlem | `dogrulama.md` |
