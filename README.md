@@ -1,8 +1,6 @@
-# [Proje Adı] — Zemin360 Hackathon
+# Zemin360 — Firma ve genç yetenek buluşma platformu
 
-> Kurum–girişim ekosisteminde keşif, doğrulama, eşleşme ve iş birliği takibini tek bir paylaşılan veri katmanında birleştiren, altı uzman yapay zeka ajanından oluşan açık kaynak platform.
-
-*(Proje adı henüz kesinleşmedi — repo'yu oluştururken bu başlığı güncelle.)*
+> Kurum–girişim ekosisteminde keşif, doğrulama, eşleşme ve iş birliği takibini tek bir paylaşılan veri katmanında birleştiren, altı uzman yapay zeka ajanından oluşan açık kaynak platform. Zemin360 Hackathon (GİRVAK) için geliştirildi.
 
 ## Bağlam
 
@@ -227,7 +225,7 @@ Genç akışının kararları ve bilinen sınırları: [`docs/plans/genc-akisi.m
 
 **Takip kapsamı:** ajan plan ve özet önerir, karar vermez; tamamlanma bir kuraldır (son adım iki tarafça tamamlanınca). Onaylanan plan kilitlidir. Tamamlanmış pilot, Eşleştirme'nin doğrulama bonusuna toplamsal girer (en çok +0.125; pilotsuz kartın skoru değişmez, alakayı yaratmaz). Durum özeti kesilebilir iş: çökerse ya da kesilirse döngü aynen çalışır.
 
-Kanıt linki kontrolü iç ağa istek atmaz (SSRF engeli, `backend/app/core/guvenli_istek.py`). Sırada: elle deneme, toplu metin denetimi ve yayına alma.
+Kanıt linki kontrolü iç ağa istek atmaz (SSRF engeli, `backend/app/core/guvenli_istek.py`). Toplu metin denetimi tamamlandı (30 Eyl). Sırada: elle deneme, tohum veri ve yayına alma.
 Yol haritası ve faz planı için bkz. [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Takım
