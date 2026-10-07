@@ -47,7 +47,6 @@ from app.agents.uygunluk import (
     gorunur_kosulu,
     listelenecekler,
 )
-from app.api.bildirimler import bildirim_ekle
 from app.api.sahiplik import eslesmedeki_taraf
 from app.core.ilan import ARANAN_FIRMA
 from app.core.llm import HizSinirHatasi, ModelMesgulHatasi
@@ -60,6 +59,7 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import Iletisim
+from app.servisler.bildirim import bildirim_ekle
 
 logger = logging.getLogger("zemin360.eslestirme")
 

@@ -40,7 +40,6 @@ from app.agents.dogrulama import (
     referans_yeniden_istenebilir_mi,
     zaman_asimina_ugradi_mi,
 )
-from app.api.bildirimler import bildirim_ekle
 from app.core.dis_servisler.eposta import Eposta
 from app.core.istek_izi import IstekIzi
 from app.models.bildirim import TUR_REFERANS_YANIT_YOK, TUR_REFERANS_YANITI
@@ -48,6 +47,7 @@ from app.models.guven_skoru import GuvenSkoru
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+from app.servisler.bildirim import bildirim_ekle
 from app.servisler.dogrulama.isaretler import referans_suphesi
 from app.servisler.dogrulama.referans_epostasi import (
     ReferansEpostaBaglami,

@@ -40,7 +40,6 @@ from app.agents.eslestirme import (
 )
 from app.agents.uygunluk import gorunur_kosulu, gosterilecek_karar
 from app.api import takip
-from app.api.bildirimler import bildirim_ekle
 from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import (
@@ -87,6 +86,7 @@ from app.schemas.eslestirme import (
 )
 from app.servisler import eslesme_epostasi
 from app.servisler import eslestirme as servis
+from app.servisler.bildirim import bildirim_ekle
 from app.servisler.eslestirme import (
     IHTIYAC_ACIK,
     eslesmeleri_oku,

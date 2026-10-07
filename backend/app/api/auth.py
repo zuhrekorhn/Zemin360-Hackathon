@@ -16,7 +16,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.bildirimler import okunmamis_sayisi
 from app.api.kimlik import mevcut_hesap
 from app.api.profil import (
     firma_profilini_uygula,
@@ -42,6 +41,7 @@ from app.schemas.auth import (
 )
 from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
 from app.servisler import kimlik_dogrulama
+from app.servisler.bildirim import okunmamis_sayisi
 
 router = APIRouter(tags=["kimlik"])
 

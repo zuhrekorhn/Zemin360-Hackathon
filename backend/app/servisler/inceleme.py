@@ -24,9 +24,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.inceleme_durumu import ACIK, gecerli_dogrulanamadilar, inceleme_gecisi
-from app.api.bildirimler import bildirim_ekle
 from app.models.inceleme_isareti import KALEM_KARARI_TURLERI, IncelemeIsareti
 from app.models.kullanici import Kullanici
+from app.servisler.bildirim import bildirim_ekle
 
 
 @dataclass(frozen=True)

@@ -1,8 +1,7 @@
-"""Uygulama içi bildirimler (docs/faz-b-kimlik-ve-dongu.md § 6).
+"""Uygulama içi bildirimlerin okuma uçları (docs/faz-b-kimlik-ve-dongu.md § 6).
 
-Bildirimi olayın kendisi yazar (eşleşme geçişi, pipeline, referans yanıtı),
-aynı işlemde: olay olup bildirim kaybolmasın, bildirim olup olay geri
-alınmasın. Gerçek e-posta yok; okunmamış sayısı `GET /me`'de.
+Bildirimi yazan ve sayan fonksiyonlar `app/servisler/bildirim.py`'de: bildirimi
+olayın kendisi, olayla aynı işlemde yazar.
 """
 
 from __future__ import annotations
@@ -11,7 +10,7 @@ import datetime as dt
 import uuid
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -28,31 +27,6 @@ router = APIRouter(prefix="/bildirimler", tags=["bildirimler"])
 # Liste sayfalanmıyor; bu kadarı bir panelde fazlasıyla yeter.
 LISTE_SINIRI = 100
 BILDIRIM_BULUNAMADI = "Bildirim bulunamadı"
-
-
-def bildirim_ekle(
-    oturum: AsyncSession,
-    hesap_id: uuid.UUID | None,
-    tur: str,
-    metin: str,
-    eslesme_id: uuid.UUID | None = None,
-) -> None:
-    """Bildirimi oturuma ekler; commit çağıranın işi (olayla aynı işlem).
-
-    Hesabı olmayan profil (Faz B öncesi kayıt) için sessizce atlanır:
-    okuyacak kimse yok.
-    """
-    if hesap_id is None:
-        return
-    oturum.add(Bildirim(hesap_id=hesap_id, tur=tur, metin=metin, eslesme_id=eslesme_id))
-
-
-async def okunmamis_sayisi(oturum: AsyncSession, hesap_id: uuid.UUID) -> int:
-    return await oturum.scalar(
-        select(func.count())
-        .select_from(Bildirim)
-        .where(Bildirim.hesap_id == hesap_id, Bildirim.okundu_tarihi.is_(None))
-    )
 
 
 @router.get("", response_model=list[BildirimYaniti])

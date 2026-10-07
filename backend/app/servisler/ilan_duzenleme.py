@@ -19,7 +19,6 @@ from app.agents.ihtiyac_duzenleme import (
     duzenlenebilir_mi,
     gerekcesi_sifirlanacak,
 )
-from app.api.bildirimler import bildirim_ekle
 from app.api.sahiplik import TARAF_ADAY, taraf_hesabi
 from app.core import calisma_modeli
 from app.core.firma_karti import ISBIRLIGI_TURLERI
@@ -30,6 +29,7 @@ from app.models.bildirim import TUR_FIRSAT_GUNCELLENDI
 from app.models.eslesme import Eslesme
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.schemas.tanimlama import IhtiyacTaslagi
+from app.servisler.bildirim import bildirim_ekle
 from app.servisler.eslestirme import iliskileriyle
 
 FIRSAT_GUNCELLENDI = "İlgilendiğin bir fırsatın ayrıntıları güncellendi."

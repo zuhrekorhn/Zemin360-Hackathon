@@ -21,7 +21,6 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.dogrulama.curume import curumus_mu, sayac_gecisi, yoklanacak_mi
-from app.api.bildirimler import bildirim_ekle
 from app.core.kanit_okuma import kaniti_oku
 from app.core.kanit_okuma.belge import ErisimDurumu, ParcaTuru
 from app.models.bildirim import TUR_KANIT_CURUDU
@@ -29,6 +28,7 @@ from app.models.gozlem import KAYNAK_YOKLAMA
 from app.models.kanit_parcasi import KanitParcasi
 from app.models.somut_cikti import SomutCikti
 from app.servisler import gozlem
+from app.servisler.bildirim import bildirim_ekle
 from app.servisler.dogrulama.kanit import degerlendir
 from app.servisler.dogrulama.parcalar import gostergeyi_yeniden_degerlendirmeye_al
 from app.servisler.dogrulama.sorgular import cikti_getir, gencin_hesap_id

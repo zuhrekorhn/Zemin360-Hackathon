@@ -31,7 +31,6 @@ from app.agents.takip_durumu import (
     ISBIRLIGI_TAMAMLANDI,
 )
 from app.agents.uygunluk import gorunur_kosulu
-from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import rol_gerekli
 from app.api.sahiplik import bulunamadi
 from app.core import firma_dogrulama
@@ -57,6 +56,7 @@ from app.schemas.girvak import (
     Sayilar,
     TurSayilari,
 )
+from app.servisler.bildirim import bildirim_ekle
 from app.servisler.ilgi import IHTIYAC_KAPANDI
 
 router = APIRouter(prefix="/girvak", tags=["girvak"])

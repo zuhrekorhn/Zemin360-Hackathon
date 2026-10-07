@@ -45,7 +45,6 @@ from app.agents.takip_durumu import (
 )
 from app.agents.takip_surecleri import PlanAdimi, SurecSablonu, surec_adi, surec_sec
 from app.api import sahiplik
-from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import mevcut_hesap, rol_gerekli
 from app.api.sahiplik import bulunamadi, eslesmedeki_taraf, girvak_mi, karsi_taraf
 from app.db.session import get_session, get_sessionmaker
@@ -75,6 +74,7 @@ from app.schemas.takip import (
     MilestoneYaniti,
     SonlandirIstegi,
 )
+from app.servisler.bildirim import bildirim_ekle
 from app.servisler.eslestirme import iletisim
 
 logger = logging.getLogger("zemin360.takip")

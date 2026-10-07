@@ -54,7 +54,6 @@ from app.agents.takip_durumu import (
     MILESTONE_TAMAMLANDI,
 )
 from app.agents.uygunluk import gorunur_kosulu
-from app.api.bildirimler import bildirim_ekle
 from app.api.kimlik import _bearer, _yetkisiz, mevcut_hesap, rol_gerekli
 from app.api.sahiplik import karsi_taraf, taraf_adi, taraf_hesabi
 from app.core.config import get_settings
@@ -68,6 +67,7 @@ from app.models.yetenek_karti import YetenekKarti
 from app.schemas.canlilik import CanlilikOlayiYaniti, PasifBaglanti, TaramaSonucu
 from app.servisler import dogrulama as dogrulama_servisi
 from app.servisler import gozlem
+from app.servisler.bildirim import bildirim_ekle
 from app.servisler.dogrulama.isaretler import referans_suphesi
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
 

@@ -182,7 +182,7 @@ def test_ayni_islemde_yazilan_bildirimler_en_yeni_once_siralanir():
     """`now()` işlem başlangıcını döndüğü için aynı işlemdeki bildirimler eşit
     zamanlı kalıyor, sıra belirsizleşiyordu; zaman damgası INSERT anında
     `clock_timestamp()` ile atanıyor."""
-    from app.api.bildirimler import bildirim_ekle
+    from app.servisler.bildirim import bildirim_ekle
 
     async def adimlar(istemci, d):
         for metin in ("birinci", "ikinci", "üçüncü"):

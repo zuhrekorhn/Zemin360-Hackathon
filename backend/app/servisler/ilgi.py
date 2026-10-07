@@ -27,12 +27,12 @@ from app.agents.eslestirme import (
     DURUM_ONERILDI,
 )
 from app.agents.takip_durumu import ISBIRLIGI_PLAN_BEKLIYOR
-from app.api.bildirimler import bildirim_ekle
 from app.api.sahiplik import TARAF_ADAY, TARAF_ILAN, taraf_adi, taraf_hesabi
 from app.models.bildirim import TUR_FIRSAT_KAPANDI
 from app.models.eslesme import Eslesme
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
+from app.servisler.bildirim import bildirim_ekle
 from app.servisler.eslestirme import iliskileriyle
 
 IHTIYAC_KAPANDI = "kapandi"
