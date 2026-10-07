@@ -37,6 +37,7 @@ ZAMAN_ALANLARI: tuple[tuple[str, str], ...] = (
     ("isbirligi", "genc_plan_onayi"),
     ("isbirligi", "kurum_plan_onayi"),
     ("isbirligi", "tamamlanma_tarihi"),
+    ("isbirligi", "sonlanma_tarihi"),
     ("isbirligi", "ozet_tarihi"),
     ("milestone", "hedef_tarih"),
     ("milestone", "genc_isaret"),
