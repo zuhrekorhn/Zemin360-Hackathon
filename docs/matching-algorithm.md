@@ -63,13 +63,13 @@ skor = 0.75 * cosine_similarity(yetenek.embedding, ihtiyac.embedding)
 - Göstergesi olan çalışma yoksa (henüz doğrulanmamış): `0` — **ceza değil**, sadece bonus yok. Doğrulanmamış kart elenmez, listede kalır.
 - Kart için "en güçlü iki çalışmanın ortalaması" ya da yetenek bazlı kanıt seçenekleri Eşleştirme incelemesinde değerlendirilecek (`dogrulama.md` § 11.1).
 
-**Tamamlanmış pilot (Faz C, `takip.md` § 6):** kartın en az bir tamamlanmış iş birliği varsa bonusa toplamsal eklenir, tavan 1.0:
+**Tamamlanmış iş birliği (`takip.md` § 6):** kartın en az bir tamamlanmış iş birliği varsa bonusa toplamsal eklenir, tavan 1.0:
 
 ```
 dogrulama_bonus = min(1.0, guven_orani + 0.5 × [tamamlanan_pilot ≥ 1])
 ```
 
-Pilotu olmayan kartın skoru Faz C öncesiyle birebir aynı (demo kalibrasyonu bozulmaz); pilot skora en çok `0.25 × 0.5 = +0.125` ekler. Sayı değil varlık sayılır: bir pilot yeter. Sinyal saklanmaz, `isbirligi.durum = tamamlandi` kayıtlarından hesaplanır (`tamamlanan_pilot_sayilari`). Alakayı yaratmaz: benzerlik alt sınırı (§ 5) skordan önce uygulanmaya devam eder. Gerekçe istemine de "Tamamlanmış pilot: N" satırı gider.
+Tamamlanmış iş birliği olmayan kartın skoru değişmez; pilot skora en çok `0.25 × 0.5 = +0.125` ekler. Sayı değil varlık sayılır: bir pilot yeter. Sinyal saklanmaz, `isbirligi.durum = tamamlandi` kayıtlarından hesaplanır (`tamamlanan_pilot_sayilari`). Alakayı yaratmaz: benzerlik alt sınırı (§ 5) skordan önce uygulanmaya devam eder. Gerekçe istemine de "Tamamlanmış pilot: N" satırı gider.
 
 ### 4.1 Kart bonusu: Eşleştirme incelemesinde karar verilecek iki seçenek
 
@@ -106,9 +106,9 @@ Skora etkisi en çok `0,25 × bonus` kadardır; yukarıdaki örnekte (a) kartı 
 
 ## 5. Eşik ve Sıralama
 
-> **Karar verilmiş kayıtlar korunur** (`plans/genc-akisi.md` § 0 karar 14). Yeniden hesap yalnızca `onerildi` kayıtlarını siler ve en iyi 5 sınırı yalnızca onlara uygulanır. Kurumun karar verdiği kayıtlarda (`ilgileniliyor`, `kabul_edildi`, `reddedildi`) yalnızca skor tazelenir; gencin ilgi gösterdiği kayıtta (`genc_ilgilendi`) skor ve gerekçe de değişmez, kayıt ilk 5'in dışına düşse de firmanın "İlgi gösterenler" listesinde kalır. Kapalı ihtiyaç için aday aranmaz.
+> **Karar verilmiş kayıtlar korunur** (`kararlar.md` G14). Yeniden hesap yalnızca `onerildi` kayıtlarını siler ve en iyi 5 sınırı yalnızca onlara uygulanır. Kurumun karar verdiği kayıtlarda (`ilgileniliyor`, `kabul_edildi`, `reddedildi`) yalnızca skor tazelenir; gencin ilgi gösterdiği kayıtta (`genc_ilgilendi`) skor ve gerekçe de değişmez, kayıt ilk 5'in dışına düşse de firmanın "İlgi gösterenler" listesinde kalır. Kapalı ihtiyaç için aday aranmaz.
 >
-> **Bilinen sınır:** ilk 5 (`TOP_N`) ihtiyaç başınadır; sıralamada 6. ve sonrası olan genç o ihtiyacı fırsat olarak görmez (`plans/genc-akisi.md` § 0 karar 3).
+> **Bilinen sınır:** ilk 5 (`TOP_N`) ihtiyaç başınadır; sıralamada 6. ve sonrası olan genç o ihtiyacı fırsat olarak görmez (`kararlar.md` G3).
 
 **Top-N** yaklaşımı: benzerlik tabanını geçen adaylar arasından skoru en yüksek **5 sonuç** gösterilir.
 
@@ -170,7 +170,7 @@ LLM'e verilenler: ihtiyaç kartı özeti, yetenek kartı özeti, doğrulama öze
 
 ## 7. Firma–firma eşleştirme (firma akışı)
 
-Plan: `plans/firma-akisi.md` § 0 kararlar 5, 11-14; § 4. Aynı pipeline (`app/servisler/eslestirme.py`), aynı kilit, aynı temizlik ve karar 14 koruması; fark aday kaynağında: ilanın `aranan`'ı `firma` ise adaylar firma kartları (`firma_adaylarini_getir`).
+Kararlar: `kararlar.md` F5, F11-F14. Aynı pipeline (`app/servisler/eslestirme.py`), aynı kilit, aynı temizlik ve G14 koruması; fark aday kaynağında: ilanın `aranan`'ı `firma` ise adaylar firma kartları (`firma_adaylarini_getir`).
 
 - **Temsil metni:** firma kartı firmanın **ne yaptığını** anlatır: ne yapıyoruz, yetkinlikler, önceki işler, sektör (`firma_temsil_metni`). Aradığı ortak ve iş birliği türü girmez. İlan tarafı aynı: problem + başarı kriteri.
 - **Kesin şartlar (SQL, benzerlikten önce):** kartı ve hesabı olan firma; ilanı açan firma değil; ilan tür seçtiyse `kurum.tur` o türlerden; ilan şehir şartı koyduysa `kurum.sehir` eşit (varsayılan "fark etmez"). Sektör şart değil.

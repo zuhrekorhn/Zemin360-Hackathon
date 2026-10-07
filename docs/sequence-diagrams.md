@@ -1,94 +1,158 @@
 # Sequence Diyagramları
 
-## Akış 1 — Keşif → Tanımlama → Eşleştirme (happy path)
+Uçtan uca dört akış. Arka plan işleri (`BackgroundTasks`) yanıt döndükten sonra çalışır;
+diyagramlarda "arka planda" diye işaretli.
 
-Genç ve kurum akışları birbirinden bağımsız çalışır; aynı anda platformda olmaları gerekmez. Eşleştirme Ajanı ikisini de arka planda periyodik/tetiklemeli okur.
+## Akış 1 — Kart, ilan ve eşleşme (iki kapı)
+
+Genç ve firma aynı anda platformda olmak zorunda değil: eşleştirme hangisi önce gelirse gelsin
+kart ya da ilan onaylanınca o kayıt için çalışır.
 
 ```mermaid
 sequenceDiagram
   actor G as Genç
-  participant K as Keşif Ajanı
-  participant DB as Veri Katmanı
-  actor Ku as Kurum
-  participant T as Tanımlama Ajanı
-  participant E as Eşleştirme Ajanı
+  actor F as Firma
+  participant K as Keşif / Tanımlama<br/>(sohbet motoru)
+  participant E as Eşleştirme<br/>(pipeline)
+  participant DB as Veri katmanı
 
-  G->>K: Sohbet başlatır
-  K->>G: Takip soruları sorar
-  G->>K: Cevaplar
-  K->>G: Yetenek kartı taslağı gösterir
-  G->>K: Onaylar
-  K->>DB: Yetenek kartını kaydeder
+  G->>K: Kayıttan sonra sohbet (form bilgisi sorulmaz)
+  K-->>G: Kart taslağı
+  G->>K: Onaylar (onaysız kaydedilmez)
+  K->>DB: Yetenek kartı
+  K-)E: Arka planda: embedding, çalışmaların değerlendirilmesi, açık ilanlarla eşleştirme
 
-  Ku->>T: İhtiyaç sohbeti başlatır
-  T->>Ku: Netleştirici sorular sorar
-  Ku->>T: Cevaplar
-  T->>Ku: İhtiyaç kartı taslağı gösterir
-  Ku->>T: Onaylar
-  T->>DB: İhtiyaç kartını kaydeder
+  F->>K: İhtiyaç sohbeti (genç yetenek ya da iş birliği ortağı kapısı)
+  K-->>F: İlan taslağı
+  F->>K: Onaylar
+  K->>DB: İhtiyaç kartı
+  K-)E: Arka planda: embedding ve eşleştirme
 
-  E->>DB: Kartları okur
-  E->>E: Taksonomi eşleme ve skor hesabı
-  E->>DB: Eşleşme kaydını yazar
-  E->>Ku: Sıralı öneri ve gerekçe gösterir (gencin adı görünür, e-posta yok)
-  Ku->>E: İlgileniyorum der
-  E->>DB: Eşleşme onerildi → ilgileniliyor
-  E->>G: Uygulama içi bildirim ("X kartınla ilgileniyor")
-  alt Genç kabul ederse
-    G->>E: Kabul eder
-    E->>DB: kabul_edildi + ISBIRLIGI açılır
-    E->>Ku: Bildirim; iki tarafa e-postalar açılır
-  else Genç reddederse
-    G->>E: Reddeder
-    E->>DB: reddedildi
-    E->>Ku: Bildirim (nötr dil)
+  E->>DB: Sert filtreler (SQL) + pgvector benzerliği + alt sınır
+  E->>E: Skor (yalnızca sıralar), LLM gerekçesi ve uygunluk kararı
+  E->>DB: onerildi (uygun_degil saklanır, görünmez)
+  E-)F: Bildirim: yeni öneri
+
+  alt Firma önce ilgilenir
+    F->>E: İlgileniyorum
+    E->>DB: ilgileniliyor
+    E-)G: Bildirim
+    G->>E: Kabul (ya da red → reddedildi)
+  else Genç önce ilgilenir
+    G->>E: İlgi + iletişim onayı
+    E->>DB: genc_ilgilendi
+    E-)F: Bildirim (5 gün yanıt yoksa Canlılık hatırlatır)
+    F->>E: İlgileniyorum (ya da "şimdilik değil" → kapandi)
   end
+  E->>DB: kabul_edildi + iş birliği açılır
+  E-)G: Bildirim ve "eşleştiniz" e-postası (alan tarafa)
+  E-)F: E-postalar iki tarafa açılır, "E-posta yaz" taslağı
 ```
 
-**Mimari sonucu:** Eşleştirme Ajanı senkron bir endpoint değil, ayrı bir arka plan işi (background job / cron) olarak yazılmalı.
+Kural tek fonksiyonda (`app/agents/eslesme_durumu.py`); geçersiz geçiş 409, aynı geçişin tekrarı
+200 ve yan etkisiz. Ayrıntı: `kimlik-ve-dongu.md` § 5. Firma–firma'da aday tarafında bir firma
+vardır; akış aynıdır.
 
-**Karşılıklı onay (Faz B):** iş birliği yalnızca gencin kabulüyle açılır; geçiş kuralı tek fonksiyonda (`app/agents/eslesme_durumu.py`). Ayrıntı: `kimlik-ve-dongu.md` § 5-6.
+## Akış 2 — Doğrulama (kanıt, referans ve zaman aşımı dalı)
 
-## Akış 2 — Doğrulama (referans + zaman aşımı dalı)
-
-Zaman aşımı bir hata değil, tasarlanmış bir dal — kişiyi cezalandırmayan nötr bir durum olarak modellenmeli.
+Zaman aşımı bir hata değil, tasarlanmış bir dal: kişiyi cezalandırmayan nötr bir durum.
 
 ```mermaid
 sequenceDiagram
   actor G as Genç
-  participant D as Doğrulama Ajanı
-  participant DB as Veri Katmanı
-  actor R as Referans Kişi
+  participant D as Doğrulama
+  participant DB as Veri katmanı
+  actor R as Referans kişi
 
-  G->>D: Kanıt gönderir (link + referans e-postası)
-  D->>D: Erişilebilirlik ve tutarlılık kontrolü
-  D->>DB: Ön rubrik skorunu kaydeder
-  D->>R: Tek kullanımlık referans linkini e-postayla gönderir (genç linki görmez)
+  G->>D: Kanıt ekler (link, dosya ya da görsel)
+  D->>D: Okuma zinciri: platform → genel → yedek okuyucu; seviye (A-D)
+  D->>D: Model alıntıyla gerçek çıkarır, kural puanlar
+  D->>DB: Güven göstergesi (okunamayan başlık "—", 0 değil)
 
-  opt Genç adresi yanlış yazdıysa
-    G->>D: İsteği geri çeker (geri_cekildi; link artık form açmaz)
+  G->>D: Referans ister (gencin kendi adresi 422)
+  D->>R: Tek kullanımlık bağlantı e-postayla (genç bağlantıyı görmez)
+
+  opt Adres yanlışsa
+    G->>D: Geri çeker (geri_cekildi)
   end
-
   opt 3. gün, yanıt yoksa (Canlılık taraması)
-    D->>R: Tek hatırlatma e-postası
+    D->>R: Tek hatırlatma
   end
 
-  alt 7 gün içinde yanıt gelirse
-    R->>D: 4 soruluk formu doldurur (ilişki; çalışma, pay, sonuç doğru mu)
-    D->>DB: Koşullu güncelleme (yalnızca bekliyor ise) ve Referans başlığı
-    D->>G: Güncel güven göstergesini bildirir
-    opt Pay ya da sonuç için "evet" yeni destek getirdiyse
-      D->>DB: Kalemi arka planda yeniden puanlar (Rol / Sonuç)
-    end
-  else Zaman aşımı (okuma anında ya da Canlılık taramasında)
-    D->>DB: Durumu yanıt yok olarak işaretler
-    D->>G: Nötr bildirim: yeniden isteyebilir ya da başkasından isteyebilir
+  alt 7 gün içinde yanıt
+    R->>D: 4 soruluk form (ilişki; çalışma, pay, sonuç doğru mu)
+    D->>DB: Koşullu güncelleme (yalnızca bekliyor ise), Referans başlığı
+    D-)G: Bildirim; pay / sonuç "evet" ise arka planda yeniden puanlama
+  else Zaman aşımı (okuma anında ya da taramada)
+    D->>DB: yanit_yok
+    D-)G: Nötr bildirim: yeniden ya da başkasından isteyebilir
   end
 
   opt Genç itiraz ederse
-    G->>D: Kanıtı yeniden değerlendirmesini ister
-    D->>DB: Rubrik skorunu yeniden hesaplar
+    G->>D: Not ile itiraz (aynı girdi önceki sonucu döner, en çok 3)
+    D->>DB: Yeniden değerlendirme ya da GİRVAK kuyruğu
   end
 ```
 
-**Mimari sonucu:** Referans yanıt endpoint'i (`/dogrulama/referans-yaniti`) token bazlı ve girişsiz olmalı — referans kişiyi üye olmaya zorlamak yanıt oranını düşürür.
+Referans yanıt ucu (`/dogrulama/referans-yaniti`) token'lı ve girişsizdir: referans kişiyi üye
+olmaya zorlamak yanıt oranını düşürür. Ayrıntı: `dogrulama.md`.
+
+## Akış 3 — Takip (plan, onay, adımlar, tamamlanma)
+
+```mermaid
+sequenceDiagram
+  actor A as Aday tarafı
+  actor F as İlan tarafı
+  participant T as Takip
+  participant DB as Veri katmanı
+  participant E as Eşleştirme
+
+  T-)T: Arka planda: süreç şablonu seçilir (işe alım, staj, proje, deneme işi, tedarik, iş birliği)
+  T->>DB: Şablon adımları, ajan "ne olunca tamam" ve hazırlık önerisini yazar
+  T-)A: Bildirim: plan önerildi
+  T-)F: Bildirim: plan önerildi
+
+  A->>T: Adımı düzenler (iki onay sıfırlanır)
+  A->>T: Planı onaylar
+  F->>T: Planı onaylar
+  T->>DB: aktif, plan kilitlenir
+
+  loop Her adım
+    A->>T: Tamamlandı olarak işaretle
+    F->>T: Tamamlandı olarak işaretle
+    T->>DB: Adım tamamlandı (iki işaret)
+  end
+  T->>DB: Son adımla tamamlandi (kural, ajan değil)
+  E->>DB: Sonraki eşleştirmelerde adayın bonusuna toplamsal girer (en çok +0.125)
+
+  opt Erken sonlanma
+    A->>T: Süreci sonlandır (nedenle)
+    T->>DB: sonlandi (geri açılmaz, tamamlanmış sayılmaz)
+    T-)F: Nedensiz nötr bildirim
+  end
+```
+
+Ayrıntı: `takip.md`.
+
+## Akış 4 — Canlılık taraması
+
+```mermaid
+sequenceDiagram
+  actor V as GİRVAK (düğme) ya da betik
+  participant C as Canlılık
+  participant DB as Veri katmanı
+  participant L as LLM (hızlı katman)
+
+  V->>C: POST /canlilik/tarama
+  C->>DB: Danışma kilidi (eşzamanlı tarama sıraya girer)
+  C->>DB: Hareketsiz kayıtlar (okuma anında, eşiklere göre)
+  C->>DB: Son hareketten sonra aynı türde olay var mı? (tekrar kuralı)
+  C->>L: Kişiye özel hatırlatma metni
+  L-->>C: Metin (yoksa şablon)
+  C->>DB: Canlılık olayı + bildirim (aynı işlemde)
+  C->>C: Referans hatırlatma ve zaman aşımı, link çürümesi yoklaması, 90 günlük temizlik
+  C-->>V: Özet: türe göre olay sayıları
+```
+
+Tarama idempotenttir: art arda iki kez çalıştırmak ikinci seferde sıfır olay üretir. Ayrıntı:
+`canlilik.md`.

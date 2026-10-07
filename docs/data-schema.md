@@ -1,29 +1,43 @@
 # Veri Şeması
 
-## ER Diyagramı
+25 tablo, PostgreSQL + pgvector. Modeller `backend/app/models/` (tablo başına bir dosya),
+migration'lar `backend/alembic/versions/`. LangGraph'ın sohbet checkpoint tabloları
+(`checkpoints`, `checkpoint_writes`…) kütüphaneye aittir, Alembic'e girmez.
+
+Diyagramlar okunur kalsın diye üçe bölündü; kolonlar modellerle birebir aynıdır.
+
+## 1. Kimlik, kartlar, eşleşme ve iş birliği
 
 ```mermaid
 erDiagram
-  KULLANICI ||--o| YETENEK_KARTI : sahiptir
-  YETENEK_KARTI ||--o{ SOMUT_CIKTI : icerir
-  SOMUT_CIKTI ||--o| GUVEN_SKORU : degerlendirilir
-  SOMUT_CIKTI ||--o{ REFERANS_ISTEGI : ister
-  SOMUT_CIKTI ||--o{ KANIT_PARCASI : kanitlanir
-  KURUM ||--o{ IHTIYAC_KARTI : olusturur
-  YETENEK_KARTI ||--o{ ESLESME : aday_olur
-  IHTIYAC_KARTI ||--o{ ESLESME : eslesir
-  ESLESME ||--o| ISBIRLIGI : donusur
-  ISBIRLIGI ||--o{ MILESTONE : icerir
-  ESLESME ||--o{ CANLILIK_OLAYI : tetikler
   HESAP ||--o| KULLANICI : profil
   HESAP ||--o| KURUM : profil
   HESAP ||--o{ BILDIRIM : alir
+  HESAP ||--o{ EPOSTA_DOGRULAMA : dogrular
+  KULLANICI ||--o| YETENEK_KARTI : sahiptir
+  KURUM ||--o| FIRMA_KARTI : sahiptir
+  KURUM ||--o{ IHTIYAC_KARTI : acar
+  YETENEK_KARTI ||--o{ ESLESME : "aday (genc)"
+  FIRMA_KARTI ||--o{ ESLESME : "aday (firma)"
+  IHTIYAC_KARTI ||--o{ ESLESME : ilan
+  ESLESME ||--o| ISBIRLIGI : "kabul_edildi ile acilir"
+  ISBIRLIGI ||--o{ MILESTONE : adimlar
+  ESLESME ||--o{ CANLILIK_OLAYI : tetikler
   ESLESME |o--o{ BILDIRIM : konusu
 
+  HESAP {
+    uuid id PK
+    string email "UNIQUE"
+    string sifre_hash "argon2id"
+    string rol "genc | kurum | girvak"
+    timestamptz kvkk_onay_tarihi
+    timestamptz eposta_dogrulandi_tarihi
+  }
   KULLANICI {
     uuid id PK
+    uuid hesap_id FK "UNIQUE"
     string ad
-    string email
+    string email "UNIQUE, iletisim"
     string sehir
     text[] calisma_modelleri
     text[] musaitlikler
@@ -37,36 +51,175 @@ erDiagram
     string linkedin_url
     string portfolyo_url
   }
+  KURUM {
+    uuid id PK
+    uuid hesap_id FK "UNIQUE"
+    string ad
+    string tur "girisim | kobi | kurumsal"
+    string sektor
+    string sehir
+    string iletisim_email "UNIQUE"
+    string web_sitesi
+    string calisan_araligi
+    int kurulus_yili
+    text tanitim
+    string yetkili_ad
+    string yetkili_gorev
+    string dogrulama_durumu "bekliyor | dogrulandi | simdilik_degil"
+    timestamptz dogrulama_tarihi
+  }
   YETENEK_KARTI {
     uuid id PK
-    uuid kullanici_id FK
+    uuid kullanici_id FK "UNIQUE: tek kart"
     string rol_alani
     string deneyim_seviyesi
     text[] sektor_ilgi_alani
     text[] araclar_teknolojiler
-    boolean kanit_bekleyen
+    text[] sertifikalar
+    text[] diller
+    bool kanit_bekleyen
     int versiyon
-    vector embedding
+    vector embedding "1024"
+    uuid oturum_id "UNIQUE"
   }
+  FIRMA_KARTI {
+    uuid id PK
+    uuid kurum_id FK "UNIQUE"
+    text ne_yapiyoruz
+    text[] yetkinlikler
+    text onceki_isler
+    text aranan_isbirligi
+    text[] isbirligi_turleri
+    int versiyon
+    vector embedding "1024"
+    uuid oturum_id "UNIQUE"
+  }
+  IHTIYAC_KARTI {
+    uuid id PK
+    uuid kurum_id FK
+    string aranan "genc | firma"
+    text problem_tanimi
+    text basari_kriteri
+    jsonb basari_olcutu
+    text kisitlar
+    string sehir_tercihi
+    string calisma_modeli
+    string musaitlik_tercihi
+    text[] aranan_firma_turleri
+    string isbirligi_turu
+    string durum "acik | kapandi"
+    string kapanma_nedeni
+    timestamptz kapanma_tarihi
+    vector embedding "1024"
+    uuid oturum_id "UNIQUE"
+  }
+  ESLESME {
+    uuid id PK
+    uuid ihtiyac_karti_id FK
+    uuid yetenek_karti_id FK "tam biri dolu"
+    uuid firma_karti_id FK "tam biri dolu"
+    float skor
+    text gerekce_metni
+    string uygunluk "uygun | kismen | uygun_degil | NULL"
+    string durum
+    string baslatan "genc | kurum"
+    timestamptz genc_ilgi_tarihi
+    timestamptz genc_iletisim_onayi_tarihi
+    timestamptz kurum_ilgi_tarihi
+    timestamptz son_aktivite_tarihi
+  }
+  ISBIRLIGI {
+    uuid id PK
+    uuid eslesme_id FK
+    string durum "plan_bekliyor | aktif | tamamlandi | sonlandi"
+    string surec
+    date baslangic_tarihi
+    timestamptz genc_plan_onayi
+    timestamptz kurum_plan_onayi
+    bool plan_onerildi_mi
+    timestamptz tamamlanma_tarihi
+    string sonlanma_nedeni
+    timestamptz sonlanma_tarihi
+    text durum_ozeti
+    timestamptz ozet_tarihi
+  }
+  MILESTONE {
+    uuid id PK
+    uuid isbirligi_id FK
+    string baslik
+    text aciklama
+    string asama
+    text oneri
+    int sira
+    date hedef_tarih
+    string durum "bekliyor | tamamlandi"
+    timestamptz genc_isaret
+    timestamptz kurum_isaret
+    string kanit_linki
+  }
+  BILDIRIM {
+    uuid id PK
+    uuid hesap_id FK
+    uuid eslesme_id FK
+    string tur
+    text metin
+    timestamptz olusturma_tarihi
+    timestamptz okundu_tarihi
+  }
+  CANLILIK_OLAYI {
+    uuid id PK
+    uuid eslesme_id FK
+    uuid alici_hesap_id FK
+    uuid milestone_id FK
+    uuid ihtiyac_karti_id FK
+    string tur
+    text mesaj_metni
+    timestamptz tetiklenme_tarihi
+  }
+  EPOSTA_DOGRULAMA {
+    uuid id PK
+    uuid hesap_id FK
+    string token_ozeti "SHA-256, UNIQUE"
+    timestamptz son_gecerlilik
+  }
+```
+
+## 2. Doğrulama
+
+```mermaid
+erDiagram
+  YETENEK_KARTI ||--o{ SOMUT_CIKTI : calismalar
+  SOMUT_CIKTI ||--o| GUVEN_SKORU : gosterge
+  SOMUT_CIKTI ||--o{ KANIT_PARCASI : kanitlar
+  SOMUT_CIKTI ||--o{ REFERANS_ISTEGI : referanslar
+  KANIT_PARCASI ||--o{ KANIT_METIN_PARCASI : "uzun metin parcalari"
+  YETENEK_KARTI ||--o{ YETENEK_KANITI : "kanitlanan yetenekler"
+  KANIT_PARCASI ||--o{ YETENEK_KANITI : kaynak
+  KULLANICI ||--o{ BAGLI_HESAP : baglar
+  KULLANICI ||--o{ PROFIL_KODU : "dogrulama kodu"
+  KULLANICI ||--o{ INCELEME_ISARETI : "GIRVAK kuyrugu"
+  SOMUT_CIKTI |o--o{ INCELEME_ISARETI : konusu
+
   SOMUT_CIKTI {
     uuid id PK
     uuid yetenek_karti_id FK
     string baslik
-    string aciklama
-    string olculebilir_sonuc
-    string kendi_rolu
+    text aciklama
     string is_turu
-    timestamptz icerik_tarihi
+    text kendi_rolu
+    text olculebilir_sonuc
     date tarih
+    timestamptz icerik_tarihi "NULL: hic degismedi"
+    uuid oturum_id
   }
   GUVEN_SKORU {
     uuid id PK
     uuid somut_cikti_id FK
-    int kanit_orijinalligi "NULL = —"
-    int sonuc_olculebilirligi "NULL = —"
-    int rol_netligi "NULL = —"
-    int ucuncu_taraf_onayi "NULL = yanit yok"
-    string gerekce_metni
+    int kanit_orijinalligi "0-3, NULL = —"
+    int sonuc_olculebilirligi "0-3, NULL = —"
+    int rol_netligi "0-3, NULL = —"
+    int ucuncu_taraf_onayi "0-3, NULL = yanit yok"
+    text gerekce_metni
     string girdi_ozeti
     string kural_surumu
     jsonb kanit_ozeti
@@ -79,167 +232,213 @@ erDiagram
     string tur "link | dosya | gorsel"
     string url
     string normal_url
+    string dosya_anahtari
+    string dosya_ozeti "SHA-256"
+    string phash
+    string platform
     string erisim
     string seviye "A-D"
+    string sahiplik_kaynagi
     jsonb belge
+    text tam_metin
+    text gorsel_metni
+    int curume_sayaci
+    bool gorunur_firmaya
+    text[] isaretler
+  }
+  KANIT_METIN_PARCASI {
+    uuid id PK
+    uuid kanit_parcasi_id FK
+    int sira
+    text metin
+    vector embedding "1024"
   }
   REFERANS_ISTEGI {
     uuid id PK
     uuid somut_cikti_id FK
     string referans_email
-    string token
-    string durum
-    int puan
+    string token "hicbir yanitta donmez"
+    string durum "bekliyor | yanitlandi | yanit_yok | geri_cekildi"
     string iliski
     string iddia_dogru
     string pay_dogru
     string sonuc_dogru
-    string yanit_metni
-    timestamp olusturma_tarihi
-    timestamp yanit_tarihi
-    timestamp gonderim_tarihi
-    timestamp hatirlatma_tarihi
+    int puan "eski 1-5 form"
+    text yanit_metni
     jsonb yanit_isareti
+    timestamptz olusturma_tarihi
+    timestamptz gonderim_tarihi
+    timestamptz hatirlatma_tarihi
+    timestamptz yanit_tarihi
   }
-  KURUM {
+  YETENEK_KANITI {
     uuid id PK
-    string ad
-    string sektor
-    string sehir
-    string iletisim_email
+    uuid kart_id FK
+    string yetenek
+    int en_guclu_puan
+    uuid kaynak_parca_id FK
+    string seviye
+  }
+  BAGLI_HESAP {
+    uuid id PK
+    uuid kullanici_id FK
+    string saglayici
+    string kullanici_adi
+    string dis_kimlik
+    string yontem "oauth | profil_kodu | elle"
+    timestamptz baglanma_tarihi
+  }
+  PROFIL_KODU {
+    uuid id PK
+    uuid kullanici_id FK
+    string platform
+    string kod
+    string profil_adresi
+    timestamptz son_gecerlilik
+  }
+  INCELEME_ISARETI {
+    uuid id PK
     string tur
-    string web_sitesi
-    string calisan_araligi
-    int kurulus_yili
-    text tanitim
-    string yetkili_ad
-    string yetkili_gorev
-    string dogrulama_durumu
-    timestamp dogrulama_tarihi
-  }
-  FIRMA_KARTI {
-    uuid id PK
-    uuid kurum_id FK
-    text ne_yapiyoruz
-    text[] yetkinlikler
-    text onceki_isler
-    text aranan_isbirligi
-    text[] isbirligi_turleri
-    int versiyon
-    vector embedding
-    uuid oturum_id
-    timestamp olusturma_tarihi
-  }
-  IHTIYAC_KARTI {
-    uuid id PK
-    uuid kurum_id FK
-    string problem_tanimi
-    string basari_kriteri
-    jsonb basari_olcutu
-    string kisitlar
-    string sehir_tercihi
-    string musaitlik_tercihi
-    vector embedding
-    timestamp olusturma_tarihi
-    string durum
-    string aranan
-    text[] aranan_firma_turleri
-    string isbirligi_turu
-    string kapanma_nedeni
-    timestamp kapanma_tarihi
-  }
-  ESLESME {
-    uuid id PK
-    uuid yetenek_karti_id FK
-    uuid firma_karti_id FK
-    uuid ihtiyac_karti_id FK
-    float skor
-    string gerekce_metni
-    string uygunluk "uygun | kismen | uygun_degil; NULL = bilinmiyor (genç eşleşmeleri dahil); uygun_degil hiçbir okumada görünmez"
-    string durum
-    timestamp son_aktivite_tarihi
-  }
-  ISBIRLIGI {
-    uuid id PK
-    uuid eslesme_id FK
-    date baslangic_tarihi
-    string durum
-    timestamp genc_plan_onayi
-    timestamp kurum_plan_onayi
-    timestamp tamamlanma_tarihi
-    text durum_ozeti
-    timestamp ozet_tarihi
-    bool plan_onerildi_mi
-    string surec
-    string sonlanma_nedeni
-    timestamp sonlanma_tarihi
-  }
-  MILESTONE {
-    uuid id PK
-    uuid isbirligi_id FK
-    string baslik
-    text aciklama
-    string asama
-    text oneri
-    int sira
-    date hedef_tarih
-    string durum
-    timestamp genc_isaret
-    timestamp kurum_isaret
-    string kanit_linki
-  }
-  CANLILIK_OLAYI {
-    uuid id PK
-    uuid eslesme_id FK
-    timestamp tetiklenme_tarihi
-    string tur
-    string mesaj_metni
+    uuid kullanici_id FK
+    uuid somut_cikti_id FK
+    jsonb ayrinti
+    string durum "acik | kapandi | dogrulanamadi"
+    text girvak_notu
+    timestamptz kapanma_tarihi
   }
 ```
 
+## 3. Gözlem ve sayaçlar (ilişkisiz, kişi taşımaz)
+
+| Tablo | Kolonlar | Ne için |
+|---|---|---|
+| `kanit_gozlemi` | `tarih`, `kaynak`, `platform`, `okuyucu`, `erisim`, `seviye`, `sure_ms`, `girdi_ozeti` | Her link okuması; platform bazında erişim dağılımı |
+| `degerlendirme_gozlemi` | `tarih`, `girdi_ozeti`, `parca_sayisi`, `sure_ms`, `model_cagrisi`, `girdi_token`, `cikti_token` | Modelin çağrıldığı her değerlendirme |
+| `servis_gunlugu` | PK (`servis`, `gun`), `basari_sayisi`, `hata_sayisi`, `son_basari`, `son_hata`, `son_hata_turu` | Dış servis başına günlük sayaç |
+| `servis_kullanimi` | PK (`servis`, `donem`), `sayi` | Ücretli servislerin aylık tavanı |
+
+Gözlem kayıtları 90 gün sonra Canlılık taramasında silinir (`canlilik.md` § 4).
+
 ## Tasarım Kararları
 
-- **Genç akışı alanları (28-29 Eyl, `plans/genc-akisi.md` § 3).**
-  - `HESAP.kvkk_onay_tarihi`.
-  - `KULLANICI`'da kayıt formunun yapısal alanları (yukarıdaki diyagram). Fotoğraf, yaş, cinsiyet, medeni durum, TC kimlik no, adres ve ücret beklentisi bilinçli olarak yok; şema bu alanları 422 ile reddeder.
-  - `YETENEK_KARTI.sertifikalar`, `diller`; `versiyon` her gerçek düzenlemede artar.
-  - `SOMUT_CIKTI.is_turu`, `kendi_rolu`, `olculebilir_sonuc` (eskiden açıklamaya birleştiriliyordu; rubrik ve embedding birleşik okur, `app/core/is_kalemi.py`), `icerik_tarihi` (NULL = hiç değişmedi; değişince güven göstergesi sıfırlanır) ve `oturum_id` ("Yeni iş ekle" sohbeti için, ertelendi).
-  - `REFERANS_ISTEGI.yanit_tarihi`: `icerik_tarihi`'nden önce verilmiş yanıt geçmişte kalır, puana girmez.
-  - `ESLESME` ve `IHTIYAC_KARTI.durum` aşağıda.
+### Kimlik ve profil
 
-- **`HESAP` (Faz B) — kimlik profilden ayrı.** `hesap(id, email UNIQUE, sifre_hash, rol, olusturma_tarihi, kvkk_onay_tarihi, eposta_dogrulandi_tarihi)`; `rol` ∈ `genc | kurum | girvak`. Genç hesabının bir `KULLANICI` profili, kurum hesabının bir `KURUM` profili olur (`hesap_id` UNIQUE FK, 1-1); GİRVAK hesabının profili yok. Şifre argon2id ile hash'lenir, düz şifre saklanmaz. `hesap_id` nullable: Faz B öncesi profiller için hesap uydurulmadı. Gerekçe ve iki seçeneğin karşılaştırması: `kimlik-ve-dongu.md` § 1.
-- **`EPOSTA_DOGRULAMA` (Doğrulama iyileştirmesi, adım 6) — kayıt e-postası bağlantısı.** `eposta_dogrulama(id, hesap_id FK CASCADE, token_ozeti UNIQUE, son_gecerlilik, olusturma_tarihi)`. Token'ın kendisi değil SHA-256 özeti saklanır. Hesap başına tek geçerli bağlantı (yenisi eskileri siler); 24 saat geçerli, doğrulamadan sonra süresi dolana kadar kalır (ikinci açılış yan etkisiz). Doğrulanınca `hesap.eposta_dogrulandi_tarihi` yazılır; gencin ad kilidi bu alandan türetilir, ayrıca saklanmaz (`dogrulama.md` § 6.3).
-- **`BAGLI_HESAP` ve `PROFIL_KODU` (Doğrulama iyileştirmesi, adım 8) — hesap bağlama.** `bagli_hesap(id, kullanici_id FK CASCADE, saglayici, kullanici_adi, dis_kimlik, yontem, baglanma_tarihi)`; `saglayici` plan § 6.1'deki on bir türden biri (CHECK: `github`, `gitlab`, `orcid`, `youtube`, `kaggle`, `behance`, `dribbble`, `medium`, `vimeo`, `soundcloud`, `kisisel_site`), `yontem` ∈ `oauth | profil_kodu | elle` (elle: GİRVAK'ın doğruladığı kod). (`saglayici`, `dis_kimlik`) tekil: bir platform hesabı iki gence bağlanamaz. OAuth token'ı saklanmaz. `profil_kodu(id, kullanici_id FK CASCADE, platform, kod, profil_adresi, son_gecerlilik)`: (`kullanici_id`, `platform`) tekil, yenisi eskisinin yerine geçer, doğrulanınca silinir. Bağlı hesaptaki kanıt seviye B; `kanit_parcasi.sahiplik_kaynagi` (`oauth | profil_kodu | yok`) ve `platform` değerlendirmede yazılır. Profil okunamazsa `inceleme_isareti` (`profil_kodu_elle`; genç başına tek açık) açılır; GİRVAK'ın kararı bildirim türü `hesap_baglama_sonucu` ile gence gider.
-- **`INCELEME_ISARETI` (Doğrulama iyileştirmesi, adım 6) — GİRVAK inceleme kuyruğu.** `inceleme_isareti(id, tur, kullanici_id FK CASCADE, somut_cikti_id FK CASCADE nullable, ayrinti JSONB, durum, girvak_notu, olusturma_tarihi, kapanma_tarihi)`. `tur` plan § 9'daki on türden biri (hepsi CHECK'te baştan tanımlı: `ayni_iddia_cok_hesapta`, `ayni_belge_iki_hesapta`, `gorsel_baskasinda`, `referans_supheli`, `belge_tutarsiz`, `kanit_celisiyor`, `itiraz_siniri`, `ad_degisikligi`, `profil_kodu_elle`, `edevlet_barkodu`; adım 9'da `eposta_barkodu` yazım hatası düzeltildi, migration `a6d2e9f4b7c1`). `durum` ∈ `acik | kapandi | dogrulanamadi`; geçiş `app/agents/inceleme_durumu.py`'de. Aynı (tür, genç, kalem) için tek açık işaret (kısmi tekil indeks, `NULLS NOT DISTINCT`): tekrar eden sinyal açık işaretin `ayrinti`'sına eklenir. İşaret puanı değiştirmez (İ1). Bildirim türleri `inceleme_sonucu`, `ad_degisikligi_sonucu`.
-- **`ISBIRLIGI` ve `MILESTONE` (Faz C) — Takip.** `ISBIRLIGI.durum`: `plan_bekliyor` → `aktif` (iki taraf da mevcut planı onaylayınca; düzenleme iki onayı da sıfırlar) → `tamamlandi` (son adım iki tarafça tamamlanınca, kural; ajanın kararı değil). `MILESTONE.durum`: `bekliyor` → `tamamlandi` (genç ve kurum ayrı ayrı işaretler). **Gecikme saklanmaz**, okuma anında hesaplanır (`hedef_tarih < bugün` ve tamamlanmadı). Onaylanan plan kilitli; `aktif`'te yalnızca `kanit_linki` değişir. `durum_ozeti` Takip Ajanı'nın kesilebilir özeti, hiçbir kural ona bakmaz. **Tamamlanmış pilot** sinyali saklanmaz, `durum = tamamlandi` kayıtlarından hesaplanır ve Eşleştirme'nin doğrulama bonusuna girer (`matching-algorithm.md` § 4). Faz B'de `aktif` açılmış planı olmayan kayıtlar migration'la `plan_bekliyor` oldu. Bkz. `takip.md`.
-- **`BILDIRIM` (Faz B) — uygulama içi bildirim.** `bildirim(id, hesap_id FK CASCADE, tur, metin, eslesme_id FK nullable SET NULL, olusturma_tarihi, okundu_tarihi nullable)`. `tur` ∈ `yeni_oneri | ilgi | kabul | red | referans_yaniti` (Faz B), `referans_yanit_yok` (Doğrulama iyileştirmesi adım 7), `plan_onerildi | plan_duzenlendi | plan_onayi | plan_onaylandi | adim_isaretlendi | adim_tamamlandi | isbirligi_tamamlandi` (Faz C); Canlılık (Faz D) aynı tabloya kendi türleriyle yazar. `olusturma_tarihi` INSERT anında `clock_timestamp()` ile atanır: `now()` işlem başlangıcını döndüğü için aynı işlemde yazılan bildirimler eşit zamanlı kalıp sıra belirsizleşiyordu. Olayla aynı işlemde yazılır; aynı geçişin tekrarı yeni bildirim yazmaz. Metin e-posta taşımaz. Bildirim yalnızca uygulama içidir, e-postayla gönderilmez. Bkz. `kimlik-ve-dongu.md` § 6.
-- **Güven göstergesinde NULL "—" demektir, 0 değil** (Doğrulama iyileştirmesi adım 3; `dogrulama.md` § 1 İ4). Kanıt, Sonuç, Rol NULL: değerlendirilmedi ya da kanıt okunamadı. `ucuncu_taraf_onayi` NULL: güncel referans yanıtı yok; 0 ise referansın olumsuz yanıtı. Eski kayıtlardaki iki tür sahte sıfır (linksiz kaleme referans gelince açılan sıfırlı gösterge, yanıtsız referansın 0'ı) migration `7c4e2a9d1f63` ile NULL'a çevrildi. Eşleştirme bonusu yalnızca dolu başlıklardan hesaplanır (`matching-algorithm.md` § 4).
-- **Kanıt `SOMUT_CIKTI`'da değil, `KANIT_PARCASI`'nda.** Eski `kanit_linki` ve `kanit_turu` kolonları genişlet → geçir → daralt ile kaldırıldı (migration'lar `3d998c849bba`, `b4f8d2e6a1c9`); tür, parçanın platformundan gelir.
-- **`KANIT_PARCASI`**: bir iş kaleminin kanıtları (link, dosya, görsel); bir kalemin birden çok parçası olabilir, her başlıkta en güçlü parça kullanılır (`dogrulama.md` § 2, § 13). `normal_url` aynı sayfanın farklı yazımlarını tek biçime indirir; kalem içinde tekildir. Ayrıntılı alanlar ve `KANIT_METIN_PARCASI`, `YETENEK_KANITI` tabloları planın § 13'ünde. Dosya / görsel (adım 9): `dosya_anahtari` (depoda rastgele anahtar), `dosya_ozeti` (ham dosyanın SHA-256'sı, kalem içinde tekil), `tam_metin` (belgede yazan metin, maskelenmiş; alıntı kaynağı), `gorsel_metni` (model okuduysa), `gorunur_firmaya`; `belge` JSONB: `dosya` (ad, tür, boyut, tarama, sayfa, okuyan), `betim`, ön okuma (`exif` konumsuz, `kodlar`, `rozet`, `c2pa`) ve `capalar` (çapa başına gerçekler: `adres`, `imza`, `rozet`, `edevlet`). Dosyanın seviyesi saklanmaz, okuma anında çapalardan ve gencin kimlik durumundan hesaplanır (`agents/dogrulama/capalar.py`); `seviye` kolonu son değerlendirmenin okunuşudur. `phash` (adım 11): görselin algısal özeti (64 bit, 16 onaltılık karakter; temizlenmiş piksellerden, `core/gorsel_ozeti.py`), PDF'te boş; başka hesapta aynı `normal_url`, aynı `dosya_ozeti` ya da bit farkı ≤ 6 olan `phash` `ayni_iddia_cok_hesapta` işaretidir (iki parça da OAuth katkıcı listesiyle doğrulandıysa takım projesi, işaret değil). `belge.kaynak_aramasi` (adım 11, görselde ve arama yapıldıysa): `tarih`, `tam_eslesen_sayfa`, `baskasinda` (adres, başlık).
-- **`SERVIS_KULLANIMI` (Doğrulama iyileştirmesi, adım 11) — ücretli dış servislerin aylık sayacı.** `servis_kullanimi(servis, donem, sayi)`, birincil anahtar (`servis`, `donem`); `donem` `YYYY-AA` (UTC). Çağrıdan önce tek koşullu sorguyla artırılır (`INSERT … ON CONFLICT DO UPDATE … WHERE sayi < tavan`); tavan dolunca çağrı yapılmaz. Bugün yalnızca `gorsel_arayici` (Cloud Vision, `GORSEL_ARAMA_AYLIK_TAVAN`). Migration `b9e4c2a7d1f3`.
-- **Link çürümesi (Doğrulama iyileştirmesi, adım 12).** Yeni tablo yok. `kanit_parcasi.curume_sayaci` üst üste "silinmiş ya da gizlenmiş" yoklama sayısıdır (`bulunamadi` ve `giris_gerekli` sayılır; `engellendi` ve `hata` sayılmaz, `acik` sıfırlar). Link parçasının `belge` JSONB'sinde `yoklama_tarihi` (son yoklama) ve sayaç 3'e varınca `curume: {tarih, onceki_puanlar: {kanit, sonuc, rol}}` (puan geçmişi) bulunur; toparlanınca `curume` silinir. Çürümüş (sayaç ≥ 3) link değerlendirmede okunmaz: Kanıt "—". Bildirim türü `kanit_curudu`. Yoklama yalnızca eskiden açık okunmuş (`erisim = acik`) ya da sayacı işleyen linke yapılır.
-- **`KANIT_GOZLEMI`, `DEGERLENDIRME_GOZLEMI`, `SERVIS_GUNLUGU` (Doğrulama iyileştirmesi, adım 12) — kalıcı gözlem.** Hiçbiri kişi, hesap ya da adres taşımaz; 90 gün sonra Canlılık taramasında silinir. `kanit_gozlemi(id, tarih, kaynak, platform, okuyucu, erisim, seviye, sure_ms, girdi_ozeti)`: her link okuması; `kaynak` ∈ `degerlendirme | yoklama`, `okuyucu` ∈ `dogrudan | yedek | uzak`, `erisim` `ErisimDurumu` değerleri; platform bazında erişim dağılımı buradan çıkar (dosya ve görseller yüklenirken okunduğu için yazılmaz). `degerlendirme_gozlemi(id, tarih, girdi_ozeti, parca_sayisi, sure_ms, model_cagrisi, girdi_token, cikti_token)`: modelin çağrıldığı her değerlendirme (önbellekten dönen yazılmaz). `servis_gunlugu(servis, gun, basari_sayisi, hata_sayisi, son_basari, son_hata, son_hata_turu)`, birincil anahtar (`servis`, `gun`): dış servis başına günlük sayaç; `gozlemli` sarmalayıcısı yazar, hata türü sınıf adıdır (mesaj değil). Migration `c5d8f2a1b7e3`.
-- **`GUVEN_SKORU` ve `REFERANS_ISTEGI`, `SOMUT_CIKTI`'dan ayrı tablolar.** Bir çıktının birden fazla referans isteği olabilir; güven skoru zamanla güncellenebilir olmalı (itiraz sonrası yeniden hesaplama).
-- **`ESLESME.durum` ve ilgi alanları (genç akışı, `plans/genc-akisi.md` § 4).** Değerler: `onerildi`, `genc_ilgilendi`, `ilgileniliyor`, `kabul_edildi`, `reddedildi`, `kapandi`; kural tek yerde (`app/agents/eslesme_durumu.py`). Karar `durum`'da; `baslatan` (`genc | kurum`), `genc_ilgi_tarihi`, `genc_iletisim_onayi_tarihi`, `kurum_ilgi_tarihi` yalnızca "kim, ne zaman" bilgisi. Tek alan seçildi çünkü pipeline, Canlılık, GİRVAK sayıları ve sahiplik `durum`'u okuyor. Karşılıklı ilgi `kabul_edildi`'dir. `IHTIYAC_KARTI.durum` (`acik | kapandi`): kapalı ihtiyaç eşleştirmeye girmez, bekleyen kayıtlar `kapandi` olur. `IHTIYAC_KARTI.aranan` (`genc | firma`, varsayılan `genc`): ilanın hangi kapıdan açıldığı; aynı tablo, aynı pipeline ve ilgi kuralları, fark aday kaynağında. Ortak ilanında `aranan_firma_turleri` (boş = hepsi) ve `isbirligi_turu`; çalışma modeli ve müsaitlik yalnızca genç ilanında (`plans/firma-akisi.md` § 0 kararlar 4-5). Firma kapatırken neden seçer (`kapanma_nedeni`: `platformda_bulundu | baska_yoldan_bulundu | vazgecildi | hatali_girildi`; sonuncusu giriş hatasıdır, GİRVAK sayılarında ayrı gösterilir, `kapanma_tarihi`); neden yalnızca GİRVAK sayılarında görünür, kapanan ilan tekrar açılmaz (`plans/firma-akisi.md` § 7).
-- **`KURUM` kayıt alanları (firma akışı, `plans/firma-akisi.md` § 2).** `tur` (`girisim | kobi | kurumsal`), `web_sitesi`, `calisan_araligi` (`1-10 | 11-50 | 51-250 | 250+`), `kurulus_yili`, `tanitim` (≤300), `yetkili_ad`, `yetkili_gorev`; hepsi nullable. Zorunluluk (tür, sektör, şehir) kayıt şemasında; eski hesaplarda boş olabilir, panel engellemeyen bir bantla ister. Vergi numarası, adres ve telefon bilinçli olarak toplanmaz. KVKK onayı gençteki gibi `hesap.kvkk_onay_tarihi`'nde. Kurallar `app/core/firma_profili.py`. **Doğrulama** (§ 6): `dogrulama_durumu` (`bekliyor | dogrulandi | simdilik_degil`, varsayılan `bekliyor`) ve GİRVAK'ın karar anı `dogrulama_tarihi`. Alan adı ipucu saklanmaz, okuma anında hesaplanır (`app/core/firma_dogrulama.py`, ağ isteği yok). Web sitesinin alan adı değişince `bekliyor`a döner. Dışarıya yalnızca `dogrulandi: bool` açılır; "şimdilik değil" firmaya "bekliyor"dan ayırt edilmez.
-- **`FIRMA_KARTI` (firma akışı, `plans/firma-akisi.md` § 0 karar 10).** Firma başına bir kart (`kurum_id` UNIQUE), isteğe bağlı: yalnızca genç arayan firmanın karta ihtiyacı yok, kartı olmayan firma ortak olarak önerilmez. Yetenek kartı genişletilmedi; onun alanları gence özel. Paylaşılan kısım eşleşme, pipeline, ilgi kuralları ve iş birliği. Embedding firmanın **ne yaptığını** temsil eder (ne yapıyoruz, yetkinlikler, önceki işler, sektör); aradığı ortak ve iş birliği türü benzerlik metnine girmez. `versiyon` hazırlamanın tekrar korumasıdır; `oturum_id` UNIQUE, aynı sohbetin ikinci onayı mevcut kartı döner. Kurallar `app/core/firma_karti.py`.
-- **`ESLESME` adayı: yetenek kartı ya da firma kartı** (firma akışı, `plans/firma-akisi.md` § 0 karar 11). `yetenek_karti_id` ve `firma_karti_id` nullable; CHECK `num_nonnulls(...) = 1` tam birini zorunlu kılar. İki UNIQUE: `(ihtiyac_karti_id, yetenek_karti_id)` ve `(ihtiyac_karti_id, firma_karti_id)`; pipeline'ın ON CONFLICT'i adayın türüne göre birine dayanır. Hangisinin dolacağını ilanın `aranan`'ı belirler. Durum makinesindeki `genc` rolü "aday tarafı" anlamındadır (karar 12): firma–firma'da aday firma bu taraftadır, kolon adları (`genc_ilgi_tarihi`, `baslatan='genc'`) değişmedi. Firma–firma'da iletişim `Iletisim.aday_firma_email`'de.
-- **`ESLESME` → `ISBIRLIGI` ilişkisi isteğe bağlı (0 veya 1).** Her eşleşme iş birliğine dönüşmez — kurum "ilgileniyorum" der, iş birliği ancak genç kabul edince (`kabul_edildi`) açılır (kimlik-ve-dongu.md § 5).
-- **`CANLILIK_OLAYI` doğrudan `ESLESME`'ye bağlı, `ISBIRLIGI`'na değil.** Pasiflik takibi bir iş birliği resmen başlamadan da çalışabilmeli — örn. "eşleşme önerildi ama kimse tıklamadı" durumu.
-- **`kanit_bekleyen` (YETENEK_KARTI) ve `durum` (REFERANS_ISTEGI, ESLESME, ISBIRLIGI) alanları state machine mantığıyla çalışıyor.** Örn. `REFERANS_ISTEGI.durum`: `bekliyor` → `yanitlandi`, `yanit_yok` (zaman aşımı, ceza değil nötr durum) ya da `geri_cekildi` (genç; ör. yanlış adres; kanıt sayılmaz). `yanitlandi`, referansın yanıt verdiğini söyler — olumlu bulduğunu değil; olumsuz bir referans da bu durumda olur, değerlendirme `GUVEN_SKORU.ucuncu_taraf_onayi` puanında taşınır.
-- **`embedding` (YETENEK_KARTI, IHTIYAC_KARTI), pgvector kolonu.** Kart onaylandığında/güncellendiğinde yeniden hesaplanır. **Sağlayıcı: Voyage AI (voyage-4, 1024 boyut)** — Anthropic'in Claude ile kullanım için resmi önerisi; ilk 200M token ücretsiz. `EMBEDDING_DIM = 1024` olarak sabitlenir (bkz. `matching-algorithm.md`).
-- **`basari_olcutu` (IHTIYAC_KARTI), JSONB, nullable.** Başarı kriterinin parçaları: `metrik`, `mevcut_deger`, `hedef_deger`, `sure` (metin, firmanın ifadesiyle) ve `olcum_bilinmiyor` (firma ölçmediğini/bilmediğini söyledi). Model çıkarır, kural karar verir (`app/core/basari_olcutu.py`): "ölçülebilir mi" metne bakan bir düzenli ifadeyle değil hedef değerin varlığıyla anlaşılır. Hedef yoksa kart **"ölçüm yöntemi belirlenecek"** işaretini alır; işaret saklanmaz, yanıtta `olcum_belirlenecek` olarak hesaplanır. Bu alandan önceki kartlarda NULL ve işaretsiz (`b7e3a1c9d2f5`). `basari_kriteri` metni yerinde: gösterim ve embedding onu kullanır.
-- **`sehir_tercihi` ve `musaitlik_tercihi` (IHTIYAC_KARTI), nullable.** Eşleştirme'nin sert filtre adımı SQL üzerinden çalışabilsin diye — serbest metin `kisitlar` alanı bu amaçla sorgulanamaz. `IHTIYAC_KARTI.sehir_tercihi` ile `KURUM.sehir` farklı şeyler: ilki gencin nerede olması istendiği (filtre), ikincisi kurumun kendi yeri (filtre değil). Arayüzde "aranan şehir" ve "kurumun şehri" olarak ayrı ayrı soruluyor; tercih boşsa kurumun şehri varsayılan geliyor.
-- **`calisma_modelleri` (KULLANICI, çoklu) ve `calisma_modeli` (IHTIYAC_KARTI, tekli).** Değerler: `is_yerinde | hibrit | uzaktan`. Konumdan ayrı bir alan — önce şehir listesine "Uzaktan / fark etmez" diye bir seçenek konmuştu, ama bu "İstanbul'da ama hibrit" gibi çok sık bir durumu ifade edilemez kılıyordu; LinkedIn ve Kariyer.net de ikisini ayrı tutuyor. **Müsaitlikle karıştırma:** müsaitlik çalışma tipidir (tam/yarı zamanlı, proje bazlı, staj), bu ise çalışma yeri. Eşleştirme filtresi: ihtiyaç `uzaktan` ise şehir filtresi uygulanmaz ve gencin `uzaktan`ı kabul etmesi yeter; `is_yerinde`/`hibrit` ise hem şehir eşleşir hem genç o modeli kabul etmiş olmalıdır. Modelini hiç belirtmemiş kart elenmez (bilinmeyeni "hayır" saymak sessiz eleme olurdu). Eski `sehir = 'uzaktan'` kayıtları `0e3cd1cd3fdf` migration'ıyla yeni alana taşındı.
-- **Müsaitlik kod olarak saklanıyor** (`KULLANICI.musaitlikler`, `IHTIYAC_KARTI.musaitlik_tercihi`; `app/core/musaitlik.py`): `tam_zamanli | yarim_zamanli | proje_bazli | staj`. Eşleştirme filtresi düz eşitlik yaptığı için Tanımlama Ajanı'nın serbest metni ("tam zamanlı") tüm adayları sessizce eliyordu — şehirdeki hatanın aynısı. Ajanın çıkarım şeması `Literal`; istemciden gelen onay katı okunur (tanınmayan değer 422), checkpoint'ten okunan eski taslak hoşgörülü okunur (tanınmayan değer NULL). Eski satırlar `7c3a9e51b8d4` migration'ıyla koda çevrildi, tanınmayan NULL oldu (filtre uygulanmaz, eleme olmaz). **Gencin tarafı çoklu seçim** (`musaitlikler text[]`, `76b95c6a1658`; tekil değer tek elemanlı listeye taşındı): ihtiyaç tek tercih taşır, filtre "tercih gencin listesinde mi" diye sorar; liste boşsa genç elenmez (çalışma modelindeki kural; eskiden müsaitliği boş genç, tercihi olan ihtiyaçta eleniyordu). Kural `musaitlik_uyar_mi`.
-- **Şehir adları kanonik yazımda saklanıyor** (`app/core/sehir.py`, 81 il + `uzaktan`). Sebep: filtre düz string karşılaştırması ve Türkçe'de `'istanbul' = 'İstanbul'` false — `lower()` ve `ILIKE` de çözmüyor (Postgres bu collation'da İ'yi küçültmüyor, Python'ın `lower()`'ı ise i + U+0307 üretiyor). Kayıt anında `sehir_kanonik()` uygulanıyor, eski satırlar `a1c4f7e2b903` migration'ıyla düzeltildi. Liste yalnızca il adlarından oluşur; "uzaktan" bir şehir değil, çalışma modelidir.
-- **`sektor_ilgi_alani`, `araclar_teknolojiler` (YETENEK_KARTI), `aciklama` (SOMUT_CIKTI), `token` (REFERANS_ISTEGI).** Faz 1'de backend iskeletini yazarken Claude Code'un dokümanlar arası çapraz kontrolde yakaladığı eksiklerdi — diğer dosyalar (`agent-specs.md`, `matching-algorithm.md`, `api-contracts.md`) bu alanlara referans veriyordu ama ER diyagramında yoktu. Buradan eklendi.
-- **`email` (KULLANICI) ve `iletisim_email` (KURUM), UNIQUE ve normalize (`lower(trim)`).** Onay anında kayıt bu alanla tek bir `INSERT … ON CONFLICT DO UPDATE` ile yazılıyor: yarışa dayanıklı, kayıtlı kişinin yeni verdiği bilgi güncelleniyor. Boş gelen alan kayıtlı değeri silmiyor (skalerlerde `COALESCE`, `calisma_modelleri` boşsa eskisi kalıyor) — taslak birleştirmedeki kuralın aynısı. Eski mükerrerler `cb9a542b6431` migration'ıyla birleştirildi (kartlar en küçük `id`'li kayda taşındı). Bu "e-postayla bul" mantığı Faz B'de hesaba bağlanınca kalkacak.
-- **`iletisim_email` (KURUM).** `KULLANICI.email`'in kurum karşılığı — Keşif Ajanı'nda kart onaylanırken email üzerinden `Kullanici` bulunup/oluşturuluyordu, Tanımlama Ajanı'nda `Kurum` için aynı mekanizma gerekiyor. Tanımlama Ajanı'nın backend'i yazılırken fark edildi.
-- **`puan` (REFERANS_ISTEGI) ve çok referanslı hesap.** Referansın 1-5 puanı kaydediliyor, çünkü `GUVEN_SKORU.ucuncu_taraf_onayi` tek bir yanıttan değil, **yanıtlamış tüm referansların ortalamasından** hesaplanıyor (1-5 → 0-3 çevrimi sonrası, 0.5 yukarı yuvarlanarak). En yüksek puanı almak "olumlu diyen birini bulana kadar referans sor" davranışını ödüllendirirdi; ortalama, zayıf bir referansın puanı aşağı çekmesine izin verir. Yuvarlama aşağı değil normal: aşağı yuvarlamada iki güçlü referans (5+4 → 2.5 → 2) tek bir 5'ten (3) düşük puan alıyordu — referans eklemek iddiayı zayıflatmamalı. Puan saklanmadan bu hesap yapılamıyordu — son yanıt öncekinin üzerine yazıyordu. Doğrulama Ajanı denenirken fark edildi.
-- **4 soruluk referans formu (REFERANS_ISTEGI, Doğrulama iyileştirmesi adım 7; migration `e4a9c7b2d5f1`).** `iliski` ∈ `yonetici | takim_arkadasi | ogretmen_danisman | musteri | diger`; `iddia_dogru`, `pay_dogru`, `sonuc_dogru` ∈ `evet | kismen | hayir | bilmiyorum` (kalemde yazılmamış pay / sonuç sorulmaz, NULL). Değer kümeleri ve `durum` CHECK'li. Referans başlığı: evet 3, kısmen 1, hayır 0, bilmiyorum ortalamaya girmez, kişi başına ortalama; eski satırların `puan`'ı (1-5) eşlemeyle okunmaya devam eder. `gonderim_tarihi` e-postanın kuyruğa verildiği an (NULL: adım 7'den önce açılmış, link gence verilmişti; bunlara hatırlatma gitmez), `hatirlatma_tarihi` 3. gündeki tek hatırlatma. `yanit_isareti` (adım 11, `referans_supheli`): `istek_izi` (isteği açan gencin IP ve tarayıcı özeti), `form_acilis` (formun ilk açılışı), yanıtta `yanit_izi`, `form_suresi_sn`, `sinyaller`. Özetler tuzlu HMAC'tir (ham IP ve tarayıcı bilgisi saklanmaz; yerel / özel ağ adresinin özeti alınmaz) ve 90 gün sonra Canlılık taramasında silinir, sinyaller kalır. Yeni tablo yok: gencin izleri bütün referans isteklerindeki `istek_izi`'lerdir. Güç işareti (kurumsal / eğitim e-postası) saklanmaz, adresten okuma anında hesaplanır. Yanıt `UPDATE … WHERE durum = 'bekliyor' RETURNING id` ile yazılır. Token hiçbir API yanıtında yok. Bildirim türü `referans_yanit_yok` (gence, nötr).
-- **`olusturma_tarihi` (REFERANS_ISTEGI).** Zaman aşımı dalı (`bekliyor` → `yanit_yok`, 5-7 gün) bir tarih olmadan hesaplanamıyordu. Ayrı bir zamanlayıcı kurulmadığı için bu geçiş okuma anında hesaplanıyor; alan onun dayanağı. Doğrulama Ajanı yazılırken eklendi.
-- **`kullanici_id` (YETENEK_KARTI) UNIQUE: gencin tek kartı** (1 Eki, Keşif incelemesi madde 7). Genç yeni kart açmaz; kartını düzenler ve çalışma ekleyerek güçlendirir, böylece aynı ilanın önerilerinde iki kez çıkmaz. Kural veritabanında ki eşzamanlı iki onay da ikinci kartı açamasın; Keşif kartı olan gence 409 döner, `/me` tek `yetenek_karti` taşır. Migration (`a3d7e1c9b5f2`) tekrar eden kart varsa durur, veri silmez.
-- **`oturum_id` (YETENEK_KARTI, IHTIYAC_KARTI), nullable + UNIQUE.** Kartı doğuran sohbetin kimliği. Onay tekrarlanabilir olsun diye: aynı sohbet ikinci kez onaylanınca (çift tıklama, embedding hatası sonrası yeniden deneme) yeni kart açılmaz, mevcut kart döner. Eşzamanlı iki onayda ikincisi UNIQUE kısıta takılır ve mevcut kartı alır. Faz A'da inceleme bulgusu olarak eklendi.
-- **`(ihtiyac_karti_id, yetenek_karti_id)` (ESLESME), UNIQUE.** Bir çift için tek eşleşme. Arka plan eşleştirmesi ile öneri okuması aynı anda çalışınca mükerrer satır açılıyordu; pipeline artık ihtiyaç kartı başına advisory lock ile sıraya giriyor, yeni satırlar `ON CONFLICT DO NOTHING` ile yazılıyor.
-- **`olusturma_tarihi` (IHTIYAC_KARTI).** Eşleştirme Ajanı "kurumun en son ihtiyaç kartı"nı bulmak için `id` sırasına bakıyordu — ama `id` rastgele üretilen bir UUID (v4), zaman bilgisi taşımıyor, sıralaması kronolojik değil. Eşleştirme Ajanı yazılırken fark edildi, gerçek bir tarih alanıyla düzeltiliyor.
+- **Kimlik profilden ayrı.** `hesap` giriş bilgisini ve rolü taşır; genç hesabının `kullanici`,
+  firma hesabının `kurum` profili olur (`hesap_id` UNIQUE, 1-1); GİRVAK'ın profili yok. Şifre
+  argon2id ile hash'lenir. `hesap_id` boş bırakılabilir: kimlik tablosundan önceki profiller için
+  hesap uydurulmadı, hesapsız profilin kartı eşleştirmeye girmez. Gerekçe: `kimlik-ve-dongu.md` § 1.
+- **Toplanmayan kişisel veri.** Fotoğraf, yaş, cinsiyet, medeni durum, TC kimlik no, adres ve ücret
+  beklentisi gençten; vergi numarası, adres ve telefon firmadan bilinçli olarak alınmaz. Şema bu
+  alanları reddeder.
+- **E-posta doğrulama:** token'ın kendisi değil SHA-256 özeti saklanır; hesap başına tek geçerli
+  bağlantı, 24 saat. Doğrulanınca `hesap.eposta_dogrulandi_tarihi` yazılır; gencin ad kilidi bu
+  alandan türetilir, ayrıca saklanmaz.
+- **`kullanici.email` ve `kurum.iletisim_email`** iletişim bilgisidir; normalize (`lower(trim)`) ve
+  tekil. Kimlik onlarla bulunmaz.
+- **Firma doğrulaması:** `dogrulama_durumu` ve GİRVAK'ın karar anı. Alan adı ipucu saklanmaz, okuma
+  anında hesaplanır (`app/core/firma_dogrulama.py`); web sitesinin alan adı değişince `bekliyor`a
+  döner. Dışarıya yalnızca `dogrulandi: bool` açılır (`kararlar.md` F6).
+
+### Kartlar
+
+- **Gencin tek kartı** (`yetenek_karti.kullanici_id` UNIQUE, `kararlar.md` G17): kural veritabanında,
+  eşzamanlı iki onay da ikinci kartı açamaz.
+- **Firma kartı ayrı tablo** (`kararlar.md` F10): firma başına bir, isteğe bağlı. Embedding firmanın
+  ne yaptığını temsil eder (ne yapıyoruz, yetkinlikler, önceki işler, sektör); aradığı ortak benzerlik
+  metnine girmez.
+- **`oturum_id` UNIQUE:** kartı doğuran sohbetin kimliği. Aynı sohbetin ikinci onayı (çift tıklama,
+  embedding hatası sonrası yeniden deneme) yeni kart açmaz, mevcut kartı döner.
+- **`versiyon`** her gerçek düzenlemede artar; arka plan işlerinin tekrar korumasıdır.
+- **`embedding`** (1024 boyut, Voyage) kart onaylanınca ve düzenlenince yeniden hesaplanır;
+  hesaplanamazsa kart yine kaydedilir, embedding'i boş kart eşleştirmeye girmez.
+- **İhtiyaç kartının kapısı** (`aranan`: `genc | firma`, `kararlar.md` F4): aynı tablo, aynı pipeline;
+  fark aday kaynağında. Ortak ilanında `aranan_firma_turleri` (boş = hepsi) ve `isbirligi_turu`;
+  çalışma modeli ve müsaitlik yalnızca genç ilanında.
+- **İhtiyaç kapanır, tekrar açılmaz** (`durum`, `kapanma_nedeni`, `kapanma_tarihi`; `kararlar.md` F7).
+  `hatali_girildi` giriş hatasıdır, GİRVAK sayılarında ayrı gösterilir.
+- **`basari_olcutu`** (JSONB): başarı kriterinin parçaları (`metrik`, `mevcut_deger`, `hedef_deger`,
+  `sure`, `olcum_bilinmiyor`). Model çıkarır, kural karar verir (`app/core/basari_olcutu.py`): hedef
+  değer yoksa ilan "ölçüm yöntemi belirlenecek" işaretini alır; işaret saklanmaz, yanıtta
+  hesaplanır.
+- **`olusturma_tarihi`** gerçek bir tarih alanı: UUID v4 kronolojik değil, "en son kart" ona göre
+  bulunur.
+
+### Eşleştirme filtreleri
+
+- **Şehir kanonik yazımda** (`app/core/sehir.py`, 81 il). Filtre düz karşılaştırma ve Türkçe'de
+  `'istanbul' = 'İstanbul'` yanlış; `lower()` ve `ILIKE` de çözmüyor (Postgres bu collation'da İ'yi
+  küçültmüyor, Python'ın `lower()`'ı i + U+0307 üretiyor). Kayıt anında `sehir_kanonik()` uygulanır.
+- **Çalışma modeli konumdan ayrı** (`is_yerinde | hibrit | uzaktan`; gençte çoklu, ilanda tekli).
+  İlan `uzaktan` ise şehir filtresi uygulanmaz; değilse hem şehir eşleşir hem genç o modeli kabul
+  etmiş olmalı. "İstanbul'da ama hibrit" gibi sık bir durum şehir listesine "uzaktan" seçeneği
+  koyarak ifade edilemiyordu.
+- **Müsaitlik kod olarak** (`tam_zamanli | yarim_zamanli | proje_bazli | staj`, `app/core/musaitlik.py`);
+  gençte çoklu seçim. Serbest metin ("tam zamanlı") düz eşitlik filtresinde bütün adayları sessizce
+  eliyordu. Çıkarım şeması `Literal`; istemciden gelen onay katı okunur (422), checkpoint'ten okunan
+  eski taslak hoşgörülü.
+- **Bilinmeyen elenme nedeni değildir:** çalışma modeli ya da müsaitlik listesi boş olan genç elenmez;
+  bilinmeyeni "hayır" saymak sessiz eleme olurdu.
+- **`sehir_tercihi`** (ilanda, gencin nerede olması istendiği; filtre) ile **`kurum.sehir`** (firmanın
+  yeri; filtre değil) farklı şeylerdir; tercih boşsa firmanın şehri varsayılan gelir.
+
+### Eşleşme
+
+- **Durum tek alanda** (`onerildi`, `genc_ilgilendi`, `ilgileniliyor`, `kabul_edildi`, `reddedildi`,
+  `kapandi`); kural `app/agents/eslesme_durumu.py`'de. Pipeline, Canlılık, GİRVAK sayıları ve sahiplik
+  aynı alanı okur. `baslatan` ve tarih kolonları yalnızca "kim, ne zaman" bilgisidir.
+- **Aday yetenek kartı ya da firma kartıdır, tam biri dolu** (CHECK `num_nonnulls(...) = 1`). İki
+  UNIQUE: (`ihtiyac_karti_id`, `yetenek_karti_id`) ve (`ihtiyac_karti_id`, `firma_karti_id`). Bir çift
+  için tek eşleşme: pipeline ihtiyaç başına danışma kilidiyle sıraya girer, yeni satırları
+  `ON CONFLICT DO NOTHING` ile yazar.
+- **`genc_*` kolonları "aday tarafı" demektir** (`kararlar.md` F12): firma–firma'da aday firma bu
+  taraftadır.
+- **`uygunluk`:** `uygun_degil` saklanır ama hiçbir okumada görünmez (`gorunur_kosulu()`); NULL
+  "bilinmiyor" demektir, öneri listelenir (`matching-algorithm.md` § 8).
+- **İş birliği isteğe bağlıdır (0 ya da 1)** ve yalnızca `kabul_edildi` ile açılır.
+- **Canlılık olayı eşleşmeye bağlıdır**, iş birliğine değil: hareketsizlik iş birliği başlamadan da
+  izlenebilmeli ("önerildi ama kimse bakmadı").
+
+### Takip
+
+- **Gecikme ve tamamlanmış iş birliği sinyali saklanmaz**, okuma anında hesaplanır; tek doğruluk
+  kaynağı `isbirligi.durum` ve `milestone.hedef_tarih`. Onaylanan plan kilitli; `aktif`'te yalnızca
+  `kanit_linki` değişir. `durum_ozeti` kesilebilir: hiçbir kural ona bakmaz (`takip.md`).
+
+### Bildirim
+
+- **Olayla aynı işlemde yazılır**; aynı geçişin tekrarı yeni bildirim yazmaz; metin e-posta taşımaz.
+  `olusturma_tarihi` INSERT anında `clock_timestamp()`: `now()` işlem başlangıcını döndüğü için aynı
+  işlemdeki bildirimlerin sırası belirsizleşiyordu.
+
+### Doğrulama
+
+- **Güven göstergesinde NULL "—" demektir, 0 değil** (`dogrulama.md` § 1, İ4). Kanıt, Sonuç, Rol NULL:
+  değerlendirilmedi ya da kanıt okunamadı. `ucuncu_taraf_onayi` NULL: güncel referans yanıtı yok; 0
+  referansın olumsuz yanıtıdır. Eşleştirme bonusu yalnızca dolu başlıklardan hesaplanır.
+- **Kanıt çalışmada değil, `kanit_parcasi`'nda:** bir çalışmanın birden çok parçası (link, dosya,
+  görsel) olabilir, her başlıkta en güçlü parça kullanılır. `normal_url` aynı sayfanın farklı
+  yazımlarını tek biçime indirir, kalem içinde tekil; `dosya_ozeti` de öyle. Dosyanın seviyesi
+  saklanmaz, okuma anında çapalardan ve gencin kimlik durumundan hesaplanır; `seviye` son
+  değerlendirmenin okunuşudur. `phash` görselin algısal özetidir; başka hesapta aynı adres, aynı dosya
+  ya da çok yakın `phash` `ayni_iddia_cok_hesapta` işaretidir.
+- **`icerik_tarihi`:** çalışmanın iddiası değişince yazılır; bu tarihten önce verilmiş referans yanıtı
+  geçmişte kalır, puana girmez (`kararlar.md` G8).
+- **Referans puanı ortalamadır:** `ucuncu_taraf_onayi`, güncel yanıt veren bütün referansların
+  ortalamasıdır (evet 3, kısmen 1, hayır 0; "bilmiyorum" girmez; 0.5 yukarı yuvarlanır). En yüksek
+  puanı almak "olumlu diyen birini bulana kadar sor" davranışını ödüllendirirdi; aşağı yuvarlamada iki
+  güçlü referans tek bir referanstan düşük puan alıyordu. Eski 1-5 yanıtlar eşlemeyle okunur.
+- **Referans formu:** `iliski` ve üç soru (`iddia_dogru`, `pay_dogru`, `sonuc_dogru`), değer kümeleri ve
+  `durum` CHECK'li. Yanıt `UPDATE … WHERE durum = 'bekliyor' RETURNING id` ile yazılır (iki sekmeden
+  yalnızca biri). `olusturma_tarihi` zaman aşımının (7 gün, okuma anında) dayanağıdır. Token hiçbir
+  API yanıtında yoktur.
+- **`yanit_isareti`:** `referans_supheli` sinyalleri; IP ve tarayıcı bilgisi yalnızca tuzlu HMAC özeti
+  olarak, 90 gün tutulur, sinyaller kalır.
+- **Hesap bağlama:** (`saglayici`, `dis_kimlik`) tekil: bir platform hesabı iki gence bağlanamaz.
+  OAuth token'ı saklanmaz. Profil kodu (`kullanici_id`, `platform`) başına tektir, doğrulanınca silinir.
+- **İnceleme işareti:** aynı (tür, genç, çalışma) için tek açık işaret (kısmi tekil indeks,
+  `NULLS NOT DISTINCT`); tekrar eden sinyal açık işaretin `ayrinti`'sına eklenir. İşaret puanı
+  değiştirmez (İ1).
+- **Link çürümesi** yeni tablo istemez: `kanit_parcasi.curume_sayaci` ve `belge` JSONB'sinde yoklama
+  tarihi ile puan geçmişi (`dogrulama.md` § 10.4).
+- **Servis kullanımı** çağrıdan önce tek koşullu sorguyla artırılır (`INSERT … ON CONFLICT DO UPDATE
+  … WHERE sayi < tavan`); tavan dolunca çağrı yapılmaz.
