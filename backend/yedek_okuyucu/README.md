@@ -7,8 +7,8 @@ siteler (Behance, Dribbble). İşlenmiş HTML'i ve istenirse ekran görüntüsü
 `docs/plans/dogrulama-iyilestirme.md` § 5.1, § 5.5.
 
 Backend'den ayrı bir uygulamadır. Chromium ağır, kaynak tüketimi öngörülemez ve
-kullanıcının verdiği adresi açar; bu yüzden ayrı bir süreçte, yayında Railway'de ayrı bir
-serviste çalışır. Backend ona `YEDEK_OKUYUCU_ADRESI` üzerinden bağlanır.
+kullanıcının verdiği adresi açar; bu yüzden ayrı bir süreçte çalışır. Backend ona
+`YEDEK_OKUYUCU_ADRESI` üzerinden bağlanır; servis kapalıysa okuma onsuz biter.
 
 ## Uç noktalar
 
@@ -36,7 +36,7 @@ alınacağına backend karar verir; servis yalnızca uygular.
   da tarayıcının TLS kimliğini kaybettirip bot engelini geri getiriyor. Vekilde HTTPS
   tarayıcıda uçtan uca kalır (CONNECT tüneli).
 - **Anahtar:** `YEDEK_OKUYUCU_ANAHTARI` doluysa istek `Authorization: Bearer <anahtar>`
-  ister. Yayında doldurulmalı; servis Railway'in özel ağında kalmalı (genel alan adı yok).
+  ister. Servis yerel makine dışına açılacaksa doldurulmalı.
 - Her istek ayrı tarayıcı bağlamında açılır: çerez ve depolama paylaşılmaz. Service
   worker ve indirme kapalı.
 
@@ -50,15 +50,5 @@ python -m playwright install chromium
 python -m yedek_okuyucu          # http://127.0.0.1:8100
 ```
 
-Ortam değişkenleri: `PORT` (8100), `YEDEK_OKUYUCU_HOST` (127.0.0.1; konteynerde 0.0.0.0),
+Ortam değişkenleri: `PORT` (8100), `YEDEK_OKUYUCU_HOST` (127.0.0.1),
 `YEDEK_OKUYUCU_ANAHTARI`, `YEDEK_OKUYUCU_ESZAMANLI` (aynı anda açılan sayfa, 2).
-
-## Railway
-
-- Yeni servis, aynı repo. Kök klasör `backend`, Dockerfile yolu `yedek_okuyucu/Dockerfile`.
-- Değişkenler: `YEDEK_OKUYUCU_ANAHTARI` (backend'dekiyle aynı). `PORT`'u Railway verir.
-- Genel alan adı açılmaz. Backend'de `YEDEK_OKUYUCU_ADRESI=http://<servis>.railway.internal:<port>`.
-- Bellek: Chromium sayfa başına birkaç yüz MB kullanır; en az 1 GB önerilir.
-
-İmaj yalnızca servisin bağımlılıklarını (`requirements.txt`) ve backend'den tek dosyayı
-(`guvenli_istek.py`) içerir. Playwright sürümü imaj etiketiyle aynı tutulmalı.

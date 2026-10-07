@@ -1,9 +1,9 @@
 """Yedek okuyucu servisi (Playwright): arayüz, HTTP istemcisi ve kapalı kip (plan § 5.1, § 5.5).
 
-Servis ayrı bir uygulamadır (`backend/yedek_okuyucu/`, yayında Railway'de ayrı
-servis); sayfayı gerçek bir tarayıcıda açar, işlenmiş HTML'i ve istenirse ekran
-görüntüsünü döner. Bizim servisimiz olduğu için istek `guvenli_istek`'ten geçmez
-(iç adres); kullanıcının adresini servis kendisi aynı kurallarla denetler.
+Servis ayrı bir uygulamadır (`backend/yedek_okuyucu/`, ayrı süreç); sayfayı gerçek
+bir tarayıcıda açar, işlenmiş HTML'i ve istenirse ekran görüntüsünü döner. Bizim
+servisimiz olduğu için istek `guvenli_istek`'ten geçmez (iç adres); kullanıcının
+adresini servis kendisi aynı kurallarla denetler.
 
 Zarif düşüş (İ9): servis kapalıysa, ulaşılamıyorsa ya da sayfayı açamadıysa
 `None` döner; okuyucu zinciri önceki okunuşla devam eder.

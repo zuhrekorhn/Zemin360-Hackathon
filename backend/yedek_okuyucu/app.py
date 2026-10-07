@@ -4,9 +4,9 @@
                   → {"durum", "son_url", "html", "ekran_goruntuleri": [base64 JPEG], "hata"}
     GET  /saglik  → {"durum": "ok"}
 
-Backend'den ayrı bir uygulama (yayında Railway'de ayrı servis). Tek dış
-bağımlılığı backend'in SSRF kuralları (`app/core/guvenli_istek.py`); kurallar
-iki yerde yazılmasın diye o dosya imaja kopyalanır (`Dockerfile`).
+Backend'den ayrı bir süreç. Tek dış bağımlılığı backend'in SSRF kuralları
+(`app/core/guvenli_istek.py`); kurallar iki yerde yazılmasın diye o dosya
+import edilir.
 `YEDEK_OKUYUCU_ANAHTARI` doluysa istek `Authorization: Bearer <anahtar>` ister.
 """
 

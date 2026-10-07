@@ -45,7 +45,7 @@ dev = [
     # Doğrulama değerlendirme seti: vaka dosyaları (degerlendirme/vaka.py)
     "pyyaml>=6.0",
 ]
-# Yedek okuyucu servisi (backend/yedek_okuyucu/; yayında ayrı imaj, kendi requirements.txt'si)
+# Yedek okuyucu servisi (backend/yedek_okuyucu/, ayrı süreç: python -m yedek_okuyucu)
 yedek-okuyucu = [
     "playwright>=1.48",
 ]

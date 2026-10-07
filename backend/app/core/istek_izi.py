@@ -4,7 +4,7 @@ Ham IP ve tarayıcı bilgisi SAKLANMAZ; yalnızca uygulamanın gizli anahtarınd
 türeyen anahtarla HMAC özeti (geri çevrilemez, başka sistemin özetiyle
 eşleştirilemez). Özetler 90 gün tutulur (Canlılık taraması siler).
 
-IP: proxy arkasında (Railway) son `X-Forwarded-For` girdisi, yani bizim
+IP: proxy arkasında son `X-Forwarded-For` girdisi, yani bizim
 proxy'mizin gördüğü adres; başlık yoksa bağlantının adresi. Yerel, özel ağ ve
 çözülemeyen adreslerin özeti alınmaz (yerel denemede herkes 127.0.0.1'dir,
 eşleşmesi bir şey söylemez). Tarayıcı: `User-Agent` + `Accept-Language`.

@@ -87,7 +87,7 @@ class Settings(BaseSettings):
     # anahtarı). Boşsa kanal sayfası okunur.
     youtube_api_anahtari: str = ""
     # Dosya ve görsel kanıtı (plan § 4.4). Yerel: dosyalar `depo_klasoru`'nda, indirme
-    # backend'in /dosya ucundan (`api_adresi`). R2: yayında (Railway diski kalıcı değil).
+    # backend'in /dosya ucundan (`api_adresi`). R2: kalıcı diski olmayan sunucuda.
     depo_saglayici: Literal["r2", "yerel", "kapali"] = "yerel"
     depo_klasoru: str = "yuklemeler"
     api_adresi: str = "http://localhost:8000"
