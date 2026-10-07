@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import io
 import re
+import threading
 from typing import Any
 
 from app.core.capalar.duzenleyenler import duzenleyen
@@ -21,6 +22,11 @@ from app.core.kanit_okuma.adres import normal_url
 TARANACAK_SAYFA = 3
 AZAMI_ADRES = 3
 _ADRES = re.compile(r"https?://[^\s<>\"'()\[\]]+", re.IGNORECASE)
+# PDFium iş parçacığı güvenli değil: aynı süreçte iki çağrı aynı anda çalışırsa süreç
+# çöker (dosya hattı ön okuyucuları iş parçacığı havuzunda paralel çalıştırır). Bütün
+# pypdfium2 çağrıları bu kilidin içinde; QR okuma (zxing) kilit dışında kalır.
+_PDFIUM_KILIDI = threading.Lock()
+
 _IPUCU = re.compile(
     r"verif|dogrula|doğrula|validate|credential|certificate|sertifika|badge|rozet|belge",
     re.IGNORECASE,
@@ -33,13 +39,15 @@ def _goruntuler(ham: bytes, icerik_turu: str) -> list[Any]:
     if icerik_turu == "application/pdf":
         import pypdfium2 as pdfium
 
-        belge = pdfium.PdfDocument(ham)
-        try:
-            return [
-                belge[i].render(scale=2).to_pil() for i in range(min(len(belge), TARANACAK_SAYFA))
-            ]
-        finally:
-            belge.close()
+        with _PDFIUM_KILIDI:
+            belge = pdfium.PdfDocument(ham)
+            try:
+                return [
+                    belge[i].render(scale=2).to_pil()
+                    for i in range(min(len(belge), TARANACAK_SAYFA))
+                ]
+            finally:
+                belge.close()
     with Image.open(io.BytesIO(ham)) as gorsel:
         gorsel.load()
         return [gorsel.convert("RGB")]

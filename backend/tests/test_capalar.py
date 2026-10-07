@@ -137,6 +137,21 @@ def test_qr_pdf_sayfasindan_okunur():
     assert bilgi["liste"][0]["metin"] == "https://btkakademi.gov.tr/dogrula/XYZ"
 
 
+def test_pdf_kodlari_paralel_okunur():
+    """PDFium iş parçacığı güvenli değil: dosya hattı ön okuyucuları paralel çalıştırır.
+    Kilitsiz hâli Linux'ta süreci çökertiyordu (CI); her okuma aynı sonucu vermeli."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    adres = "https://btkakademi.gov.tr/dogrula/PARALEL"
+    gorsel = Image.open(io.BytesIO(_qr_png(adres)))
+    pdf_akis = io.BytesIO()
+    gorsel.save(pdf_akis, format="PDF")
+    ham = pdf_akis.getvalue()
+    with ThreadPoolExecutor(max_workers=8) as havuz:
+        sonuclar = list(havuz.map(lambda _: kodlari_oku(ham, "application/pdf"), range(16)))
+    assert all(s["liste"][0]["metin"] == adres for s in sonuclar)
+
+
 def test_dogrulama_adresleri_kod_once_metinde_yalnizca_ipuclu_ya_da_bilinen():
     kodlar = [{"bicim": "QRCode", "metin": "https://ornek.org/verify/1"}]
     metin = (
