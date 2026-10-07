@@ -1,20 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
-import { useGirisliHesap } from "@/components/giris-kapisi";
-import { OnayAlani } from "@/components/onay-alani";
-import { DurumEtiketi, IletisimSatiri } from "@/components/panel";
 import { Button } from "@/components/ui/button";
 import type { GencEslesmesi, IhtiyacKartiYaniti } from "@/lib/api";
 import {
   ILETISIM_ONAYI,
   ILETISIM_ONAYI_KUTUSU,
   NEDEN_UYGUN,
-  gencDurumEtiketi,
-  gencEylemleri,
   uyumMetni,
 } from "@/lib/ilgi";
 import {
@@ -25,11 +19,13 @@ import {
 } from "@/lib/sabitler";
 
 /**
- * Gencin ana sayfasındaki fırsat ve ilgi satırları (docs/api-contracts.md).
- * Metinler docs/icerik-rehberi.md'ye göre; liste docs/icerik-rehberi.md.
+ * Gencin ana sayfasındaki fırsat kartı (docs/api-contracts.md). Metinler
+ * docs/icerik-rehberi.md'ye göre: uyum kelimeyle, "Neden uygun?" gence
+ * yazılmış metinle (docs/kararlar.md G9; yoksa bölüm hiç çizilmez).
  */
 
-function IhtiyacOzeti({ ihtiyac }: { ihtiyac: IhtiyacKartiYaniti }) {
+/** İhtiyacın koşulları: şehir, çalışma modeli, müsaitlik. */
+export function KosulEtiketleri({ ihtiyac }: { ihtiyac: IhtiyacKartiYaniti }) {
   const kosullar = [
     ihtiyac.sehir_tercihi ? sehirEtiketi(ihtiyac.sehir_tercihi) : null,
     ihtiyac.calisma_modeli
@@ -38,23 +34,42 @@ function IhtiyacOzeti({ ihtiyac }: { ihtiyac: IhtiyacKartiYaniti }) {
     ihtiyac.musaitlik_tercihi
       ? etiketle(MUSAITLIK_ETIKETLERI, ihtiyac.musaitlik_tercihi)
       : null,
-  ].filter(Boolean);
+  ].filter((k): k is string => Boolean(k));
+  if (kosullar.length === 0) return null;
   return (
-    <>
-      <p className="text-sm text-pretty">{ihtiyac.problem_tanimi}</p>
-      {ihtiyac.basari_kriteri ? (
-        <p className="text-sm text-pretty text-muted-foreground">
-          Başarı ölçütü: {ihtiyac.basari_kriteri}
-        </p>
-      ) : null}
-      {kosullar.length > 0 ? (
-        <p className="text-xs text-muted-foreground">{kosullar.join(" · ")}</p>
-      ) : null}
-    </>
+    <ul className="flex flex-wrap gap-1.5" aria-label="Koşullar">
+      {kosullar.map((kosul) => (
+        <li
+          key={kosul}
+          className="rounded-full border border-kenar px-2.5 py-0.5 text-xs text-muted-foreground"
+        >
+          {kosul}
+        </li>
+      ))}
+    </ul>
   );
 }
 
-/** Bir fırsat: firma, ihtiyaç, uyum, "Neden uygun?" ve açık onaylı "İlgileniyorum". */
+/** Firma adı ve doğrulanmış işareti; fırsat ve ilgi kartlarının başlığı. */
+export function FirmaBasligi({
+  ihtiyac,
+  sag,
+}: {
+  ihtiyac: IhtiyacKartiYaniti;
+  sag?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+      <h3 className="flex flex-wrap items-center gap-2 font-heading text-lg leading-snug font-semibold text-ana">
+        {ihtiyac.kurum.ad}
+        <DogrulanmisFirma dogrulandi={ihtiyac.kurum.dogrulandi} />
+      </h3>
+      {sag}
+    </div>
+  );
+}
+
+/** Bir fırsat: firma, uyum, ihtiyaç, "Neden uygun?" ve açık onaylı "İlgileniyorum". */
 export function FirsatKarti({
   firsat,
   onIlgi,
@@ -78,53 +93,64 @@ export function FirsatKarti({
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <span className="flex flex-wrap items-center gap-2 font-heading text-lg font-semibold text-ana">
-          {ihtiyac.kurum.ad}
-          <DogrulanmisFirma dogrulandi={ihtiyac.kurum.dogrulandi} />
-        </span>
-        <span className="rounded-sm border border-baglanti px-2 py-0.5 text-xs text-baglanti">
-          {uyumMetni(firsat.uyum)}
-        </span>
-      </div>
-      <IhtiyacOzeti ihtiyac={ihtiyac} />
-
-      <section className="flex flex-col gap-1">
-        <h4 className="font-heading text-sm font-semibold text-ana">
-          {NEDEN_UYGUN}
-        </h4>
-        <p className="text-sm text-pretty text-muted-foreground">
-          {firsat.gerekce_metni ?? "Açıklama henüz hazır değil."}
+    <li className="flex flex-col rounded-md border border-kenar bg-card">
+      <div className="flex flex-col gap-3 px-5 pt-5 pb-4">
+        <FirmaBasligi
+          ihtiyac={ihtiyac}
+          sag={
+            <span className="rounded-full bg-baglanti/10 px-2.5 py-1 text-xs font-medium text-baglanti">
+              {uyumMetni(firsat.uyum)}
+            </span>
+          }
+        />
+        <KosulEtiketleri ihtiyac={ihtiyac} />
+        <p className="text-[15px] leading-relaxed text-pretty text-metin">
+          {ihtiyac.problem_tanimi}
         </p>
-      </section>
+        {ihtiyac.basari_kriteri ? (
+          <p className="text-sm text-pretty text-muted-foreground">
+            <span className="font-medium text-metin">Başarı ölçütü: </span>
+            {ihtiyac.basari_kriteri}
+          </p>
+        ) : null}
+        {firsat.gerekce_metni ? (
+          <section className="flex flex-col gap-1 rounded-sm border-l-2 border-baglanti bg-zemin px-4 py-3">
+            <h4 className="font-heading text-sm font-semibold text-ana">
+              {NEDEN_UYGUN}
+            </h4>
+            <p className="text-sm leading-relaxed text-pretty">
+              {firsat.gerekce_metni}
+            </p>
+          </section>
+        ) : null}
+      </div>
 
-      <div className="flex flex-col gap-3 border-t border-kenar pt-3">
+      <div className="border-t border-kenar px-5 py-3">
         {!onayAcik ? (
-          <Button
-            type="button"
-            size="lg"
-            className="w-fit"
-            onClick={() => setOnayAcik(true)}
-          >
-            İlgileniyorum
-          </Button>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Button type="button" size="lg" onClick={() => setOnayAcik(true)}>
+              İlgileniyorum
+            </Button>
+            <span className="text-xs text-pretty text-muted-foreground">
+              Firma da ilgilenirse iletişim bilgileriniz paylaşılır.
+            </span>
+          </div>
         ) : (
-          <div className="flex flex-col gap-3 rounded-sm border border-kenar bg-muted px-3 py-3">
+          <div className="flex flex-col gap-3">
             <p className="text-sm text-pretty">{ILETISIM_ONAYI}</p>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex w-fit items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={onaylandi}
                 onChange={(olay) => setOnaylandi(olay.target.checked)}
-                className="accent-ana"
+                className="size-4 accent-ana"
               />
               {ILETISIM_ONAYI_KUTUSU}
             </label>
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                size="sm"
+                size="lg"
                 disabled={!onaylandi || bekleniyor}
                 onClick={() => void ilet()}
               >
@@ -132,8 +158,8 @@ export function FirsatKarti({
               </Button>
               <Button
                 type="button"
-                size="sm"
-                variant="outline"
+                size="lg"
+                variant="ghost"
                 disabled={bekleniyor}
                 onClick={() => {
                   setOnayAcik(false);
@@ -146,92 +172,6 @@ export function FirsatKarti({
           </div>
         )}
       </div>
-    </li>
-  );
-}
-
-/** Gencin kendi ilgisi: durumu, geri çekme ya da karşılıklı ilgide iletişim. */
-export function IlgiSatiri({
-  ilgi,
-  onGeriCek,
-}: {
-  ilgi: GencEslesmesi;
-  onGeriCek: () => Promise<void>;
-}) {
-  const [bekleniyor, setBekleniyor] = useState(false);
-  const [onayAcik, setOnayAcik] = useState(false);
-  const hesap = useGirisliHesap();
-  const ihtiyac = ilgi.ihtiyac_karti;
-  const { geriCek } = gencEylemleri(ilgi.durum);
-
-  async function cek() {
-    setBekleniyor(true);
-    try {
-      await onGeriCek();
-    } finally {
-      setBekleniyor(false);
-      setOnayAcik(false);
-    }
-  }
-
-  return (
-    <li className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <span className="flex flex-wrap items-center gap-2 font-heading text-lg font-semibold text-ana">
-          {ihtiyac.kurum.ad}
-          <DogrulanmisFirma dogrulandi={ihtiyac.kurum.dogrulandi} />
-        </span>
-        <DurumEtiketi
-          metin={gencDurumEtiketi(ilgi.durum)}
-          baglanti={ilgi.durum === "kabul_edildi"}
-        />
-      </div>
-      <IhtiyacOzeti ihtiyac={ihtiyac} />
-      {ilgi.iletisim ? (
-        <IletisimSatiri
-          iletisim={ilgi.iletisim}
-          karsiTaraf="kurum"
-          taslak={{
-            adayTuru: "genc",
-            gonderenAdi: hesap.ad ?? "",
-            aliciAdi: ihtiyac.kurum.ad,
-            problem: ihtiyac.problem_tanimi,
-            basariKriteri: ihtiyac.basari_kriteri,
-          }}
-        />
-      ) : null}
-      {onayAcik ? (
-        <OnayAlani
-          soru={`${ihtiyac.kurum.ad} fırsatına gösterdiğin ilgi geri çekilsin mi? Fırsat yeniden “Sana uygun fırsatlar”a döner.`}
-          onayEtiketi="İlgimi geri çek"
-          bekleniyor={bekleniyor}
-          bekleniyorEtiketi="Geri çekiliyor…"
-          onOnayla={() => void cek()}
-          onVazgec={() => setOnayAcik(false)}
-        />
-      ) : geriCek || ilgi.isbirligi_id ? (
-        <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-3">
-          {geriCek ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={bekleniyor}
-              onClick={() => setOnayAcik(true)}
-            >
-              İlgimi geri çek
-            </Button>
-          ) : null}
-          {ilgi.isbirligi_id ? (
-            <Link
-              href={`/isbirligi/${ilgi.isbirligi_id}`}
-              className="text-sm text-baglanti underline"
-            >
-              İş birliğine git
-            </Link>
-          ) : null}
-        </div>
-      ) : null}
     </li>
   );
 }
