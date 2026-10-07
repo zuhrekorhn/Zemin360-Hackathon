@@ -25,7 +25,7 @@ bağlantıları ve son Canlılık olaylarını tek panelde görür.
 - Canlılık davranış tahmini yapmaz: kural tabanlı eşikler yeter.
 - Toplu ya da jenerik spam göndermez.
 - Hiçbir kaydın durumunu değiştirmez: hatırlatır, karar vermez.
-- Gerçek e-posta göndermez; uygulama içi bildirim kullanır.
+- Hatırlatmaları e-postayla göndermez; uygulama içi bildirim kullanır. (Tarama ayrıca Doğrulama'nın bekleyen referans isteklerine tek hatırlatma e-postası gönderir; o e-posta referans kişiye gider, hatırlatma bildirimi değildir.)
 
 ## 1. Pasiflik: neye göre, ne zaman, kime
 
@@ -201,7 +201,7 @@ Genç ve kurum bu uçları çağıramaz (403). Onlar hatırlatmayı bildirim ola
 
 ## 11. Kapsam dışı
 
-- Gerçek e-posta ya da SMS
+- Hatırlatmaların e-postayla ya da SMS ile gönderilmesi
 - Hatırlatma tercihleri, sessize alma
 - Davranış tahmini, puanlama
 - Canlılık'ın bir kaydın durumunu değiştirmesi (ör. eşleşmeyi otomatik kapatma)

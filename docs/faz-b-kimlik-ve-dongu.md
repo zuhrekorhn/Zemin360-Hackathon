@@ -125,7 +125,7 @@ GİRVAK okuma işlerinde her şeyi görür. Yazma işleri genç ve kurumun işid
 
 ## 6. Uygulama içi bildirimler
 
-- **Tablo:** `bildirim(id, hesap_id FK, tur, metin, eslesme_id FK nullable, olusturma_tarihi, okundu_tarihi nullable)`. Gerçek e-posta gönderilmez.
+- **Tablo:** `bildirim(id, hesap_id FK, tur, metin, eslesme_id FK nullable, olusturma_tarihi, okundu_tarihi nullable)`. Bildirimler e-postayla gönderilmez; tek istisna, karşılıklı ilgi kesinleşince bildirimi alan tarafa giden "eşleştiniz" e-postası (7 Eki, `app/servisler/eslesme_epostasi.py`).
 
 | Olay | Kime | Metin (örnek) |
 |---|---|---|

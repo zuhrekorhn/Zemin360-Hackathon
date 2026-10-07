@@ -92,7 +92,7 @@ Gemini içinde çalışmaya devam eder. Her çağrının token kullanımı log'a
 - [x] Karşılıklı onay: kurum "ilgileniyorum" der → eşleşme `ilgileniliyor` →
       genç kabul eder → `kabul_edildi` + iş birliği açılır → **iletişim bilgisi
       ancak şimdi iki tarafa görünür**. Genç reddederse `reddedildi`.
-- [x] Uygulama içi bildirimler (tablo + panelde sayaç). Gerçek e-posta yok.
+- [x] Uygulama içi bildirimler (tablo + panelde sayaç). E-postayla gönderilmez (7 Eki'den beri tek istisna "eşleştiniz" e-postası).
 
 **Kabul:** İki ayrı tarayıcıda genç ve kurum olarak döngü, iletişim açılmasına
 kadar çıkmaz sokak olmadan yürür. ✓ Tarayıcıda doğrulandı (27 Eyl), demo
@@ -288,7 +288,7 @@ yayına alma.
 ## Kapsam dışı
 
 Mobil uygulama, taraflar arası mesajlaşma, e-posta bildirimi (gerçek e-posta yalnızca
-kayıt doğrulaması ve referans isteği için gider), ESCO
+kayıt doğrulaması, referans isteği ve "eşleştiniz" e-postası için gider), ESCO
 taksonomisi, çoklu dil, refresh token / OAuth, httpOnly cookie'ye geçiş
 (ürünleşme dönemi).
 
