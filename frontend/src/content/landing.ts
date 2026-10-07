@@ -1,10 +1,9 @@
 /**
  * Karşılama sayfasının (/) bütün metinleri — tek kaynak.
  *
- * Metinler docs/design/landing/LANDING_HANDOFF.md (v2) § 3'ten birebir;
- * içerik rehberine (docs/icerik-rehberi.md) göre yazıldı. Kopya değişikliği
+ * Metinler içerik rehberine (docs/icerik-rehberi.md) göre yazıldı. Kopya değişikliği
  * yalnızca burada yapılır; bileşenler metin taşımaz. Mobilde de aynı metinler
- * gösterilir, yalnızca yerleşim değişir (brief § 4).
+ * gösterilir, yalnızca yerleşim değişir.
  */
 
 export type Sekme = "genc" | "firma";

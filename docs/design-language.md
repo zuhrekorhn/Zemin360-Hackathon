@@ -45,7 +45,7 @@ Düzen kodda tek yerde; sayfa kendi kabuğunu yazmaz.
 - **Başlık bloğu:** tek `h1` (Fraunces, 24→30px), altında açıklama. Başlığın yanında durum etiketi, sağda tek bir eylem olabilir.
 - **Yükleniyor ve hata** durumları da aynı kabukla ve aynı genişlikte çizilir (`SayfaDurumu`, `GirisKapisi genislik=`). Veri gelince içerik yana ya da aşağı kaymaz.
 - **Menü** (`menu-kabugu.tsx`): karşılama ve uygulama menüsü aynı iskeleti giyer. Yapışkandır, 1200px'lik geniş kapsayıcıdadır ve yüksekliği 64px (`lg`'de 76px). Girişten önce ve sonra logo aynı yerde durur. İçerik dar sütunda ortalanır, menü geniş kalır. `lg` altında bağlantılar katlanır menüye girer, bildirim zili ve okunmamış sayısı katlanmadan görünür kalır. Etkin sayfa kalın yazı ve vurgu renginde alt çizgiyle gösterilir.
-- **Karşılama sayfası** kabuğun dışındadır: 1200px, kendi bölüm ritmi (96–112px) ve daha büyük yazı ölçeği (`docs/design/landing/LANDING_HANDOFF.md`). Uygulamanın içi sade ve dar kalır.
+- **Karşılama sayfası** kabuğun dışındadır: 1200px, kendi bölüm ritmi (96–112px) ve daha büyük yazı ölçeği (`src/app/page.tsx`, metinler `src/content/landing.ts`). Uygulamanın içi sade ve dar kalır.
 - **Kontrast:** vurgu rengi (`#B8823C`) üstünde metin koyu olur (`metin`, 4.9:1). Beyaz 3.3:1'de kalıyor. Küçük metin vurgu renginde yazılmaz, zemin üstünde 3:1'de kalıyor.
 
 ## Kaçınılacaklar

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Karşılama sayfasının üst menüsü (brief § 3.1). Yalnızca / sayfasında ve
+ * Karşılama sayfasının üst menüsü. Yalnızca / sayfasında ve
  * giriş yapılmamışken UstMenu'nün yerine gösterilir; iskelet (yapışkanlık,
  * katlanır menü) MenuKabugu'nda, uygulama menüsüyle ortak.
  */

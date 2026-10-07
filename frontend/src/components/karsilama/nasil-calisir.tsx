@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * "Nasıl çalışır" bölümü (brief § 3.4): genç (sen) / firma (siz) sekmeleri.
+ * "Nasıl çalışır" bölümü: genç (sen) / firma (siz) sekmeleri.
  *
  * Erişilebilir sekme listesi: yalnızca seçili sekme Tab sırasında, oklar,
  * Home ve End ile gezinilir (lib/sekme.ts). Menüdeki "Gençler için / Firmalar

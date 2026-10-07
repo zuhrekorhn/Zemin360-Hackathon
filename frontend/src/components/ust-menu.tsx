@@ -42,7 +42,7 @@ export function UstMenu() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Karşılama sayfası kendi menüsünü taşır (brief § 3.1); girişli kullanıcı
+  // Karşılama sayfası kendi menüsünü taşır; girişli kullanıcı
   // / sayfasında da her zamanki menüyü görür.
   if (pathname === "/" && oturum.durum !== "girisli") {
     return <KarsilamaMenusu />;

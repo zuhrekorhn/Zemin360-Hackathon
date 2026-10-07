@@ -1,5 +1,5 @@
 /**
- * Hero'daki örnek akış (brief § 3.2): soru → yanıt → yetenek kartı → fırsat.
+ * Hero'daki örnek akış: soru → yanıt → yetenek kartı → fırsat.
  *
  * Sayfadaki tek bilinçli hareket burada (design-language.md): öğeler ~600ms
  * arayla, belirip hafifçe yukarı kayarak gelir. Hareket `motion-safe:` ile

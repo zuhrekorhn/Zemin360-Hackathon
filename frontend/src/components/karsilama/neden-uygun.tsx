@@ -1,5 +1,5 @@
 /**
- * "Neden uygun?" örneği (brief § 3.5). Gerçek ekranlardaki BelgeKarti:
+ * "Neden uygun?" örneği. Gerçek ekranlardaki BelgeKarti:
  * doğrulama gösterimleri hairline, az yuvarlak, "resmi belge" hissi
  * (design-language.md § Yerleşim).
  *

@@ -19,7 +19,7 @@ gozden_geciren: null
 - **`null` = "—":** başlık değerlendirilmedi, değerlendirilemedi ya da yanıt yok. 0 ile karıştırılmaz.
 - **Liste:** iki değer de savunulabiliyorsa (ör. ekip ortaklığı sayfada belirsizse Rol 2 ya da 3) kullanılır. Liste mümkün olduğunca dar tutulur; tek değer tercih edilir.
 - **Etiketlenmemiş vaka:** `beklenen: null`. Karneye girmez. `onerilen` alanı yalnızca öneridir ve "taslak etiket" karnesinde kullanılır.
-- **Kim etiketler:** `etiketleyen` boş olan vakanın `beklenen`'i geçersizdir. Etiketleri Zühre koyar. GİRVAK sonradan vakaların en az %20'sini gözden geçirir (`gozden_geciren`); anlaşmazlıklar `ANLASMAZLIKLAR.md`'ye yazılır.
+- **Kim etiketler:** `etiketleyen` boş olan vakanın `beklenen`'i geçersizdir. Etiketleri Zühre koyar. GİRVAK sonradan vakaların en az %20'sini gözden geçirir (`gozden_geciren`); ayrışılan vakada etiket birlikte düzeltilir.
 
 ## 2. Kaynak seviyesini belirle
 

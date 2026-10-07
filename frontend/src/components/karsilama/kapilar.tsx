@@ -1,6 +1,6 @@
 /**
  * İki kapı: genç (ana renk) ve firma (vurgu rengi). Hero'da iki satırlı
- * kart-buton, kapanışta tek satırlı buton; hedefler aynı (brief § 3.2, 3.8).
+ * kart-buton, kapanışta tek satırlı buton; hedefler aynı.
  *
  * Vurgu (#B8823C) üstünde beyaz metin 3.3:1'de kalıyor; kontrast renk
  * sadakatinden önce geldiği için firma kapısında koyu metin (4.9:1) —

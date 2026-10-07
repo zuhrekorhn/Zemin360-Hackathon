@@ -338,7 +338,7 @@ Zincir sırası:
 - **Etiketleme:**
   - `degerlendirme_seti/ETIKETLEME_REHBERI.md`: her başlık ve seviye için örnekli kural.
   - Etiketleri ekip koyar. Her vakada `etiketleyen` ve `gozden_geciren` alanları bulunur.
-  - GİRVAK sonradan vakaların en az %20'sini gözden geçirir; anlaşmazlıklar `ANLASMAZLIKLAR.md`'ye yazılır.
+  - GİRVAK sonradan vakaların en az %20'sini gözden geçirir; ayrışılan vakada etiket birlikte düzeltilir.
   - Kötü niyetli vakaları ekip üretir.
   - Etiketlenmemiş vaka karneye girmez. Etiketleri bekleyen ilk karne "taslak etiketle" diye ayrı raporlanır.
 - **Çevrimdışı çalışma:** ağ ve model yanıtları kayıtlıdır (kaset deseni). Set pytest'in parçasıdır (`tests/test_degerlendirme_seti.py`), her test koşusunda çalışır; canlı sürüm ayrı bir betikle (§ 16).

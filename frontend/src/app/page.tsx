@@ -24,11 +24,10 @@ import {
 } from "@/content/landing";
 import { cn } from "@/lib/utils";
 
-// Karşılama sayfası: docs/design/landing/LANDING_HANDOFF.md (v2).
-// Metinler content/landing.ts'te; renk ve font mevcut paletten
+// Karşılama sayfası. Metinler content/landing.ts'te; renk ve font mevcut paletten
 // (docs/design-language.md). Backend kapalıyken de eksiksiz görünür.
 
-/** Geliştirme göstergesi yalnızca açıkça istenirse (brief § 5). */
+/** Geliştirme göstergesi yalnızca açıkça istenirse. */
 const GELISTIRME_DURUMU = process.env.NEXT_PUBLIC_SHOW_DEV_STATUS === "true";
 
 const H2 =
@@ -226,7 +225,7 @@ export default function AnaSayfa() {
               <p className="text-[15px] text-muted-foreground">
                 {GUVEN.program}
               </p>
-              {/* Logo yeri: gerçek logolar eklenene kadar boş kutu (brief § 3.7). */}
+              {/* Logo yeri: gerçek logolar eklenene kadar boş kutu. */}
               <div aria-hidden="true" className="flex shrink-0 gap-4 md:gap-7">
                 <span className="h-11 w-[120px] rounded-lg border border-dashed border-muted-foreground/40" />
                 <span className="h-11 w-[120px] rounded-lg border border-dashed border-muted-foreground/40" />

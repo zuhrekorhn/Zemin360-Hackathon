@@ -7,7 +7,6 @@ Doğrulama'nın güven göstergesini ölçen etiketli vakalar (`docs/dogrulama.m
 | Yol | Ne |
 |---|---|
 | `ETIKETLEME_REHBERI.md` | Doğru etiketin kuralları (önce bunu oku) |
-| `ANLASMAZLIKLAR.md` | Gözden geçirmede etiketleyenle ayrışılan vakalar |
 | `vakalar/<alan>.yaml` | Vakalar; alan başına bir dosya |
 | `dosyalar/` | Dosya ve görsel kanıtları |
 | `kaset/` | Kayıtlı DNS, HTTP ve model yanıtları (çevrimdışı karne) |

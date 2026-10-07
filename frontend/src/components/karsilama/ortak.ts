@@ -2,13 +2,13 @@
  * Karşılama sayfasının ortak parçaları: kapsayıcı, odak halkası, sekme köprüsü.
  *
  * Renkler yalnızca mevcut paletten (docs/design-language.md, globals.css
- * @theme); brief'teki referans renkler rol olarak eşlendi, yeni token yok.
+ * @theme); yeni token yok.
  */
 
 import { GENIS_KAPSAYICI } from "@/components/sayfa";
 import type { Sekme } from "@/content/landing";
 
-/** 1200px içerik; masaüstünde yanlarda 120px kalır (brief § 1). */
+/** 1200px içerik; masaüstünde yanlarda 120px kalır. */
 export const KAPSAYICI = GENIS_KAPSAYICI;
 
 /** Açık zeminde görünür odak halkası. */
