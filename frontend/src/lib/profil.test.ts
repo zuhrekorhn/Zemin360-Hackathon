@@ -8,7 +8,11 @@ import {
   kartTamamlamaCagrisi,
   onaydaProfilSorulmali,
   profilBandi,
+  hesapGovdesi,
+  hesapHatalari,
   profilFormunuDogrula,
+  tercihGovdesi,
+  tercihHatalari,
 } from "@/lib/profil";
 
 const GECERLI: ProfilFormu = {
@@ -46,6 +50,26 @@ describe("profilFormunuDogrula", () => {
     expect(
       profilFormunuDogrula({ ...GECERLI, portfolyo_url: "benim sitem" }, 2026),
     ).toEqual(["Portfolyo adresi geçerli bir web adresi değil."]);
+  });
+});
+
+describe("tercihler ve hesap ayrı sayfalarda", () => {
+  it("hatalar ikiye bölünür: tercihler üç, hesap bir zorunlu alan", () => {
+    expect(tercihHatalari(BOS_PROFIL_FORMU)).toHaveLength(3);
+    expect(hesapHatalari(BOS_PROFIL_FORMU, 2026)).toEqual(["Durumunu seç."]);
+  });
+
+  it("her sayfa yalnızca kendi alanlarını gönderir", () => {
+    expect(Object.keys(tercihGovdesi(GECERLI)).sort()).toEqual([
+      "calisma_modelleri",
+      "musaitlik_baslangici",
+      "musaitlikler",
+      "sehir",
+    ]);
+    const hesap = hesapGovdesi(GECERLI);
+    expect(hesap).not.toHaveProperty("sehir");
+    expect(hesap).toHaveProperty("kariyer_durumu");
+    expect(hesap).toHaveProperty("github_url");
   });
 });
 

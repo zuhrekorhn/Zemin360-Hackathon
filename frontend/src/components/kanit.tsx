@@ -1,5 +1,6 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
@@ -34,6 +35,7 @@ import {
   kanitLinkleri,
   okunamayanSecenekleri,
 } from "@/lib/kanit";
+import { notuBasliklaraAyir } from "@/lib/guven-gostergesi";
 import { referansSatiri } from "@/lib/kart-duzenleme";
 import { REFERANS_DURUMLARI, referansOzeti } from "@/lib/referans";
 
@@ -52,12 +54,23 @@ import { REFERANS_DURUMLARI, referansOzeti } from "@/lib/referans";
  *   - İtiraz: değerlendirmeyi eksik bulan genç yeniden baktırır.
  */
 
+/** Kanıt bölümünde açılabilecek ekleme formu; aynı anda yalnızca biri açık. */
+export type EklemeFormu = "link" | "dosya" | "referans";
+
+const EKLEME_DUGMELERI: { form: EklemeFormu; etiket: string }[] = [
+  { form: "link", etiket: "Link" },
+  { form: "dosya", etiket: "PDF ya da görsel" },
+  { form: "referans", etiket: "Referans iste" },
+];
+
 export function KanitBolumu({
   somutCiktiId,
   kanitlar,
   durum,
   onDurum,
   onHata,
+  acikForm,
+  onAcikForm,
 }: {
   somutCiktiId: string;
   /** Kart görünümündeki kanıtlar: kanıt durumu gelmeden de liste çizilsin. */
@@ -65,12 +78,16 @@ export function KanitBolumu({
   durum: KanitDurumu | undefined;
   onDurum: (durum: KanitDurumu) => void;
   onHata: (hata: Hata | null) => void;
+  /** Açık ekleme formu; çalışma kartının "sıradaki adım" düğmesi de açar. */
+  acikForm: EklemeFormu | null;
+  onAcikForm: (form: EklemeFormu | null) => void;
 }) {
   const [bekleniyor, setBekleniyor] = useState(false);
   const parcalar = durum?.kanitlar ?? kanitlar;
   const linkler = kanitLinkleri(parcalar);
   const dosyalar = dosyaParcalari(parcalar);
   const kanitVar = linkler.length + dosyalar.length > 0;
+  const referanslar = durum?.referanslar ?? [];
   const degerlendirildi = degerlendirildiMi(durum?.guven_skoru);
 
   /** Bir eylemi çalıştırır; başarılıysa true (formlar kendini temizlesin diye). */
@@ -88,12 +105,17 @@ export function KanitBolumu({
     }
   }
 
+  /** Ekleme başarılıysa form kapanır. */
+  const ekle = (is: () => Promise<KanitDurumu>) =>
+    calistir(is).then((tamam) => {
+      if (tamam) onAcikForm(null);
+      return tamam;
+    });
+
   return (
-    <div className="flex flex-col gap-5 rounded-sm border border-kenar bg-card px-4 py-4">
-      <section className="flex flex-col gap-3">
-        <h4 className="font-heading text-sm font-semibold text-ana">
-          Kanıtlar
-        </h4>
+    <div className="flex flex-col gap-5">
+      <section className="flex flex-col gap-2.5">
+        <h4 className="text-sm font-semibold text-ana">Kanıtlar</h4>
         {kanitVar ? (
           <ul className="flex flex-col gap-3">
             {linkler.map((parca) => (
@@ -125,22 +147,9 @@ export function KanitBolumu({
           </ul>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Henüz kanıt eklemedin. Bir link, PDF ya da görsel ekleyebilir ya da
-            aşağıdan bir referans isteyebilirsin.
+            Henüz kanıt eklemedin.
           </p>
         )}
-        <LinkEkleFormu
-          kimlik={somutCiktiId}
-          bekleniyor={bekleniyor}
-          onEkle={(url) => calistir(() => kanitLinkiEkle(somutCiktiId, url))}
-        />
-        <DosyaEkleFormu
-          kimlik={somutCiktiId}
-          bekleniyor={bekleniyor}
-          onEkle={(dosya) =>
-            calistir(() => kanitDosyasiEkle(somutCiktiId, dosya))
-          }
-        />
         {kanitVar && durum && !degerlendirildi ? (
           <div className="flex flex-wrap items-center gap-3">
             <Button
@@ -160,31 +169,75 @@ export function KanitBolumu({
         ) : null}
       </section>
 
-      <section className="flex flex-col gap-3 border-t border-kenar pt-4">
-        <h4 className="font-heading text-sm font-semibold text-ana">
-          Referanslar
-        </h4>
-        {durum && durum.referanslar.length > 0
-          ? durum.referanslar.map((referans) => (
-              <ReferansSatiri
-                key={referans.id}
-                referans={referans}
-                onYenidenIste={() =>
-                  void calistir(() => referansYenidenIste(referans.id))
-                }
-                onGeriCek={() =>
-                  void calistir(() => referansGeriCek(referans.id))
-                }
+      {referanslar.length > 0 ? (
+        <section className="flex flex-col gap-2.5">
+          <h4 className="text-sm font-semibold text-ana">Referanslar</h4>
+          {referanslar.map((referans) => (
+            <ReferansSatiri
+              key={referans.id}
+              referans={referans}
+              onYenidenIste={() =>
+                void calistir(() => referansYenidenIste(referans.id))
+              }
+              onGeriCek={() =>
+                void calistir(() => referansGeriCek(referans.id))
+              }
+            />
+          ))}
+        </section>
+      ) : null}
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-sm text-muted-foreground">Ekle:</span>
+          {EKLEME_DUGMELERI.map(({ form, etiket }) => (
+            <Button
+              key={form}
+              type="button"
+              size="sm"
+              variant="outline"
+              aria-expanded={acikForm === form}
+              aria-controls={`ekle-${form}-${somutCiktiId}`}
+              onClick={() => onAcikForm(acikForm === form ? null : form)}
+            >
+              <Plus aria-hidden="true" />
+              {etiket}
+            </Button>
+          ))}
+        </div>
+        {acikForm ? (
+          <div
+            id={`ekle-${acikForm}-${somutCiktiId}`}
+            className="rounded-md border border-kenar bg-zemin px-4 py-4"
+          >
+            {acikForm === "link" ? (
+              <LinkEkleFormu
+                kimlik={somutCiktiId}
+                bekleniyor={bekleniyor}
+                onEkle={(url) => ekle(() => kanitLinkiEkle(somutCiktiId, url))}
+                onVazgec={() => onAcikForm(null)}
               />
-            ))
-          : null}
-        <ReferansFormu
-          kimlik={somutCiktiId}
-          bekleniyor={bekleniyor}
-          onIste={(eposta) =>
-            calistir(() => referansIste(somutCiktiId, eposta))
-          }
-        />
+            ) : acikForm === "dosya" ? (
+              <DosyaEkleFormu
+                kimlik={somutCiktiId}
+                bekleniyor={bekleniyor}
+                onEkle={(dosya) =>
+                  ekle(() => kanitDosyasiEkle(somutCiktiId, dosya))
+                }
+                onVazgec={() => onAcikForm(null)}
+              />
+            ) : (
+              <ReferansFormu
+                kimlik={somutCiktiId}
+                bekleniyor={bekleniyor}
+                onIste={(eposta) =>
+                  ekle(() => referansIste(somutCiktiId, eposta))
+                }
+                onVazgec={() => onAcikForm(null)}
+              />
+            )}
+          </div>
+        ) : null}
       </section>
 
       {durum?.dogrulanamadi ? (
@@ -374,10 +427,12 @@ function DosyaEkleFormu({
   kimlik,
   bekleniyor,
   onEkle,
+  onVazgec,
 }: {
   kimlik: string;
   bekleniyor: boolean;
   onEkle: (dosya: File) => Promise<boolean>;
+  onVazgec: () => void;
 }) {
   const [dosya, setDosya] = useState<File | null>(null);
   const girdi = useRef<HTMLInputElement>(null);
@@ -409,15 +464,11 @@ function DosyaEkleFormu({
         çok 20 MB, görsel en çok 10 MB. Dosyayı yalnızca sen ve GİRVAK görür;
         istersen firmalara açabilirsin.
       </p>
-      <Button
-        type="submit"
-        size="sm"
-        variant="outline"
-        className="w-fit"
-        disabled={bekleniyor || !dosya}
-      >
-        {bekleniyor ? "Değerlendiriliyor…" : "Yükle ve değerlendir"}
-      </Button>
+      <FormDugmeleri onVazgec={onVazgec}>
+        <Button type="submit" size="sm" disabled={bekleniyor || !dosya}>
+          {bekleniyor ? "Değerlendiriliyor…" : "Yükle ve değerlendir"}
+        </Button>
+      </FormDugmeleri>
     </form>
   );
 }
@@ -426,10 +477,12 @@ function LinkEkleFormu({
   kimlik,
   bekleniyor,
   onEkle,
+  onVazgec,
 }: {
   kimlik: string;
   bekleniyor: boolean;
   onEkle: (url: string) => Promise<boolean>;
+  onVazgec: () => void;
 }) {
   const [link, setLink] = useState("");
 
@@ -453,14 +506,14 @@ function LinkEkleFormu({
           inputMode="url"
         />
       </FormAlani>
-      <div className="flex flex-wrap items-center gap-3">
+      <p className="text-xs text-muted-foreground">
+        Linkin açılır ve çalışman dört açıdan değerlendirilir.
+      </p>
+      <FormDugmeleri onVazgec={onVazgec}>
         <Button type="submit" size="sm" disabled={bekleniyor || !link.trim()}>
           {bekleniyor ? "Değerlendiriliyor…" : "Ekle ve değerlendir"}
         </Button>
-        <span className="text-xs text-muted-foreground">
-          Linkin açılır ve çalışman dört açıdan değerlendirilir.
-        </span>
-      </div>
+      </FormDugmeleri>
     </form>
   );
 }
@@ -469,10 +522,12 @@ function ReferansFormu({
   kimlik,
   bekleniyor,
   onIste,
+  onVazgec,
 }: {
   kimlik: string;
   bekleniyor: boolean;
   onIste: (eposta: string) => Promise<boolean>;
+  onVazgec: () => void;
 }) {
   const [eposta, setEposta] = useState("");
 
@@ -501,16 +556,30 @@ function ReferansFormu({
         Bu kişiye birkaç kısa soruluk bir e-posta göndeririz; 3. gün bir kez
         hatırlatırız. Yanıt için 7 günü var.
       </p>
-      <Button
-        type="submit"
-        size="sm"
-        variant="outline"
-        className="w-fit"
-        disabled={bekleniyor || !eposta.trim()}
-      >
-        Referans iste
-      </Button>
+      <FormDugmeleri onVazgec={onVazgec}>
+        <Button type="submit" size="sm" disabled={bekleniyor || !eposta.trim()}>
+          Referans iste
+        </Button>
+      </FormDugmeleri>
     </form>
+  );
+}
+
+/** Ekleme formunun gönder ve vazgeç düğmeleri. */
+function FormDugmeleri({
+  children,
+  onVazgec,
+}: {
+  children: React.ReactNode;
+  onVazgec: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {children}
+      <Button type="button" size="sm" variant="ghost" onClick={onVazgec}>
+        Vazgeç
+      </Button>
+    </div>
   );
 }
 
@@ -558,14 +627,29 @@ function Degerlendirme({
 }) {
   const [acik, setAcik] = useState(false);
   const [aciklama, setAciklama] = useState("");
+  const notlar = notuBasliklaraAyir(not);
 
   return (
     <section className="flex flex-col gap-3 border-t border-kenar pt-4">
-      {not ? (
-        <p className="text-sm text-pretty">
-          <span className="text-muted-foreground">Değerlendirme notu: </span>
-          {not}
-        </p>
+      {notlar.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          <h4 className="text-sm font-semibold text-ana">
+            Değerlendirme notları
+          </h4>
+          <ul className="flex flex-col gap-2">
+            {notlar.map((parca, i) => (
+              <li
+                key={i}
+                className="grid gap-x-3 gap-y-0.5 text-sm text-pretty sm:grid-cols-[5rem_1fr]"
+              >
+                <span className="font-medium text-metin">
+                  {parca.baslik ?? "Genel"}
+                </span>
+                <span className="text-muted-foreground">{parca.metin}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       {incelemeBekliyor ? (

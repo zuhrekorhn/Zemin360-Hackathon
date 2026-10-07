@@ -115,17 +115,21 @@ function taslakHali(cikti: SomutCiktiYaniti): SomutCiktiTaslagi {
   };
 }
 
-/** Bir çalışmanın "Düzenle" ve "Sil" eylemleri; onaylar sayfa içinde (rehber § 5.6). */
-export function IsKalemiEylemleri({
+/**
+ * Bir çalışmanın düzenleme formu (kart sayfasında "⋯ → Düzenle" ya da "sıradaki
+ * adım" açar). Değerlendirilmiş çalışmanın göstergesi sıfırlanacaksa önce sorulur.
+ */
+export function IsKalemiDuzenleFormu({
   kartId,
   cikti,
   onGuncel,
   onHata,
-}: Ortak & { cikti: SomutCiktiYaniti }) {
-  const [acik, setAcik] = useState(false);
-  const [taslak, setTaslak] = useState<SomutCiktiTaslagi>(taslakHali(cikti));
+  onKapat,
+}: Ortak & { cikti: SomutCiktiYaniti; onKapat: () => void }) {
+  const [taslak, setTaslak] = useState<SomutCiktiTaslagi>(() =>
+    taslakHali(cikti),
+  );
   const [bekleniyor, setBekleniyor] = useState(false);
-  const [silmeOnayi, setSilmeOnayi] = useState(false);
   const [sifirlamaOnayi, setSifirlamaOnayi] = useState(false);
 
   async function kaydet(olay: React.FormEvent) {
@@ -133,10 +137,9 @@ export function IsKalemiEylemleri({
     if (bekleniyor) return;
     const degisenler = degisenIsKalemiAlanlari(taslakHali(cikti), taslak);
     if (Object.keys(degisenler).length === 0) {
-      setAcik(false);
+      onKapat();
       return;
     }
-    // Değerlendirilmiş çalışmanın göstergesi sıfırlanacaksa önce sorulur.
     if (
       gostergeSifirlanir(degisenler) &&
       cikti.guven_skoru &&
@@ -161,60 +164,11 @@ export function IsKalemiEylemleri({
         : undefined,
     );
     setBekleniyor(false);
-    if (tamam) setAcik(false);
-  }
-
-  async function sil() {
-    setBekleniyor(true);
-    await calistir(() => isKalemiSil(kartId, cikti.id), { onGuncel, onHata });
-    setBekleniyor(false);
-    setSilmeOnayi(false);
-  }
-
-  if (silmeOnayi) {
-    return (
-      <OnayAlani
-        soru={`“${cikti.baslik}” silinsin mi? Kanıtı ve referans istekleri de silinir.`}
-        onayEtiketi="Sil"
-        bekleniyor={bekleniyor}
-        bekleniyorEtiketi="Siliniyor…"
-        onOnayla={() => void sil()}
-        onVazgec={() => setSilmeOnayi(false)}
-      />
-    );
-  }
-
-  if (!acik) {
-    return (
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            setTaslak(taslakHali(cikti));
-            setAcik(true);
-          }}
-        >
-          Düzenle
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => setSilmeOnayi(true)}
-        >
-          Sil
-        </Button>
-      </div>
-    );
+    if (tamam) onKapat();
   }
 
   return (
-    <form
-      className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4"
-      onSubmit={kaydet}
-    >
+    <form className="flex flex-col gap-3" onSubmit={kaydet}>
       <IsKalemiFormu
         kimlik={`duzenle-${cikti.id}`}
         cikti={taslak}
@@ -238,17 +192,41 @@ export function IsKalemiEylemleri({
           <Button type="submit" size="sm" disabled={bekleniyor}>
             {bekleniyor ? "Kaydediliyor…" : "Kaydet"}
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setAcik(false)}
-          >
+          <Button type="button" size="sm" variant="ghost" onClick={onKapat}>
             Vazgeç
           </Button>
         </div>
       )}
     </form>
+  );
+}
+
+/** Çalışmayı silme onayı; onaylar sayfa içinde (rehber § 5.6). */
+export function IsKalemiSilmeOnayi({
+  kartId,
+  cikti,
+  onGuncel,
+  onHata,
+  onKapat,
+}: Ortak & { cikti: SomutCiktiYaniti; onKapat: () => void }) {
+  const [bekleniyor, setBekleniyor] = useState(false);
+
+  async function sil() {
+    setBekleniyor(true);
+    await calistir(() => isKalemiSil(kartId, cikti.id), { onGuncel, onHata });
+    setBekleniyor(false);
+    onKapat();
+  }
+
+  return (
+    <OnayAlani
+      soru={`“${cikti.baslik}” silinsin mi? Kanıtı ve referans istekleri de silinir.`}
+      onayEtiketi="Sil"
+      bekleniyor={bekleniyor}
+      bekleniyorEtiketi="Siliniyor…"
+      onOnayla={() => void sil()}
+      onVazgec={onKapat}
+    />
   );
 }
 
@@ -308,8 +286,7 @@ export function IsKalemiEkleFormu({
         }
       />
       <p className="text-xs text-pretty text-muted-foreground">
-        Referans kişi eklemek için çalışmayı kaydettikten sonra kanıt bölümünü
-        kullan.
+        Kanıt ve referansı çalışmayı kaydettikten sonra ekleyebilirsin.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" disabled={bekleniyor}>

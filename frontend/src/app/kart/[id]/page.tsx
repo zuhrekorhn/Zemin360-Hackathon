@@ -1,15 +1,16 @@
 "use client";
 
-import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { CalismaKarti } from "@/components/calisma-karti";
+import { CalismaTercihleri } from "@/components/calisma-tercihleri";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import {
   IsKalemiEkleFormu,
-  IsKalemiEylemleri,
   KartAlanlariFormu,
 } from "@/components/kart-duzenleme";
 import {
@@ -18,7 +19,6 @@ import {
   EtiketSatiri,
   PilotRozeti,
 } from "@/components/kart";
-import { KanitBolumu } from "@/components/kanit";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +30,6 @@ import {
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
-import { panelYolu } from "@/lib/yonlendirme";
 
 /**
  * Yetenek kartı + Doğrulama Ajanı ekranı (docs/agent-specs.md § 1 ve § 4).
@@ -49,6 +48,9 @@ import { panelYolu } from "@/lib/yonlendirme";
  * Sahibi kartı burada düzenler (docs/agent-specs.md § 1): kart alanları,
  * iş kalemi düzenle/sil/ekle. İçerik ya da link değişen işin güven göstergesi
  * sıfırlanır ve yeniden değerlendirilir; eski referans yanıtları geçmişte kalır.
+ * Çalışma tercihleri de burada (docs/kararlar.md G18): eşleştirme onlarla yapılır.
+ * Her çalışma kapalı bir kartla başlar, tek "sıradaki adım" gösterir
+ * (`CalismaKarti`); formlar istenince açılır.
  */
 
 export default function KartSayfasi() {
@@ -153,8 +155,20 @@ function KartIcerigi() {
         }
         aciklama={
           sahibi
-            ? "Her çalışman dört açıdan değerlendirilir: kanıt, sonuç, rol ve referans. Tek bir puana indirilmez; böylece neyin güçlü, neyin eksik olduğunu görürsün."
+            ? `Firmalar seni bu kartla, adınla (${kart?.genc_adi ?? ""}) birlikte görür. E-postan yalnızca karşılıklı ilgi oluşunca paylaşılır.`
             : "Her çalışma dört açıdan değerlendirilir: kanıt, sonuç, rol ve referans. Tek bir puana indirilmez; böylece neyin güçlü, neyin eksik olduğunu görürsünüz."
+        }
+        eylem={
+          sahibi && kart && !kartDuzenleniyor ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={() => setKartDuzenleniyor(true)}
+            >
+              Kartı düzenle
+            </Button>
+          ) : null
         }
       />
 
@@ -179,38 +193,43 @@ function KartIcerigi() {
 
       {!yukleniyor && kart ? (
         <>
-          <BelgeKarti
-            baslik={kart.rol_alani}
-            altbaslik={`Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
-            rozet={
-              <span className="flex flex-wrap gap-2">
-                <PilotRozeti sayi={kart.tamamlanan_pilot} />
-                {kart.kanit_bekleyen ? (
-                  <span className="rounded-sm border border-kenar px-2.5 py-1 text-xs text-muted-foreground">
-                    Kanıt bekliyor
-                  </span>
-                ) : null}
-              </span>
-            }
-          >
-            <EtiketSatiri
-              etiket="Araçlar"
-              degerler={kart.araclar_teknolojiler}
+          {sahibi && kartDuzenleniyor ? (
+            <KartAlanlariFormu
+              kart={kart}
+              onGuncel={duzenlendi}
+              onHata={setHata}
+              onKapat={() => setKartDuzenleniyor(false)}
             />
-            <EtiketSatiri
-              etiket="Sektör ilgisi"
-              degerler={kart.sektor_ilgi_alani}
-            />
-            <EtiketSatiri etiket="Sertifikalar" degerler={kart.sertifikalar} />
-            <EtiketSatiri etiket="Diller" degerler={kart.diller} />
-            {sahibi ? (
-              <p className="text-xs text-muted-foreground">
-                Firmalar kartını adınla ({kart.genc_adi}) birlikte böyle görür.
-                E-postan yalnızca karşılıklı ilgi oluşunca o firmayla
-                paylaşılır.
-              </p>
-            ) : null}
-          </BelgeKarti>
+          ) : (
+            <BelgeKarti
+              baslik={kart.rol_alani}
+              altbaslik={`Deneyim: ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}`}
+              rozet={
+                <span className="flex flex-wrap gap-2">
+                  <PilotRozeti sayi={kart.tamamlanan_pilot} />
+                  {kart.kanit_bekleyen ? (
+                    <span className="rounded-sm border border-kenar px-2.5 py-1 text-xs text-muted-foreground">
+                      Kanıt bekliyor
+                    </span>
+                  ) : null}
+                </span>
+              }
+            >
+              <EtiketSatiri
+                etiket="Araçlar"
+                degerler={kart.araclar_teknolojiler}
+              />
+              <EtiketSatiri
+                etiket="Sektör ilgisi"
+                degerler={kart.sektor_ilgi_alani}
+              />
+              <EtiketSatiri
+                etiket="Sertifikalar"
+                degerler={kart.sertifikalar}
+              />
+              <EtiketSatiri etiket="Diller" degerler={kart.diller} />
+            </BelgeKarti>
+          )}
 
           {kayitNotu ? (
             <p
@@ -221,26 +240,7 @@ function KartIcerigi() {
             </p>
           ) : null}
 
-          {sahibi ? (
-            kartDuzenleniyor ? (
-              <KartAlanlariFormu
-                kart={kart}
-                onGuncel={duzenlendi}
-                onHata={setHata}
-                onKapat={() => setKartDuzenleniyor(false)}
-              />
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-fit"
-                onClick={() => setKartDuzenleniyor(true)}
-              >
-                Kartı düzenle
-              </Button>
-            )
-          ) : null}
+          {sahibi ? <CalismaTercihleri /> : null}
 
           {sahibi && !kart.embedding_var ? (
             <EslestirmeyeHazirla
@@ -256,84 +256,73 @@ function KartIcerigi() {
             />
           ) : null}
 
-          <section className="flex flex-col gap-6">
-            <div className="flex flex-col gap-1">
-              <h2 className="font-heading text-xl font-semibold text-ana">
-                {sahibi ? "Çalışmaların" : "Çalışmaları"}
-              </h2>
-              {/* Rehber § 9.5: güven göstergesinin yapay zekâ açıklaması. */}
-              <p className="text-xs text-muted-foreground">
-                Kanıt, sonuç ve rol yapay zekâ desteğiyle değerlendirilir;
-                referans puanını referans kişi verir.
-              </p>
+          <section className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="flex flex-col gap-1">
+                <h2 className="flex items-center gap-2.5 font-heading text-xl font-semibold text-ana">
+                  {sahibi ? "Çalışmaların" : "Çalışmaları"}
+                  {kart.somut_ciktilar.length > 0 ? (
+                    <span className="rounded-full bg-ana px-2 py-0.5 font-sans text-xs font-medium text-zemin">
+                      {kart.somut_ciktilar.length}
+                    </span>
+                  ) : null}
+                </h2>
+                {/* Rehber § 9.5: güven göstergesinin yapay zekâ açıklaması. */}
+                <p className="text-xs text-pretty text-muted-foreground">
+                  Her çalışma dört açıdan değerlendirilir. Kanıt, sonuç ve rol
+                  yapay zekâ desteğiyle değerlendirilir; referans puanını
+                  referans kişi verir.
+                </p>
+              </div>
+              {sahibi && !isEkleniyor ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEkleniyor(true)}
+                >
+                  <Plus aria-hidden="true" />
+                  Çalışma ekle
+                </Button>
+              ) : null}
             </div>
 
-            {kart.somut_ciktilar.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {sahibi
-                  ? "Bu kartta henüz çalışma yok. Aşağıdan ekleyebilirsin."
-                  : "Bu kartta henüz çalışma yok."}
-              </p>
-            ) : (
-              kart.somut_ciktilar.map((cikti) => (
-                <div key={cikti.id} className="flex flex-col gap-3">
-                  <CiktiOzeti
-                    cikti={cikti}
-                    kartId={kart.id}
-                    sahibiBakiyor={sahibi}
-                    referansVar={
-                      (kanitlar[cikti.id]?.referanslar.length ?? 0) > 0
-                    }
-                  />
-                  {sahibi ? (
-                    <IsKalemiEylemleri
-                      kartId={kart.id}
-                      cikti={cikti}
-                      onGuncel={duzenlendi}
-                      onHata={setHata}
-                    />
-                  ) : null}
-                  {sahibi ? (
-                    <KanitBolumu
-                      somutCiktiId={cikti.id}
-                      kanitlar={cikti.kanitlar}
-                      durum={kanitlar[cikti.id]}
-                      onDurum={kanidiGuncelle}
-                      onHata={setHata}
-                    />
-                  ) : null}
-                </div>
-              ))
-            )}
-
-            {sahibi ? (
-              isEkleniyor ? (
+            {sahibi && isEkleniyor ? (
+              <div className="rounded-md border border-kenar bg-card px-5 py-4">
                 <IsKalemiEkleFormu
                   kartId={kart.id}
                   onGuncel={duzenlendi}
                   onHata={setHata}
                   onKapat={() => setIsEkleniyor(false)}
                 />
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-fit"
-                  onClick={() => setIsEkleniyor(true)}
-                >
-                  Çalışma ekle
-                </Button>
-              )
+              </div>
             ) : null}
+
+            {kart.somut_ciktilar.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {sahibi
+                  ? "Bu kartta henüz çalışma yok. Yaptığın bir işi ekle; kanıt ve referansla güçlendirebilirsin."
+                  : "Bu kartta henüz çalışma yok."}
+              </p>
+            ) : sahibi ? (
+              kart.somut_ciktilar.map((cikti) => (
+                <CalismaKarti
+                  key={cikti.id}
+                  kartId={kart.id}
+                  cikti={cikti}
+                  durum={kanitlar[cikti.id]}
+                  onDurum={kanidiGuncelle}
+                  onGuncel={duzenlendi}
+                  onHata={setHata}
+                />
+              ))
+            ) : (
+              kart.somut_ciktilar.map((cikti) => (
+                <CiktiOzeti key={cikti.id} cikti={cikti} kartId={kart.id} />
+              ))
+            )}
           </section>
         </>
       ) : null}
-
-      <footer className="mt-auto flex flex-wrap gap-3 border-t border-kenar pt-6">
-        <Button asChild variant="outline" size="lg">
-          <Link href={panelYolu(hesap.rol)}>Panele dön</Link>
-        </Button>
-      </footer>
     </Sayfa>
   );
 }

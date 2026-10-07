@@ -132,10 +132,21 @@ export function EtiketSatiri({
 }) {
   if (degerler.length === 0) return null;
   return (
-    <p className="text-sm">
-      <span className="text-muted-foreground">{etiket}: </span>
-      {degerler.join(", ")}
-    </p>
+    <div className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-3">
+      <span className="w-24 shrink-0 text-xs text-muted-foreground">
+        {etiket}
+      </span>
+      <ul className="flex flex-wrap gap-1.5">
+        {degerler.map((deger) => (
+          <li
+            key={deger}
+            className="rounded-full border border-kenar px-2.5 py-0.5 text-sm text-metin"
+          >
+            {deger}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

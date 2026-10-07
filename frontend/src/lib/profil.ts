@@ -67,18 +67,27 @@ function tamSayi(metin: string): number | null {
   return Number(temiz);
 }
 
-/** Gönderilmeden önce gösterilecek hatalar; boşsa form geçerli. */
-export function profilFormunuDogrula(
-  form: ProfilFormu,
-  buYil: number = new Date().getFullYear(),
-): string[] {
+/**
+ * Çalışma tercihlerinin hataları: eşleştirmenin kullandığı alanlar. Kayıtta
+ * profille birlikte, sonra kart sayfasında düzenlenir (docs/kararlar.md G18).
+ */
+export function tercihHatalari(form: ProfilFormu): string[] {
   const hatalar: string[] = [];
   if (!form.sehir) hatalar.push("Şehir seç.");
   if (form.calisma_modelleri.length === 0)
     hatalar.push("En az bir çalışma modeli işaretle.");
-  if (!form.kariyer_durumu) hatalar.push("Durumunu seç.");
   if (form.musaitlikler.length === 0)
     hatalar.push("En az bir müsaitlik işaretle.");
+  return hatalar;
+}
+
+/** Hesap bilgilerinin (eğitim, bağlantılar) hataları; Hesabım sayfası. */
+export function hesapHatalari(
+  form: ProfilFormu,
+  buYil: number = new Date().getFullYear(),
+): string[] {
+  const hatalar: string[] = [];
+  if (!form.kariyer_durumu) hatalar.push("Durumunu seç.");
 
   if (form.sinif.trim()) {
     const sinif = tamSayi(form.sinif);
@@ -105,6 +114,14 @@ export function profilFormunuDogrula(
   return hatalar;
 }
 
+/** Kayıt formunun hepsi: önce tercihler, sonra hesap bilgileri. */
+export function profilFormunuDogrula(
+  form: ProfilFormu,
+  buYil: number = new Date().getFullYear(),
+): string[] {
+  return [...tercihHatalari(form), ...hesapHatalari(form, buYil)];
+}
+
 function bosIseNull(metin: string): string | null {
   const temiz = metin.trim();
   return temiz ? temiz : null;
@@ -126,6 +143,28 @@ export function formuProfileCevir(form: ProfilFormu): GencKayitProfili {
     linkedin_url: bosIseNull(form.linkedin_url),
     portfolyo_url: bosIseNull(form.portfolyo_url),
   };
+}
+
+const TERCIH_ALANLARI_GOVDE = [
+  "sehir",
+  "calisma_modelleri",
+  "musaitlikler",
+  "musaitlik_baslangici",
+] as const;
+
+/** PATCH /profil gövdesi: yalnızca çalışma tercihleri (kart sayfası). */
+export function tercihGovdesi(form: ProfilFormu) {
+  const tam = formuProfileCevir(form);
+  return Object.fromEntries(
+    TERCIH_ALANLARI_GOVDE.map((alan) => [alan, tam[alan]]),
+  ) as Pick<GencKayitProfili, (typeof TERCIH_ALANLARI_GOVDE)[number]>;
+}
+
+/** PATCH /profil gövdesi: tercihler dışındaki her şey (Hesabım). */
+export function hesapGovdesi(form: ProfilFormu) {
+  const tam: Partial<GencKayitProfili> = { ...formuProfileCevir(form) };
+  for (const alan of TERCIH_ALANLARI_GOVDE) delete tam[alan];
+  return tam;
 }
 
 /** Kayıtlı profili düzenleme formuna çevirir. */

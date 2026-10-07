@@ -93,6 +93,16 @@ Başka yerde tutulan kararlar:
   genç büyüdükçe düzenlenir ve çalışma eklenerek güçlenir. Kartı olan gence Keşif 409 döner, menüde
   "Kartım" vardır, `/me` tek `yetenek_karti` döner. Gerekçe: iki kart aynı genci aynı ilana iki kez
   önerebiliyordu. Kartı bulmanın tek yolu `app/servisler/genc_karti.py`.
+- **G18. Gencin ekranları kullanıcının sorusuna göre bölünür, tabloya göre değil (8 Eki 2026).**
+  Menü: Fırsatlar (ana sayfa), Kartım, İş birliklerim; bildirimler zil, ayar ve çıkış adın
+  altındaki hesap menüsünde. **Çalışma tercihleri (şehir, çalışma modeli, müsaitlik, başlama)
+  kart sayfasında**, çünkü eşleştirme onlarla yapılır ve genç onları kartıyla birlikte düşünür;
+  eğitim, bağlantılar, bağlı hesaplar ve KVKK "Hesabım"da (`/profil`). Veri yine `kullanici`
+  tablosunda, uç aynı (`PATCH /profil`, kısmi gövde); değişen yalnızca hangi ekranın hangi
+  alanları gönderdiği (`lib/profil.ts` › `tercihGovdesi`, `hesapGovdesi`). Ana sayfa "şimdi ne
+  yapmalıyım" sırasıyla dizilir (önce yanıt bekleyen işler, sonra fırsatlar; ilişkiler tek
+  "Süreçlerin" listesinde); kart sayfasında her çalışma kapalı bir kartla başlar ve tek "sıradaki
+  adım" gösterir (`lib/calisma.ts`), formlar istenince açılır.
 
 ## F — Firma akışı
 
