@@ -2,81 +2,169 @@
 
 ## Genel Bakış
 
-Sistem, ortak bir veri katmanı üzerinde çalışan altı uzman ajandan oluşuyor. Hiçbir ajan diğerinin işini bloklamıyor — Keşif/Tanımlama akışları kullanıcı etkileşimine bağlı senkron çalışırken, Eşleştirme ve Canlılık ajanları arka plan işleri (background jobs) olarak tasarlanıyor.
+Altı uzman ajan tek bir paylaşılan veri katmanı üzerinde çalışır. İki tür ajan var:
+
+- **Sohbet ajanları** (Keşif, Tanımlama ve firma kartı sohbeti) kullanıcıyla çok turlu konuşur.
+  Tek bir LangGraph motorunu paylaşırlar; sohbet Postgres checkpointer'da durur.
+- **Tek seferlik hesaplar** (Eşleştirme, Doğrulama, Takip, Canlılık) bir olayla tetiklenir: kart
+  onayı, kanıt eklenmesi, karşılıklı ilgi, tarama ucu. Ağır işler yanıt döndükten sonra arka planda
+  (`BackgroundTasks`) çalışır.
+
+İlke: **benzerlik aday bulur, yapay zekâ doğrular, puanı kod verir.** Dil modeli öneri, gerekçe ve
+metin üretir; listeye girme, puan, durum geçişi ve tamamlanma saf kurallardadır. Hiçbir taslak
+kullanıcı onaylamadan kaydedilmez.
 
 ```mermaid
 flowchart TD
-  U[Kullanıcılar - Genç yetenekler ve kurumlar] --> W[Web arayüzü - Next.js]
-  W --> A[API katmanı - FastAPI]
-  A --> O[Ajan orkestrasyonu - LangGraph]
-  O --> D[(Veri katmanı - Postgres + pgvector)]
-  O --> L[LLM API - Katmanlı model stratejisi]
+  U[Genç, firma, GİRVAK] --> W[Web arayüzü<br/>Next.js]
+  W -->|JWT| A[Uç noktalar<br/>app/api]
+  A --> S[Servisler, orkestrasyon<br/>app/servisler]
+  A --> M[Sohbet motoru<br/>LangGraph]
+  S --> G[Ajan kuralları ve istemler<br/>app/agents]
+  M --> G
+  S --> C[Altyapı<br/>app/core]
+  G --> C
+  S --> D[(PostgreSQL + pgvector)]
+  M --> D
+  C --> L[Gemini<br/>hızlı ve güçlü katman]
+  C --> V[Voyage<br/>embedding]
+  C --> X[Dış servisler<br/>e-posta, depo, yedek okuyucu…]
 ```
 
 ## Teknoloji Kararları
 
 | Katman | Seçim | Gerekçe |
 |---|---|---|
-| Ajan orkestrasyonu | **LangGraph** | Durum kalıcılığını (checkpointing) native destekliyor; CrewAI/AutoGen'e göre bu ihtiyaca en uygun olanı. **Kodda nasıl kullanılıyor (30 Eyl):** yalnızca çok turlu sohbet ajanları (Keşif, Tanımlama, firma kartı) bir `StateGraph` olarak derlenir ve aynı motoru paylaşır (`app/agents/sohbet_motoru.py`); sohbet Postgres checkpointer'da durur, LLM hatasında kaldığı yerden sürer. Eşleştirme, Doğrulama, Takip ve Canlılık tek seferlik hesaplardır, grafik kullanmaz; aralarındaki akışı `app/servisler/` yürütür. Supervisor ajanı ve LangGraph `interrupt` kullanılmıyor: insan onayı uç noktalarla sağlanır (taslak onaylanmadan kaydedilmez, güven göstergesine itiraz edilir, eşleşmede karar insanındır). |
-| Backend | **FastAPI (Python)** | Orkestrasyon katmanıyla aynı dilde, async destekli; bu sınıf ürünlerde sektörün en yaygın kombinasyonu. |
-| Veritabanı | **PostgreSQL + pgvector** | Ayrı bir vektör veritabanı (Qdrant/Pinecone) bu veri hacminde (yüzlerce–birkaç bin kayıt) gereksiz altyapı yükü. Tek veritabanında hem ilişkisel veri hem embedding tutuluyor. |
-| Frontend | **Next.js + Tailwind + shadcn/ui** | Güncel, hızlı ve profesyonel görünümlü bir arayüz için sektör standardı — UI/UX değerlendirme kriterini doğrudan destekliyor. |
-| Embedding | **Voyage AI (voyage-4, 1024 boyut)** | Anthropic'in Claude ile kullanım için resmi önerdiği sağlayıcı — ilk 200M token ücretsiz, ön ödeme istemiyor (hackathon için pratikte sıfır maliyet). Ödeme yöntemi eklenmemiş hesapta dakikada 3 istek sınırı var: art arda kart onaylarında embedding 429'a düşebilir; kart yine kaydedilir, "eşleştirmeye hazırla" ile yeniden hesaplanır. |
-| Kimlik (Faz B) | **E-posta + şifre, JWT (HS256, 7 gün), Bearer + localStorage** | Karmaşıklık bilinçli düşük: refresh token, OAuth ve httpOnly cookie yok (ürünleşme dönemi). Şifre argon2id (`argon2-cffi`). Kimlik ayrı `hesap` tablosunda, profil `kullanici`/`kurum`'da (1-1) — giriş tek tabloda, GİRVAK'ın profile ihtiyacı yok, bildirim ve yetki tek kimliğe bağlanıyor. Sahiplik kuralları tek dosyada (`app/api/sahiplik.py`); başkasının kaynağı 404 (varlık sızmasın). Gerekçeler ve seçenek karşılaştırması: `kimlik-ve-dongu.md` § 1. |
-| Dış servisler (Doğrulama iyileştirmesi, Adım 6) | **Arayüz + `.env` bayrağı + zarif düşüş** | Her dış servis (`app/core/dis_servisler/`) küçük bir arayüzün arkasında; somut sınıf tek kurulum noktasında (`kurulum.py`) bayrağa göre seçilir, testler sahte verir. Hata akışı düşürmez: ilgili sinyal "—" olur ya da log'a düşülür (`dogrulama.md` § 14.4). Çağrılar `zaman_asimli` ve `gozlemli` sarmalayıcılarıyla; sonuçlar GİRVAK'a `GET /saglik/servisler`'de. İlk servis **e-posta** (`EPOSTA_SAGLAYICI=resend | brevo | log | kapali`, varsayılan `log`): kayıt doğrulaması, referans istekleri ve karşılıklı ilgi kesinleşince "eşleştiniz" e-postası (`app/servisler/eslesme_epostasi.py`). **Brevo** alan adı istemez, tek bir doğrulanmış gönderen adresi (`EPOSTA_GONDEREN`) yeter; Resend doğrulanmış alan adı ister. Gerçek göndericiler `.example`/`.test` gibi sahte adreslere ağ isteği atmaz (demo hesapları). Diğer bildirimler uygulama içinde kalır. Eşleşen iki taraf birbirine sistemden değil kendi adresinden yazar: "E-posta yaz" düğmesi hazır taslaklı bir `mailto:` bağlantısıdır (`frontend/src/lib/eposta-taslagi.ts`, servis gerekmez). |
-| Yedek okuyucu (Doğrulama iyileştirmesi, Adım 10) | **Playwright, ayrı servis (`backend/yedek_okuyucu/`)** | Düz HTTP ile okunamayan kanıt sayfası (bot engeli, JavaScript ile çizilen sayfa, görsel ağırlıklı portfolyo) gerçek tarayıcıda açılır; işlenmiş HTML ve gerekirse ekran görüntüsü döner. Chromium ağır ve kullanıcının adresini açtığı için backend'den ayrı süreçte (yayında Railway'de ayrı servis). SSRF: tarayıcının tek ağ kapısı süreç içi bir vekil; her bağlantı backend'in `guvenli_istek.hedefi_dogrula` kuralıyla denetlenip doğrulanan IP'ye açılır (istek yakalama yetmiyor: yakalanan isteğe verilen 3xx'i tarayıcı denetimsiz izliyor). Backend tarafı bir dış servis gibi bağlanır (bayrak, zaman aşımı, zarif düşüş). Ayrıntı: servis README'si. |
-| LLM | **Gemini, ücretli katman, iki model katmanı** | Sağlayıcı Faz 1'den beri Gemini: Anthropic ön ödeme istiyordu, Gemini istemiyordu. Faz A'da ücretsiz katmandan ücretli anahtara geçildi (günde 20 istek demo için yetmiyordu); sağlayıcı değişmedi. **Katmanlar** (`app/core/llm.py`): *hızlı* — Keşif ve Tanımlama'nın yapılandırılmış çıkarımı (varsayılan `gemini-3.6-flash`, yedek `gemini-3.1-flash-lite`, düşünme seviyesi `minimal` — `GEMINI_HIZLI_DUSUNME`; modelin varsayılanında tur ~6 sn sürüyor ve çıktının %70-90'ı düşünmeydi, üstelik kullanıcının söylemediği bir bilgiyi taslağa ekledi; `minimal`'de tur ~2 sn, uydurma yok); *güçlü* — eşleştirme gerekçesi ve doğrulama rubriği (varsayılan `gemini-3.8-flash`, yedek `gemini-3.6-flash`). Model adları `.env`'den okunur (`GEMINI_HIZLI_MODEL`, `GEMINI_GUCLU_MODEL` ve yedekleri), kod değişmeden değişir. Güçlü katmanın varsayılanı bilerek kararlı (preview olmayan) bir model: demo 9-11 Ekim'de, preview modellerin hız sınırı ve kararlılığı belirsiz. Yeni anahtarlara kararlı bir Pro açık değil: `gemini-2.5-pro` model listesinde görünüyor ama çağrıda 404 dönüyor, `gemini-pro-latest` ise `gemini-3.1-pro-preview`'a gidiyor. Bu yüzden şimdilik en yeni kararlı Flash; Pro'ya gerek olup olmadığı aynı girdiyle Pro/Flash karşılaştırılarak kararlaştırılacak. **Yedek model** LangChain `with_fallbacks` ile aynı prompt ve şemayı ikinci modele gönderir. Amacı sağlayıcı arızası: 5xx (`GoogleAPIError`), zaman aşımı (`httpx.TimeoutException`, `GEMINI_ZAMAN_ASIMI_SN`, varsayılan 30 sn) ve anlık hız sınırı (429, `GoogleRateLimitError` — ücretli katmanda dakikalık sınır; ücretsiz katmanda günlük kotaydı) ve kullanılamayan model (404, `GoogleModelNotFoundError` — log'a `MODEL KULLANILAMIYOR` hatası ve düzeltilecek `.env` değişkeni yazılır). Hepsi model başına oluşuyor, yedek model o an genellikle çalışır. **Diğer 4xx listede yok:** hatalı istek (400) ya da yetki (401/403) ikinci modelde de aynı şekilde başarısız olur. Açılışta `.env`'deki dört model adı sağlayıcının model listesiyle karşılaştırılır; bulunamayan uyarılır, uygulama durmaz, kontrol başarısızsa sessizce geçilir. İki model de yanıt veremezse istek 503 (arıza, zaman aşımı) ya da 429 (hız sınırı) olarak döner — ayrıntı `app/core/hatalar.py`. SDK'nın kendi tekrar sayısı 6'dan **2'ye** indirildi (`MAKS_TEKRAR`): asıl tekrar stratejisi yedek model, aynı modeli üstel beklemeyle tekrar tekrar denemek dakikalar kaybettiriyordu. **Gözlemlenebilirlik:** her çağrı sunucu günlüğüne tek satır yazar: iş adı, model, süre, deneme sırası ve token kullanımı (girdi, çıktı, düşünme, toplam). |
+| Ajan orkestrasyonu | **LangGraph** (yalnızca sohbetler) | Durum kalıcılığını (checkpointing) yerleşik destekliyor: LLM hatasında sohbet kaldığı yerden sürer. Sohbet ajanları bir `StateGraph` olarak derlenir ve aynı motoru paylaşır (`app/agents/sohbet_motoru.py`); yeni sohbet ajanı bir `AjanTanimi` yazmaktır. Tek seferlik hesaplar grafik kullanmaz; aralarındaki akışı `app/servisler/` yürütür. Supervisor ajanı ve `interrupt` kullanılmaz: insan onayı uç noktalarla sağlanır. |
+| Backend | **FastAPI (Python)** | Orkestrasyonla aynı dil, async, otomatik OpenAPI belgesi (`/docs`). |
+| Veritabanı | **PostgreSQL + pgvector** | Bu veri hacminde (yüzlerce–birkaç bin kart) ayrı bir vektör veritabanı gereksiz altyapı yükü. İlişkisel veri ve embedding tek yerde, tek işlemde. |
+| Frontend | **Next.js (App Router) + Tailwind + shadcn/ui** | Erişilebilir hazır bileşenler; tema `design-language.md`'deki CSS değişkenlerinden. |
+| Embedding | **Voyage AI** (`voyage-4`, 1024 boyut) | Kart temsil metni → vektör; LLM'den bağımsız, ucuz çağrı. Voyage'a ulaşılamazsa kart yine kaydedilir, embedding sonradan tamamlanır (`app/servisler/embedding.py`). |
+| Kimlik | **E-posta + şifre, JWT (HS256, 7 gün), Bearer** | Karmaşıklık bilinçli düşük: refresh token, OAuth ile giriş ve httpOnly cookie yok (ürünleşme dönemi). Şifre argon2id. Kimlik `hesap` tablosunda, profil `kullanici` / `kurum`'da; sahiplik kuralları tek modülde (`app/servisler/sahiplik.py`); başkasının kaynağı 404. Ayrıntı: `kimlik-ve-dongu.md`. |
+| Dış servisler | **Arayüz + `.env` bayrağı + zarif düşüş** | Her dış servis (`app/core/dis_servisler/`) küçük bir `Protocol` arayüzünün arkasında; somut sınıf tek kurulum noktasında (`kurulum.py`) bayrağa göre seçilir, testler sahte verir. Hata akışı düşürmez: ilgili sinyal "—" olur. Çağrılar `zaman_asimli` ve `gozlemli` sarmalayıcılarından geçer; durumları GİRVAK'ın gözlem panelinde (`GET /saglik/servisler`). Varsayılanların hepsi yerelde çalışır (`dogrulama.md` § 14.4). |
+| E-posta | **Brevo ya da Resend** (`EPOSTA_SAGLAYICI`, varsayılan `log`) | Kayıt doğrulaması, referans istekleri ve karşılıklı ilgi kesinleşince "eşleştiniz" e-postası (`app/servisler/eslesme_epostasi.py`). Brevo tek doğrulanmış gönderen adresi ister, Resend doğrulanmış alan adı. `log` kipinde bağlantılar sunucu günlüğüne yazılır. `.example` gibi sahte adreslere ağ isteği atılmaz. Diğer bildirimler uygulama içinde kalır. Eşleşen iki taraf birbirine kendi adresinden yazar: "E-posta yaz" taslaklı bir `mailto:` bağlantısıdır (`frontend/src/lib/eposta-taslagi.ts`). |
+| Yedek okuyucu | **Playwright, ayrı süreç** (`backend/yedek_okuyucu/`) | Düz HTTP ile okunamayan kanıt sayfasını (bot engeli, JavaScript ile çizilen sayfa, görsel portfolyo) gerçek tarayıcıda açar. Chromium ağır ve kullanıcının adresini açtığı için backend'den ayrı süreçte. SSRF: tarayıcının tek ağ kapısı süreç içi bir vekil; her bağlantı backend'in `guvenli_istek.hedefi_dogrula` kuralıyla denetlenir. Servis kapalıysa okuma onsuz biter. |
+| LLM | **Gemini, iki model katmanı, yedek zincir** | Aşağıda. |
 
-## LLM Maliyet/Performans Stratejisi
+### LLM katmanları
 
-Görevler üç kategoriye ayrılıyor, her biri farklı model gerektiriyor:
+| Katman | İşler | Varsayılan model (yedek) |
+|---|---|---|
+| **Hızlı** | Sohbetlerin alan çıkarımı; dosya ve görsel okuma; Canlılık hatırlatma metni; Takip durum özeti | `gemini-3.6-flash` (`gemini-3.1-flash-lite`), düşünme seviyesi `minimal` |
+| **Güçlü** | Eşleştirme gerekçesi ve uygunluk kararı; Doğrulama'nın kanıt çıkarımı; Takip plan kişiselleştirmesi | `gemini-3.8-flash` (`gemini-3.6-flash`) |
+| Embedding | Kart temsil metni → vektör; uzun kanıt metninde parça seçimi | Voyage `voyage-4` |
 
-| Kategori | İşler | Katman | Varsayılan model (yedek) |
-|---|---|---|---|
-| **Yapılandırma/çıkarma** | Keşif ve Tanımlama sohbetlerinin alan çıkarımı | hızlı | `gemini-3.6-flash` (`gemini-3.1-flash-lite`) |
-| **Gerekçeli akıl yürütme** | Eşleştirme'nin "neden eşleşti" gerekçesi, Doğrulama'nın rubrik puanlaması | güçlü | `gemini-3.8-flash` (`gemini-3.6-flash`) |
-| **Embedding** | Kart temsil metni → vektör | — | Voyage `voyage-4` (LLM'den bağımsız, ayrı ve ucuz çağrı) |
-
-Çıkarımda format zaten net, ince akıl yürütme gerekmiyor; sohbetin her turunda çağrıldığı için hız ve maliyet belirleyici. Gerekçe ve rubrik tek seferlik ama nüans önemli: kartlardaki somut noktalara atıf, kurallara uyum (itiraz notu beyandır, sayı uydurma yok). Bu katmanlama maliyetin büyük kısmını ucuz modelde tutarken kalite gereken yerde güçlü modeli devreye sokuyor. Güçlü modelin gerçekten gerekli olup olmadığı, aynı girdiyle Pro ve Flash karşılaştırılarak ölçülüyor; model `.env`'den değiştirilebildiği için karar kod değişikliği gerektirmiyor.
+- **Neden iki katman:** çıkarım her sohbet turunda çağrılır; hız ve maliyet belirleyici, format
+  zaten net. Gerekçe, rubrik ve plan tek seferlik ama nüans önemli. Hızlı katmanda düşünme
+  `minimal`: varsayılan düşünmede tur ~6 sn sürüyor ve model kullanıcının söylemediği bilgiyi
+  taslağa ekliyordu; `minimal`'de ~2 sn, uydurma yok.
+- **Model adları `.env`'den** (`GEMINI_HIZLI_MODEL`, `GEMINI_GUCLU_MODEL` ve yedekleri); kod
+  değişmeden değişir. Güçlü katmanın varsayılanı bilerek kararlı (preview olmayan) bir model.
+  Pro'ya geçmenin gerekli olup olmadığı aynı girdiyle karşılaştırılarak kararlaştırılacak.
+- **Yedek model** (LangChain `with_fallbacks`) aynı istemi ve şemayı ikinci modele gönderir.
+  Tetikleyen hatalar: 5xx, zaman aşımı (`GEMINI_ZAMAN_ASIMI_SN`, varsayılan 30 sn), anlık hız
+  sınırı (429) ve kullanılamayan model (404; günlüğe düzeltilecek `.env` değişkeni yazılır).
+  Diğer 4xx (hatalı istek, yetki) ikinci modelde de aynı şekilde başarısız olacağı için listede
+  yok. SDK'nın kendi tekrar sayısı 2'ye indirildi: asıl tekrar stratejisi yedek model.
+- **İkisi de yanıt veremezse** uç 503 (arıza, zaman aşımı) ya da 429 (hız sınırı) döner;
+  `app/core/hatalar.py` her hatayı CORS başlığı ve `{"detail": ...}` gövdesiyle döndürür, böylece
+  arayüz kullanıcıya doğru cümleyi gösterir.
+- **Açılışta** `.env`'deki dört model adı sağlayıcının listesiyle karşılaştırılır; bulunamayan
+  uyarılır, uygulama durmaz.
+- **Gözlemlenebilirlik:** her çağrı günlüğe tek satır yazar: iş adı, model, süre, deneme sırası,
+  token kullanımı (girdi, çıktı, düşünme).
+- **İstem güvenliği:** kullanıcı metni istemde veri etiketleri içindedir (`app/core/istem_guvenligi.py`),
+  kullanıcıya giden her LLM metni ortak dil kuralına uyar (`app/core/kullanici_dili.py`).
 
 ## Katmanlar (backend)
 
 | Katman | Ne durur | Kural |
 |---|---|---|
-| `app/agents/` | Saf kurallar (durum makineleri, eşikler, skor, düzenleme ve güçlendirme hesapları) ve dil modeli çağrıları | Veritabanı yok; testle sabitlenmiş tablolar. Yapay zekâ öneri ve metin üretir, karar kuraldadır |
-| `app/servisler/` | Birden fazla uç ve arka plan işinin paylaştığı orkestrasyon: eşleştirme pipeline'ı, kart hazırlama (embedding → otomatik puanlama → yeniden eşleştirme), kart düzenleme, doğrulama rubriğinin yazılması, ilgi akışının yan etkileri (iş birliği açma, ihtiyacı kapatma) | Genç akışında açıldı (`plans/genc-akisi.md` § 11) |
-| `app/api/` | Uçlar: yetki (401/403/404), istek/yanıt şeması, servisi çağırma, bildirim | İnce kalır; aynı iş iki uçta yazılmaz |
+| `app/api/` | Uç noktalar: istek ve yanıt şeması, kimlik (401 / 403), "göremez" kararını 404'e çevirme, servisi çağırma | İnce kalır; aynı iş iki uçta yazılmaz |
+| `app/servisler/` | Birden fazla ucun ve arka plan işinin paylaştığı orkestrasyon: eşleştirme pipeline'ı, kart hazırlama (embedding → değerlendirme → yeniden eşleştirme), ilgi akışının yan etkileri, doğrulama, sahiplik kuralları, bildirim yazma, embedding | API katmanından import etmez |
+| `app/agents/` | Saf kurallar (durum makineleri, skor, eşikler, puan tavanları, süreç şablonları) ve dil modeli çağrıları (istem, şema, çıkarım) | Veritabanına yazmaz; tablolar testle sabit. Yapay zekâ öneri ve metin üretir, karar kuraldadır |
+| `app/core/` | Altyapı ve küçük alan kuralları: ayarlar, LLM ve embedding istemcileri, güvenli HTTP isteği, kanıt okuma zinciri, dosya yükleme hattı, dış servis adaptörleri, şehir / müsaitlik / çalışma modeli normalizasyonu | Üst katmanlardan import etmez |
+| `app/models/`, `app/schemas/`, `app/db/` | SQLAlchemy modelleri (tablo başına bir dosya), Pydantic şemaları, oturum | — |
 
-Arka plan işleri `BackgroundTasks` ile yanıttan sonra çalışır, kendi oturumunu açar, hatayı yutar ve idempotenttir (danışma kilidi, `ON CONFLICT`, versiyon kontrolü, satır kilidi). Testler hepsini `tests/conftest.py`'de sahteyle değiştirir.
+**Arka plan işleri** `BackgroundTasks` ile yanıttan sonra çalışır, kendi oturumunu açar, hatayı
+yutar ve idempotenttir (danışma kilidi, `ON CONFLICT`, versiyon kontrolü, satır kilidi). Testler
+hepsini `tests/conftest.py`'de sahteyle değiştirir; testler gerçek Gemini ya da Voyage çağırmaz.
+
+**Zamanlayıcı yok, bilinçli:** zaman aşımı ve gecikme okuma anında hesaplanır; periyodik iş bir uç
+noktadır (`POST /canlilik/tarama`, `canlilik.md` § 4).
+
+**Bilinen borç** (hackathon sonrası):
+- `app/api/canlilik.py` taramanın orkestrasyonunu, `app/api/takip.py` plan ve bildirim yardımcılarını
+  taşıyor; ikisi `app/servisler/`'e alınmalı.
+- `app/agents/eslestirme.py` aday sorgularını (SQL okuma) da içeriyor; genç ve firma adayı için
+  ikiz fonksiyonlar (gerekçe, uygunluk) tek bir aday türü stratejisinde birleşmeli.
+- Eşleşme tablosundaki `genc_*` kolonları "aday tarafı" anlamında kullanılıyor (`kararlar.md` F12);
+  yeniden adlandırma bir migration işi.
+
+## Kullanılan desenler
+
+| Desen | Nerede |
+|---|---|
+| Strategy | Sohbet ajanı tanımları (`AjanTanimi`), kanıt okuyucuları, OAuth sağlayıcıları, profil kodu platformları, çapa doğrulayıcıları, Takip süreç şablonları (`SurecSablonu`) |
+| Chain of Responsibility | Kanıt okuma zinciri: platform okuyucusu → genel → yedek okuyucu → Jina |
+| Adapter + Factory | Dış servisler (`Protocol` arayüzü, tek kurulum noktası `kurulum.py`) |
+| Null Object | Bayrağı kapalı servis (`Kapali…` sınıfları): `if servis_var` dalları koda dağılmaz |
+| Decorator | `zaman_asimli`, `gozlemli` sarmalayıcıları |
+| State Machine | `eslesme_durumu`, `takip_durumu`, `inceleme_durumu`, `referans_durumu` (saf, tablo testli) |
+| Single dispatch | Kart türüne göre embedding temsil metni (`app/servisler/embedding.py`) |
+| Pipeline | Dosya yükleme hattı (tür → boyut → virüs → temizlik → okuma) |
+| Value Object | `KanitBelgesi`, `BaslikPuanlari`, `Aday` (dondurulmuş dataclass) |
+
+SOLID karşılıkları Doğrulama örneğinde ayrıntılı: `dogrulama.md` § 14.2.
 
 ## İlgi akışı (iki kapı)
 
-Eşleşme durumu tek alanda (`eslesme.durum`), geçiş kuralı tek fonksiyonda (`app/agents/eslesme_durumu.py › gecis`):
+Eşleşme durumu tek alanda (`eslesme.durum`), geçiş kuralı tek fonksiyonda
+(`app/agents/eslesme_durumu.py` › `gecis`):
 
 ```
-onerildi ──firma "ilgileniyorum"──▶ ilgileniliyor ──genç kabul──▶ kabul_edildi
-   │                                              └──genç red────▶ reddedildi
-   └──genç ilgi (iletişim onayıyla)──▶ genc_ilgilendi ──firma "ilgileniyorum"──▶ kabul_edildi (karşılıklı ilgi)
+onerildi ──firma "ilgileniyorum"──▶ ilgileniliyor ──aday kabul──▶ kabul_edildi
+   │                                              └──aday red────▶ reddedildi
+   └──aday ilgi (iletişim onayıyla)──▶ genc_ilgilendi ──firma "ilgileniyorum"──▶ kabul_edildi (karşılıklı ilgi)
                                          ├──firma "şimdilik değil"──▶ kapandi
-                                         └──genç geri çeker──────────▶ onerildi
+                                         └──aday geri çeker──────────▶ onerildi
    onerildi | genc_ilgilendi | ilgileniliyor ──ihtiyaç kapandı──▶ kapandi
 ```
 
-- Genç eşik üstü önerileri "fırsat" olarak görür; ilgisi skoru değiştirmez.
+- Aday önerildiği fırsatı baştan görür; ilgisi skoru değiştirmez.
 - `kabul_edildi` iş birliğini açar, e-postaları yalnızca iki tarafa gösterir ve plan önerisini başlatır.
-- Karar verilmiş kayıtlar yeniden hesapta korunur: pipeline yalnızca `onerildi` siler, `genc_ilgilendi`'nin skorunu ve gerekçesini de değiştirmez.
-- Ayrıntı: `plans/genc-akisi.md` § 4, `kimlik-ve-dongu.md` § 5.
+- Karar verilmiş kayıtlar yeniden hesapta korunur: pipeline yalnızca `onerildi` siler,
+  `genc_ilgilendi`'nin skorunu ve gerekçesini de değiştirmez (`kararlar.md` G14).
+- Ayrıntı: `kimlik-ve-dongu.md` § 5.
 
-**Firma–firma (firma akışı, `plans/firma-akisi.md` § 3-4):** aynı tablo, aynı makine, aynı pipeline. Eşleşmenin adayı yetenek kartı ya da firma kartıdır (tam biri dolu); aday kaynağını ilanın `aranan`'ı seçer. Makinedeki "genç" rolü **aday tarafı** demektir: ortak firma o taraftadır. Ortak firmanın hesabı da firma rolünde olduğu için taraf hesabın rolünden değil eşleşmeden okunur (`sahiplik.eslesmedeki_taraf`); aday firmanın uçları ayrı ve incedir (`/firma-ilgi`, `/firma-kabul`…). İş birliği ve takip değişmeden iki firmaya açılır.
+**Firma–firma:** aynı tablo, aynı makine, aynı pipeline. Eşleşmenin adayı yetenek kartı ya da firma
+kartıdır (tam biri dolu); aday kaynağını ilanın `aranan`'ı seçer. Makinedeki "genç" rolü **aday
+tarafı** demektir; iki taraf da firma rolünde olduğu için taraf hesabın rolünden değil eşleşmeden
+okunur (`sahiplik.eslesmedeki_taraf`). İş birliği ve takip değişmeden iki firmaya açılır
+(`kararlar.md` F10–F12).
 
-## Repo Yapısı
+## Repo yapısı
 
 ```
-/docs               — bu klasör: mimari, şema, API sözleşmeleri, yol haritası
-/backend            — FastAPI + LangGraph: app/{api,agents,models,schemas,core,db}, alembic/, scripts/, tests/; yedek_okuyucu/ (ayrı Playwright servisi)
-/frontend           — Next.js (App Router): src/{app,components,lib}
+docs/                 tasarım belgeleri (bu klasör)
+backend/
+  app/
+    api/              uç noktalar (FastAPI router'ları)
+    servisler/        orkestrasyon, sahiplik, bildirim, embedding
+      dogrulama/      kanıt, referans, itiraz, çapalar, kötüye kullanım işaretleri
+    agents/           ajan kuralları, durum makineleri, istemler; sohbet_motoru.py
+      dogrulama/      puan çekirdeği, kurallar, alıntı denetimi, çıkarım
+    core/             ayarlar, llm, embeddings, guvenli_istek, kanit_okuma/, dis_servisler/
+    models/ schemas/ db/
+  alembic/            migration'lar
+  degerlendirme/      Doğrulama'nın ölçüm kütüphanesi (karne, adalet, kaset)
+  scripts/            demo verisi, yerel sıfırlama, karne ve tarama betikleri
+  tests/              pytest; degerlendirme_seti/ (etiketli vakalar, kasetler, karneler)
+  yedek_okuyucu/      Playwright servisi (ayrı süreç)
+frontend/
+  src/app/            sayfalar (App Router)
+  src/components/     bileşenler; ui/ shadcn bileşenleri
+  src/lib/            API istemcisi, oturum, saf karar fonksiyonları (testli)
 ```
 
-Klasörlerin ayrıntısı README'nin "Klasör yapısı" satırlarında.
-
-Monorepo tercih edildi — solo geliştirici + 3 haftalık sprint için ayrı repolar arası senkronizasyon yükü gereksiz.
+Monorepo: tek geliştirici için repolar arası senkronizasyon yükü gereksiz.
