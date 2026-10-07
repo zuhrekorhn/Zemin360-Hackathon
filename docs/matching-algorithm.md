@@ -1,6 +1,6 @@
 # Eşleştirme Algoritması
 
-Bu doküman, `agent-specs.md`'deki 7 adımlı pipeline'ın uygulama düzeyinde detayıdır. Kapsam iki katmana ayrılmıştır: **MVP çekirdek** (Faz 2'de yazılacak, ESCO taksonomisi olmadan çalışır) ve **isteğe bağlı geliştirme** (zaman kalırsa eklenir). Bu ayrım bilinçli — projenin en riskli parçasını önce en sade haliyle çalışır kılmak, sonra zenginleştirmek.
+Bu doküman, `agent-specs.md`'deki 7 adımlı pipeline'ın uygulama düzeyinde detayıdır. Kapsam iki katmana ayrılmıştır: **çekirdek** (uygulandı, ESCO taksonomisi olmadan çalışır) ve **isteğe bağlı geliştirme** (ESCO; uygulanmadı, hackathon sonrası). Bu ayrım bilinçli — projenin en riskli parçasını önce en sade haliyle çalışır kılmak, sonra zenginleştirmek.
 
 ```mermaid
 flowchart TD
@@ -244,7 +244,7 @@ Demo: Anadolu↔Soğuk Lojistik, Soğuk Lojistik ilanı↔Tazele / Yolgüç / Vi
 
 ## İsteğe Bağlı Geliştirme — ESCO Taksonomi Eşleme
 
-Zaman kalırsa (Faz 3 veya sonrası), skor formülüne bir bileşen daha eklenir:
+Uygulanmadı (hackathon sonrası). Eklenirse skor formülüne bir bileşen daha girer:
 
 ```
 skor = 0.55 * cosine_similarity
