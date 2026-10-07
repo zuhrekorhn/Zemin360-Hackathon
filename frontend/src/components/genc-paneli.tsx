@@ -7,9 +7,10 @@ import { FirmaBasligi, KosulEtiketleri } from "@/components/firsatlar";
 import { OnayAlani } from "@/components/onay-alani";
 import { IletisimSatiri } from "@/components/panel";
 import { Button } from "@/components/ui/button";
+import { basHarfler } from "@/components/kart-yan-sutunu";
+import { KUTU } from "@/components/ui/yuzey";
 import type {
   BanaGelenIlgi,
-  Guclendirme,
   IsbirligiOzeti,
   YetenekKartiOzeti,
 } from "@/lib/api";
@@ -23,7 +24,7 @@ import { kartYolu } from "@/lib/yonlendirme";
  * lib/genc-paneli.ts'de; burada yalnızca çizim.
  *
  * Görsel hiyerarşi: yanıt bekleyen iş vurgu renginde sol çizgiyle öne çıkar,
- * fırsat kartları sade, yan sütun küçük ve sakin (docs/design-language.md).
+ * fırsat kartları sade, yan sütun sakin; yüzeyler `KUTU` (docs/design-language.md).
  */
 
 /** Ana sütundaki bölüm başlığı; sayı varsa yanında. */
@@ -61,7 +62,12 @@ export function BolumBasligi({
 /** "Seni bekleyenler"in satır kabı: vurgu renginde sol çizgi. */
 function BekleyenKabi({ children }: { children: React.ReactNode }) {
   return (
-    <li className="flex flex-col gap-3 rounded-md border border-kenar border-l-[3px] border-l-vurgu bg-card px-5 py-4">
+    <li
+      className={cn(
+        KUTU,
+        "flex flex-col gap-3 border-l-[3px] border-l-vurgu px-6 py-5",
+      )}
+    >
       {children}
     </li>
   );
@@ -137,7 +143,12 @@ export function KabulEdilenIlgi({
   gencAdi: string;
 }) {
   return (
-    <li className="flex flex-col gap-3 rounded-md border border-baglanti/40 bg-card px-5 py-4">
+    <li
+      className={cn(
+        KUTU,
+        "flex flex-col gap-3 border-baglanti/40 px-6 py-5",
+      )}
+    >
       <p className="text-xs font-medium text-baglanti">Karşılıklı ilgi</p>
       <FirmaBasligi ihtiyac={ilgi.ihtiyac_karti} />
       {ilgi.iletisim ? (
@@ -206,7 +217,8 @@ export function YanKutu({
   return (
     <section
       className={cn(
-        "flex flex-col gap-3 rounded-md border border-kenar bg-card px-5 py-4",
+        KUTU,
+        "flex flex-col gap-3 px-5 py-5",
         className,
       )}
     >
@@ -218,66 +230,38 @@ export function YanKutu({
   );
 }
 
-/** Kartın özeti ve en çok fark yaratacak güçlendirme önerileri. */
-export function KartOzeti({
+/** Yan sütunun başı: gencin adı, kartının rolü ve kartına bağlantı. */
+export function KimlikOzeti({
+  ad,
   kart,
-  guclendirmeler,
 }: {
-  kart: YetenekKartiOzeti;
-  guclendirmeler: Guclendirme[];
+  ad: string;
+  kart: YetenekKartiOzeti | null;
 }) {
-  const yol = kartYolu(kart);
   return (
-    <YanKutu baslik="Kartın">
-      <div className="flex flex-col gap-0.5">
-        <span className="font-medium text-metin">{kart.rol_alani}</span>
-        <span className="text-sm text-muted-foreground">
-          Deneyim: {etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}
+    <section className={cn(KUTU, "flex flex-col gap-4 px-5 py-5")}>
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          className="flex size-12 shrink-0 items-center justify-center rounded-full bg-ana font-heading text-base font-semibold text-zemin"
+        >
+          {basHarfler(ad)}
         </span>
-      </div>
-      {kart.kanit_bekleyen || !kart.embedding_var ? (
-        <ul className="flex flex-col gap-1 text-sm">
-          {kart.kanit_bekleyen ? (
-            <li className="flex items-center gap-2">
-              <span aria-hidden="true" className="size-1.5 rounded-full bg-vurgu" />
-              Kanıt bekleyen çalışman var
-            </li>
-          ) : null}
-          {!kart.embedding_var ? (
-            <li className="flex items-center gap-2">
-              <span aria-hidden="true" className="size-1.5 rounded-full bg-vurgu" />
-              Henüz fırsatlarla eşleştirilmedi
-            </li>
-          ) : null}
-        </ul>
-      ) : null}
-
-      {guclendirmeler.length > 0 ? (
-        <div className="flex flex-col gap-2 border-t border-kenar pt-3">
-          <p className="text-sm font-medium text-ana">Kartını güçlendir</p>
-          <ul className="flex flex-col gap-2.5">
-            {guclendirmeler.slice(0, 2).map((satir) => (
-              <li key={satir.somut_cikti_id} className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">{satir.baslik}</span>
-                <span className="text-xs text-pretty text-muted-foreground">
-                  {satir.metin}
-                </span>
-                <Link
-                  href={`${yol}#calisma-${satir.somut_cikti_id}`}
-                  className="w-fit text-sm text-baglanti underline underline-offset-4"
-                >
-                  Kanıt ekle
-                </Link>
-              </li>
-            ))}
-          </ul>
+        <div className="flex min-w-0 flex-col">
+          <span className="font-heading text-lg leading-tight font-semibold text-ana">
+            {ad}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            {kart
+              ? `${kart.rol_alani} · ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi).toLocaleLowerCase("tr")} deneyim`
+              : "Kartın henüz yok"}
+          </span>
         </div>
-      ) : null}
-
-      <Button asChild variant="outline" className="mt-1 w-full">
-        <Link href={yol}>Kartına git</Link>
+      </div>
+      <Button asChild variant="outline" className="w-full">
+        <Link href={kartYolu(kart)}>{kart ? "Kartına git" : "Kartını oluştur"}</Link>
       </Button>
-    </YanKutu>
+    </section>
   );
 }
 

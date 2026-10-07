@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
 import type { GencEslesmesi, IhtiyacKartiYaniti } from "@/lib/api";
 import {
   ILETISIM_ONAYI,
@@ -17,6 +18,7 @@ import {
   etiketle,
   sehirEtiketi,
 } from "@/lib/sabitler";
+import { cn } from "@/lib/utils";
 
 /**
  * Gencin ana sayfasındaki fırsat kartı (docs/api-contracts.md). Metinler
@@ -60,7 +62,7 @@ export function FirmaBasligi({
 }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-      <h3 className="flex flex-wrap items-center gap-2 font-heading text-lg leading-snug font-semibold text-ana">
+      <h3 className="flex flex-wrap items-center gap-2 font-heading text-xl leading-snug font-semibold text-ana">
         {ihtiyac.kurum.ad}
         <DogrulanmisFirma dogrulandi={ihtiyac.kurum.dogrulandi} />
       </h3>
@@ -93,8 +95,8 @@ export function FirsatKarti({
   }
 
   return (
-    <li className="flex flex-col rounded-md border border-kenar bg-card">
-      <div className="flex flex-col gap-3 px-5 pt-5 pb-4">
+    <li className={cn(KUTU, "flex flex-col")}>
+      <div className="flex flex-col gap-3.5 px-6 pt-6 pb-5">
         <FirmaBasligi
           ihtiyac={ihtiyac}
           sag={
@@ -114,7 +116,7 @@ export function FirsatKarti({
           </p>
         ) : null}
         {firsat.gerekce_metni ? (
-          <section className="flex flex-col gap-1 rounded-sm border-l-2 border-baglanti bg-zemin px-4 py-3">
+          <section className="flex flex-col gap-1 rounded-lg border-l-[3px] border-baglanti bg-baglanti/[0.06] px-4 py-3">
             <h4 className="font-heading text-sm font-semibold text-ana">
               {NEDEN_UYGUN}
             </h4>
@@ -125,7 +127,7 @@ export function FirsatKarti({
         ) : null}
       </div>
 
-      <div className="border-t border-kenar px-5 py-3">
+      <div className="border-t border-kenar px-6 py-4">
         {!onayAcik ? (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Button type="button" size="lg" onClick={() => setOnayAcik(true)}>
