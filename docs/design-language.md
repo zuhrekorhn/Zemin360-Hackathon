@@ -11,8 +11,8 @@ Yön: **"kök"** metaforu — doğrulanmış güven, büyüyen bir ağ, kök sal
 | Rol | Hex | Kullanım |
 |---|---|---|
 | Zemin | `#F3F4EE` | Sayfa arka planı |
-| Ana (koyu) | `#1E3A2F` | Başlıklar, koyu yüzeyler |
-| Vurgu (CTA) | `#B8823C` | Butonlar, önemli aksiyonlar |
+| Ana (koyu) | `#1E3A2F` | Başlıklar, koyu yüzeyler, **birincil düğmeler** (zemin rengi metinle; 8 Eki 2026, altından değişti: altın her yerde olunca hiçbir şey öne çıkmıyordu) |
+| Vurgu | `#B8823C` | Sayfa düzeyindeki tek öne çıkan an: "Sıradaki adım" bandının düğmesi, okunmamış rozeti, zayıf göstergenin amber zemini |
 | Bağlantı rengi | `#4A7A6D` | Eşleşme/bağlantı anları, linkler |
 | Metin | `#16211B` | Gövde metni |
 | Çizgi/kenar | `#D8D6C9` | Hairline çizgiler, kenarlıklar |
@@ -51,6 +51,7 @@ Düzen kodda tek yerde; sayfa kendi kabuğunu yazmaz.
 - **Formlar istenince açılır:** bir öğenin ekleme ve düzenleme formları düğmenin arkasında; düzenle ve sil gibi ikincil eylemler "⋯" menüsünde (`eylem-menusu.tsx`), yıkıcı eylem birincil düğmenin yanında durmaz.
 - **Seviye kelime ve çubukla:** güven göstergesi "Eksik / Zayıf / Orta / Güçlü" ve üç parçalı çubuk (`seviye-cubugu.tsx`, karşılama sayfasıyla ortak); "2/3" gibi not biçimi yok. En güçlü seviye bağlantı renginde.
 - **Karşılama sayfası** kabuğun dışındadır: 1200px, kendi bölüm ritmi (96–112px) ve daha büyük yazı ölçeği (`src/app/page.tsx`, metinler `src/content/landing.ts`). Uygulamanın içi sade ve dar kalır.
+- **Yüzeyler:** kutular zeminden bir ton açık, hairline kenar, çok hafif gölge, 12px köşe (`components/ui/yuzey.ts` › `KUTU`); dikkat isteyen yüzey amber ve kesikli (`DIKKAT`). Bir öğenin bütün işleri sağdan açılan panelde toplanır (`components/ui/yan-panel.tsx`), sayfa formlarla uzamaz.
 - **Kontrast:** vurgu rengi (`#B8823C`) üstünde metin koyu olur (`metin`, 4.9:1). Beyaz 3.3:1'de kalıyor. Küçük metin vurgu renginde yazılmaz, zemin üstünde 3:1'de kalıyor.
 
 ## Kaçınılacaklar

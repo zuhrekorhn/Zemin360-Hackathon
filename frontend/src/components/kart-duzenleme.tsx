@@ -34,7 +34,7 @@ import {
 export const YENIDEN_DEGERLENDIRME_NOTU =
   "Kaydedildi. Değişen çalışman yeniden değerlendiriliyor; güven göstergesi kısa süre içinde güncellenir. Sayfayı yenileyerek görebilirsin.";
 
-const SIFIRLAMA_ONAYI =
+export const SIFIRLAMA_ONAYI =
   "Bu çalışma daha önce değerlendirildi. Kaydedersen güven göstergesi sıfırlanır ve yeniden değerlendirilir; önceki referans yanıtları geçmiş olarak kalır.";
 
 type Ortak = {
@@ -125,7 +125,13 @@ export function IsKalemiDuzenleFormu({
   onGuncel,
   onHata,
   onKapat,
-}: Ortak & { cikti: SomutCiktiYaniti; onKapat: () => void }) {
+  onSil,
+}: Ortak & {
+  cikti: SomutCiktiYaniti;
+  onKapat: () => void;
+  /** Verilirse formun sağında "Çalışmayı sil" (onayı çağıran gösterir). */
+  onSil?: () => void;
+}) {
   const [taslak, setTaslak] = useState<SomutCiktiTaslagi>(() =>
     taslakHali(cikti),
   );
@@ -195,6 +201,17 @@ export function IsKalemiDuzenleFormu({
           <Button type="button" size="sm" variant="ghost" onClick={onKapat}>
             Vazgeç
           </Button>
+          {onSil ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="ml-auto text-destructive hover:text-destructive"
+              onClick={onSil}
+            >
+              Çalışmayı sil
+            </Button>
+          ) : null}
         </div>
       )}
     </form>

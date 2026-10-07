@@ -1,4 +1,5 @@
 import { SeviyeCubugu } from "@/components/seviye-cubugu";
+import { DIKKAT } from "@/components/ui/yuzey";
 import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
 import {
   GOSTERGE_BASLIKLARI,
@@ -9,6 +10,7 @@ import { kartDosyasiAdresi } from "@/lib/api";
 import { dosyaParcalari, kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
 import { type Uygunluk, uygunlukRozeti } from "@/lib/uygunluk";
+import { cn } from "@/lib/utils";
 
 /**
  * Kart ve gerekçe görünümünün paylaşılan parçaları.
@@ -23,40 +25,57 @@ import { type Uygunluk, uygunlukRozeti } from "@/lib/uygunluk";
 
 /**
  * Dört başlık ayrı ayrı gösterilir, tek bir "güven puanı"na indirgenmez:
- * agent-specs.md § 4'ün açık kararı. Her başlık kelime ve çubukla; kısa adlar
- * rehberden (docs/icerik-rehberi.md § 4). Değerlendirilmemiş başlık "—" (0 değil).
+ * agent-specs.md § 4'ün açık kararı. Her başlık bir karo: ad ve kelime üstte,
+ * üç parçalı çubuk altta. Zayıf başlık (Eksik, Zayıf) amber zeminle kendini
+ * gösterir; değerlendirilmemiş başlık "—" (0 değil).
  */
-export function GuvenGostergesi({ skor }: { skor: GuvenSkoru }) {
+export function GostergeKarolari({ skor }: { skor: GuvenSkoru }) {
   return (
-    <dl className="grid grid-cols-2 gap-px border-t border-kenar bg-kenar sm:grid-cols-4">
+    <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {GOSTERGE_BASLIKLARI.map((bilesen) => {
         const { metin, sozlu, seviye } = baslikGosterimi(
           bilesen.ad,
           skor[bilesen.alan],
         );
+        const zayif = seviye !== null && seviye <= 1;
         return (
           <div
             key={bilesen.ad}
-            className="flex flex-col gap-1.5 bg-card px-5 py-3 sm:px-4"
+            className={cn(
+              "flex flex-col gap-2 rounded-lg px-3 py-2.5",
+              zayif ? DIKKAT : "border border-transparent bg-zemin",
+            )}
           >
-            <dt className="text-xs text-muted-foreground">{bilesen.ad}</dt>
-            <dd className="flex items-center gap-2.5">
-              <SeviyeCubugu seviye={seviye} etiket={`${bilesen.ad}: ${sozlu}`} />
-              <span
+            <div className="flex items-baseline justify-between gap-2">
+              <dt className="text-xs text-muted-foreground">{bilesen.ad}</dt>
+              <dd
                 aria-hidden="true"
-                className={
-                  seviye === null
-                    ? "text-sm text-muted-foreground"
-                    : "text-sm font-medium text-metin"
-                }
+                className={cn(
+                  "text-xs font-semibold",
+                  seviye === null ? "text-muted-foreground" : "text-metin",
+                )}
               >
                 {metin}
-              </span>
-            </dd>
+              </dd>
+            </div>
+            <SeviyeCubugu
+              seviye={seviye}
+              etiket={`${bilesen.ad}: ${sozlu}`}
+              genis
+            />
           </div>
         );
       })}
     </dl>
+  );
+}
+
+/** Belge kartının eteğinde gösterge (firmanın gördüğü salt okunur çalışma). */
+export function GuvenGostergesi({ skor }: { skor: GuvenSkoru }) {
+  return (
+    <div className="border-t border-kenar px-4 py-3">
+      <GostergeKarolari skor={skor} />
+    </div>
   );
 }
 
@@ -112,7 +131,11 @@ export function SkorRozeti({ skor }: { skor: number }) {
 }
 
 /** Yapay zekâ "kısmen uygun" dediyse rozet; diğer kararlarda hiçbir şey çizmez. */
-export function KismenUygunRozeti({ uygunluk }: { uygunluk: Uygunluk | undefined }) {
+export function KismenUygunRozeti({
+  uygunluk,
+}: {
+  uygunluk: Uygunluk | undefined;
+}) {
   const metin = uygunlukRozeti(uygunluk);
   if (!metin) return null;
   return (

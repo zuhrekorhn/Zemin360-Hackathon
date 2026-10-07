@@ -1,9 +1,20 @@
 import { describe, expect, it } from "vitest";
 
 import type { GuvenSkoru } from "@/lib/api";
-import { siradakiAdim } from "@/lib/calisma";
+import {
+  eksikler,
+  kalanCumlesi,
+  kartDurumu,
+  kartinSiradakiAdimi,
+  siradakiAdim,
+} from "@/lib/calisma";
 
-const skor = (k: number | null, s: number | null, r: number | null, ref: number | null) =>
+const skor = (
+  k: number | null,
+  s: number | null,
+  r: number | null,
+  ref: number | null,
+) =>
   ({
     kanit_orijinalligi: k,
     sonuc_olculebilirligi: s,
@@ -12,33 +23,102 @@ const skor = (k: number | null, s: number | null, r: number | null, ref: number 
     gerekce_metni: null,
   }) as GuvenSkoru;
 
-const tur = (girdi: Parameters<typeof siradakiAdim>[0]) => siradakiAdim(girdi)?.tur ?? null;
+const turler = (girdi: Parameters<typeof eksikler>[0]) =>
+  eksikler(girdi).map((e) => e.tur);
 
-describe("siradakiAdim", () => {
-  it("kanıt da referans da yoksa önce kanıt", () => {
-    expect(tur({ kanitSayisi: 0, referansSayisi: 0, skor: null })).toBe("kanit");
+describe("eksikler", () => {
+  it("kanıt da referans da yoksa yalnızca kanıt", () => {
+    expect(turler({ kanitSayisi: 0, referansSayisi: 0, skor: null })).toEqual([
+      "kanit",
+    ]);
   });
 
-  it("kanıt var ama değerlendirilmemişse adım yok (kanıt bölümü kendi düğmesini gösterir)", () => {
-    expect(tur({ kanitSayisi: 1, referansSayisi: 0, skor: null })).toBeNull();
+  it("kanıt var ama değerlendirilmemişse öneri yok", () => {
+    expect(turler({ kanitSayisi: 1, referansSayisi: 0, skor: null })).toEqual(
+      [],
+    );
   });
 
-  it("ekrandaki örnek: Kanıt Güçlü, Sonuç Eksik → sonucu ekle", () => {
-    expect(tur({ kanitSayisi: 1, referansSayisi: 1, skor: skor(3, 0, 3, 3) })).toBe("sonuc");
+  it("ekrandaki Dernek örneği: link çalışmayı göstermiyor → önce doğru kanıt", () => {
+    const liste = eksikler({
+      kanitSayisi: 1,
+      referansSayisi: 1,
+      skor: skor(0, 0, 0, 3),
+    });
+    expect(liste.map((e) => e.tur)).toEqual(["kanit", "sonuc", "rol"]);
+    expect(liste[0].etiket).toBe("Doğru kanıtı ekle");
   });
 
-  it("sıra: sonuç, pay, kanıt, referans", () => {
-    expect(tur({ kanitSayisi: 1, referansSayisi: 0, skor: skor(1, 2, 1, null) })).toBe("rol");
-    expect(tur({ kanitSayisi: 1, referansSayisi: 0, skor: skor(1, 2, 2, null) })).toBe("kanit");
-    expect(tur({ kanitSayisi: 1, referansSayisi: 0, skor: skor(2, 2, 2, null) })).toBe("referans");
+  it("ekrandaki Team ToDo örneği: yalnızca sonuç", () => {
+    expect(
+      turler({ kanitSayisi: 1, referansSayisi: 1, skor: skor(3, 0, 3, 3) }),
+    ).toEqual(["sonuc"]);
   });
 
-  it("referans istenmişse (yanıt beklense de) yeniden önerilmez; hepsi yeterliyse adım yok", () => {
-    expect(tur({ kanitSayisi: 1, referansSayisi: 1, skor: skor(2, 2, 2, null) })).toBeNull();
-    expect(tur({ kanitSayisi: 1, referansSayisi: 0, skor: skor(3, 2, 2, 3) })).toBeNull();
+  it("referans istenmişse (yanıt beklense de) eksik sayılmaz; olumsuz yanıt eksik", () => {
+    expect(
+      turler({ kanitSayisi: 1, referansSayisi: 1, skor: skor(2, 2, 2, null) }),
+    ).toEqual([]);
+    expect(
+      turler({ kanitSayisi: 1, referansSayisi: 1, skor: skor(2, 2, 2, 0) }),
+    ).toEqual(["referans"]);
   });
 
   it("değerlendirilmemiş başlık (—) zayıf sayılmaz", () => {
-    expect(tur({ kanitSayisi: 1, referansSayisi: 1, skor: skor(null, null, 2, 3) })).toBeNull();
+    expect(
+      turler({
+        kanitSayisi: 1,
+        referansSayisi: 1,
+        skor: skor(null, null, 2, 3),
+      }),
+    ).toEqual([]);
+  });
+
+  it("siradakiAdim ilk eksik", () => {
+    expect(
+      siradakiAdim({
+        kanitSayisi: 1,
+        referansSayisi: 0,
+        skor: skor(2, 1, 1, null),
+      })?.tur,
+    ).toBe("sonuc");
+  });
+});
+
+describe("kartinSiradakiAdimi", () => {
+  const dernek = eksikler({
+    kanitSayisi: 1,
+    referansSayisi: 1,
+    skor: skor(0, 0, 0, 3),
+  });
+  const todo = eksikler({
+    kanitSayisi: 1,
+    referansSayisi: 1,
+    skor: skor(3, 0, 3, 3),
+  });
+
+  it("en az eksiği kalan çalışma: en hızlı kazanç", () => {
+    const adim = kartinSiradakiAdimi([
+      { id: "d", baslik: "Dernek", eksikler: dernek },
+      { id: "t", baslik: "Team ToDo", eksikler: todo },
+    ]);
+    expect(adim).toMatchObject({
+      ciktiId: "t",
+      calisma: "Team ToDo",
+      eksikSayisi: 1,
+    });
+    expect(adim?.adim.tur).toBe("sonuc");
+    expect(adim && kalanCumlesi(adim)).toMatch(/yalnızca sonuç eksik/);
+  });
+
+  it("eksik yoksa null; durum puan değil sayım", () => {
+    expect(
+      kartinSiradakiAdimi([{ id: "x", baslik: "X", eksikler: [] }]),
+    ).toBeNull();
+    expect(kartDurumu([dernek, todo, []])).toEqual({
+      calisma: 3,
+      tamam: 1,
+      eksik: 4,
+    });
   });
 });

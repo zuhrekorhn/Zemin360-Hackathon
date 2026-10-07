@@ -67,14 +67,14 @@
 :root {
   --background: var(--color-zemin);
   --foreground: var(--color-metin);
-  --card: #fbfbf6;
+  --card: #fdfdf9; /* Zeminden bir ton açık: kutular zeminden ayrılsın */
   --card-foreground: var(--color-metin);
   --popover: #fbfbf6;
   --popover-foreground: var(--color-metin);
-  --primary: var(--color-vurgu);
-  --primary-foreground: var(
-    --color-metin
-  ); /* Altın üstünde koyu metin — beyazın kontrastı yetersiz */
+  /* Birincil eylem koyu yeşil (8 Eki 2026, design-language § Renk Paleti): altın
+     sayfa düzeyindeki tek vurguya (sıradaki adım bandı, rozet) kaldı. */
+  --primary: var(--color-ana);
+  --primary-foreground: var(--color-zemin);
   --secondary: var(--color-ana);
   --secondary-foreground: var(--color-zemin);
   --muted: #e9eae1;

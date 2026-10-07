@@ -6,6 +6,7 @@ import { CalismaTercihleriAlanlari } from "@/components/genc-profil-alanlari";
 import { tarihYaz } from "@/components/panel";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
 import { type GencProfil, profilGetir, profilGuncelle } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
@@ -15,11 +16,8 @@ import {
   tercihGovdesi,
   tercihHatalari,
 } from "@/lib/profil";
-import {
-  CALISMA_MODELLERI,
-  MUSAITLIKLER,
-  sehirEtiketi,
-} from "@/lib/sabitler";
+import { CALISMA_MODELLERI, MUSAITLIKLER, sehirEtiketi } from "@/lib/sabitler";
+import { cn } from "@/lib/utils";
 
 /**
  * Kart sayfasındaki "Çalışma tercihlerin" (docs/kararlar.md G18): şehir, çalışma
@@ -105,7 +103,7 @@ export function CalismaTercihleri() {
     <section
       id="tercihler"
       aria-labelledby="tercihler-baslik"
-      className="flex scroll-mt-24 flex-col gap-4 rounded-md border border-kenar bg-card px-5 py-4"
+      className={cn(KUTU, "flex scroll-mt-24 flex-col gap-4 px-5 py-5")}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-0.5">
@@ -161,7 +159,7 @@ export function CalismaTercihleri() {
           </div>
         </form>
       ) : (
-        <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+        <dl className="grid gap-x-6 gap-y-3 text-sm">
           {satirlar.map(([etiket, deger]) => (
             <div key={etiket} className="flex flex-col gap-0.5">
               <dt className="text-xs text-muted-foreground">{etiket}</dt>

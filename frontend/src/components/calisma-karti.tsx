@@ -1,102 +1,76 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
+import { useState } from "react";
 
-import { EylemMenusu } from "@/components/eylem-menusu";
-import { type EklemeFormu, KanitBolumu } from "@/components/kanit";
-import { GuvenGostergesi } from "@/components/kart";
+import { GostergeKarolari } from "@/components/kart";
 import {
   IsKalemiDuzenleFormu,
   IsKalemiSilmeOnayi,
 } from "@/components/kart-duzenleme";
 import { Button } from "@/components/ui/button";
+import { DIKKAT, KUTU } from "@/components/ui/yuzey";
 import type {
   KanitDurumu,
   SomutCiktiYaniti,
   YetenekKartiYaniti,
 } from "@/lib/api";
-import { siradakiAdim } from "@/lib/calisma";
-import { gostergeDoluMu } from "@/lib/guven-gostergesi";
+import { eksikler } from "@/lib/calisma";
+import { gostergeDoluMu, notuBasliklaraAyir } from "@/lib/guven-gostergesi";
 import type { Hata } from "@/lib/hata";
+import { kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
 import { cn } from "@/lib/utils";
 
 /**
- * Gencin kendi kart sayfasında bir çalışma (docs/dogrulama.md § 1, § 3).
+ * Gencin kendi kart sayfasında bir çalışma (docs/dogrulama.md § 1, docs/kararlar.md G18).
  *
- * Kapalıyken: çalışmanın özeti, dört başlıklı gösterge ve tek bir "sıradaki
- * adım". Kanıt ve referans listeleri, ekleme formları ve değerlendirme notları
- * "Kanıtlar ve referanslar" açılınca görünür; düzenleme ve silme "⋯"
- * menüsünde. Firma aynı çalışmayı `CiktiOzeti` ile salt okunur görür.
+ * Özet, kanıt linki, dört gösterge karosu (zayıf olan amber) ve kanıt
+ * çalışmayı göstermiyorsa kartın içinde uyarı. Altta kaç eksik kaldığı ve en
+ * hızlısı; bütün eksikler "Güçlendir" panelinde adım adım. Düzenleme
+ * yerinde açılır, silme düzenleme formunun içinde. Firma aynı çalışmayı
+ * `CiktiOzeti` ile salt okunur görür.
  */
 export function CalismaKarti({
   kartId,
   cikti,
   durum,
-  onDurum,
+  onGuclendir,
   onGuncel,
   onHata,
 }: {
   kartId: string;
   cikti: SomutCiktiYaniti;
   durum: KanitDurumu | undefined;
-  onDurum: (durum: KanitDurumu) => void;
+  onGuclendir: () => void;
   onGuncel: (kart: YetenekKartiYaniti, not?: string) => void;
   onHata: (hata: Hata | null) => void;
 }) {
-  const kimlik = `calisma-${cikti.id}`;
-  // Ana sayfadaki "Kanıt ekle" bağlantısı bu çalışmaya gelir (#calisma-…):
-  // ayrıntı açık ve link formu hazır gelsin. Sayfa giriş kapısından sonra
-  // istemcide çizildiği için adres burada okunabilir.
-  const [hedeflendi] = useState(
-    () =>
-      typeof window !== "undefined" && window.location.hash === `#${kimlik}`,
-  );
   const [kip, setKip] = useState<"oku" | "duzenle" | "sil">("oku");
-  const [ayrinti, setAyrinti] = useState(hedeflendi);
-  const [acikForm, setAcikForm] = useState<EklemeFormu | null>(
-    hedeflendi ? "link" : null,
-  );
-
-  useEffect(() => {
-    if (hedeflendi)
-      document.getElementById(kimlik)?.scrollIntoView({ block: "start" });
-  }, [hedeflendi, kimlik]);
-
-  const kanitSayisi = (durum?.kanitlar ?? cikti.kanitlar).length;
-  const referansSayisi = durum?.referanslar.length ?? 0;
-  const adim = siradakiAdim({
-    kanitSayisi,
-    referansSayisi,
-    skor: cikti.guven_skoru,
+  const parcalar = durum?.kanitlar ?? cikti.kanitlar;
+  const ilkLink = kanitLinkleri(parcalar)[0];
+  const skor = durum?.guven_skoru ?? cikti.guven_skoru;
+  const liste = eksikler({
+    kanitSayisi: parcalar.length,
+    referansSayisi: durum?.referanslar.length ?? 0,
+    skor,
   });
-
-  function adimAt() {
-    if (!adim) return;
-    if (adim.tur === "sonuc" || adim.tur === "rol") {
-      setKip("duzenle");
-      return;
-    }
-    setAyrinti(true);
-    setAcikForm(adim.tur === "referans" ? "referans" : "link");
-  }
-
-  const ozet = [
-    kanitSayisi > 0 ? `${kanitSayisi} kanıt` : null,
-    referansSayisi > 0 ? `${referansSayisi} referans` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  // Kanıt var ama çalışmayı göstermiyor: değerlendirmenin cümlesi kartın içinde.
+  const kanitUyarisi =
+    liste[0]?.tur === "kanit" && parcalar.length > 0
+      ? (notuBasliklaraAyir(skor?.gerekce_metni).find(
+          (p) => p.baslik === "Kanıt",
+        )?.metin ?? liste[0].metin)
+      : null;
 
   return (
     <article
-      id={kimlik}
-      className="flex scroll-mt-24 flex-col rounded-md border border-kenar bg-card"
+      id={`calisma-${cikti.id}`}
+      className={cn(KUTU, "flex scroll-mt-24 flex-col gap-4 px-5 py-5")}
     >
-      <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] leading-snug font-semibold text-metin">
+      <header className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+          <h3 className="flex flex-wrap items-center gap-2 text-base leading-snug font-semibold text-metin">
             {cikti.baslik}
             {cikti.is_turu ? (
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
@@ -104,121 +78,132 @@ export function CalismaKarti({
               </span>
             ) : null}
           </h3>
-          {cikti.aciklama ? (
-            <p
-              className={cn(
-                "text-sm text-pretty text-muted-foreground",
-                !ayrinti && "line-clamp-2",
-              )}
+          {ilkLink ? (
+            <a
+              href={kanitAdresi(ilkLink.url)}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex max-w-64 items-center gap-1 text-sm text-baglanti underline-offset-4 hover:underline"
             >
-              {cikti.aciklama}
-            </p>
+              <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
+              <span className="truncate">
+                {ilkLink.url.replace(/^https?:\/\/(www\.)?/, "")}
+              </span>
+            </a>
           ) : null}
         </div>
-        <EylemMenusu
-          etiket={`“${cikti.baslik}” için eylemler`}
-          eylemler={[
-            { etiket: "Düzenle", onSec: () => setKip("duzenle") },
-            { etiket: "Sil", onSec: () => setKip("sil"), yikici: true },
-          ]}
-        />
-      </div>
+        {kip === "oku" && cikti.aciklama ? (
+          <p className="line-clamp-2 max-w-prose text-sm text-pretty text-muted-foreground">
+            {cikti.aciklama}
+          </p>
+        ) : null}
+        {kip === "oku" && cikti.kendi_rolu ? (
+          <p className="text-sm text-pretty">
+            <span className="font-medium">Payın: </span>
+            {cikti.kendi_rolu}
+          </p>
+        ) : null}
+        {kip === "oku" && cikti.olculebilir_sonuc ? (
+          <p className="text-sm text-pretty">
+            <span className="font-medium">Sonuç: </span>
+            {cikti.olculebilir_sonuc}
+          </p>
+        ) : null}
+      </header>
 
       {kip === "duzenle" ? (
-        <div className="border-t border-kenar px-5 py-4">
+        <div className="border-t border-kenar pt-4">
           <IsKalemiDuzenleFormu
             kartId={kartId}
             cikti={cikti}
             onGuncel={onGuncel}
             onHata={onHata}
             onKapat={() => setKip("oku")}
+            onSil={() => setKip("sil")}
           />
         </div>
       ) : kip === "sil" ? (
-        <div className="px-5 pb-4">
-          <IsKalemiSilmeOnayi
-            kartId={kartId}
-            cikti={cikti}
-            onGuncel={onGuncel}
-            onHata={onHata}
-            onKapat={() => setKip("oku")}
-          />
-        </div>
-      ) : cikti.olculebilir_sonuc || cikti.kendi_rolu ? (
-        <dl className="flex flex-col gap-1 px-5 pb-3 text-sm">
-          {cikti.olculebilir_sonuc ? (
-            <div className="flex gap-2">
-              <dt className="shrink-0 font-medium text-metin">Sonuç:</dt>
-              <dd className="text-pretty">{cikti.olculebilir_sonuc}</dd>
-            </div>
-          ) : null}
-          {cikti.kendi_rolu ? (
-            <div className="flex gap-2">
-              <dt className="shrink-0 font-medium text-metin">Payın:</dt>
-              <dd className="text-pretty">{cikti.kendi_rolu}</dd>
-            </div>
-          ) : null}
-        </dl>
-      ) : null}
-
-      {cikti.guven_skoru && gostergeDoluMu(cikti.guven_skoru) ? (
-        <GuvenGostergesi skor={cikti.guven_skoru} />
+        <IsKalemiSilmeOnayi
+          kartId={kartId}
+          cikti={cikti}
+          onGuncel={onGuncel}
+          onHata={onHata}
+          onKapat={() => setKip("oku")}
+        />
       ) : (
-        <p className="border-t border-kenar px-5 py-3 text-sm text-muted-foreground">
-          Henüz değerlendirilmedi. Kanıt ya da referans eklediğinde güven
-          göstergesi burada görünür.
-        </p>
-      )}
-
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-kenar px-5 py-3">
-        {adim && kip === "oku" ? (
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
-            <p className="min-w-0 flex-1 basis-56 text-sm text-pretty">
-              <span className="font-medium text-ana">Sıradaki adım: </span>
-              {adim.metin}
+        <>
+          {kanitUyarisi ? (
+            <p
+              className={cn(
+                DIKKAT,
+                "flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm text-pretty",
+              )}
+            >
+              <AlertCircle
+                aria-hidden="true"
+                className="mt-0.5 size-4 shrink-0 text-vurgu"
+              />
+              {kanitUyarisi}
             </p>
-            <Button type="button" size="sm" onClick={adimAt}>
-              {adim.etiket}
-            </Button>
-          </div>
-        ) : (
-          <span className="flex-1" />
-        )}
-        <button
-          type="button"
-          aria-expanded={ayrinti}
-          aria-controls={`${kimlik}-ayrinti`}
-          onClick={() => setAyrinti((onceki) => !onceki)}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground outline-none hover:bg-muted hover:text-metin focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          Kanıtlar ve referanslar
-          {ozet ? <span className="text-xs">({ozet})</span> : null}
-          <ChevronDown
-            aria-hidden="true"
-            className={cn(
-              "size-4 transition-transform",
-              ayrinti && "rotate-180",
-            )}
-          />
-        </button>
-      </div>
+          ) : null}
 
-      {ayrinti ? (
-        <div
-          id={`${kimlik}-ayrinti`}
-          className="border-t border-kenar px-5 py-4"
-        >
-          <KanitBolumu
-            somutCiktiId={cikti.id}
-            kanitlar={cikti.kanitlar}
-            durum={durum}
-            onDurum={onDurum}
-            onHata={onHata}
-            acikForm={acikForm}
-            onAcikForm={setAcikForm}
-          />
-        </div>
-      ) : null}
+          {skor && gostergeDoluMu(skor) ? (
+            <GostergeKarolari skor={skor} />
+          ) : (
+            <p className="rounded-lg bg-zemin px-3 py-2.5 text-sm text-muted-foreground">
+              Henüz değerlendirilmedi. Kanıt ya da referans eklediğinde güven
+              göstergesi burada görünür.
+            </p>
+          )}
+
+          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-kenar pt-4">
+            <p className="text-sm text-pretty">
+              {liste.length === 0 ? (
+                skor ? (
+                  <span className="inline-flex items-center gap-1.5 text-baglanti">
+                    <CheckCircle2 aria-hidden="true" className="size-4" />
+                    Eksik yok
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    Değerlendirme bekleniyor
+                  </span>
+                )
+              ) : liste.length === 1 ? (
+                <>
+                  <span className="text-muted-foreground">1 eksik: </span>
+                  <span className="font-semibold">{liste[0].kisa}</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-muted-foreground">
+                    {liste.length} eksik · en hızlısı:{" "}
+                  </span>
+                  <span className="font-semibold">{liste[0].kisa}</span>
+                </>
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setKip("duzenle")}
+              >
+                Düzenle
+              </Button>
+              <Button
+                type="button"
+                variant={liste.length > 0 ? "default" : "outline"}
+                size="lg"
+                className="px-4"
+                onClick={onGuclendir}
+              >
+                {liste.length > 0 ? "Güçlendir" : "Kanıt ve referanslar"}
+              </Button>
+            </div>
+          </footer>
+        </>
+      )}
     </article>
   );
 }

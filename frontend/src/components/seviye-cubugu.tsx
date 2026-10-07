@@ -13,6 +13,7 @@ export function SeviyeCubugu({
   seviye,
   etiket,
   buyuk = false,
+  genis = false,
 }: {
   /** Dolu parça sayısı (0–3); null = değerlendirilmedi (hepsi boş, kesikli). */
   seviye: number | null;
@@ -20,15 +21,21 @@ export function SeviyeCubugu({
   etiket: string;
   /** Karşılama sayfasındaki geniş çubuk. */
   buyuk?: boolean;
+  /** Bulunduğu kutunun genişliğini doldurur (gösterge karoları). */
+  genis?: boolean;
 }) {
   return (
-    <span role="img" aria-label={etiket} className="flex gap-1">
+    <span
+      role="img"
+      aria-label={etiket}
+      className={cn("flex gap-1", genis && "w-full")}
+    >
       {[1, 2, 3].map((parca) => (
         <span
           key={parca}
           className={cn(
             "block rounded-[3px]",
-            buyuk ? "h-2 w-[22px]" : "h-1.5 w-4",
+            buyuk ? "h-2 w-[22px]" : genis ? "h-1.5 flex-1" : "h-1.5 w-4",
             seviye === null
               ? "border border-dashed border-kenar"
               : parca <= seviye

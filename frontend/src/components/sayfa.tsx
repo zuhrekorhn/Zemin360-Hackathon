@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 export type Genislik = "genis" | "icerik" | "form" | "dar";
 
 const GENISLIKLER: Record<Genislik, string> = {
-  genis: "max-w-5xl", // 1024px — iki sütunlu ana sayfa: akış + yan sütun
+  genis: "max-w-6xl", // 1152px — iki sütunlu sayfalar: yan sütun + akış
   icerik: "max-w-2xl", // 672px — okunabilir satır uzunluğu, panel bir "belge"
   form: "max-w-xl", // 576px — tek sütunlu form
   dar: "max-w-md", // 448px — giriş gibi birkaç alanlı form
