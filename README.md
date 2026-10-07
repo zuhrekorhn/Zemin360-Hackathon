@@ -121,9 +121,10 @@ python run.py --reload          # http://localhost:8000
 ```bash
 python scripts/yerel_sifirla.py      # yerel DB'yi boşaltır; onay için veritabanı adını sorar
 python scripts/demo_hesaplari.py     # genc@ / kurum@ / girvak@demo.zemin360.example + birer kart
+python scripts/demo_zenginlestir.py  # demo havuzunu büyütür: 3 firma kartı, 2 ilan, 9 genç kartı
 ```
 
-Demo genç kartı ile kurumun ihtiyaç kartı birbirine önerilecek şekilde seçildi; betik benzerliği ve skoru yazdırır. Üç hesabın şifresi `DEMO_SIFRESI`.
+Demo genç kartı ile kurumun ihtiyaç kartı birbirine önerilecek şekilde seçildi; betik benzerliği ve skoru yazdırır. Üç hesabın şifresi `DEMO_SIFRESI`. `demo_zenginlestir.py` yalnızca ekler (yeniden çalıştırmak güvenli), `demo_hesaplari.py`'den sonra çalışır, Voyage ve Gemini anahtarı ister; sonunda üç ilan için eşleştirme çalıştırır. Adlar kurgusal, e-postalar `.example` alan adında.
 
 `run.py` yerine `uvicorn app.main:app` da çalışır — ama **Windows'ta `--reload` olmadan çalışmaz**: LangGraph'ın checkpointer'ı psycopg kullanıyor, psycopg de Windows'un varsayılan ProactorEventLoop'uyla uyumsuz. `run.py` döngüyü doğru olanla sabitliyor, sebebini de dosyanın başında anlatıyor.
 
@@ -139,6 +140,7 @@ python scripts/kesif_e2e.py b                 # sadece "hiç projem yok" senaryo
 python scripts/eslestirme_e2e.py <kurum_id> --tohum   # Eşleştirme pipeline'i uçtan uca
 python scripts/yerel_sifirla.py              # yerel DB'yi boşaltır (onay sorar; production'da çalışmaz)
 python scripts/demo_hesaplari.py             # genç/kurum/GİRVAK demo hesapları + birer kart (.env: DEMO_SIFRESI)
+python scripts/demo_zenginlestir.py          # demo havuzuna firma, ilan ve genç kartları ekler (yalnızca ekler)
 python scripts/girvak_hesabi.py --email …    # GİRVAK hesabı açar (açık kayıtla açılamaz)
 python -m yedek_okuyucu                      # yedek okuyucu (Playwright) servisi, :8100 (kurulum: yedek_okuyucu/README.md)
 ruff check . && ruff format .                 # lint + format
