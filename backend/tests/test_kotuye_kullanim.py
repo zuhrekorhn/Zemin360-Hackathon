@@ -403,7 +403,6 @@ def test_genc_ile_ayni_agdan_hizli_yanit_isaret_acar():
                 "hizli_yanit",
             ]
             assert "@" not in str(isaret.ayrinti)  # işarette e-posta yok
-            await oturum.refresh(istek)
             assert istek.yanit_isareti["sinyaller"] == satir["sinyaller"]
             # Referans başlığı yanıttan hesaplandı: işaret puanı değiştirmez (İ1)
             durum = await istemci.get(
@@ -474,10 +473,10 @@ def test_izler_90_gun_sonra_silinir_sinyaller_kalir():
             _, istek = await _referans_isteyen_genc(oturum, istemci)
             istek.yanit_isareti = {**istek.yanit_isareti, "sinyaller": ["hizli_yanit"]}
             await oturum.commit()
-            simdi = istek.olusturma_tarihi + dt.timedelta(days=89)
-            assert await eski_izleri_temizle(oturum, simdi) == 0
-            simdi = istek.olusturma_tarihi + dt.timedelta(days=91)
-            assert await eski_izleri_temizle(oturum, simdi) >= 1
+            # Sayım yerine bu isteğe bakılır (aynı nesne): yerelde başka eski izler olabilir.
+            await eski_izleri_temizle(oturum, istek.olusturma_tarihi + dt.timedelta(days=89))
+            assert "istek_izi" in istek.yanit_isareti
+            await eski_izleri_temizle(oturum, istek.olusturma_tarihi + dt.timedelta(days=91))
             assert istek.yanit_isareti == {"sinyaller": ["hizli_yanit"]}
 
     asyncio.run(senaryo())

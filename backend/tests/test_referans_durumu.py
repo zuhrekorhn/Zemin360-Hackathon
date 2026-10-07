@@ -122,7 +122,8 @@ def test_yanitlanmis_ya_da_suresi_dolmus_istek_geri_cekilemez(durum):
 
 
 def test_geri_cekmenin_tekrari_yan_etkisiz(bildirimler):
-    istek = _istek(DURUM_BEKLIYOR, YENI)
+    # Geri çekme gerçek saatle zaman aşımına bakar: istek bugüne göre yeni olmalı.
+    istek = _istek(DURUM_BEKLIYOR, dt.datetime.now(dt.UTC) - dt.timedelta(days=1))
     asyncio.run(referansi_geri_cek(None, istek))
     asyncio.run(referansi_geri_cek(None, istek))
     assert istek.durum == DURUM_GERI_CEKILDI
