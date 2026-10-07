@@ -4,7 +4,7 @@ Backend'in düz HTTP isteğiyle okuyamadığı kanıt sayfalarını gerçek bir 
 JavaScript ile çizilen sayfalar (Kaggle, GrabCAD) ve tarayıcı olmayan istemciyi reddeden
 siteler (Behance, Dribbble). İşlenmiş HTML'i ve istenirse ekran görüntüsünü döner
 (1280 px genişlik, sayfanın üstten en çok 3 parçası, JPEG). Plan:
-`docs/plans/dogrulama-iyilestirme.md` § 5.1, § 5.5.
+`docs/dogrulama.md` § 5.1, § 5.5.
 
 Backend'den ayrı bir uygulamadır. Chromium ağır, kaynak tüketimi öngörülemez ve
 kullanıcının verdiği adresi açar; bu yüzden ayrı bir süreçte çalışır. Backend ona

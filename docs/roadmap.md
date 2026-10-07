@@ -24,14 +24,14 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 | Alan | Ne yapıldı | Ayrıntı |
 |---|---|---|
 | Sağlamlaştırma (Faz A) | İnceleme bulguları, Gemini ücretli katman, iki model katmanı ve yedek zincir | `architecture.md` § LLM |
-| Kimlik ve iki taraflı döngü (Faz B) | JWT, üç rol, paneller, karşılıklı onay, bildirimler | `faz-b-kimlik-ve-dongu.md` |
-| Takip (Faz C) | Plan, iki taraflı onay ve işaret, tamamlanma sinyali (pilot bonusu) | `faz-c-takip.md` |
-| Canlılık + GİRVAK paneli (Faz D) | Tarama, hatırlatma, yeni fırsat, program hedefleri | `faz-d-canlilik.md` |
+| Kimlik ve iki taraflı döngü (Faz B) | JWT, üç rol, paneller, karşılıklı onay, bildirimler | `kimlik-ve-dongu.md` |
+| Takip (Faz C) | Plan, iki taraflı onay ve işaret, tamamlanma sinyali (pilot bonusu) | `takip.md` |
+| Canlılık + GİRVAK paneli (Faz D) | Tarama, hatırlatma, yeni fırsat, program hedefleri | `canlilik.md` |
 | Genç akışı | Kayıt formu, tek kart, otomatik puanlama, gençten ilgi | `plans/genc-akisi.md` |
 | Firma akışı | Firma kaydı ve profili (`/kurum/profil`), firma kartı, iki kapı, firma–firma eşleşme, firma doğrulaması | `plans/firma-akisi.md` |
 | Güvenlik | SSRF engeli (`app/core/guvenli_istek.py`) | `agent-specs.md` § 4 |
 | Toplu metin denetimi (30 Eyl) | Hitap, onaylar, LLM istem dili | `icerik-rehberi.md` |
-| Doğrulama incelemesi (1-5 Eki) | 14 adım: link/dosya/görsel okuma, hesap bağlama, referans, kötüye kullanım, gözlem | `plans/dogrulama-iyilestirme.md` |
+| Doğrulama incelemesi (1-5 Eki) | 14 adım: link/dosya/görsel okuma, hesap bağlama, referans, kötüye kullanım, gözlem | `dogrulama.md` |
 | Tanımlama incelemesi (5-6 Eki) | Kötü girdi senaryoları 42/42, başarı ölçütü, "Düzenle" düğmesi, koşul sorusu, istem güvenliği | `plans/ilan-duzenleme.md`, `plans/tanimlama-kalanlar.md` |
 | Eşleştirme incelemesi (6 Eki) | Skor eşiği kaldırıldı, alt sınır 0.48 / 0.52, uygunluk kararı | `matching-algorithm.md` § 5, § 8 |
 | Takip incelemesi (6 Eki) | Süreç şablonları, hazırlık önerisi, erken sonlanma | `plans/takip-surecleri.md` |
@@ -45,7 +45,7 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
       değiştiği için eskidi; ücretli canlı koşu isteğe bağlı.
 - [ ] Takip: kabulden sonra plan, hazırlık önerisi, "Süreci sonlandır".
 - [ ] E-posta: Brevo hesabı açılınca gerçek gönderim.
-- [ ] Hesap ve anahtar işleri: `plans/dogrulama-iyilestirme.md` sonundaki Adım 12 durum bloğu.
+- [ ] Hesap ve anahtar işleri: `dogrulama.md` sonundaki Adım 12 durum bloğu.
 
 **Tohum veri** (demo senaryosuyla aynı hikâyeden):
 
@@ -65,7 +65,7 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
       servis (Neon ya da Supabase).
 - [ ] Canlı frontend adresi backend'in `CORS_ORIGINS` ayarına; OAuth dönüş adresleri.
 - [ ] Zamanlanmış görev günde iki kez (09:00, 18:00 İstanbul) `POST /canlilik/tarama`'yı
-      `X-Tarama-Anahtari` başlığıyla çağırır; `TARAMA_ANAHTARI` `.env`'de (`faz-d-canlilik.md` § 4).
+      `X-Tarama-Anahtari` başlığıyla çağırır; `TARAMA_ANAHTARI` `.env`'de (`canlilik.md` § 4).
 - [ ] Migration'lar canlı veritabanında sıfırdan çalışır. *Yerelde boş veritabanında
       doğrulandı (30 Eyl): `upgrade head`, `alembic check`, `downgrade base` temiz.*
 

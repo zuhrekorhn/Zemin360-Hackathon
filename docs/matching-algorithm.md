@@ -61,9 +61,9 @@ skor = 0.75 * cosine_similarity(yetenek.embedding, ihtiyac.embedding)
 - Çalışma başına oran: **dolu başlıkların toplamı / (3 × dolu başlık sayısı)** (0-1 arası). Boş başlık (NULL, arayüzde "—": değerlendirilmedi ya da referans yanıtı yok) ne ceza ne bonus: paydaya da girmez. Dört başlık doluysa sonuç eski `toplam / 12`'nin aynısıdır. Hiç dolu başlığı olmayan çalışma ortalamaya girmez. (Doğrulama iyileştirmesi adım 3, bulgu 17: değerlendirilmemiş başlıklar 0 sayılınca referans eklemek bile kartın bonusunu düşürüyordu.)
 - `dogrulama_bonus` = çalışma oranlarının ortalaması.
 - Göstergesi olan çalışma yoksa (henüz doğrulanmamış): `0` — **ceza değil**, sadece bonus yok. Doğrulanmamış kart elenmez, listede kalır.
-- Kart için "en güçlü iki çalışmanın ortalaması" ya da yetenek bazlı kanıt seçenekleri Eşleştirme incelemesinde değerlendirilecek (`plans/dogrulama-iyilestirme.md` § 11.1).
+- Kart için "en güçlü iki çalışmanın ortalaması" ya da yetenek bazlı kanıt seçenekleri Eşleştirme incelemesinde değerlendirilecek (`dogrulama.md` § 11.1).
 
-**Tamamlanmış pilot (Faz C, `faz-c-takip.md` § 6):** kartın en az bir tamamlanmış iş birliği varsa bonusa toplamsal eklenir, tavan 1.0:
+**Tamamlanmış pilot (Faz C, `takip.md` § 6):** kartın en az bir tamamlanmış iş birliği varsa bonusa toplamsal eklenir, tavan 1.0:
 
 ```
 dogrulama_bonus = min(1.0, guven_orani + 0.5 × [tamamlanan_pilot ≥ 1])
@@ -73,7 +73,7 @@ Pilotu olmayan kartın skoru Faz C öncesiyle birebir aynı (demo kalibrasyonu b
 
 ### 4.1 Kart bonusu: Eşleştirme incelemesinde karar verilecek iki seçenek
 
-> **Durum: karar verilmedi, formül değişmedi.** Bugün geçerli olan yukarıdaki kuraldır (çalışma oranlarının ortalaması). Bu bölüm incelemeye hazırlıktır (`plans/dogrulama-iyilestirme.md` § 11.1, bulgu 27, adım 13). Hiçbir seçeneğin uygulaması yapılmadı.
+> **Durum: karar verilmedi, formül değişmedi.** Bugün geçerli olan yukarıdaki kuraldır (çalışma oranlarının ortalaması). Bu bölüm incelemeye hazırlıktır (`dogrulama.md` § 11.1, bulgu 27, adım 13). Hiçbir seçeneğin uygulaması yapılmadı.
 
 **Sorun.** Ortalama, kartın en iyi kanıtını zayıf kalemler ağırlaştırır: güçlü bir çalışmanın yanına zayıf bir çalışma eklemek bonusu düşürür. Doğrulama iyileştirmesinin ilk üç adımı iki kaynağı kapattı (boş başlık artık paydada değil, kalem içinde parçalar toplanmaz, en güçlü parça alınır). Kalan kaynak kalemler arası ortalamadır.
 

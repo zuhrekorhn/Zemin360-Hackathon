@@ -1,6 +1,6 @@
 # Etiketleme Rehberi
 
-Bu rehber, değerlendirme setindeki her vakaya **doğru** güven göstergesinin nasıl yazılacağını tanımlar. Etiket, bugünkü sistemin ne verdiğini değil, **olması gerekeni** söyler. Kaynak: `docs/plans/dogrulama-iyilestirme.md` § 2, § 5.2, § 7, § 11.2.
+Bu rehber, değerlendirme setindeki her vakaya **doğru** güven göstergesinin nasıl yazılacağını tanımlar. Etiket, bugünkü sistemin ne verdiğini değil, **olması gerekeni** söyler. Kaynak: `docs/dogrulama.md` § 2, § 5.2, § 7, § 11.2.
 
 ## 1. Etiketin biçimi
 

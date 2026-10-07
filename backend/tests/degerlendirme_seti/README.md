@@ -1,6 +1,6 @@
 # Doğrulama değerlendirme seti
 
-Doğrulama'nın güven göstergesini ölçen etiketli vakalar (`docs/plans/dogrulama-iyilestirme.md` § 10.1). Her puanlama değişikliği bu set üzerinde önce ve sonra çalıştırılır.
+Doğrulama'nın güven göstergesini ölçen etiketli vakalar (`docs/dogrulama.md` § 10.1). Her puanlama değişikliği bu set üzerinde önce ve sonra çalıştırılır.
 
 ## İçerik
 

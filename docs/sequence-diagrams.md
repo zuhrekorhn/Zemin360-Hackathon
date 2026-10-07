@@ -47,7 +47,7 @@ sequenceDiagram
 
 **Mimari sonucu:** Eşleştirme Ajanı senkron bir endpoint değil, ayrı bir arka plan işi (background job / cron) olarak yazılmalı.
 
-**Karşılıklı onay (Faz B):** iş birliği yalnızca gencin kabulüyle açılır; geçiş kuralı tek fonksiyonda (`app/agents/eslesme_durumu.py`). Ayrıntı: `faz-b-kimlik-ve-dongu.md` § 5-6.
+**Karşılıklı onay (Faz B):** iş birliği yalnızca gencin kabulüyle açılır; geçiş kuralı tek fonksiyonda (`app/agents/eslesme_durumu.py`). Ayrıntı: `kimlik-ve-dongu.md` § 5-6.
 
 ## Akış 2 — Doğrulama (referans + zaman aşımı dalı)
 
