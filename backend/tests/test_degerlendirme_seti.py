@@ -140,8 +140,9 @@ def test_bugunku_sistem_karnesi_degismedi(tmp_path):
         cwd=BACKEND,
         capture_output=True,
         timeout=180,
-        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+        # Yerel (C) bir kütüphane çökerse yığın izi stderr'e düşsün.
+        env={**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONFAULTHANDLER": "1"},
     )
-    assert tamam.returncode == 0, tamam.stderr.decode("utf-8", "replace")[-2000:]
+    assert tamam.returncode == 0, tamam.stderr.decode("utf-8", "replace")[-4000:]
     beklenen = json.loads((SETI_KLASORU / "karneler" / "mevcut_sistem.json").read_text("utf-8"))
     assert json.loads(cikti.read_text("utf-8")) == beklenen
