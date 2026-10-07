@@ -28,7 +28,7 @@ async def cikti_getir(oturum: AsyncSession, somut_cikti_id: uuid.UUID) -> SomutC
     """İş kalemini güven göstergesi ve referans istekleriyle birlikte okur.
 
     Sahipliğe bakmaz: girişsiz referans yanıtı da kullanıyor (orada kimlik
-    token'ın kendisi). Sahiplik uçların işi (`app/api/sahiplik.py`).
+    token'ın kendisi). Sahiplik uçların işi (`app/servisler/sahiplik.py`).
     """
     cikti = await oturum.scalar(
         select(SomutCikti)

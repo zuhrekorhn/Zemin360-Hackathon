@@ -26,8 +26,7 @@ from app.agents.guclendirme import (
     one_cikacagi_firsat_sayisi,
 )
 from app.agents.kart_duzenleme import versiyon_artmali_mi
-from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import bulunamadi, yetenek_kartinin_sahibi_mi
+from app.api.kimlik import bulunamadi, rol_gerekli
 from app.api.yetenek_kartlari import KART_BULUNAMADI, kart_yaniti
 from app.db.session import get_session
 from app.models.eslesme import Eslesme
@@ -46,6 +45,7 @@ from app.servisler import kart_duzenleme as duzenleme
 from app.servisler import kart_hazirlama
 from app.servisler.dogrulama.dosyalar import depodan_sil, dosya_anahtarlari
 from app.servisler.eslestirme import IHTIYAC_ACIK
+from app.servisler.sahiplik import yetenek_kartinin_sahibi_mi
 
 router = APIRouter(prefix="/yetenek-kartlari", tags=["kart-duzenleme"])
 

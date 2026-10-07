@@ -31,8 +31,7 @@ from app.agents.takip_durumu import (
     ISBIRLIGI_TAMAMLANDI,
 )
 from app.agents.uygunluk import gorunur_kosulu
-from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import bulunamadi
+from app.api.kimlik import bulunamadi, rol_gerekli
 from app.core import firma_dogrulama
 from app.core.program import HEDEFLER
 from app.db.session import get_session

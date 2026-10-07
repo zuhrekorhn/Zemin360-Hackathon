@@ -9,11 +9,11 @@ planda; hata akışı düşürmez (İ9).
 
 from __future__ import annotations
 
-from app.api.sahiplik import TARAF_ADAY, TARAF_ILAN, taraf_adi
 from app.core.config import get_settings
 from app.core.dis_servisler import kurulum
 from app.core.dis_servisler.eposta import Eposta, dusmeden_gonder
 from app.models.eslesme import Eslesme
+from app.servisler.sahiplik import TARAF_ADAY, TARAF_ILAN, taraf_adi
 
 
 def _alici_eposta(eslesme: Eslesme, alici_taraf: str) -> str | None:

@@ -17,13 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.eslestirme import tamamlanan_pilot_sayilari
-from app.api.kimlik import mevcut_hesap
-from app.api.sahiplik import (
-    bulunamadi,
-    girvak_mi,
-    yetenek_kartini_gorebilir_mi,
-    yetenek_kartinin_sahibi_mi,
-)
+from app.api.kimlik import bulunamadi, mevcut_hesap
 from app.core.dis_servisler.depo import DepoKapali
 from app.core.embeddings import EmbeddingHatasi, embedding_uret, yetenek_temsil_metni
 from app.core.is_kalemi import is_kalemi_metni
@@ -36,6 +30,11 @@ from app.schemas.dogrulama import IndirmeAdresiYaniti
 from app.schemas.kesif import YetenekKartiYaniti
 from app.servisler.dogrulama import dosyalar
 from app.servisler.dogrulama.parcalar import DOSYA_TURLERI
+from app.servisler.sahiplik import (
+    girvak_mi,
+    yetenek_kartini_gorebilir_mi,
+    yetenek_kartinin_sahibi_mi,
+)
 
 logger = logging.getLogger("zemin360.embedding")
 

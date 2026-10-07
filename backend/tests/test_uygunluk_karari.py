@@ -30,7 +30,6 @@ from app.agents.uygunluk import (
     karari_dogrula,
     listelenecekler,
 )
-from app.api.sahiplik import TARAF_ADAY, TARAF_ILAN
 from app.core.llm import HizSinirHatasi
 from app.db.base import EMBEDDING_DIM
 from app.models.bildirim import TUR_YENI_ONERI, Bildirim
@@ -39,6 +38,7 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.servisler import eslestirme as servis
 from app.servisler import firma_karti as firma_servisi
 from app.servisler.eslestirme import iliskileriyle
+from app.servisler.sahiplik import TARAF_ADAY, TARAF_ILAN
 from tests.test_firma_eslestirme import _firma, _ortak_ilan
 from tests.test_firma_eslestirme import gerekce_sahte as gerekce_sahte  # noqa: F401
 from tests.test_sahiplik import senaryo

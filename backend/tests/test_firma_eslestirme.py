@@ -26,7 +26,6 @@ from app.agents.eslestirme import (
     temizlenecekler,
 )
 from app.api import canlilik as canlilik_api
-from app.api.sahiplik import TARAF_ADAY, TARAF_ILAN, eslesmedeki_taraf, taraf_adi, taraf_hesabi
 from app.db.base import EMBEDDING_DIM
 from app.models.bildirim import TUR_YENI_ONERI, Bildirim
 from app.models.eslesme import Eslesme
@@ -36,6 +35,13 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.servisler import eslestirme as servis
 from app.servisler import firma_karti as firma_servisi
 from app.servisler.eslestirme import iletisim, iliskileriyle
+from app.servisler.sahiplik import (
+    TARAF_ADAY,
+    TARAF_ILAN,
+    eslesmedeki_taraf,
+    taraf_adi,
+    taraf_hesabi,
+)
 from tests.test_sahiplik import _hesap, senaryo
 
 V = [1.0] + [0.0] * (EMBEDDING_DIM - 1)

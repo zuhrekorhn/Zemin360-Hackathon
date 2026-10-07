@@ -14,8 +14,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.kimlik import mevcut_hesap
-from app.api.sahiplik import bulunamadi
+from app.api.kimlik import bulunamadi, mevcut_hesap
 from app.db.session import get_session
 from app.models.bildirim import Bildirim
 from app.models.eslesme import Eslesme

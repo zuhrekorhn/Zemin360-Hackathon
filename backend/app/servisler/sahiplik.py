@@ -1,12 +1,9 @@
 """Kaynak sahipliği: kim hangi kartı, eşleşmeyi, sohbeti görebilir ya da değiştirebilir.
 
-Kuralların tablosu: docs/faz-b-kimlik-ve-dongu.md § 3. Uç noktalar kaynağı
-okuyup buradaki fonksiyonlara sorar; tek kaynak burası.
-
-Hata kodu sözleşmesi:
-  401 — token yok/geçersiz (app/api/kimlik.py › mevcut_hesap)
-  403 — rol uygun değil (app/api/kimlik.py › rol_gerekli)
-  404 — başkasının kaynağı. 403 değil: kaynağın var olduğu sızmasın.
+Kuralların tablosu: docs/faz-b-kimlik-ve-dongu.md § 3. Uç noktalar ve servisler
+kaynağı okuyup buradaki fonksiyonlara sorar; tek kaynak burası. HTTP'den bağımsızdır:
+"göremez" kararını uç 404'e çevirir (app/api/kimlik.py › bulunamadi; 403 değil,
+kaynağın var olduğu sızmasın).
 
 GİRVAK okuma işlerinde her şeyi görür; yazma işleri genç ve kurumun işidir.
 """
@@ -16,7 +13,6 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from fastapi import HTTPException
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -49,10 +45,6 @@ TARAF_ILAN = ROL_KURUM
 
 # Sohbet checkpoint'ine oturumu açan hesabın kimliği bu anahtarla yazılır.
 SOHBET_SAHIBI = "sahip_hesap_id"
-
-
-def bulunamadi(mesaj: str) -> HTTPException:
-    return HTTPException(status_code=404, detail=mesaj)
 
 
 def girvak_mi(hesap: Hesap) -> bool:

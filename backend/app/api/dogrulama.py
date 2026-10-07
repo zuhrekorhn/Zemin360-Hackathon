@@ -47,8 +47,7 @@ from app.agents.dogrulama import (
     yanitlanabilir_mi,
 )
 from app.agents.dogrulama.kurallar import OkunanKanit
-from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import bulunamadi, girvak_mi, yetenek_kartinin_sahibi_mi
+from app.api.kimlik import bulunamadi, rol_gerekli
 from app.core import istek_izi
 from app.core.dis_servisler.depo import DepoKapali
 from app.core.dis_servisler.eposta import Eposta
@@ -96,6 +95,7 @@ from app.servisler.dogrulama import (
 from app.servisler.dogrulama.isaretler.referans_suphesi import form_acildi
 from app.servisler.dogrulama.parcalar import DosyaSiniri
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
+from app.servisler.sahiplik import girvak_mi, yetenek_kartinin_sahibi_mi
 
 router = APIRouter(prefix="/dogrulama", tags=["dogrulama"])
 

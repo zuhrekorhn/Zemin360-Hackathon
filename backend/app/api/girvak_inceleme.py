@@ -15,8 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.inceleme_durumu import ACIK, GecersizKarar
-from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import bulunamadi
+from app.api.kimlik import bulunamadi, rol_gerekli
 from app.db.session import get_session
 from app.models.hesap import ROL_GIRVAK
 from app.models.inceleme_isareti import IncelemeIsareti

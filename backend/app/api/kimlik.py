@@ -2,9 +2,11 @@
 
     mevcut_hesap            — geçerli token yoksa 401
     rol_gerekli("kurum")    — rol uymuyorsa 403
+    bulunamadi(mesaj)       — başkasının kaynağı 404
 
-Sahiplik (başkasının kaynağına 404) bu bağımlılıkların işi değil; kaynağı
-okuyan uç nokta, kaynağın sahibini hesapla karşılaştırır.
+Sahiplik bu bağımlılıkların işi değil; kaynağı okuyan uç nokta, kaynağın sahibini
+`app/servisler/sahiplik.py`'ye sorar ve "göremez" kararını `bulunamadi` ile 404'e
+çevirir (403 değil: kaynağın var olduğu sızmasın).
 """
 
 from __future__ import annotations
@@ -66,3 +68,8 @@ def rol_gerekli(*roller: str) -> Callable[..., Awaitable[Hesap]]:
         return hesap
 
     return bagimlilik
+
+
+def bulunamadi(mesaj: str) -> HTTPException:
+    """Başkasının ya da var olmayan kaynağın hatası: ikisi ayırt edilmez."""
+    return HTTPException(status_code=404, detail=mesaj)

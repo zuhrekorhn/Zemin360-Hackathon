@@ -24,8 +24,7 @@ from sqlalchemy.orm import selectinload
 
 from app.agents.firma_karti import profil_baglami
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
-from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import bulunamadi, sohbet_baslangici, sohbetin_sahibi_mi
+from app.api.kimlik import bulunamadi, rol_gerekli
 from app.core.alan_adlari import KART_ALAN_ADLARI, bos_alan_mesaji
 from app.core.firma_karti import ZORUNLU_ALANLAR
 from app.core.hatalar import HIZ_SINIRI_MESAJI
@@ -42,6 +41,7 @@ from app.schemas.firma_karti import (
 )
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
 from app.servisler import firma_karti as servis
+from app.servisler.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 
 router = APIRouter(prefix="/kurum/kart", tags=["firma-karti"])
 

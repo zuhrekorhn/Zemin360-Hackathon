@@ -41,20 +41,7 @@ from app.agents.eslestirme import (
 from app.agents.uygunluk import gorunur_kosulu, gosterilecek_karar
 from app.api import takip
 from app.api.ihtiyac_kartlari import kart_yaniti as ihtiyac_karti_yaniti
-from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import (
-    GENCE_ACIK_DURUMLAR,
-    TARAF_ADAY,
-    TARAF_ILAN,
-    bulunamadi,
-    calisma_basligi,
-    eslesmedeki_taraf,
-    girvak_mi,
-    kullanici_id,
-    taraf_adi,
-    taraf_hesabi,
-)
-from app.api.sahiplik import kurum_id as hesabin_kurumu
+from app.api.kimlik import bulunamadi, rol_gerekli
 from app.api.yetenek_kartlari import kart_yaniti
 from app.core.firma_dogrulama import DOGRULANDI
 from app.db.session import get_session
@@ -94,6 +81,18 @@ from app.servisler.eslestirme import (
     iliskileriyle,
 )
 from app.servisler.ilgi import firsat_kapandi_metni, isbirligini_ac
+from app.servisler.sahiplik import (
+    GENCE_ACIK_DURUMLAR,
+    TARAF_ADAY,
+    TARAF_ILAN,
+    calisma_basligi,
+    eslesmedeki_taraf,
+    girvak_mi,
+    kullanici_id,
+    taraf_adi,
+    taraf_hesabi,
+)
+from app.servisler.sahiplik import kurum_id as hesabin_kurumu
 
 router = APIRouter(prefix="/eslestirme", tags=["eslestirme"])
 
@@ -108,7 +107,7 @@ def _hedef_kurum(hesap: Hesap, istenen: uuid.UUID | None) -> uuid.UUID:
     """Hangi kurumun eşleştirmesi? Kurum yalnızca kendisininkini, GİRVAK herhangi birini.
 
     Kurum başka bir kurumun kimliğini verirse 404 (sahiplik sözleşmesi,
-    app/api/sahiplik.py); kimlik vermezse kendi kurumu kullanılır.
+    app/servisler/sahiplik.py); kimlik vermezse kendi kurumu kullanılır.
     """
     if girvak_mi(hesap):
         if istenen is None:

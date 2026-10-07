@@ -15,13 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.agents.tanimlama import ZORUNLU_ALANLAR
-from app.api.kimlik import mevcut_hesap, rol_gerekli
-from app.api.sahiplik import (
-    bulunamadi,
-    girvak_mi,
-    ihtiyac_kartini_gorebilir_mi,
-    ihtiyac_kartinin_sahibi_mi,
-)
+from app.api.kimlik import bulunamadi, mevcut_hesap, rol_gerekli
 from app.api.yetenek_kartlari import EMBEDDING_HATA_MESAJI
 from app.core.alan_adlari import IHTIYAC_ALAN_ADLARI, bos_alan_mesaji
 from app.core.basari_olcutu import olcum_belirlenecek
@@ -39,6 +33,11 @@ from app.schemas.tanimlama import (
 from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir, ihtiyac_kilidi
 from app.servisler.ilan_duzenleme import duzenleme_engeli, ilan_eslesmeleri, ilani_duzenle
 from app.servisler.ilgi import IHTIYAC_KAPANDI, ihtiyaci_kapat
+from app.servisler.sahiplik import (
+    girvak_mi,
+    ihtiyac_kartini_gorebilir_mi,
+    ihtiyac_kartinin_sahibi_mi,
+)
 
 logger = logging.getLogger("zemin360.embedding")
 

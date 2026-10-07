@@ -13,14 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.kimlik import rol_gerekli
-from app.api.sahiplik import (
-    TARAF_ADAY,
-    calisma_basligi,
-    eslesmedeki_taraf,
-    kullanici_id,
-    kurum_id,
-    taraf_adi,
-)
 from app.api.takip import ilerleme_hesapla
 from app.db.session import get_session
 from app.models.eslesme import Eslesme
@@ -31,6 +23,14 @@ from app.models.isbirligi import Isbirligi
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.eslestirme import IsbirligiOzeti
 from app.servisler.eslestirme import iletisim
+from app.servisler.sahiplik import (
+    TARAF_ADAY,
+    calisma_basligi,
+    eslesmedeki_taraf,
+    kullanici_id,
+    kurum_id,
+    taraf_adi,
+)
 
 router = APIRouter(tags=["isbirlikleri"])
 

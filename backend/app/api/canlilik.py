@@ -55,7 +55,6 @@ from app.agents.takip_durumu import (
 )
 from app.agents.uygunluk import gorunur_kosulu
 from app.api.kimlik import _bearer, _yetkisiz, mevcut_hesap, rol_gerekli
-from app.api.sahiplik import karsi_taraf, taraf_adi, taraf_hesabi
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.models.canlilik_olayi import CanlilikOlayi
@@ -70,6 +69,7 @@ from app.servisler import gozlem
 from app.servisler.bildirim import bildirim_ekle
 from app.servisler.dogrulama.isaretler import referans_suphesi
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
+from app.servisler.sahiplik import karsi_taraf, taraf_adi, taraf_hesabi
 
 logger = logging.getLogger("zemin360.canlilik")
 

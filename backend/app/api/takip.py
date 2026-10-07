@@ -44,9 +44,7 @@ from app.agents.takip_durumu import (
     sonlanma_gecisi,
 )
 from app.agents.takip_surecleri import PlanAdimi, SurecSablonu, surec_adi, surec_sec
-from app.api import sahiplik
-from app.api.kimlik import mevcut_hesap, rol_gerekli
-from app.api.sahiplik import bulunamadi, eslesmedeki_taraf, girvak_mi, karsi_taraf
+from app.api.kimlik import bulunamadi, mevcut_hesap, rol_gerekli
 from app.db.session import get_session, get_sessionmaker
 from app.models.bildirim import (
     TUR_ADIM_ISARETLENDI,
@@ -74,8 +72,10 @@ from app.schemas.takip import (
     MilestoneYaniti,
     SonlandirIstegi,
 )
+from app.servisler import sahiplik
 from app.servisler.bildirim import bildirim_ekle
 from app.servisler.eslestirme import iletisim
+from app.servisler.sahiplik import eslesmedeki_taraf, girvak_mi, karsi_taraf
 
 logger = logging.getLogger("zemin360.takip")
 

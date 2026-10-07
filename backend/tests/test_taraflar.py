@@ -16,7 +16,8 @@ from app.agents.eslesme_durumu import (
     gecis,
 )
 from app.agents.eslestirme import DURUM_GENC_ILGILENDI, DURUM_ONERILDI
-from app.api.sahiplik import (
+from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM
+from app.servisler.sahiplik import (
     TARAF_ADAY,
     TARAF_ILAN,
     eslesmedeki_taraf,
@@ -24,7 +25,6 @@ from app.api.sahiplik import (
     taraf_adi,
     taraf_hesabi,
 )
-from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM
 
 
 def _dunya():

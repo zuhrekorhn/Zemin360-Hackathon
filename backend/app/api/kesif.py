@@ -23,7 +23,6 @@ from app.agents.kesif import (
 )
 from app.api.kimlik import rol_gerekli
 from app.api.profil import gencin_profilini_guncelle
-from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.api.yetenek_kartlari import embedding_hesapla, kart_yaniti
 from app.core import istek_izi
 from app.core.hatalar import HIZ_SINIRI_MESAJI
@@ -53,6 +52,7 @@ from app.servisler.dogrulama import (
 from app.servisler.dogrulama.parcalar import link_parcasi_ekle
 from app.servisler.dogrulama.referans_epostasi import epostalari_gonder
 from app.servisler.genc_karti import gencin_karti
+from app.servisler.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 
 router = APIRouter(prefix="/kesif", tags=["kesif"])
 

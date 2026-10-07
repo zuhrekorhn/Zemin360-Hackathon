@@ -24,7 +24,6 @@ from app.agents.tanimlama import ZORUNLU_ALANLAR
 from app.api.ihtiyac_kartlari import embedding_hesapla, kart_yaniti
 from app.api.kimlik import rol_gerekli
 from app.api.profil import kurumun_profilini_guncelle
-from app.api.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 from app.core.alan_adlari import IHTIYAC_ALAN_ADLARI, bos_alan_mesaji
 from app.core.hatalar import HIZ_SINIRI_MESAJI
 from app.core.ilan import ARANAN_FIRMA, ARANAN_GENC
@@ -43,6 +42,7 @@ from app.schemas.tanimlama import (
 )
 from app.servisler.eslestirme import eslestirmeyi_arka_planda_calistir
 from app.servisler.ilan_duzenleme import taslak_alanlari
+from app.servisler.sahiplik import sohbet_baslangici, sohbetin_sahibi_mi
 
 router = APIRouter(prefix="/tanimlama", tags=["tanimlama"])
 
