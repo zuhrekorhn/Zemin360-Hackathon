@@ -45,12 +45,14 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 3. **Sert filtreler önce çalışır** (embedding'den önce) — şehir, müsaitlik gibi olmazsa-olmazlar.
 4. Cosine similarity ile sıralama.
 5. Ağırlıklandırma — doğrulama rozeti olanlara küçük bonus.
-6. Eşik altı sonuçlar gösterilmez.
+6. Benzerlik alt sınırının altındaki adaylar listeye girmez (genç–ilan 0.48, firma–firma 0.52); skor yalnızca sıralar (`matching-algorithm.md` § 5).
 7. LLM ile gerekçe metni üretimi (en çok katkı sağlayan taksonomi düğümleri + doğrulama durumu).
 
 **Ne zaman çalışır:** ihtiyaç kartı onaylanınca (o ihtiyaç için) ve yetenek kartı onaylanınca, düzenlenince ya da profildeki filtre alanı değişince (o kartla ilgili açık ihtiyaçlar için; `app/servisler/kart_hazirlama.py`). Sonradan gelen genç böylece mevcut ihtiyaçlarla eşleşir. Pipeline tek: `app/servisler/eslestirme.py`.
 
 **İlgi iki taraflı** (`plans/genc-akisi.md` § 4): eşik üstü öneri gence "fırsat" olarak görünür; ilk ilgiyi firma da genç de gösterebilir, genç ilgi skoru değiştirmez. Karar verilmiş kayıtlar korunur: yeniden hesap yalnızca `onerildi` kayıtlarını siler; gencin ilgi gösterdiği kaydın skoru ve gerekçesi de değişmez (karar 14). Kapalı ihtiyaç için aday aranmaz.
+
+**Uygunluk kararı** (`matching-algorithm.md` § 8; ilke: benzerlik aday bulur, yapay zekâ doğrular, puanı kod verir): gerekçeyi yazan aynı çağrı her aday için `uygun / kismen / uygun_degil` der. `uygun_degil` saklanır ama hiçbir okumada ve hiçbir bildirimde görünmez (`app/agents/uygunluk.py` › `gorunur_kosulu()`). Firma–firma'da benzerlik tabanını geçen ilk 8 aday yargılanır, "Kısmen uygun" rozeti çıkar; genç–ilan tarafında karar yalnızca gizlemek içindir (rozet yok, API'de `uygunluk` null). Model hata verirse karar "bilinmiyor" sayılır, öneri listelenir. Kart ya da ilan düzenlenince karar sıfırlanır.
 
 **Bilinen sınırlamalar:** Cold start (havuz küçükken kalite düşük — jüriye açıkça belirtilmeli). Taksonomi tek zorunlu filtre değil, embedding serbest metni de temsil eder.
 
@@ -80,6 +82,8 @@ Her ajan için üç soru: **ne sağlayacak, ne sağlamayacak (sınırları), nas
 **Ne sağlamayacak:** Karmaşık bir davranışsal tahmin modeli kurmaz — kural tabanlı bir eşik (örn. "30 gündür etkileşim yok") yeterli. Toplu/jenerik spam göndermez.
 
 **Genç akışı eki:** genç ilgi gösterdi ve firma 5 gündür yanıt vermediyse firmaya tek hatırlatma (`genc_ilgisi_yanitsiz`, yalnızca şablon, "siz" hitabı).
+
+**Gizli öneri eki (7 Eki):** uygunluk kararı `uygun_degil` olan eşleşme taramada yok sayılır: hatırlatılmaz, öneri sayısına ve "yeni fırsat" bildirimine girmez (`faz-d-canlilik.md` § 1).
 
 **Doğrulama eki (adım 12):** aynı tarama, eskiden açık okunmuş kanıt linklerini haftada bir yoklar; üst üste 3 kez silinmiş ya da gizlenmiş çıkan link Kanıt'a girmez, gence nötr bildirim gider (kurallar `plans/dogrulama-iyilestirme.md` § 10.4).
 

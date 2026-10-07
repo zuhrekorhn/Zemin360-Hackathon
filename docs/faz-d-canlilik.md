@@ -48,6 +48,7 @@ aşımıyla ve Takip gecikmesiyle aynı desen; yeni bir "pasif" alanı saklanmaz
 
 **Kurallar:**
 - **Kapsam dışı kayıtlar:** `reddedildi` eşleşmeler ve `tamamlandi` iş birlikleri hatırlatılmaz. Hesabı olmayan (Faz B öncesi) profil de hatırlatılmaz.
+- **Gizli öneriler (7 Eki):** uygunluk kararı `uygun_degil` olan eşleşme (`matching-algorithm.md` § 8) hiçbir ekranda görünmediği için taramada da yok sayılır: kimseye hatırlatılmaz, `oneri_bekliyor`'daki öneri sayısına ve `yeni_firsat` bildirimine girmez (`pasif_adaylar(..., yalniz_gorunur=True)`, filtre `gorunur_kosulu()`). GİRVAK'ın "pasifleşen bağlantılar" listesi süzgeçsiz okur.
 - **Öncelik:** Aynı iş birliğinde aynı kişiye aynı taramada tek hatırlatma gider. `adim_gecikti`, `isbirligi_hareketsiz`'den önce gelir; gecikmiş adım zaten "hareket yok" demektir.
 - **Eşikler tek yerde:** Saf bir modülde durur (`app/agents/canlilik_kurallari.py`) ve tablo testle sabitlenir. `.env`'den değiştirilmez; demo için zaman aracı var (§ 6).
 - **Bildirimler:** Faz B tablosuna, Canlılık türleriyle yazılır. Tıklayınca ilgili sayfaya gider: kurum öneriler sayfasına, genç "Bana gelen ilgiler"e, iş birliği bildirimleri `/isbirligi/{id}`'ye. Metinde ad olabilir, e-posta olmaz.
