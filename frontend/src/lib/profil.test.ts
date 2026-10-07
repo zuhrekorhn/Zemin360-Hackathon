@@ -1,13 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type { MeYaniti } from "@/lib/api";
 import {
   BOS_PROFIL_FORMU,
   type ProfilFormu,
   formuProfileCevir,
-  kartTamamlamaCagrisi,
   onaydaProfilSorulmali,
-  profilBandi,
   hesapGovdesi,
   hesapHatalari,
   profilFormunuDogrula,
@@ -81,39 +78,6 @@ describe("formuProfileCevir", () => {
   });
 });
 
-describe("profilBandi", () => {
-  const hesap = (ek: Partial<MeYaniti>) =>
-    ({
-      rol: "genc",
-      eksik_profil_alanlari: [],
-      kvkk_onayli: true,
-      firma_karti_var: false,
-      eposta_dogrulandi: true,
-      ...ek,
-    }) as MeYaniti;
-
-  it("eksik yoksa bant yok", () => {
-    expect(profilBandi(hesap({}))).toBeNull();
-  });
-
-  it("eksik alanları ve KVKK onayını söyler", () => {
-    expect(
-      profilBandi(
-        hesap({
-          eksik_profil_alanlari: ["sehir", "musaitlikler"],
-          kvkk_onayli: false,
-        }),
-      ),
-    ).toBe(
-      "Profilini tamamla: profilinde eksik bilgi var (şehir, müsaitlik); KVKK aydınlatma metnini onaylamadın.",
-    );
-  });
-
-  it("kurumda bant yok", () => {
-    expect(profilBandi(hesap({ rol: "kurum", kvkk_onayli: false }))).toBeNull();
-  });
-});
-
 describe("onaydaProfilSorulmali", () => {
   it("filtre alanları kayıtta alındıysa sorulmaz", () => {
     expect(onaydaProfilSorulmali([])).toBe(false);
@@ -125,25 +89,3 @@ describe("onaydaProfilSorulmali", () => {
   });
 });
 
-describe("kartTamamlamaCagrisi", () => {
-  const genc = (kartVar: boolean) =>
-    ({
-      rol: "genc",
-      yetenek_karti: kartVar ? { id: "1" } : null,
-    }) as MeYaniti;
-
-  it("kartı olmayan gence çağrı", () => {
-    expect(kartTamamlamaCagrisi(genc(false))).toBe(
-      "Kartını tamamla, firmalar seni görebilsin.",
-    );
-  });
-  it("kartı varsa ya da kurumsa yok", () => {
-    expect(kartTamamlamaCagrisi(genc(true))).toBeNull();
-    expect(
-      kartTamamlamaCagrisi({
-        rol: "kurum",
-        yetenek_karti: null,
-      } as unknown as MeYaniti),
-    ).toBeNull();
-  });
-});

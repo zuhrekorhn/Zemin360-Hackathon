@@ -11,7 +11,6 @@ import type {
   GencKayitProfili,
   GencProfil,
   KariyerDurumu,
-  MeYaniti,
 } from "@/lib/api";
 
 export const SINIF_EN_AZ = 1;
@@ -185,23 +184,6 @@ export function profildenForma(profil: GencProfil): ProfilFormu {
   };
 }
 
-/**
- * Panelin üstündeki engellemeyen bant: bu alanlardan önce açılmış hesaplar
- * için. Gösterilecek bir şey yoksa null.
- */
-export function profilBandi(hesap: MeYaniti): string | null {
-  if (hesap.rol !== "genc") return null;
-  const eksikler = hesap.eksik_profil_alanlari.map(
-    (alan) => EKSIK_ALAN_ETIKETLERI[alan] ?? alan,
-  );
-  const parcalar: string[] = [];
-  if (eksikler.length > 0)
-    parcalar.push(`profilinde eksik bilgi var (${eksikler.join(", ")})`);
-  if (!hesap.kvkk_onayli) parcalar.push("KVKK aydınlatma metnini onaylamadın");
-  if (parcalar.length === 0) return null;
-  return `Profilini tamamla: ${parcalar.join("; ")}.`;
-}
-
 /** Eşleştirmenin sert filtreleri; kart onayında profilde yoksa sorulur. */
 const FILTRE_ALANLARI = ["sehir", "calisma_modelleri", "musaitlikler"];
 
@@ -211,13 +193,4 @@ const FILTRE_ALANLARI = ["sehir", "calisma_modelleri", "musaitlikler"];
  */
 export function onaydaProfilSorulmali(eksikAlanlar: string[]): boolean {
   return eksikAlanlar.some((alan) => FILTRE_ALANLARI.includes(alan));
-}
-
-/**
- * Onaylı kartı olmayan genç eşleştirmeye girmez: panelin en üstünde çağrı.
- * Kartı varsa null.
- */
-export function kartTamamlamaCagrisi(hesap: MeYaniti): string | null {
-  if (hesap.rol !== "genc" || hesap.yetenek_karti) return null;
-  return "Kartını tamamla, firmalar seni görebilsin.";
 }

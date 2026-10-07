@@ -3,7 +3,7 @@
  * (docs/design-language.md § Sayfa düzeni).
  *
  *   <Sayfa genislik="form">
- *     <SayfaBasligi baslik="Profilim" aciklama="…" />
+ *     <SayfaBasligi baslik="Hesabım" aciklama="…" />
  *     …bölümler…
  *   </Sayfa>
  *

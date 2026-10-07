@@ -126,7 +126,7 @@ export function TaslakBolumu({
           <p className="text-sm text-pretty text-muted-foreground">
             {profilSor
               ? "Eşleştirme bu bilgilerle yapılır. "
-              : "Çalışma tercihlerin profilinde; değiştirmek istersen Profilim sayfasından. "}
+              : "Çalışma tercihlerini kartın onaylandıktan sonra kart sayfasından değiştirebilirsin. "}
             E-postan kartta görünmez; iletişim ancak karşılıklı ilgiyle açılır.
           </p>
         </div>
