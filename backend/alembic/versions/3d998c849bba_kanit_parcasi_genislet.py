@@ -1,6 +1,6 @@
 """kanit parcasi: genislet (expand)
 
-Doğrulama iyileştirmesi adım 3a (docs/plans/dogrulama-iyilestirme.md § 13):
+Doğrulama (docs/dogrulama.md § 13):
   - `kanit_parcasi`: bir iş kalemine eklenen link / dosya / görsel; bir kalemin
     birden çok parçası olabilir.
   - `kanit_metin_parcasi`: uzun kanıt metninin embedding'li parçaları (§ 5.4).

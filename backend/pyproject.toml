@@ -20,10 +20,10 @@ dependencies = [
     # asyncpg'yi desteklemiyor. Uygulama verisi hâlâ asyncpg üzerinden okunur.
     "langgraph-checkpoint-postgres>=2.0",
     "psycopg[binary,pool]>=3.2",
-    # Kimlik (docs/faz-b-kimlik-ve-dongu.md § 1): şifre hash'i ve JWT
+    # Kimlik (docs/kimlik-ve-dongu.md § 1): şifre hash'i ve JWT
     "argon2-cffi>=23.1",
     "PyJWT>=2.8",
-    # Dosya ve görsel kanıtı (docs/plans/dogrulama-iyilestirme.md § 4)
+    # Dosya ve görsel kanıtı (docs/dogrulama.md § 4)
     "python-multipart>=0.0.9",  # yükleme ucu
     "boto3>=1.34",  # Cloudflare R2 (S3 uyumlu)
     "filetype>=1.2",  # tür ilk baytlardan

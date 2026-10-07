@@ -1,7 +1,7 @@
 """takip surecleri
 
 İş birliğinin süreç şablonu ve erken sonlanması, adımın şablon anahtarı ve
-hazırlık önerisi (docs/plans/takip-surecleri.md). Hepsi nullable ve eklemeli:
+hazırlık önerisi (docs/kararlar.md T1). Hepsi nullable ve eklemeli:
 eski kayıtlarda `surec` ve `asama` boş kalır, sayfa onları bugünkü gibi gösterir.
 Değer kümeleri veritabanında kısıtlanmıyor, kural kodda
 (app/agents/takip_surecleri.py, app/agents/takip_durumu.py).

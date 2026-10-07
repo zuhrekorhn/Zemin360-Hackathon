@@ -1,6 +1,6 @@
 """takip alanlari
 
-Takip Ajanı (docs/faz-c-takip.md § 2): plan onayı, tamamlanma, durum özeti ve
+Takip Ajanı (docs/takip.md § 2): plan onayı, tamamlanma, durum özeti ve
 milestone işaretleri. Veri silinmez. Faz B'de `aktif` açılan, planı olmayan
 iş birlikleri `plan_bekliyor` olur: plan önerisinden devam etsinler.
 

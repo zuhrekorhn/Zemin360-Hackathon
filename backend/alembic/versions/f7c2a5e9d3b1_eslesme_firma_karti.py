@@ -1,6 +1,6 @@
 """eslesme firma karti
 
-Firma–firma eşleşme (docs/plans/firma-akisi.md § 0 karar 11): aynı `eslesme`
+Firma–firma eşleşme (docs/kararlar.md F11): aynı `eslesme`
 tablosu. `yetenek_karti_id` nullable olur, yanına nullable `firma_karti_id`
 gelir; bir satırda **tam biri** dolu (CHECK). Ayrı UNIQUE
 `(ihtiyac_karti_id, firma_karti_id)`: pipeline'ın ON CONFLICT'i firma

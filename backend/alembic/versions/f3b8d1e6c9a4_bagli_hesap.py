@@ -1,6 +1,6 @@
 """bagli hesap ve profil kodu
 
-Doğrulama iyileştirmesi adım 8 (docs/plans/dogrulama-iyilestirme.md § 6, § 13).
+Doğrulama (docs/dogrulama.md § 6, § 13).
 Bağlı hesaptaki çalışma seviye B'dir. Bir platform hesabı iki gence bağlanamaz.
 
 Revision ID: f3b8d1e6c9a4

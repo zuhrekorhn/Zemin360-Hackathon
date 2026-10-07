@@ -1,6 +1,6 @@
 """firma profil alanlari
 
-Firma kayıt formunun alanları (docs/plans/firma-akisi.md § 0 kararlar 1-2, § 2):
+Firma kayıt formunun alanları (docs/kararlar.md F1-F2, § 2):
 tür, web sitesi, çalışan sayısı aralığı, kuruluş yılı, tanıtım, formu
 dolduranın adı ve görevi. Hepsi nullable ve eklemeli: eski firma satırları
 değişmez, panel onlara "Profilinizi tamamlayın" bandı gösterir (karar 9).

@@ -1,6 +1,6 @@
 """eposta dogrulama: hesap.eposta_dogrulandi_tarihi ve eposta_dogrulama tablosu
 
-Doğrulama iyileştirmesi adım 6 (docs/plans/dogrulama-iyilestirme.md § 6.3,
+Doğrulama (docs/dogrulama.md § 6.3,
 bulgu 37). Var olan hesaplar doğrulanmamış başlar (NULL); doğrulama girişi
 engellemez, yalnızca ad kilidini ve ada dayalı seviye A koşulunu açar.
 

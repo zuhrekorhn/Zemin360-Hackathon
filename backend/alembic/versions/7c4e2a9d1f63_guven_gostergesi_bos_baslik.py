@@ -1,6 +1,6 @@
 """guven gostergesi: bos baslik NULL ("—")
 
-Doğrulama iyileştirmesi adım 3b (docs/plans/dogrulama-iyilestirme.md § 1 İ4,
+Doğrulama (docs/dogrulama.md § 1 İ4,
 bulgu 17 ve 19). Eski kod "değerlendirilmedi" ile "0 puan" arasında ayrım
 yapmıyordu; iki tür sahte sıfır kaldı:
 

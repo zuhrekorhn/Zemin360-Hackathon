@@ -1,6 +1,6 @@
 """ilan aranan
 
-İlanın kimi aradığı (docs/plans/firma-akisi.md § 0 kararlar 4-5, § 2):
+İlanın kimi aradığı (docs/kararlar.md F4-F5, § 2):
 `ihtiyac_karti.aranan` (`genc | firma`, varsayılan `genc`; mevcut ilanlar genç
 ilanı), `aranan_firma_turleri` (boş = hepsi; yalnızca ortak ilanında) ve
 `isbirligi_turu` (ortak ilanında, isteğe bağlı). Eklemeli.

@@ -1,6 +1,6 @@
 """gozlem: kanit_gozlemi, degerlendirme_gozlemi, servis_gunlugu
 
-Doğrulama iyileştirmesi adım 12 (docs/plans/dogrulama-iyilestirme.md § 10.3, § 14.4).
+Doğrulama (docs/dogrulama.md § 10.3, § 14.4).
 Erişim dağılımı, değerlendirme süresi / token kullanımı ve dış servis sağlığı kalıcı.
 
 Revision ID: c5d8f2a1b7e3

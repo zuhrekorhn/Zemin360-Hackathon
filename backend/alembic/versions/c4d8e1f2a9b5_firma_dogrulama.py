@@ -1,6 +1,6 @@
 """firma dogrulama
 
-Firma doğrulaması (docs/plans/firma-akisi.md § 0 karar 6, § 6):
+Firma doğrulaması (docs/kararlar.md F6):
 `kurum.dogrulama_durumu` (`bekliyor | dogrulandi | simdilik_degil`, varsayılan
 `bekliyor`) ve GİRVAK'ın karar anı `dogrulama_tarihi`. Mevcut firmalar
 `bekliyor` olur: hiçbiri henüz doğrulanmadı. Alan adı ipucu saklanmaz.

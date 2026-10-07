@@ -1,7 +1,7 @@
 """musaitlik coklu secim
 
-Gencin müsaitliği tek değerden çoklu seçime döner (docs/plans/genc-akisi.md
-§ 0, karar 2): `kullanici.musaitlik` → `kullanici.musaitlikler text[]`.
+Gencin müsaitliği tek değerden çoklu seçime döner (docs/kararlar.md
+G2): `kullanici.musaitlik` → `kullanici.musaitlikler text[]`.
 
 Veri geçişi: dolu tekil değer tek elemanlı listeye taşınır, NULL boş liste
 olur. Davranış değişikliği (onaylı): eskiden NULL müsaitlikli genç, tercihi

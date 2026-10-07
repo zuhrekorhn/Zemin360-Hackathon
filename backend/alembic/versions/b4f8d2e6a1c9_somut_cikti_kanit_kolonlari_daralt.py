@@ -1,9 +1,9 @@
 """somut cikti: kanit_linki ve kanit_turu kalkar (contract)
 
-Doğrulama iyileştirmesi adım 3c. Genişlet → geçir → daralt'ın son adımı:
+Doğrulama (docs/dogrulama.md § 13). Genişlet → geçir → daralt'ın son adımı:
 kanıt artık `kanit_parcasi`'nda (3d998c849bba kopyaladı, 2c63259'dan beri kod
 yalnızca parçaları okuyup yazıyor). `kanit_turu` hiçbir yerde kullanılmıyordu;
-tür, parçanın platformundan gelecek (bulgu 29).
+tür, parçanın platformundan gelecek.
 
 Kolonu dolu olup parçası olmayan kalem varsa (ör. genişletmeden sonra eski
 kodla yazılmış satır) migration DURUR, hiçbir şeyi silmez: genişletme

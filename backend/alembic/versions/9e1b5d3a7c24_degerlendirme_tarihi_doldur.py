@@ -1,6 +1,6 @@
 """guven gostergesi: degerlendirme_tarihi eski kayitlarda doldurulur
 
-Doğrulama iyileştirmesi adım 3b-2. "Kalem değerlendirildi mi?" artık
+Doğrulama (docs/dogrulama.md § 13). "Kalem değerlendirildi mi?" artık
 `degerlendirme_tarihi`'ne bakıyor (yalnızca referans yanıtıyla açılmış gösterge
 değerlendirilmiş sayılmaz). Bu alandan önce rubrikten geçmiş kayıtların tarihi
 boş; doldurulmazsa kart hazırlama onları yeniden puanlamaya kalkar. İmza:

@@ -1,6 +1,6 @@
 """inceleme isareti: eposta_barkodu → edevlet_barkodu
 
-Doğrulama iyileştirmesi adım 9 (docs/plans/dogrulama-iyilestirme.md § 4.2, § 9).
+Doğrulama (docs/dogrulama.md § 4.2, § 9).
 Tür adı baştan yanlış yazılmıştı: işaret e-Devlet barkodlu belgenin GİRVAK
 tarafından elle doğrulanmasını bekler, e-postayla ilgisi yok. Adım 9'a kadar bu
 türde işaret açılmadı; yine de varsa satırlar da taşınır.

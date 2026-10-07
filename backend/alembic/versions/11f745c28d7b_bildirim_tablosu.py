@@ -1,6 +1,6 @@
 """bildirim tablosu
 
-Uygulama içi bildirimler (docs/faz-b-kimlik-ve-dongu.md § 6). Hesaba bağlı;
+Uygulama içi bildirimler (docs/kimlik-ve-dongu.md § 6). Hesaba bağlı;
 eşleşme silinirse bildirim kalır, bağlantısı düşer (SET NULL).
 
 Revision ID: 11f745c28d7b

@@ -1,6 +1,6 @@
 """hesap tablosu
 
-Kimlik (docs/faz-b-kimlik-ve-dongu.md § 1): giriş yapan hesap ayrı tabloda;
+Kimlik (docs/kimlik-ve-dongu.md § 1): giriş yapan hesap ayrı tabloda;
 genç profili (kullanici) ve kurum profili (kurum) ona 1-1 bağlanır.
 
 Veri silinmez: profillerin hesap_id'si nullable, Faz B öncesi profiller için

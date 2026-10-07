@@ -1,6 +1,6 @@
 """servis_kullanimi: dış servislerin aylık kullanım sayacı
 
-Doğrulama iyileştirmesi adım 11 (docs/plans/dogrulama-iyilestirme.md § 14.4).
+Doğrulama (docs/dogrulama.md § 14.4).
 Cloud Vision kaynak aramasının aylık tavanı kalıcı sayaçla denetlenir.
 
 Revision ID: b9e4c2a7d1f3

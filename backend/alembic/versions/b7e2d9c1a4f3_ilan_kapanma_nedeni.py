@@ -1,6 +1,6 @@
 """ilan kapanma nedeni
 
-İlan kapatma düğmesi (docs/plans/firma-akisi.md § 0 karar 7, § 7):
+İlan kapatma düğmesi (docs/kararlar.md F7):
 `ihtiyac_karti.kapanma_nedeni` (`platformda_bulundu | baska_yoldan_bulundu |
 vazgecildi`) ve `kapanma_tarihi`. İkisi de nullable ve eklemeli; açık ilanlarda
 boş. Kural kodda (app/core/ilan.py); değer kümesi veritabanında kısıtlanmıyor,

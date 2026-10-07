@@ -1,6 +1,6 @@
 """genc akisi alanlari
 
-Genç akışı (docs/plans/genc-akisi.md § 3), yalnızca eklemeli: kayıt formunun
+Genç akışı (docs/data-schema.md), yalnızca eklemeli: kayıt formunun
 profil alanları, KVKK onayı, iş kalemi alanları, referans yanıt tarihi,
 ilginin kim/ne zaman bilgisi, ihtiyaç kartı durumu. Veri silinmez.
 

@@ -1,6 +1,6 @@
 """canlilik alanlari
 
-Canlılık Ajanı (docs/faz-d-canlilik.md § 6): olayın alıcısı, adımı ve ihtiyaç
+Canlılık Ajanı (docs/canlilik.md § 6): olayın alıcısı, adımı ve ihtiyaç
 kartı (tekrar kuralının anahtarı), anahtar indeksi; yetenek kartına oluşturma
 tarihi ("eski kart" kuralı). Veri silinmez; mevcut kartlar migration anının
 tarihini alır.

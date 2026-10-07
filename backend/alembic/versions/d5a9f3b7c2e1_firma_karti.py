@@ -1,6 +1,6 @@
 """firma karti
 
-Firmanın yetkinlik kartı (docs/plans/firma-akisi.md § 0 karar 10, § 2):
+Firmanın yetkinlik kartı (docs/kararlar.md F10):
 yeni `firma_karti` tablosu, firma başına bir kart (`kurum_id` UNIQUE).
 Eklemeli; mevcut tablolara dokunulmaz.
 

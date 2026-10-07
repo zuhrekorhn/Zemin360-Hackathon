@@ -1,6 +1,6 @@
 """referans formu: 4 soruluk yanit, geri cekme, hatirlatma
 
-Doğrulama iyileştirmesi adım 7 (docs/plans/dogrulama-iyilestirme.md § 7, § 13).
+Doğrulama (docs/dogrulama.md § 7, § 13).
 Eski 1-5 yanıtlar `puan`'da kalır ve okunmaya devam eder; yeni yanıt ilişki ve
 üç soruyla gelir. Durum CHECK'i `geri_cekildi`'yi de tanır.
 

@@ -1,6 +1,6 @@
 """inceleme isareti: GIRVAK inceleme kuyrugu
 
-Doğrulama iyileştirmesi adım 6 (docs/plans/dogrulama-iyilestirme.md § 9, § 13).
+Doğrulama (docs/dogrulama.md § 9, § 13).
 Plan § 9'daki on türün hepsi CHECK'te baştan tanımlı. Aynı (tür, genç, kalem)
 için tek açık işaret: kısmi tekil indeks, kalemsiz işaretlerde NULL'lar eşit
 sayılır (NULLS NOT DISTINCT, PostgreSQL 15+).
