@@ -839,12 +839,30 @@ olmadığını yazdıysan karar "uygun" olamaz.
 """
 
 
-def _uygunluk_sablonu(talimat: str, uretim_sablonu: ChatPromptTemplate) -> ChatPromptTemplate:
+# Aynı çağrının üçüncü alanı (docs/kararlar.md G9): gerekçe ilanı açan firmaya yazılıyor,
+# aday onu okursa kendisinden üçüncü şahısla ve firmaya yönelik notlarla bahsedildiğini görür.
+ADAY_GEREKCESI_KURALI = """
+
+ADAYA METİN (karardan sonra, ayrı alan):
+Aynı eşleşmeyi bu kez {kime} anlat: 2 cümle, "{hitap}" diye hitap ederek. İlanın ne istediğini
+ve {kimin} hangi somut işinin, aracının ya da yetkinliğinin buna karşılık geldiğini söyle.
+Firmaya yönelik değerlendirme notlarını (kanıtın zayıflığı, eksik kalan yanlar) buraya taşıma;
+eksik bir şey söyleyeceksen bir öneri olarak söyle. Abartma, puan verme, kararı söyleme.
+"""
+GENC_ADAY_KURALI = ADAY_GEREKCESI_KURALI.format(kime="gence", hitap="sen", kimin="gencin")
+FIRMA_ADAY_KURALI = ADAY_GEREKCESI_KURALI.format(
+    kime="aday firmaya", hitap="siz", kimin="aday firmanın"
+)
+
+
+def _uygunluk_sablonu(
+    talimat: str, uretim_sablonu: ChatPromptTemplate, aday_kurali: str
+) -> ChatPromptTemplate:
     insan = uretim_sablonu.messages[1].prompt.template
     assert "Bu eşleşmenin gerekçesini yaz." in insan
     return ChatPromptTemplate.from_messages(
         [
-            ("system", talimat + UYGUNLUK_EK_KURALI),
+            ("system", talimat + UYGUNLUK_EK_KURALI + aday_kurali),
             (
                 "human",
                 insan.replace(
@@ -856,16 +874,22 @@ def _uygunluk_sablonu(talimat: str, uretim_sablonu: ChatPromptTemplate) -> ChatP
     )
 
 
-FIRMA_UYGUNLUK_SABLONU = _uygunluk_sablonu(FIRMA_GEREKCE_TALIMATI, FIRMA_GEREKCE_SABLONU)
-GENC_UYGUNLUK_SABLONU = _uygunluk_sablonu(GEREKCE_TALIMATI, GEREKCE_SABLONU)
+FIRMA_UYGUNLUK_SABLONU = _uygunluk_sablonu(
+    FIRMA_GEREKCE_TALIMATI, FIRMA_GEREKCE_SABLONU, FIRMA_ADAY_KURALI
+)
+GENC_UYGUNLUK_SABLONU = _uygunluk_sablonu(GEREKCE_TALIMATI, GEREKCE_SABLONU, GENC_ADAY_KURALI)
 
 
 @dataclass(frozen=True)
 class Yargi:
-    """Bir adayın gerekçesi ve uygunluk kararı. İkisi birlikte dolu ya da birlikte None."""
+    """Bir adayın gerekçesi ve uygunluk kararı. İkisi birlikte dolu ya da birlikte None.
+
+    `aday_gerekce` adaya hitaben metin (G9); gerekçe varken de boş olabilir.
+    """
 
     gerekce: str | None
     uygunluk: str | None
+    aday_gerekce: str | None = None
 
 
 BILINMIYOR = Yargi(gerekce=None, uygunluk=None)
@@ -900,7 +924,8 @@ async def _uygunluk_cagir(zincir: Runnable, girdiler: dict) -> Yargi:
     uygunluk = karari_dogrula(getattr(cikti, "uygunluk", None))
     if not gerekce or uygunluk is None:
         return BILINMIYOR
-    return Yargi(gerekce=gerekce, uygunluk=uygunluk)
+    aday_gerekce = (getattr(cikti, "aday_gerekce", None) or "").strip() or None
+    return Yargi(gerekce=gerekce, uygunluk=uygunluk, aday_gerekce=aday_gerekce)
 
 
 async def _firma_uygunluk_cagir(girdiler: dict) -> Yargi:
@@ -926,16 +951,25 @@ async def _iddia_korumali_yargi(
     sonraki hesapta yeniden denenir). Model hatası çağırana çıkar.
     """
     yargi = await uret("")
-    if iddia_serbest or yargi.gerekce is None or not dogrulama_iddiasi_var_mi(yargi.gerekce):
+    if iddia_serbest or yargi.gerekce is None:
         return yargi
+    if not dogrulama_iddiasi_var_mi(yargi.gerekce):
+        return _aday_metni_korumali(yargi)
     logger.info("Gerekçe güçlü kanıt yokken 'doğrulanmış' dedi; yeniden yargılanıyor (%s)", kimlik)
     yargi = await uret(duzeltme_notu)
     if yargi.gerekce is None or not dogrulama_iddiasi_var_mi(yargi.gerekce):
-        return yargi
+        return _aday_metni_korumali(yargi)
     logger.warning(
         "Gerekçe iki denemede de 'doğrulanmış' dedi; karar bilinmiyor kalıyor (%s)", kimlik
     )
     return BILINMIYOR
+
+
+def _aday_metni_korumali(yargi: Yargi) -> Yargi:
+    """Aday metni "doğrulanmış" derse yalnızca o metin düşer; gerekçe ve karar kalır."""
+    if yargi.aday_gerekce and dogrulama_iddiasi_var_mi(yargi.aday_gerekce):
+        return Yargi(gerekce=yargi.gerekce, uygunluk=yargi.uygunluk)
+    return yargi
 
 
 async def firma_uygunluk_yargila(ihtiyac: IhtiyacKarti, aday: FirmaAdayi) -> Yargi:

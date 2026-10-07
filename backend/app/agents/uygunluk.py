@@ -44,6 +44,11 @@ class UygunlukKarari(BaseModel):
     uygunluk: Literal["uygun", "kismen", "uygun_degil"] = Field(
         description="Gerekçeyle tutarlı uygunluk kararı"
     )
+    # Karardan sonra: kararı etkilemez. Boş gelirse aday tarafında "Neden uygun?" görünmez.
+    aday_gerekce: str = Field(
+        default="",
+        description="Adaya hitaben 2 cümle: bu fırsat neden ona uygun (docs/kararlar.md G9)",
+    )
 
 
 def karari_dogrula(etiket: str | None) -> str | None:

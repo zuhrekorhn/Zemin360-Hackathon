@@ -230,6 +230,7 @@ async def pipeline_calistir(oturum: AsyncSession, ihtiyac: IhtiyacKarti) -> list
     for kimlik, yargi in yargilar.items():
         if yargi.uygunluk is not None and kimlik in guncel:
             guncel[kimlik].gerekce_metni = yargi.gerekce
+            guncel[kimlik].aday_gerekce_metni = yargi.aday_gerekce
             guncel[kimlik].uygunluk = yargi.uygunluk
 
     gerekce_bekleyenler: list[tuple[Eslesme, Aday | FirmaAdayi]] = [

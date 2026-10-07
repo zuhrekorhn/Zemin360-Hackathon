@@ -67,10 +67,14 @@ def test_firsatlar_ve_ilgiler():
         d.oturum.add(
             Eslesme(ihtiyac_karti_id=d.I2.id, yetenek_karti_id=d.K1.id, skor=0.3, durum="onerildi")
         )
+        # Genç firmaya yazılan gerekçeyi değil, kendisine yazılanı görür (G9).
+        d.E1.gerekce_metni = "Aday bu işi yapmış; kanıtı zayıf."
+        d.E1.aday_gerekce_metni = "Bu işi daha önce yaptın."
         await d.oturum.commit()
 
         firsatlar = (await istemci.get("/eslestirme/firsatlarim", headers=d.genc1.baslik)).json()
         assert [f["uyum"] for f in firsatlar] == [0.6, 0.3]
+        assert [f["gerekce_metni"] for f in firsatlar] == ["Bu işi daha önce yaptın.", None]
         assert firsatlar[0]["eslesme_id"] == str(d.E1.id)
         assert firsatlar[0]["ihtiyac_karti"]["kurum"]["ad"] == "Koop Bir"
         assert firsatlar[0]["iletisim"] is None

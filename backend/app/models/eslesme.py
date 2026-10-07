@@ -63,6 +63,9 @@ class Eslesme(UUIDPrimaryKeyMixin, Base):
     )
     skor: Mapped[float] = mapped_column(Float)
     gerekce_metni: Mapped[str | None] = mapped_column(Text)
+    # Aynı çağrının adaya hitaben yazdığı metin: gence "sen", aday firmaya "siz"
+    # (docs/kararlar.md G9). Gerekçeyle birlikte yazılır ve birlikte sıfırlanır.
+    aday_gerekce_metni: Mapped[str | None] = mapped_column(Text)
     # Yapay zekânın gerekçeyle birlikte verdiği karar: uygun | kismen | uygun_degil
     # (yalnızca firma–firma; NULL = bilinmiyor). `uygun_degil` kayıtlar saklanır ama
     # hiçbir okumada görünmez (app/agents/uygunluk.py › gorunur_kosulu).

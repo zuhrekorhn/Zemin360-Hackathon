@@ -108,6 +108,39 @@ def test_gecerli_cikti_kirpilarak_doner(monkeypatch):
     assert asyncio.run(ajan._firma_uygunluk_cagir({})) == Yargi("Yazılım yapıyor.", KISMEN)
 
 
+def test_aday_metni_ayri_alanda_doner_bossa_none(monkeypatch):
+    """Adaya hitaben metin (G9) gerekçeyle aynı çağrıdan; boş gelmesi kararı bozmaz."""
+    zincir = _SahteZincir(
+        SimpleNamespace(
+            gerekce="Aday yapıyor.", uygunluk=UYGUN, aday_gerekce=" Siz yapıyorsunuz. "
+        ),
+        SimpleNamespace(gerekce="Aday yapıyor.", uygunluk=UYGUN, aday_gerekce="  "),
+    )
+    monkeypatch.setattr(ajan, "_firma_uygunluk_zinciri", lambda: zincir)
+    assert asyncio.run(ajan._firma_uygunluk_cagir({})) == Yargi(
+        "Aday yapıyor.", UYGUN, "Siz yapıyorsunuz."
+    )
+    assert asyncio.run(ajan._firma_uygunluk_cagir({})) == Yargi("Aday yapıyor.", UYGUN)
+
+
+def test_aday_metni_dogrulanmis_derse_yalnizca_o_duser(monkeypatch):
+    zincir = _SahteZincir(
+        SimpleNamespace(
+            gerekce="İşi yapıyor.", uygunluk=UYGUN, aday_gerekce="Doğrulanmış firmasınız."
+        )
+    )
+    monkeypatch.setattr(ajan, "_firma_uygunluk_zinciri", lambda: zincir)
+    monkeypatch.setattr(ajan, "firma_gerekce_girdileri", lambda *a, **k: {})
+    yargi = asyncio.run(ajan.firma_uygunluk_yargila(None, _aday(dogrulandi=False)))
+    assert yargi == Yargi("İşi yapıyor.", UYGUN) and len(zincir.girdiler) == 1
+
+
+def test_iki_istem_de_adaya_kendi_hitabiyla_yazdirir():
+    genc = ajan.GENC_UYGUNLUK_SABLONU.messages[0].prompt.template
+    firma = ajan.FIRMA_UYGUNLUK_SABLONU.messages[0].prompt.template
+    assert '"sen" diye hitap' in genc and '"siz" diye hitap' in firma
+
+
 def _aday(dogrulandi: bool):
     kurum = SimpleNamespace(dogrulama_durumu="dogrulandi" if dogrulandi else "dogrulanmadi")
     # aday_kimligi: ortak koruma onu günlüğe yazıyor.

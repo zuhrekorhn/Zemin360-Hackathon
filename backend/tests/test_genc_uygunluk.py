@@ -39,9 +39,10 @@ def test_genc_adayinda_karar_yanita_cikmaz():
 
 
 def test_genc_istemi_gerekce_talimati_ve_ayni_ek_kural():
-    """Ölçümdeki genç istemiyle aynı: gerekçe talimatı + firma tarafının ek kuralı."""
+    """Ölçümdeki genç istemiyle aynı (gerekçe talimatı + firma tarafının ek kuralı); sonda
+    yalnızca karardan sonra yazılan aday metni kuralı (G9) var."""
     sistem = ajan.GENC_UYGUNLUK_SABLONU.messages[0].prompt.template
-    assert sistem == ajan.GEREKCE_TALIMATI + ajan.UYGUNLUK_EK_KURALI
+    assert sistem == ajan.GEREKCE_TALIMATI + ajan.UYGUNLUK_EK_KURALI + ajan.GENC_ADAY_KURALI
     insan = ajan.GENC_UYGUNLUK_SABLONU.messages[1].prompt.template
     assert "gerekçesini ve uygunluk kararını ver." in insan
     assert "YETENEK KARTI" in insan

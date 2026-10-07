@@ -96,7 +96,7 @@ def ilani_duzenle(
         setattr(ilan, alan, deger)
     for eslesme in eslesmeler:
         if gerekcesi_sifirlanacak(eslesme.durum):
-            eslesme.gerekce_metni = None
+            eslesme.gerekce_metni = eslesme.aday_gerekce_metni = None
             # Karar gerekçeye dayanır: birlikte sıfırlanır, sonraki hesapta yeniden yargılanır.
             eslesme.uygunluk = None
         if bildirim_alacak(eslesme.durum):

@@ -181,5 +181,5 @@ async def onerilerin_gerekcesini_bosalt(oturum: AsyncSession, kart_id: uuid.UUID
     await oturum.execute(
         update(Eslesme)
         .where(Eslesme.firma_karti_id == kart_id, Eslesme.durum == DURUM_ONERILDI)
-        .values(gerekce_metni=None, uygunluk=None)
+        .values(gerekce_metni=None, aday_gerekce_metni=None, uygunluk=None)
     )

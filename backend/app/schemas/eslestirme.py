@@ -123,8 +123,9 @@ class BanaGelenIlgi(BaseModel):
 class GencEslesmesi(BaseModel):
     """Gencin ana sayfasındaki bir satır: fırsat (önerildi) ya da kendi ilgisi.
 
-    `uyum` eşleşmenin skoru (0-1; arayüz "%72 uyum" yazar). `gerekce_metni`
-    firmaya yazılan açıklamanın aynısı (docs/kararlar.md G9; başlık "Neden uygun?").
+    `uyum` eşleşmenin skoru (0-1; arayüz kelimeyle yazar: "Güçlü uyum"). `gerekce_metni`
+    aynı çağrının gence "sen" diye yazdığı metin (docs/kararlar.md G9; başlık "Neden uygun?");
+    firmanın okuduğu gerekçe gence gösterilmez.
     E-posta yalnızca karşılıklı ilgide `iletisim`'de.
     """
 
@@ -146,7 +147,8 @@ class FirmaAdayEslesmesi(BaseModel):
     Ortak ilanında önerildiği ya da ilgi gördüğü/gösterdiği her eşleşme:
     arayüz fırsatlar, gelen ilgiler ve ilgilerimiz diye ayırır. `baslatan`
     ilk ilgiyi kimin gösterdiği (`genc` = aday tarafı, `kurum` = ilan tarafı;
-    kolon adları F12 gereği değişmedi). E-posta yalnızca karşılıklı ilgide.
+    kolon adları F12 gereği değişmedi). `gerekce_metni` aday firmaya "siz" diye yazılan
+    metin (G9). E-posta yalnızca karşılıklı ilgide.
     """
 
     eslesme_id: uuid.UUID

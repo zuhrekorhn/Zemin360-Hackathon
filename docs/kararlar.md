@@ -65,8 +65,12 @@ Başka yerde tutulan kararlar:
   sonuç, pay) değişirse `somut_cikti.icerik_tarihi` yazılır; bu tarihten önce verilmiş referans
   yanıtı silinmez, geçmiş olarak görünür ama puana girmez; genç referansı yeniden isteyebilir.
   Kanıt eklemek ya da kaldırmak iddiayı değiştirmez, referansları geçmişe atmaz.
-- **G9. Gerekçe metni gence aynen gösterilir**, ikinci bir LLM çağrısı yapılmaz. Başlık nötr:
-  "Bu eşleşmenin gerekçesi".
+- **G9. Aday kendisine yazılan metni görür (8 Eki 2026'da değişti).** Firmanın okuduğu gerekçe
+  adaydan üçüncü şahısla bahseder ve firmaya yönelik notlar taşır ("kanıt linki açılmadı");
+  gence aynen gösterilince hem "sen" kuralı bozuluyor hem de firma notu gence gidiyordu. Gerekçeyi
+  yazan çağrı karardan sonra üçüncü bir alan da yazar (`aday_gerekce`): gence "sen", aday firmaya
+  "siz", 2 cümle, eksik bir şey varsa öneri olarak. Ek LLM çağrısı yok. Bu metin boşsa aday
+  tarafında "Neden uygun?" görünmez; firmanın gerekçesine düşülmez.
 - **G10. Eksik profil engellemez.** Yeni zorunlu alanları olmayan eski hesap, engellemeyen bir
   bantla tamamlamaya çağrılır.
 - **G11. Frontend'e yeni test bağımlılığı eklenmez.** Karar mantığı (durum etiketleri, düğme

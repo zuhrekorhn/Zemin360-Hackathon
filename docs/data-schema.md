@@ -119,7 +119,8 @@ erDiagram
     uuid yetenek_karti_id FK "tam biri dolu"
     uuid firma_karti_id FK "tam biri dolu"
     float skor
-    text gerekce_metni
+    text gerekce_metni "firmaya"
+    text aday_gerekce_metni "adaya (G9)"
     string uygunluk "uygun | kismen | uygun_degil | NULL"
     string durum
     string baslatan "genc | kurum"

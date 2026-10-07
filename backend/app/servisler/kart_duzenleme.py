@@ -101,7 +101,7 @@ async def kart_degisti(oturum: AsyncSession, kart: YetenekKarti) -> int:
     await oturum.execute(
         update(Eslesme)
         .where(Eslesme.yetenek_karti_id == kart.id, Eslesme.durum == DURUM_ONERILDI)
-        .values(gerekce_metni=None, uygunluk=None)
+        .values(gerekce_metni=None, aday_gerekce_metni=None, uygunluk=None)
     )
     return kart.versiyon
 
