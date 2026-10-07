@@ -101,8 +101,11 @@ Başka yerde tutulan kararlar:
   tablosunda, uç aynı (`PATCH /profil`, kısmi gövde); değişen yalnızca hangi ekranın hangi
   alanları gönderdiği (`lib/profil.ts` › `tercihGovdesi`, `hesapGovdesi`). Ana sayfa "şimdi ne
   yapmalıyım" sırasıyla dizilir (önce yanıt bekleyen işler, sonra fırsatlar; ilişkiler tek
-  "Süreçlerin" listesinde); kart sayfasında her çalışma kapalı bir kartla başlar ve tek "sıradaki
-  adım" gösterir (`lib/calisma.ts`), formlar istenince açılır.
+  "Süreçlerin" listesinde). Fırsatlar ve Kartım aynı iskelette: solda kimlik ve kartın durumu,
+  sağda iş. Kartın tamamı için sayfa düzeyinde tek "Sıradaki adım" (en az eksiği kalan çalışmanın
+  ilk eksiği; sıra kanıt, sonuç, pay, referans; `lib/calisma.ts`); bir çalışmanın bütün eksikleri
+  sağdan açılan "Güçlendir" panelinde numaralı adımlarla. **Kartın durumu puan değil sayımdır**
+  ("4 eksik · 2 çalışma"): dört başlık tek bir değere indirilmez (`agent-specs.md` § 4).
 
 ## F — Firma akışı
 
