@@ -136,13 +136,13 @@ function BildirimListesi() {
       ) : liste.length === 0 ? (
         <BosDurum metin={BOS_METINLERI[hesap.rol] ?? BOS_METINLERI.girvak} />
       ) : (
-        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-md border border-kenar bg-card">
+        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)]">
           {liste.map((bildirim) => (
             <li key={bildirim.id}>
               <button
                 type="button"
                 onClick={() => void ac(bildirim)}
-                className="group flex w-full items-start gap-3 px-4 py-3.5 text-left hover:bg-muted"
+                className={`group flex w-full items-start gap-3 border-l-[3px] px-5 py-4 text-left hover:bg-muted ${bildirim.okundu_tarihi ? "border-l-transparent" : "border-l-vurgu"}`}
               >
                 <span
                   aria-hidden="true"
@@ -156,8 +156,8 @@ function BildirimListesi() {
                   <span
                     className={
                       bildirim.okundu_tarihi
-                        ? "text-sm text-pretty text-muted-foreground"
-                        : "text-sm font-medium text-pretty"
+                        ? "text-[15px] text-pretty text-muted-foreground"
+                        : "text-[15px] font-medium text-pretty"
                     }
                   >
                     {bildirim.metin}

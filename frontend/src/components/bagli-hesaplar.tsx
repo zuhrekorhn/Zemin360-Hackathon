@@ -101,7 +101,7 @@ export function BagliHesaplar() {
           ))}
           {veri.profil_kodu_platformlari.length > 0 ? (
             kodFormuAcik ? (
-              <div className="rounded-md border border-kenar bg-zemin px-4 py-4">
+              <div className="rounded-lg border border-kenar bg-zemin px-4 py-4">
                 <KodAlmaFormu
                   platformlar={veri.profil_kodu_platformlari}
                   onAlindi={() => {
@@ -141,7 +141,7 @@ function HesapListesi({
     );
   }
   return (
-    <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
+    <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
       {hesaplar.map((hesap) => (
         <HesapSatiri key={hesap.id} hesap={hesap} onDegisti={onDegisti} />
       ))}
@@ -273,12 +273,12 @@ function KodKutusu({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-sm border border-kenar p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-kenar p-4">
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">
           {platformAdi(kod.platform)} doğrulama kodun
         </span>
-        <code className="w-fit rounded-sm bg-muted px-2 py-1 font-mono text-base select-all">
+        <code className="w-fit rounded-md bg-muted px-2 py-1 font-mono text-base select-all">
           {kod.kod}
         </code>
       </div>

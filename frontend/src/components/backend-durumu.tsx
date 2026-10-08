@@ -43,7 +43,7 @@ export function BackendDurumu() {
   const { nokta, metin } = gorunum[durum];
 
   return (
-    <div className="inline-flex w-fit items-center gap-2 rounded-sm border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
+    <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
       <span
         aria-hidden="true"
         className={`size-2 shrink-0 rounded-full ${nokta}`}

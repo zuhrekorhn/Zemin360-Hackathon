@@ -81,7 +81,7 @@ export function KanitSatiri({
 /** Okunamayan link için açıklama ve gencin yapabilecekleri (docs/dogrulama.md § 3). */
 function SecenekKutusu({ kutu }: { kutu: SecenekKutusuVerisi }) {
   return (
-    <div className="flex flex-col gap-1 rounded-sm border border-kenar bg-muted/40 px-3 py-2 text-sm">
+    <div className="flex flex-col gap-1 rounded-lg border border-kenar bg-muted/40 px-3 py-2 text-sm">
       <p className="text-pretty">{kutu.mesaj}</p>
       <p className="text-xs text-muted-foreground">
         Bunlardan birini yapabilirsin:

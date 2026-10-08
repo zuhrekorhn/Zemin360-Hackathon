@@ -70,7 +70,7 @@ export function KilitliAd({
       )}
       {acik && !profil.bekleyen_ad ? (
         // Profil formunun içinde durduğu için ayrı <form> değil: Enter profili kaydetmesin.
-        <div className="flex flex-col gap-3 rounded-sm border border-kenar p-4">
+        <div className="flex flex-col gap-3 rounded-lg border border-kenar p-4">
           <FormAlani etiket="Yeni adın" htmlFor="yeni-ad">
             <Input
               id="yeni-ad"

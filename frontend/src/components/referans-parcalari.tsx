@@ -80,7 +80,7 @@ export function ReferansSatiri({
   const [onayAcik, setOnayAcik] = useState(false);
 
   return (
-    <div className="flex flex-col gap-1 rounded-sm border border-kenar px-3 py-2">
+    <div className="flex flex-col gap-1 rounded-lg border border-kenar px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm break-all">{referans.referans_email}</span>
         <span className="text-xs text-muted-foreground">
@@ -96,7 +96,7 @@ export function ReferansSatiri({
           {isaretler.map((isaret) => (
             <li
               key={isaret}
-              className="rounded-sm border border-kenar px-2 py-0.5 text-xs text-muted-foreground"
+              className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
             >
               {isaret}
             </li>

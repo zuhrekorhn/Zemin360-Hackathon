@@ -256,7 +256,7 @@ function SecenekGrubu<T extends string>({
         {soru}
       </legend>
       {ayrinti ? (
-        <p className="rounded-sm border-l-2 border-kenar pl-3 text-sm text-pretty">
+        <p className="border-l-[3px] border-kenar pl-3 text-sm text-pretty">
           {ayrinti}
         </p>
       ) : null}
@@ -266,8 +266,8 @@ function SecenekGrubu<T extends string>({
             key={secenek.deger}
             className={
               secili === secenek.deger
-                ? "flex cursor-pointer items-center gap-3 rounded-sm border border-baglanti bg-muted px-4 py-3 text-sm"
-                : "flex cursor-pointer items-center gap-3 rounded-sm border border-kenar bg-card px-4 py-3 text-sm"
+                ? "flex cursor-pointer items-center gap-3 rounded-lg border border-baglanti bg-muted px-4 py-3 text-sm"
+                : "flex cursor-pointer items-center gap-3 rounded-lg border border-kenar bg-card px-4 py-3 text-sm"
             }
           >
             <input
@@ -289,7 +289,7 @@ function SecenekGrubu<T extends string>({
 /** Referans kişinin yanıt verirken baktığı iddia. */
 function Iddia({ bilgi }: { bilgi: ReferansIstegiBilgisi }) {
   return (
-    <article className="rounded-sm border border-kenar bg-card">
+    <article className="overflow-hidden rounded-xl border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)]">
       <div className="border-b border-kenar px-5 py-4">
         <p className="text-xs text-muted-foreground">Çalışmanın sahibi</p>
         <p className="text-sm">{bilgi.iddia_sahibi_adi}</p>
@@ -308,7 +308,7 @@ function Iddia({ bilgi }: { bilgi: ReferansIstegiBilgisi }) {
 
 function Bilgilendirme({ metin }: { metin: string }) {
   return (
-    <p className="rounded-sm border border-kenar bg-card px-5 py-4 text-sm text-pretty">
+    <p className="rounded-xl border border-kenar bg-card px-6 py-5 text-sm shadow-[0_1px_2px_rgb(22_33_27/0.05)] text-pretty">
       {metin}
     </p>
   );
@@ -316,7 +316,7 @@ function Bilgilendirme({ metin }: { metin: string }) {
 
 function Tesekkur({ sonuc }: { sonuc: ReferansYanitiSonucu }) {
   return (
-    <section className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-5 py-4">
+    <section className="flex flex-col gap-3 rounded-xl border border-kenar bg-card px-6 py-5 shadow-[0_1px_2px_rgb(22_33_27/0.05)]">
       <h2 className="font-heading text-xl font-semibold text-ana">
         Teşekkürler, yanıtınız kaydedildi
       </h2>

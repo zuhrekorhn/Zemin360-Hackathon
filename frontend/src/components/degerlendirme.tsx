@@ -14,10 +14,10 @@ import { notuBasliklaraAyir } from "@/lib/guven-gostergesi";
 export function DogrulanamadiEtiketi({ notlar }: { notlar: string[] }) {
   return (
     <section
-      className="flex flex-col gap-1.5 rounded-sm border border-kenar px-3 py-2"
+      className="flex flex-col gap-1.5 rounded-lg border border-kenar px-4 py-3"
       aria-label="GİRVAK kararı"
     >
-      <span className="w-fit rounded-sm border border-kenar px-2 py-0.5 text-xs font-medium">
+      <span className="w-fit rounded-full bg-vurgu/15 px-2.5 py-0.5 text-xs font-medium text-metin">
         Doğrulanamadı
       </span>
       <p className="text-sm text-pretty">
