@@ -28,6 +28,8 @@ export function IhtiyacFormu({
   ortak,
   bekleniyor,
   duzenleme = false,
+  baslikGizle = false,
+  formId,
   onGonder,
 }: {
   taslak: IhtiyacTaslagi;
@@ -35,6 +37,10 @@ export function IhtiyacFormu({
   bekleniyor: boolean;
   /** Kayıtlı ilan düzenleniyor: boş filtre bilerek seçilmiş "Fark etmez"dir. */
   duzenleme?: boolean;
+  /** Sayfa ya da panel zaten başlık taşıyor: "İhtiyaç kartı taslağınız" yazılmaz. */
+  baslikGizle?: boolean;
+  /** Verilirse gönder düğmesi formda çizilmez; dışarıdaki düğme `form={formId}` ile gönderir (yan panelin eteği). */
+  formId?: string;
   onGonder: (kurumProfili: KurumProfili, taslak: IhtiyacTaslagi) => void;
 }) {
   // Firmanın sektörü ve şehri kayıtta alınıyor (docs/kararlar.md
@@ -80,7 +86,8 @@ export function IhtiyacFormu({
 
   return (
     <form
-      className="flex flex-col gap-8"
+      id={formId}
+      className="@container flex flex-col gap-8"
       onSubmit={(olay) => {
         olay.preventDefault();
         if (bekleniyor) return;
@@ -110,16 +117,18 @@ export function IhtiyacFormu({
       }}
     >
       <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-heading text-xl font-semibold text-ana">
-            {duzenleme ? "İhtiyaç kartınız" : "İhtiyaç kartı taslağınız"}
-          </h2>
-          <p className="text-sm text-pretty text-muted-foreground">
-            {duzenleme
-              ? "Değiştirmek istediğiniz alanları düzeltin, sonra kaydedin."
-              : "Sohbetten çıkan kart bu. Gözden geçirin, gerekirse düzeltin, sonra aşağıdan onaylayın."}
-          </p>
-        </div>
+        {baslikGizle ? null : (
+          <div className="flex flex-col gap-1">
+            <h2 className="font-heading text-xl font-semibold text-ana">
+              {duzenleme ? "İhtiyaç kartınız" : "İhtiyaç kartı taslağınız"}
+            </h2>
+            <p className="text-sm text-pretty text-muted-foreground">
+              {duzenleme
+                ? "Değiştirmek istediğiniz alanları düzeltin, sonra kaydedin."
+                : "Sohbetten çıkan kart bu. Gözden geçirin, gerekirse düzeltin, sonra aşağıdan onaylayın."}
+            </p>
+          </div>
+        )}
 
         <MetinAlani
           id="problem"
@@ -138,7 +147,7 @@ export function IhtiyacFormu({
           sohbetteBos={!taslak.basari_kriteri}
         />
         <div className="flex flex-col gap-3">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 @md:grid-cols-3">
             <OlcutAlani
               id="mevcut-deger"
               etiket="Bugünkü durum"
@@ -190,7 +199,7 @@ export function IhtiyacFormu({
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 @md:grid-cols-2">
             {firmaBilgisiSor ? (
               <>
                 <FormAlani etiket="Sektör" htmlFor="sektor" istegeBagli>
@@ -356,18 +365,20 @@ export function IhtiyacFormu({
               : "Onaylanan ihtiyaç, eşleşen adaylara gösterilir."}
           </p>
 
-          <Button
-            type="submit"
-            size="lg"
-            disabled={bekleniyor}
-            className="w-fit"
-          >
-            {bekleniyor
-              ? "Kaydediliyor…"
-              : duzenleme
-                ? "Değişiklikleri kaydet"
-                : "Kartı onayla"}
-          </Button>
+          {formId ? null : (
+            <Button
+              type="submit"
+              size="lg"
+              disabled={bekleniyor}
+              className="w-fit"
+            >
+              {bekleniyor
+                ? "Kaydediliyor…"
+                : duzenleme
+                  ? "Değişiklikleri kaydet"
+                  : "Kartı onayla"}
+            </Button>
+          )}
         </div>
       </section>
     </form>
@@ -413,7 +424,7 @@ function OlcutAlani({
 /** Hedef değeri olmayan başarı kriteri. */
 export function OlcumBelirlenecekRozeti() {
   return (
-    <span className="rounded-sm border border-kenar px-2.5 py-1 text-xs text-muted-foreground">
+    <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
       Ölçüm yöntemi belirlenecek
     </span>
   );

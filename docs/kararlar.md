@@ -175,6 +175,12 @@ Başka yerde tutulan kararlar:
   kartları `KUTU` yüzeyinde, yanıt bekleyen kart vurgu çizgisiyle; "Panele dön" yok, menü var.
   Kararlar `lib/kurum-paneli.ts`'de saf ve testli. Menüde aynı anda tek sayfa etkin
   (`lib/menu.ts` › `etkinBaglanti`).
+  **2. tur:** ihtiyaç düzenleme panelde sağdan açılır (`ilan-duzenleme-paneli.tsx`; eski
+  `/kurum/ilan/[id]/duzenle` adresi `/kurum?duzenle=<id>`'ye yönlenir). İhtiyaç ve firma kartı
+  sohbetleri Keşif'in iskeletinde: solda sohbet, sağda canlı önizleme (`sohbet-onizlemeleri.tsx`;
+  toplananlar `lib/sohbet-onizleme.ts`, zorunlular backend'deki `ZORUNLU_ALANLAR`'la aynı: ihtiyaçta
+  problem ve başarı ölçütü, firma kartında ne yapıldığı ve yetkinlikler). Firma kartı düzenleme ve
+  Firma profili gencin Hesabım'ıyla aynı kalıpta (yan menü + `FormBolumu`); "Panele dön" yok.
 
 ## D — İlan düzenleme
 

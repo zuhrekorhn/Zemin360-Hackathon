@@ -1,16 +1,18 @@
-"use client";
+﻿"use client";
 
+import { CalendarClock, Search, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
+import { IhtiyacOnizleme } from "@/components/sohbet-onizlemeleri";
 import {
   IhtiyacFormu,
   OlcumBelirlenecekRozeti,
 } from "@/components/ihtiyac-formu";
 
-import { GirisKapisi } from "@/components/giris-kapisi";
+import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { EslestirmeyeHazirla } from "@/components/eslestirmeye-hazirla";
 import {
   CevapAlani,
@@ -19,7 +21,7 @@ import {
   Sohbet,
   type SohbetHatasi,
 } from "@/components/sohbet";
-import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
 import {
   type IhtiyacKartiYaniti,
   type IhtiyacTaslagi,
@@ -38,6 +40,7 @@ import {
 import { isbirligiTuruEtiketi } from "@/lib/firma-karti";
 import { FIRMA_TURLERI } from "@/lib/firma-profil";
 import { hatayaCevir } from "@/lib/hata";
+import { cn } from "@/lib/utils";
 import { type Aranan, arananParametresi } from "@/lib/ilan";
 import {
   CALISMA_MODELI_ETIKETLERI,
@@ -47,11 +50,11 @@ import {
 } from "@/lib/sabitler";
 
 /**
- * Tanımlama Ajanı sohbeti (docs/agent-specs.md § 2).
+ * TanÄ±mlama AjanÄ± sohbeti (docs/agent-specs.md Â§ 2).
  *
- * Keşif ile aynı akış: sohbet → taslak gözden geçirme → onay → kaydedilen kart.
- * Fark soru setinde: ajan sokratik sorularla belirsiz ifadeyi ölçülebilir hale
- * getirir. Kart kurum onaylamadan veritabanına yazılmaz.
+ * KeÅŸif ile aynÄ± akÄ±ÅŸ: sohbet â†’ taslak gÃ¶zden geÃ§irme â†’ onay â†’ kaydedilen kart.
+ * Fark soru setinde: ajan sokratik sorularla belirsiz ifadeyi Ã¶lÃ§Ã¼lebilir hale
+ * getirir. Kart kurum onaylamadan veritabanÄ±na yazÄ±lmaz.
  */
 
 type Asama = "sohbet" | "taslak" | "kaydedildi";
@@ -67,9 +70,10 @@ export default function TanimlamaSayfasi() {
 }
 
 function TanimlamaSohbeti() {
-  // İki kapı (docs/kararlar.md F4): ortak ilanı `?aranan=firma`.
+  // Ä°ki kapÄ± (docs/kararlar.md F4): ortak ilanÄ± `?aranan=firma`.
   const aranan: Aranan = arananParametresi(useSearchParams().get("aranan"));
   const ortak = aranan === "firma";
+  const hesap = useGirisliHesap();
   const [asama, setAsama] = useState<Asama>("sohbet");
   const [oturumId, setOturumId] = useState<string | null>(null);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);
@@ -84,13 +88,13 @@ function TanimlamaSohbeti() {
   const baslatildi = useRef(false);
   const sonMesaj = useRef<HTMLDivElement | null>(null);
 
-  // Hata cümlesi tek yerden: lib/hata.ts (429 hız sınırı, 503 arıza ayrımı orada).
+  // Hata cÃ¼mlesi tek yerden: lib/hata.ts (429 hÄ±z sÄ±nÄ±rÄ±, 503 arÄ±za ayrÄ±mÄ± orada).
   const hatayiYaz = useCallback(
     (sebep: unknown) => setHata(hatayaCevir(sebep)),
     [],
   );
 
-  // Kapı başına bir açık sohbet: yenilenen sayfa onu sürdürür.
+  // KapÄ± baÅŸÄ±na bir aÃ§Ä±k sohbet: yenilenen sayfa onu sÃ¼rdÃ¼rÃ¼r.
   const oturumAnahtari = `tanimlama-oturumu:${aranan}`;
 
   const sohbetiBaslat = useCallback(async () => {
@@ -107,8 +111,8 @@ function TanimlamaSohbeti() {
           if (durum.taslak_hazir) setAsama("taslak");
           return;
         } catch (sebep) {
-          // Sohbet yok (silinmiş, başka hesap): yenisi açılır. Diğer hatalar
-          // gösterilir; "Tekrar dene" aynı sohbeti yeniden ister.
+          // Sohbet yok (silinmiÅŸ, baÅŸka hesap): yenisi aÃ§Ä±lÄ±r. DiÄŸer hatalar
+          // gÃ¶sterilir; "Tekrar dene" aynÄ± sohbeti yeniden ister.
           if (!(sebep instanceof ApiHatasi && sebep.durumKodu === 404)) {
             throw sebep;
           }
@@ -128,7 +132,7 @@ function TanimlamaSohbeti() {
   }, [hatayiYaz, aranan, oturumAnahtari]);
 
   useEffect(() => {
-    // StrictMode efekti iki kez çalıştırıyor; ikinci oturum açılmasın.
+    // StrictMode efekti iki kez Ã§alÄ±ÅŸtÄ±rÄ±yor; ikinci oturum aÃ§Ä±lmasÄ±n.
     if (baslatildi.current) return;
     baslatildi.current = true;
     void sohbetiBaslat();
@@ -184,42 +188,77 @@ function TanimlamaSohbeti() {
     }
   }
 
+  const baslik = (
+    <SayfaBasligi
+      baslik="Ä°htiyacÄ±nÄ±zÄ± tanÄ±mlayÄ±n"
+      aciklama={
+        ortak
+          ? "KÄ±sa bir sohbetle bir iÅŸ birliÄŸi ortaÄŸÄ±yla Ã§Ã¶zmek istediÄŸiniz ihtiyacÄ± netleÅŸtireceÄŸiz; ihtiyacÄ±nÄ±za uyan firmalarÄ± gÃ¶stereceÄŸiz. Bu sohbet yapay zekÃ¢ desteÄŸiyle ilerler. Ä°htiyacÄ±nÄ±z siz onaylamadan kaydedilmez."
+          : "KÄ±sa bir sohbetle ihtiyacÄ±nÄ±zÄ± Ã¶lÃ§Ã¼lebilir bir ihtiyaÃ§ kartÄ±na Ã§evireceÄŸiz. Bu sohbet yapay zekÃ¢ desteÄŸiyle ilerler. Ä°htiyacÄ±nÄ±z siz onaylamadan kaydedilmez."
+      }
+    />
+  );
+
+  // Sohbet sÃ¼rerken: solda sohbet, saÄŸda ihtiyacÄ±n canlÄ± hali (KeÅŸif'le aynÄ± iskelet).
+  if (asama === "sohbet") {
+    return (
+      <Sayfa genislik="genis">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="flex min-w-0 flex-col gap-6">
+            {baslik}
+            {hata ? <HataKutusu hata={hata} tekrarDene={tekrarDene} /> : null}
+            <Sohbet
+              ajanAdi="Zemin360"
+              mesajlar={mesajlar}
+              bekleniyor={bekleniyor}
+              sonMesajRef={sonMesaj}
+              altKisim={
+                <CevapAlani
+                  girdi={girdi}
+                  setGirdi={setGirdi}
+                  bekleniyor={bekleniyor}
+                  gonder={gonder}
+                />
+              }
+            />
+          </div>
+          <aside aria-label="Ä°htiyacÄ±nÄ±z" className="lg:sticky lg:top-24">
+            <IhtiyacOnizleme
+              taslak={taslak}
+              ortak={ortak}
+              firmaAdi={hesap.ad ?? ""}
+            />
+          </aside>
+        </div>
+      </Sayfa>
+    );
+  }
+
+  if (asama === "kaydedildi" && kart) {
+    return (
+      <Sayfa genislik="genis">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+          <h1 className="sr-only">Ä°htiyacÄ±nÄ±z kaydedildi</h1>
+          <KayitliKart kart={kart} onGuncelle={setKart} />
+        </div>
+      </Sayfa>
+    );
+  }
+
+  // Taslak: sohbetten Ã§Ä±kan ihtiyacÄ± gÃ¶zden geÃ§irip onaylama.
   return (
-    <Sayfa>
+    <Sayfa genislik="form">
       <SayfaBasligi
-        baslik="İhtiyacınızı tanımlayın"
-        aciklama={
-          ortak
-            ? "Kısa bir sohbetle bir iş birliği ortağıyla çözmek istediğiniz ihtiyacı netleştireceğiz; ihtiyacınıza uyan firmaları göstereceğiz. Bu sohbet yapay zekâ desteğiyle ilerler. İhtiyacınız siz onaylamadan kaydedilmez."
-            : "Kısa bir sohbetle ihtiyacınızı ölçülebilir bir ihtiyaç kartına çevireceğiz. Bu sohbet yapay zekâ desteğiyle ilerler. İhtiyacınız siz onaylamadan kaydedilmez."
-        }
+        baslik="Ä°htiyacÄ±nÄ±zÄ± gÃ¶zden geÃ§irin"
+        aciklama="Sohbetten Ã§Ä±kan ihtiyaÃ§ bu. YanlÄ±ÅŸ anlaÅŸÄ±lan bir ÅŸey varsa dÃ¼zeltin; doÄŸruysa onaylayÄ±n. Ä°htiyacÄ±nÄ±z siz onaylamadan kaydedilmez."
       />
-
-      {asama === "sohbet" ? (
-        <Sohbet
-          ajanAdi="Zemin360"
-          mesajlar={mesajlar}
-          bekleniyor={bekleniyor}
-          sonMesajRef={sonMesaj}
-        />
-      ) : null}
-
       {hata ? <HataKutusu hata={hata} tekrarDene={tekrarDene} /> : null}
-
-      {asama === "sohbet" ? (
-        <CevapAlani
-          girdi={girdi}
-          setGirdi={setGirdi}
-          bekleniyor={bekleniyor}
-          gonder={gonder}
-        />
-      ) : null}
-
-      {asama === "taslak" && taslak ? (
+      {taslak ? (
         <IhtiyacFormu
           taslak={taslak}
           ortak={ortak}
           bekleniyor={bekleniyor}
+          baslikGizle
           onGonder={async (kurumProfili, duzeltilmisTaslak) => {
             if (!oturumId) return;
             setHata(null);
@@ -232,7 +271,7 @@ function TanimlamaSohbeti() {
               );
               setKart(kayitli);
               setAsama("kaydedildi");
-              // Kaydedilen ihtiyacın sohbeti kapandı; yenileme yeni sohbet açar.
+              // Kaydedilen ihtiyacÄ±n sohbeti kapandÄ±; yenileme yeni sohbet aÃ§ar.
               sohbetOturumuSil(oturumAnahtari);
             } catch (sebep) {
               hatayiYaz(sebep);
@@ -242,21 +281,11 @@ function TanimlamaSohbeti() {
           }}
         />
       ) : null}
-
-      {asama === "kaydedildi" && kart ? (
-        <KayitliKart kart={kart} onGuncelle={setKart} />
-      ) : null}
-
-      <footer className="mt-auto border-t border-kenar pt-6">
-        <Button asChild variant="outline" size="lg">
-          <Link href="/kurum">Panele dön</Link>
-        </Button>
-      </footer>
     </Sayfa>
   );
 }
 
-/* --- Kart gösterimleri ---------------------------------------------------- */
+/* --- Kart gÃ¶sterimleri ---------------------------------------------------- */
 
 function TaslakKarti({
   taslak,
@@ -271,12 +300,12 @@ function TaslakKarti({
 }) {
   const olcut = taslak.basari_olcutu;
   const olcutParcalari = [
-    olcut?.mevcut_deger ? `Bugün: ${olcut.mevcut_deger}` : null,
+    olcut?.mevcut_deger ? `BugÃ¼n: ${olcut.mevcut_deger}` : null,
     olcut?.hedef_deger ? `Hedef: ${olcut.hedef_deger}` : null,
-    olcut?.sure ? `Süre: ${olcut.sure}` : null,
+    olcut?.sure ? `SÃ¼re: ${olcut.sure}` : null,
   ].filter(Boolean);
   return (
-    <article className="rounded-sm border border-kenar bg-card">
+    <article className={cn(KUTU, "overflow-hidden")}>
       {kurumAdi ? (
         <div className="border-b border-kenar px-4 py-3">
           <p className="text-xs text-muted-foreground">Firma</p>
@@ -287,14 +316,14 @@ function TaslakKarti({
       <div className="border-b border-kenar px-4 py-3">
         <p className="text-xs text-muted-foreground">Problem</p>
         <p className="text-sm text-pretty break-words">
-          {taslak.problem_tanimi || "—"}
+          {taslak.problem_tanimi || "â€”"}
         </p>
       </div>
 
       <div className="border-b border-kenar px-4 py-3">
-        <p className="text-xs text-muted-foreground">Başarı kriteri</p>
+        <p className="text-xs text-muted-foreground">BaÅŸarÄ± kriteri</p>
         <p className="text-sm text-pretty break-words">
-          {taslak.basari_kriteri || "—"}
+          {taslak.basari_kriteri || "â€”"}
         </p>
         {olcumBelirlenecek ? (
           <div className="mt-2">
@@ -302,21 +331,21 @@ function TaslakKarti({
           </div>
         ) : olcutParcalari.length ? (
           <p className="mt-1 text-xs text-muted-foreground">
-            {olcutParcalari.join(" · ")}
+            {olcutParcalari.join(" Â· ")}
           </p>
         ) : null}
       </div>
 
       {taslak.kisitlar ? (
         <div className="border-b border-kenar px-4 py-3">
-          <p className="text-xs text-muted-foreground">Kısıtlar</p>
+          <p className="text-xs text-muted-foreground">KÄ±sÄ±tlar</p>
           <p className="text-sm text-pretty break-words">{taslak.kisitlar}</p>
         </div>
       ) : null}
 
       <dl className="grid gap-px bg-kenar sm:grid-cols-2">
         <div className="bg-card px-4 py-3">
-          <dt className="text-xs text-muted-foreground">Aranan şehir</dt>
+          <dt className="text-xs text-muted-foreground">Aranan ÅŸehir</dt>
           <dd className="text-sm break-words">
             {ortak && !taslak.sehir_tercihi
               ? "Fark etmez"
@@ -327,7 +356,7 @@ function TaslakKarti({
           <>
             <div className="bg-card px-4 py-3">
               <dt className="text-xs text-muted-foreground">
-                Aranan firma türleri
+                Aranan firma tÃ¼rleri
               </dt>
               <dd className="text-sm break-words">
                 {taslak.aranan_firma_turleri?.length
@@ -342,25 +371,25 @@ function TaslakKarti({
               </dd>
             </div>
             <div className="bg-card px-4 py-3">
-              <dt className="text-xs text-muted-foreground">İş birliği türü</dt>
+              <dt className="text-xs text-muted-foreground">Ä°ÅŸ birliÄŸi tÃ¼rÃ¼</dt>
               <dd className="text-sm break-words">
                 {taslak.isbirligi_turu
                   ? isbirligiTuruEtiketi(taslak.isbirligi_turu)
-                  : "—"}
+                  : "â€”"}
               </dd>
             </div>
           </>
         ) : (
           <>
             <div className="bg-card px-4 py-3">
-              <dt className="text-xs text-muted-foreground">Çalışma modeli</dt>
+              <dt className="text-xs text-muted-foreground">Ã‡alÄ±ÅŸma modeli</dt>
               <dd className="text-sm break-words">
                 {etiketle(CALISMA_MODELI_ETIKETLERI, taslak.calisma_modeli)}
               </dd>
             </div>
             <div className="bg-card px-4 py-3">
               <dt className="text-xs text-muted-foreground">
-                Müsaitlik tercihi
+                MÃ¼saitlik tercihi
               </dt>
               <dd className="text-sm break-words">
                 {etiketle(MUSAITLIK_ETIKETLERI, taslak.musaitlik_tercihi)}
@@ -373,6 +402,10 @@ function TaslakKarti({
   );
 }
 
+/**
+ * Kaydedildikten hemen sonra: ihtiyacÄ±n hazÄ±r olduÄŸunu sÃ¶yleyen bant, kaydedilen
+ * kart ve sonraki adÄ±mlar (KeÅŸif'teki `KayitliKart`Ä±n eÅŸi).
+ */
 function KayitliKart({
   kart,
   onGuncelle,
@@ -380,18 +413,59 @@ function KayitliKart({
   kart: IhtiyacKartiYaniti;
   onGuncelle: (kart: IhtiyacKartiYaniti) => void;
 }) {
+  const ortak = kart.aranan === "firma";
+  const adaylarYolu = `/kurum/oneriler?ihtiyac=${kart.id}`;
+  const adimlar = [
+    {
+      ikon: Search,
+      baslik: "AdaylarÄ± gÃ¶r",
+      metin: ortak
+        ? "Firma kartlarÄ±yla eÅŸleÅŸen uygun firmalar ve neden uygun olduklarÄ±."
+        : "Yetenek kartlarÄ±yla eÅŸleÅŸen uygun adaylar ve neden uygun olduklarÄ±.",
+      href: adaylarYolu,
+    },
+    {
+      ikon: CalendarClock,
+      baslik: "Ä°htiyacÄ± dÃ¼zenle",
+      metin:
+        "Bir ÅŸeyi eksik ya da yanlÄ±ÅŸ yazdÄ±ysanÄ±z dÃ¼zeltin; adaylar yeniden belirlenir.",
+      href: `/kurum?duzenle=${kart.id}`,
+    },
+    {
+      ikon: UserRoundPlus,
+      baslik: "BaÅŸka bir ihtiyaÃ§",
+      metin: "FarklÄ± bir konuda ayrÄ± bir ihtiyaÃ§ tanÄ±mlayÄ±n.",
+      href: ortak ? "/tanimlama?aranan=firma" : "/tanimlama",
+    },
+  ];
+
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="font-heading text-xl font-semibold text-ana">
-        İhtiyaç kartınız kaydedildi
-      </h2>
-      {kart.embedding_var ? (
-        <p className="text-sm text-pretty text-muted-foreground">
-          {kart.aranan === "firma"
-            ? "Artık firma kartlarıyla eşleştirilebilir."
-            : "Artık gençlerin yetenek kartlarıyla eşleştirilebilir."}
-        </p>
-      ) : (
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 rounded-xl bg-ana px-7 py-7 text-zemin sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-medium text-zemin/70">
+            Ä°htiyacÄ±nÄ±z kaydedildi
+          </p>
+          <h2 className="font-heading text-2xl font-semibold text-balance">
+            Ä°htiyacÄ±nÄ±z hazÄ±r
+          </h2>
+          <p className="max-w-prose text-[15px] text-pretty text-zemin/85">
+            {kart.embedding_var
+              ? ortak
+                ? "ArtÄ±k firma kartlarÄ±yla eÅŸleÅŸtirilebilir."
+                : "ArtÄ±k genÃ§lerin yetenek kartlarÄ±yla eÅŸleÅŸtirilebilir."
+              : "Uygun adaylarÄ± bulmak iÃ§in eÅŸleÅŸtirmeye hazÄ±rlanmasÄ± gerekiyor."}
+          </p>
+        </div>
+        <Link
+          href={adaylarYolu}
+          className="inline-flex h-10 shrink-0 items-center justify-center self-start rounded-lg bg-vurgu px-5 text-sm font-semibold text-metin hover:bg-vurgu/90 sm:self-center"
+        >
+          Uygun adaylarÄ± gÃ¶r
+        </Link>
+      </div>
+
+      {kart.embedding_var ? null : (
         <EslestirmeyeHazirla
           hazirla={async () => onGuncelle(await ihtiyacKartiHazirla(kart.id))}
         />
@@ -399,16 +473,35 @@ function KayitliKart({
 
       <TaslakKarti
         taslak={kart}
-        ortak={kart.aranan === "firma"}
+        ortak={ortak}
         kurumAdi={kart.kurum.ad}
         olcumBelirlenecek={kart.olcum_belirlenecek}
       />
 
-      <Button asChild size="lg" className="mt-1 w-fit">
-        <Link href={`/kurum/oneriler?ihtiyac=${kart.id}`}>
-          Uygun adayları gör
-        </Link>
-      </Button>
+      <div className="flex flex-col gap-3">
+        <h3 className="font-heading text-lg font-semibold text-ana">
+          SÄ±rada ne var
+        </h3>
+        <ul className="grid gap-3 sm:grid-cols-3">
+          {adimlar.map(({ ikon: Ikon, baslik, metin, href }) => (
+            <li key={baslik}>
+              <Link
+                href={href}
+                className={cn(
+                  KUTU,
+                  "flex h-full flex-col gap-2 px-5 py-5 transition-colors hover:border-ana",
+                )}
+              >
+                <Ikon aria-hidden="true" className="size-5 text-baglanti" />
+                <span className="font-medium text-ana">{baslik}</span>
+                <span className="text-sm text-pretty text-muted-foreground">
+                  {metin}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

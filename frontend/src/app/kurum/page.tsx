@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { EpostaDogrulamaBandi } from "@/components/eposta-dogrulama-bandi";
@@ -12,6 +11,7 @@ import {
   IsbirligiBekleyeni,
 } from "@/components/genc-paneli";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
+import { IlanDuzenlemePaneli } from "@/components/ilan-duzenleme-paneli";
 import { IsbirligiSatiri } from "@/components/isbirligi-satiri";
 import {
   AdayListesi,
@@ -64,13 +64,14 @@ export default function KurumPaneli() {
 function KurumPaneliIcerigi() {
   const hesap = useGirisliHesap();
   const { tazele } = useOturum();
-  const router = useRouter();
   const [oneriler, setOneriler] = useState<KurumOnerisi[] | null>(null);
   const [isbirlikleri, setIsbirlikleri] = useState<IsbirligiOzeti[] | null>(
     null,
   );
   // Kapatma onayı açık olan ihtiyaç; aynı anda biri.
   const [kapatilan, setKapatilan] = useState<string | null>(null);
+  // Düzenleme paneli açık olan ihtiyaç; `?duzenle=<id>` ile de açılır.
+  const [duzenlenen, setDuzenlenen] = useState<string | null>(null);
   const [hata, setHata] = useState<Hata | null>(null);
   const okundu = useRef(false);
 
@@ -88,6 +89,8 @@ function KurumPaneliIcerigi() {
   useEffect(() => {
     if (okundu.current) return;
     okundu.current = true;
+    // Adres çubuğu yalnızca tarayıcıda; okuma bağlandıktan sonra.
+    setDuzenlenen(new URLSearchParams(window.location.search).get("duzenle"));
     void oku();
   }, [oku]);
 
@@ -213,9 +216,7 @@ function KurumPaneliIcerigi() {
                     kart={kart}
                     sayi={sayilar[kart.id]}
                     kapatiliyor={kapatilan === kart.id}
-                    onDuzenle={() =>
-                      router.push(`/kurum/ilan/${kart.id}/duzenle`)
-                    }
+                    onDuzenle={() => setDuzenlenen(kart.id)}
                     onKapatmaAc={() => setKapatilan(kart.id)}
                     onKapatmaBirak={() => setKapatilan(null)}
                     // Kapanınca /me tazelenir: liste durumu oradan okuyor;
@@ -275,6 +276,23 @@ function KurumPaneliIcerigi() {
           </section>
         </div>
       </div>
+
+      {duzenlenen && kartlar.some((kart) => kart.id === duzenlenen) ? (
+        <IlanDuzenlemePaneli
+          key={duzenlenen}
+          kartId={duzenlenen}
+          onKapat={() => {
+            setDuzenlenen(null);
+            // Adresteki ?duzenle= yenilemede paneli yeniden açmasın.
+            window.history.replaceState(null, "", "/kurum");
+          }}
+          // /me ihtiyaç metnini, öneriler adayları taşıyor; ikisi de tazelenir.
+          onKaydedildi={() => {
+            void tazele();
+            void oku();
+          }}
+        />
+      ) : null}
     </Sayfa>
   );
 }

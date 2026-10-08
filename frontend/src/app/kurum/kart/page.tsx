@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Sayfa, SayfaBasligi } from "@/components/sayfa";
+import { EtiketSatiri } from "@/components/kart";
 import { FirmaKartiFormAlanlari } from "@/components/firma-karti-formu";
-import { GirisKapisi } from "@/components/giris-kapisi";
+import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
+import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import {
   CevapAlani,
   HataKutusu,
@@ -13,7 +14,10 @@ import {
   Sohbet,
   type SohbetHatasi,
 } from "@/components/sohbet";
+import { FirmaKartiOnizleme } from "@/components/sohbet-onizlemeleri";
 import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
+import { YanPanel } from "@/components/ui/yan-panel";
 import {
   type FirmaKartiTaslagi,
   type FirmaKartiYaniti,
@@ -33,14 +37,16 @@ import {
 } from "@/lib/firma-karti";
 import { hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
+import { cn } from "@/lib/utils";
 
 /**
- * Firma kartı (docs/kararlar.md F3, F9).
+ * Firma kartı (docs/kararlar.md F3, F9, F21).
  *
- * Kart yoksa kısa bir sohbet: kayıt formundaki bilgiler sorulmaz. Taslak
- * gelince firma formda düzeltip onaylar; kart firma onaylamadan kaydedilmez.
- * Kart varsa görünüm ve "Kartı düzenle". Kart, iş birliği ortağı arayan
- * firmalara aday olarak gösterilir; genç arayan firmanın karta ihtiyacı yok.
+ * Kart yoksa kısa bir sohbet (solda sohbet, sağda kartın canlı hali): kayıt
+ * formundaki bilgiler sorulmaz. Taslak gelince firma formda düzeltip onaylar;
+ * kart firma onaylamadan kaydedilmez. Kart varsa görünüm ve sağdan açılan
+ * "Kartı düzenle" paneli. Kart, iş birliği ortağı arayan firmalara aday olarak
+ * gösterilir; genç arayan firmanın karta ihtiyacı yok.
  */
 export default function FirmaKartiSayfasi() {
   return (
@@ -72,41 +78,20 @@ function FirmaKartiIcerigi() {
     void oku();
   }, [oku]);
 
-  return (
-    <Sayfa>
-      <SayfaBasligi
-        baslik="Firma kartı"
-        aciklama="Firmanızın ne yaptığını anlatan kart. İş birliği ortağı arayan firmalar sizi bu kartla bulur."
+  if (kart === undefined) {
+    return <SayfaDurumu hata={hata} tekrarDene={() => void oku()} />;
+  }
+  if (kart === null) {
+    return (
+      <KartSohbeti
+        onKaydedildi={(yeni) => {
+          setKart(yeni);
+          void tazele();
+        }}
       />
-
-      {hata && kart === undefined ? (
-        <HataKutusu hata={hata} tekrarDene={() => void oku()} />
-      ) : null}
-
-      {kart === undefined ? (
-        hata ? null : (
-          <p className="text-sm text-muted-foreground" role="status">
-            Yükleniyor…
-          </p>
-        )
-      ) : kart === null ? (
-        <KartSohbeti
-          onKaydedildi={(yeni) => {
-            setKart(yeni);
-            void tazele();
-          }}
-        />
-      ) : (
-        <KartGorunumu kart={kart} onGuncelle={setKart} />
-      )}
-
-      <footer className="mt-auto border-t border-kenar pt-6">
-        <Button asChild variant="outline" size="lg">
-          <Link href="/kurum">Panele dön</Link>
-        </Button>
-      </footer>
-    </Sayfa>
-  );
+    );
+  }
+  return <KartGorunumu kart={kart} onGuncelle={setKart} />;
 }
 
 /* --- Sohbet ve onay -------------------------------------------------------- */
@@ -116,6 +101,7 @@ function KartSohbeti({
 }: {
   onKaydedildi: (kart: FirmaKartiYaniti) => void;
 }) {
+  const hesap = useGirisliHesap();
   const [oturumId, setOturumId] = useState<string | null>(null);
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([]);
   const [taslak, setTaslak] = useState<FirmaKartiTaslagi | null>(null);
@@ -148,10 +134,6 @@ function KartSohbeti({
     baslatildi.current = true;
     void sohbetiBaslat();
   }, [sohbetiBaslat]);
-
-  useEffect(() => {
-    sonMesaj.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [mesajlar, bekleniyor]);
 
   async function cevapGonder(cevap: string) {
     if (!oturumId) return;
@@ -200,26 +182,36 @@ function KartSohbeti({
     );
   }
 
+  // Solda sohbet, sağda kartın canlı hali (Keşif'le aynı iskelet).
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-xs text-pretty text-muted-foreground">
-        Bu sohbet yapay zekâ desteğiyle ilerler. Kartınız siz onaylamadan
-        kaydedilmez. Kayıtta verdiğiniz bilgiler tekrar sorulmaz.
-      </p>
-      <Sohbet
-        ajanAdi="Zemin360"
-        mesajlar={mesajlar}
-        bekleniyor={bekleniyor}
-        sonMesajRef={sonMesaj}
-      />
-      {hata ? <HataKutusu hata={hata} tekrarDene={tekrarDene} /> : null}
-      <CevapAlani
-        girdi={girdi}
-        setGirdi={setGirdi}
-        bekleniyor={bekleniyor}
-        gonder={gonder}
-      />
-    </div>
+    <Sayfa genislik="genis">
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <SayfaBasligi
+            baslik="Firma kartınızı oluşturun"
+            aciklama="Kısa bir sohbetle firmanızın ne yaptığını bir karta dönüştüreceğiz; iş birliği ortağı arayan firmalar sizi bu kartla bulur. Bu sohbet yapay zekâ desteğiyle ilerler. Kartınız siz onaylamadan kaydedilmez. Kayıtta verdiğiniz bilgiler tekrar sorulmaz."
+          />
+          {hata ? <HataKutusu hata={hata} tekrarDene={tekrarDene} /> : null}
+          <Sohbet
+            ajanAdi="Zemin360"
+            mesajlar={mesajlar}
+            bekleniyor={bekleniyor}
+            sonMesajRef={sonMesaj}
+            altKisim={
+              <CevapAlani
+                girdi={girdi}
+                setGirdi={setGirdi}
+                bekleniyor={bekleniyor}
+                gonder={gonder}
+              />
+            }
+          />
+        </div>
+        <aside aria-label="Firma kartınız" className="lg:sticky lg:top-24">
+          <FirmaKartiOnizleme taslak={taslak} firmaAdi={hesap.ad ?? ""} />
+        </aside>
+      </div>
+    </Sayfa>
   );
 }
 
@@ -255,16 +247,11 @@ function TaslakOnayi({
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-heading text-xl font-semibold text-ana">
-          Kartınızın taslağı
-        </h2>
-        <p className="text-sm text-pretty text-muted-foreground">
-          Sohbetten çıkan kart bu. Gözden geçirin, gerekirse düzeltin ve
-          onaylayın.
-        </p>
-      </div>
+    <Sayfa genislik="form">
+      <SayfaBasligi
+        baslik="Kartınızı gözden geçirin"
+        aciklama="Sohbetten çıkan kart bu. Yanlış anlaşılan bir şey varsa düzeltin; doğruysa onaylayın. Kartınız siz onaylamadan kaydedilmez."
+      />
       <form className="flex flex-col gap-5" onSubmit={onayla}>
         <FirmaKartiFormAlanlari form={form} onDegis={setForm} />
         {hata ? <HataKutusu hata={hata} /> : null}
@@ -272,11 +259,13 @@ function TaslakOnayi({
           {bekleniyor ? "Kaydediliyor…" : "Kartı onayla"}
         </Button>
       </form>
-    </section>
+    </Sayfa>
   );
 }
 
 /* --- Kart ve düzenleme ----------------------------------------------------- */
+
+const DUZENLEME_FORMU = "firma-karti-duzenleme-formu";
 
 function KartGorunumu({
   kart,
@@ -290,6 +279,12 @@ function KartGorunumu({
   const [bekleniyor, setBekleniyor] = useState(false);
   const [hata, setHata] = useState<SohbetHatasi | null>(null);
   const [kaydedildi, setKaydedildi] = useState(false);
+
+  function paneliKapat() {
+    setForm(kartiForma(kart));
+    setHata(null);
+    setDuzenleniyor(false);
+  }
 
   async function kaydet(olay: React.FormEvent) {
     olay.preventDefault();
@@ -319,81 +314,108 @@ function KartGorunumu({
     }
   }
 
-  if (duzenleniyor) {
-    return (
-      <form className="flex flex-col gap-5" onSubmit={kaydet}>
-        <FirmaKartiFormAlanlari form={form} onDegis={setForm} />
-        {hata ? <HataKutusu hata={hata} /> : null}
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" size="lg" disabled={bekleniyor}>
-            {bekleniyor ? "Kaydediliyor…" : "Kaydet"}
-          </Button>
+  return (
+    <Sayfa>
+      <SayfaBasligi
+        baslik="Firma kartı"
+        aciklama="Firmanızın ne yaptığını anlatan kart. İş birliği ortağı arayan firmalar sizi bu kartla bulur."
+        eylem={
           <Button
             type="button"
-            size="lg"
             variant="outline"
-            disabled={bekleniyor}
+            size="lg"
             onClick={() => {
-              setForm(kartiForma(kart));
-              setHata(null);
-              setDuzenleniyor(false);
+              setKaydedildi(false);
+              setDuzenleniyor(true);
             }}
           >
-            Vazgeç
+            <Pencil aria-hidden="true" />
+            Kartı düzenle
           </Button>
-        </div>
-      </form>
-    );
-  }
+        }
+      />
 
-  return (
-    <section className="flex flex-col gap-4 rounded-sm border border-kenar bg-card px-4 py-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-heading text-lg font-semibold text-ana">
-          {kart.firma_adi}
-        </h2>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            setKaydedildi(false);
-            setDuzenleniyor(true);
-          }}
-        >
-          Kartı düzenle
-        </Button>
-      </div>
-      <p className="text-sm text-pretty">{kart.ne_yapiyoruz}</p>
-      <Satir baslik="Yetkinlikler">{kart.yetkinlikler.join(", ")}</Satir>
-      {kart.onceki_isler ? (
-        <Satir baslik="Önceki işler">{kart.onceki_isler}</Satir>
-      ) : null}
-      {kart.aranan_isbirligi ? (
-        <Satir baslik="Aradığınız ortak">{kart.aranan_isbirligi}</Satir>
-      ) : null}
-      {kart.isbirligi_turleri.length > 0 ? (
-        <Satir baslik="İş birliği türleri">
-          {kart.isbirligi_turleri.map(isbirligiTuruEtiketi).join(", ")}
-        </Satir>
-      ) : null}
       {kaydedildi ? (
-        <p className="text-sm text-muted-foreground" role="status">
+        <p
+          role="status"
+          className="rounded-xl bg-baglanti/10 px-5 py-3 text-sm text-baglanti"
+        >
           Kartınız kaydedildi.
         </p>
       ) : null}
       {!kart.embedding_var ? (
         // Rehber § 5.8: ne beklendiğini söyle, kesin süre verme.
-        <p className="text-xs text-pretty text-muted-foreground" role="status">
+        <p
+          role="status"
+          className="rounded-xl bg-muted px-5 py-3 text-sm text-pretty"
+        >
           Kartınız eşleştirmeye hazırlanıyor. Birkaç saniye sonra sayfayı
           yenileyerek görebilirsiniz.
         </p>
       ) : null}
-    </section>
+
+      <article className={cn(KUTU, "flex flex-col gap-5 px-6 py-6")}>
+        <h2 className="font-heading text-xl leading-snug font-semibold text-ana">
+          {kart.firma_adi}
+        </h2>
+        <p className="text-[15px] leading-relaxed text-pretty">
+          {kart.ne_yapiyoruz}
+        </p>
+        <EtiketSatiri etiket="Yetkinlikler" degerler={kart.yetkinlikler} />
+        <EtiketSatiri
+          etiket="İş birliği türleri"
+          degerler={kart.isbirligi_turleri.map(isbirligiTuruEtiketi)}
+        />
+        {kart.onceki_isler ? (
+          <Bolum baslik="Önceki işler">{kart.onceki_isler}</Bolum>
+        ) : null}
+        {kart.aranan_isbirligi ? (
+          <Bolum baslik="Aradığınız ortak">{kart.aranan_isbirligi}</Bolum>
+        ) : null}
+      </article>
+
+      <YanPanel
+        acik={duzenleniyor}
+        onKapat={paneliKapat}
+        ust="Kartı düzenleyin"
+        baslik={kart.firma_adi}
+        alt="Ne yaptığınızı, yetkinliklerinizi ve aradığınız ortağı güncelleyin."
+        etek={
+          <>
+            <Button
+              type="submit"
+              form={DUZENLEME_FORMU}
+              size="lg"
+              disabled={bekleniyor}
+            >
+              {bekleniyor ? "Kaydediliyor…" : "Kaydet"}
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              variant="ghost"
+              disabled={bekleniyor}
+              onClick={paneliKapat}
+            >
+              Vazgeç
+            </Button>
+          </>
+        }
+      >
+        <form
+          id={DUZENLEME_FORMU}
+          className="flex flex-col gap-5"
+          onSubmit={kaydet}
+        >
+          <FirmaKartiFormAlanlari form={form} onDegis={setForm} />
+          {hata ? <HataKutusu hata={hata} /> : null}
+        </form>
+      </YanPanel>
+    </Sayfa>
   );
 }
 
-function Satir({
+function Bolum({
   baslik,
   children,
 }: {
@@ -401,9 +423,9 @@ function Satir({
   children: React.ReactNode;
 }) {
   return (
-    <p className="text-sm text-pretty">
-      <span className="font-medium text-ana">{baslik}: </span>
-      {children}
-    </p>
+    <section className="flex flex-col gap-1 border-t border-kenar pt-4">
+      <h3 className="font-heading text-sm font-semibold text-ana">{baslik}</h3>
+      <p className="text-sm leading-relaxed text-pretty">{children}</p>
+    </section>
   );
 }

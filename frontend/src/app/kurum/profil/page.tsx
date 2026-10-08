@@ -5,11 +5,16 @@ import { useEffect, useRef, useState } from "react";
 
 import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
-import { FirmaProfilAlanlari } from "@/components/firma-profil-alanlari";
+import {
+  FirmaTanitimAlanlari,
+  FirmaTemelAlanlari,
+} from "@/components/firma-profil-alanlari";
 import { GirisKapisi } from "@/components/giris-kapisi";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
+import { FormBolumu } from "@/components/ui/form-bolumu";
 import { Input } from "@/components/ui/input";
+import { KUTU } from "@/components/ui/yuzey";
 import {
   type FirmaProfil,
   firmaProfiliGetir,
@@ -23,6 +28,7 @@ import {
 } from "@/lib/firma-profil";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useOturum } from "@/lib/oturum";
+import { cn } from "@/lib/utils";
 
 /**
  * Firmanın profil düzenleme sayfası (docs/kararlar.md F2, F9).
@@ -31,9 +37,16 @@ import { useOturum } from "@/lib/oturum";
  * alanlardan önce açılmış firma hesapları paneldeki banttan buraya gelir ve
  * eksikleri ile KVKK onayını burada tamamlar. Firmaya "siz".
  */
+const BOLUMLER = [
+  { id: "kimlik", etiket: "Ad ve e-posta" },
+  { id: "temel", etiket: "Tür, sektör ve şehir" },
+  { id: "tanitim", etiket: "Firmanızı tanıtın" },
+  { id: "dogrulama", etiket: "Firma doğrulaması" },
+];
+
 export default function FirmaProfilSayfasi() {
   return (
-    <GirisKapisi roller={["kurum"]} genislik="form">
+    <GirisKapisi roller={["kurum"]} genislik="genis">
       <FirmaProfilIcerigi />
     </GirisKapisi>
   );
@@ -94,85 +107,138 @@ function FirmaProfilIcerigi() {
   }
 
   if (!profil) {
-    return <SayfaDurumu genislik="form" hata={hata} />;
+    return <SayfaDurumu genislik="genis" hata={hata} />;
   }
 
   return (
-    <Sayfa genislik="form">
-      <SayfaBasligi
-        baslik="Firma profili"
-        aciklama={
-          <>
-            Firmanızın temel bilgileri. İletişim e-postanız
-            {profil.email ? ` (${profil.email})` : ""} yalnızca karşılıklı ilgi
-            oluşunca paylaşılır.
-          </>
-        }
-      />
+    <Sayfa genislik="genis">
+      <div className="grid items-start gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <nav
+          aria-label="Firma profili bölümleri"
+          className="hidden flex-col gap-1 lg:sticky lg:top-24 lg:flex"
+        >
+          {BOLUMLER.map((bolum) => (
+            <a
+              key={bolum.id}
+              href={`#${bolum.id}`}
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-metin"
+            >
+              {bolum.etiket}
+            </a>
+          ))}
+          <div className="mt-3 border-t border-kenar pt-3">
+            <Link
+              href="/kurum/kart"
+              className="block rounded-lg px-3 py-2 text-sm text-baglanti hover:bg-muted"
+            >
+              Firma kartınız
+            </Link>
+          </div>
+        </nav>
 
-      <p className="flex flex-wrap items-center gap-2 text-sm">
-        {profil.dogrulandi ? (
-          <DogrulanmisFirma dogrulandi />
-        ) : (
-          <span className="text-muted-foreground">
-            Doğrulama bekleniyor. Program ekibi firmanızı doğrulayınca adınızın
-            yanında “Doğrulanmış firma” işareti görünür. Web sitenizi
-            değiştirirseniz doğrulama yeniden yapılır.
-          </span>
-        )}
-      </p>
-
-      <form className="flex flex-col gap-6" onSubmit={kaydet}>
-        <FormAlani etiket="Firma adı" htmlFor="ad">
-          <Input
-            id="ad"
-            value={ad}
-            onChange={(olay) => setAd(olay.target.value)}
-            required
-            autoComplete="organization"
+        <div className="flex min-w-0 max-w-3xl flex-col gap-6">
+          <SayfaBasligi
+            baslik="Firma profili"
+            aciklama="Firmanızın kayıt bilgileri. İş birliği ortağı ararken sizi bulacak kişilere ne yaptığınızı ise firma kartınız anlatır."
+            etiket={
+              profil.dogrulandi ? <DogrulanmisFirma dogrulandi /> : undefined
+            }
           />
-        </FormAlani>
 
-        <FirmaProfilAlanlari form={form} onDegis={setForm} />
+          <form className={cn(KUTU, "flex flex-col")} onSubmit={kaydet}>
+            <FormBolumu id="kimlik">
+              <div className="flex flex-col gap-4">
+                <FormAlani etiket="Firma adı" htmlFor="ad">
+                  <Input
+                    id="ad"
+                    value={ad}
+                    onChange={(olay) => setAd(olay.target.value)}
+                    required
+                    autoComplete="organization"
+                  />
+                </FormAlani>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium">
+                    İletişim e-postası
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {profil.email ? `${profil.email} · ` : ""}
+                    yalnızca karşılıklı ilgi oluşunca paylaşılır.
+                  </span>
+                </div>
+              </div>
+            </FormBolumu>
 
-        {profil.kvkk_onay_tarihi ? null : (
-          <label className="flex items-start gap-2 text-sm text-pretty">
-            <input
-              type="checkbox"
-              checked={kvkkOnay}
-              onChange={(olay) => setKvkkOnay(olay.target.checked)}
-              className="mt-0.5 accent-ana"
-            />
-            <span>
-              <Link
-                href="/kvkk"
-                target="_blank"
-                className="text-baglanti underline"
-              >
-                KVKK aydınlatma metnini
-              </Link>{" "}
-              okudum; verilerimin bu metinde anlatılan amaçlarla işlenmesini
-              onaylıyorum.
-            </span>
-          </label>
-        )}
+            <FormBolumu id="temel">
+              <FirmaTemelAlanlari form={form} onDegis={setForm} />
+            </FormBolumu>
 
-        {hata ? <HataKutusu hata={hata} /> : null}
-        {kaydedildi ? (
-          <p className="text-sm text-muted-foreground" role="status">
-            Firma profiliniz kaydedildi.
-          </p>
-        ) : null}
+            <FormBolumu id="tanitim">
+              <FirmaTanitimAlanlari form={form} onDegis={setForm} />
+            </FormBolumu>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" size="lg" disabled={bekleniyor}>
-            {bekleniyor ? "Kaydediliyor…" : "Kaydet"}
-          </Button>
-          <Link href="/kurum" className="text-sm text-baglanti underline">
-            Panele dön
-          </Link>
+            {profil.kvkk_onay_tarihi ? null : (
+              <FormBolumu>
+                <label className="flex items-start gap-2 text-sm text-pretty">
+                  <input
+                    type="checkbox"
+                    checked={kvkkOnay}
+                    onChange={(olay) => setKvkkOnay(olay.target.checked)}
+                    className="mt-0.5 size-4 accent-ana"
+                  />
+                  <span>
+                    <Link
+                      href="/kvkk"
+                      target="_blank"
+                      className="text-baglanti underline"
+                    >
+                      KVKK aydınlatma metnini
+                    </Link>{" "}
+                    okudum; verilerimin bu metinde anlatılan amaçlarla
+                    işlenmesini onaylıyorum.
+                  </span>
+                </label>
+              </FormBolumu>
+            )}
+
+            <div className="flex flex-col gap-3 rounded-b-xl border-t border-kenar bg-zemin/60 px-6 py-4">
+              {hata ? <HataKutusu hata={hata} /> : null}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" size="lg" disabled={bekleniyor}>
+                  {bekleniyor ? "Kaydediliyor…" : "Kaydet"}
+                </Button>
+                {kaydedildi ? (
+                  <span className="text-sm text-muted-foreground" role="status">
+                    Kaydedildi.
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </form>
+
+          <section
+            id="dogrulama"
+            className={cn(KUTU, "scroll-mt-24 px-6 py-6")}
+          >
+            <h2 className="font-heading text-lg font-semibold text-ana">
+              Firma doğrulaması
+            </h2>
+            {profil.dogrulandi ? (
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-pretty text-muted-foreground">
+                <DogrulanmisFirma dogrulandi />
+                Adınızın yanında “Doğrulanmış firma” işareti görünüyor. Web
+                sitenizi değiştirirseniz doğrulama yeniden yapılır.
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-pretty text-muted-foreground">
+                Doğrulama bekleniyor. Program ekibi firmanızı doğrulayınca
+                adınızın yanında “Doğrulanmış firma” işareti görünür. Web
+                sitenizi değiştirirseniz doğrulama yeniden yapılır.
+              </p>
+            )}
+          </section>
         </div>
-      </form>
+      </div>
     </Sayfa>
   );
 }

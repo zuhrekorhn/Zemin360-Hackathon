@@ -18,13 +18,23 @@ import { cn } from "@/lib/utils";
  *
  * Vergi numarası, adres ve telefon bilinçli olarak yok. Firmaya "siz".
  */
-export function FirmaProfilAlanlari({
-  form,
-  onDegis,
-}: {
+type AlanProps = {
   form: FirmaProfilFormu;
   onDegis: (form: FirmaProfilFormu) => void;
-}) {
+};
+
+/** Kayıt formu: iki parça arka arkaya. Profil sayfası parçaları ayrı bölümlerde çizer. */
+export function FirmaProfilAlanlari(props: AlanProps) {
+  return (
+    <div className="flex flex-col gap-6">
+      <FirmaTemelAlanlari {...props} />
+      <FirmaTanitimAlanlari {...props} />
+    </div>
+  );
+}
+
+/** Zorunlu parça: firma türü, sektör, şehir. */
+export function FirmaTemelAlanlari({ form, onDegis }: AlanProps) {
   function alan<K extends keyof FirmaProfilFormu>(
     ad: K,
     deger: FirmaProfilFormu[K],
@@ -92,7 +102,21 @@ export function FirmaProfilAlanlari({
           </select>
         </FormAlani>
       </div>
+    </div>
+  );
+}
 
+/** İsteğe bağlı parça: web sitesi, çalışan sayısı, tanıtım, formu dolduran. */
+export function FirmaTanitimAlanlari({ form, onDegis }: AlanProps) {
+  function alan<K extends keyof FirmaProfilFormu>(
+    ad: K,
+    deger: FirmaProfilFormu[K],
+  ) {
+    onDegis({ ...form, [ad]: deger });
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
       <fieldset className="flex flex-col gap-4">
         <legend className="mb-1 font-heading text-lg font-semibold text-ana">
           Firmanızı tanıtın{" "}

@@ -14,6 +14,7 @@ import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormBolumu } from "@/components/ui/form-bolumu";
 import { KUTU } from "@/components/ui/yuzey";
 import { type GencProfil, profilGetir, profilGuncelle } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
@@ -39,18 +40,6 @@ export default function ProfilSayfasi() {
     <GirisKapisi roller={["genc"]} genislik="genis">
       <ProfilIcerigi />
     </GirisKapisi>
-  );
-}
-
-/** Formun bir bölümü; sol menüdeki bağlantı `id`'ye gider. */
-function Bolum({ id, children }: { id?: string; children: React.ReactNode }) {
-  return (
-    <div
-      id={id}
-      className="scroll-mt-24 border-t border-kenar px-6 py-6 first:border-t-0"
-    >
-      {children}
-    </div>
   );
 }
 
@@ -168,7 +157,7 @@ function ProfilIcerigi() {
           />
 
           <form className={cn(KUTU, "flex flex-col")} onSubmit={kaydet}>
-            <Bolum id="kimlik">
+            <FormBolumu id="kimlik">
               <div className="flex flex-col gap-4">
                 {profil.ad_kilitli ? (
                   <KilitliAd profil={profil} onTalep={setProfil} />
@@ -191,18 +180,18 @@ function ProfilIcerigi() {
                   </span>
                 </div>
               </div>
-            </Bolum>
+            </FormBolumu>
 
-            <Bolum id="egitim">
+            <FormBolumu id="egitim">
               <EgitimAlanlari form={form} onDegis={setForm} />
-            </Bolum>
+            </FormBolumu>
 
-            <Bolum id="baglantilar">
+            <FormBolumu id="baglantilar">
               <BaglantiAlanlari form={form} onDegis={setForm} />
-            </Bolum>
+            </FormBolumu>
 
             {profil.kvkk_onay_tarihi ? null : (
-              <Bolum>
+              <FormBolumu>
                 <label className="flex items-start gap-2 text-sm text-pretty">
                   <input
                     type="checkbox"
@@ -222,7 +211,7 @@ function ProfilIcerigi() {
                     işlenmesini onaylıyorum.
                   </span>
                 </label>
-              </Bolum>
+              </FormBolumu>
             )}
 
             <div className="flex flex-col gap-3 rounded-b-xl border-t border-kenar bg-zemin/60 px-6 py-4">
