@@ -1,6 +1,8 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 import { BekleyenKabi, YanKutu } from "@/components/genc-paneli";
 import { IlanKapatma } from "@/components/ilan-kapatma";
@@ -10,7 +12,7 @@ import { DurumEtiketi, tarihYaz } from "@/components/panel";
 import { Button } from "@/components/ui/button";
 import { KUTU } from "@/components/ui/yuzey";
 import type { IhtiyacKartiOzeti, KurumOnerisi } from "@/lib/api";
-import { arananEtiketi, ilanKapali } from "@/lib/ilan";
+import { KAPILAR, arananEtiketi, ilanKapali } from "@/lib/ilan";
 import {
   ADAY_LISTESI_SINIRI,
   type AdaySatiri,
@@ -41,9 +43,11 @@ export function FirmaOzeti({ ad, kartVar }: { ad: string; kartVar: boolean }) {
           <span className="font-heading text-lg leading-tight font-semibold text-ana">
             {ad}
           </span>
-          <span className="text-sm text-muted-foreground">
-            {kartVar ? "Firma kartınız yayında" : "Firma kartınız henüz yok"}
-          </span>
+          {kartVar ? (
+            <span className="text-sm text-muted-foreground">
+              Firma kartınız hazır
+            </span>
+          ) : null}
         </div>
       </div>
       {/* Kart yoksa çağrı "Tamamlanacaklar"da; burada tekrarlanmaz. */}
@@ -56,7 +60,7 @@ export function FirmaOzeti({ ad, kartVar }: { ad: string; kartVar: boolean }) {
   );
 }
 
-/** Adayların tek listesi: her satırda tek durum etiketi, tıklayınca ihtiyacın aday sayfası. */
+/** Adayların tek listesi: etiket yalnızca bir şey söylüyorsa, tıklayınca ihtiyacın aday sayfası. */
 export function AdayListesi({ satirlar }: { satirlar: AdaySatiri[] }) {
   const gorunen = satirlar.slice(0, ADAY_LISTESI_SINIRI);
   const gizli = satirlar.length - gorunen.length;
@@ -78,12 +82,14 @@ export function AdayListesi({ satirlar }: { satirlar: AdaySatiri[] }) {
                   <span className="min-w-0 truncate text-sm font-medium">
                     {satir.ad}
                   </span>
-                  <DurumEtiketi
-                    metin={satir.etiket}
-                    baglanti={satir.baglanti}
-                  />
+                  {satir.etiket ? (
+                    <DurumEtiketi
+                      metin={satir.etiket}
+                      baglanti={satir.baglanti}
+                    />
+                  ) : null}
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-[13px] text-muted-foreground">
                   {satir.alt}
                 </span>
               </Link>
@@ -92,7 +98,7 @@ export function AdayListesi({ satirlar }: { satirlar: AdaySatiri[] }) {
         </ul>
       )}
       {gizli > 0 ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {gizli} aday daha var; ihtiyaç kartlarından açabilirsiniz.
         </p>
       ) : null}
@@ -159,10 +165,9 @@ export function IhtiyacKarti({
         kapali && "bg-transparent shadow-none",
       )}
     >
-      <div className="flex flex-col gap-3 px-6 pt-5 pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            {tarihYaz(kart.olusturma_tarihi)}
+      <div className="flex flex-col gap-3 px-6 pt-5 pb-5">
+        <div className="flex min-h-9 items-start justify-between gap-3">
+          <p className="flex flex-wrap items-center gap-2">
             {aranan ? <DurumEtiketi metin={aranan} /> : null}
             {kapali ? <DurumEtiketi metin="Kapandı" /> : null}
           </p>
@@ -171,21 +176,25 @@ export function IhtiyacKarti({
               etiket="Bu ihtiyaç için eylemler"
               eylemler={[
                 { etiket: "Düzenle", onSec: onDuzenle },
-                { etiket: "İhtiyacı kapat", onSec: onKapatmaAc, yikici: true },
+                {
+                  etiket: "İhtiyacı kapat",
+                  onSec: onKapatmaAc,
+                  yikici: true,
+                },
               ]}
             />
           )}
         </div>
         <p
           className={cn(
-            "line-clamp-4 text-[15px] leading-relaxed text-pretty",
+            "line-clamp-4 text-base leading-relaxed text-pretty",
             kapali && "text-muted-foreground",
           )}
         >
           {kart.problem_tanimi}
         </p>
         {kart.basari_kriteri ? (
-          <p className="line-clamp-2 text-sm text-pretty text-muted-foreground">
+          <p className="line-clamp-2 text-sm leading-relaxed text-pretty text-muted-foreground">
             <span className="font-medium text-metin">Başarı ölçütü: </span>
             {kart.basari_kriteri}
           </p>
@@ -195,13 +204,16 @@ export function IhtiyacKarti({
         <Button asChild size="lg" variant={kapali ? "outline" : "default"}>
           <Link href={`/kurum/oneriler?ihtiyac=${kart.id}`}>Adayları gör</Link>
         </Button>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           {kapali
             ? "Bu ihtiyaç kapandı."
             : (sayim ??
               (kart.embedding_var
                 ? "Henüz aday yok."
                 : "Adayları açtığınızda uygun adaylar hazırlanır."))}
+        </span>
+        <span className="ml-auto text-sm text-muted-foreground">
+          {tarihYaz(kart.olusturma_tarihi)}
         </span>
       </div>
       {kapatiliyor && !kapali ? (
@@ -212,5 +224,78 @@ export function IhtiyacKarti({
         />
       ) : null}
     </li>
+  );
+}
+
+/**
+ * "Yeni ihtiyaç": iki kapı tek düğmenin arkasında, her biri ne işe yaradığını
+ * söyleyerek (docs/kararlar.md F4, F9). Bölümün birincil eylemi bu; ekranda
+ * iki eşdeğer düğme yarışmasın.
+ */
+export function YeniIhtiyacMenusu() {
+  const [acik, setAcik] = useState(false);
+  const kutu = useRef<HTMLDivElement>(null);
+  const dugme = useRef<HTMLButtonElement>(null);
+
+  // Dışarı tıklayınca ya da Escape'le kapanır.
+  useEffect(() => {
+    if (!acik) return;
+    function disari(olay: MouseEvent) {
+      if (!kutu.current?.contains(olay.target as Node)) setAcik(false);
+    }
+    function tus(olay: KeyboardEvent) {
+      if (olay.key === "Escape") {
+        setAcik(false);
+        dugme.current?.focus();
+      }
+    }
+    document.addEventListener("mousedown", disari);
+    document.addEventListener("keydown", tus);
+    return () => {
+      document.removeEventListener("mousedown", disari);
+      document.removeEventListener("keydown", tus);
+    };
+  }, [acik]);
+
+  return (
+    <div ref={kutu} className="relative">
+      <Button
+        ref={dugme}
+        type="button"
+        variant="outline"
+        size="lg"
+        aria-expanded={acik}
+        aria-controls="yeni-ihtiyac-menusu"
+        onClick={() => setAcik((onceki) => !onceki)}
+      >
+        Yeni ihtiyaç
+        <ChevronDown
+          aria-hidden="true"
+          className={cn("transition-transform", acik && "rotate-180")}
+        />
+      </Button>
+      {acik ? (
+        <div
+          id="yeni-ihtiyac-menusu"
+          className="absolute top-full right-0 z-30 mt-2 flex w-72 flex-col gap-0.5 rounded-lg border border-kenar bg-card p-1.5 shadow-[0_8px_24px_-12px_rgb(22_33_27/0.25)]"
+        >
+          {KAPILAR.map((kapi) => (
+            <Link
+              key={kapi.aranan}
+              href={kapi.yol}
+              onClick={() => setAcik(false)}
+              className="flex flex-col gap-0.5 rounded-md px-3 py-2.5 hover:bg-muted"
+            >
+              <span className="text-sm font-medium text-ana">
+                {kapi.baslik}
+              </span>
+              <span className="text-[13px] leading-snug text-pretty text-muted-foreground">
+                {kapi.aciklama}
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }

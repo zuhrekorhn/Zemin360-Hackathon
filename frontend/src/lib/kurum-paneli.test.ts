@@ -86,7 +86,7 @@ describe("adaySatirlari", () => {
       alt: "Firma",
       hedef: "/kurum/oneriler?ihtiyac=i1",
     });
-    expect(satirlar[1].etiket).toBe("Aday");
+    expect(satirlar[1].etiket).toBeNull();
     expect(satirlar[1].baglanti).toBe(false);
   });
 });

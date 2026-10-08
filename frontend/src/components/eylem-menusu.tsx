@@ -49,9 +49,9 @@ export function EylemMenusu({
         aria-label={etiket}
         aria-expanded={acik}
         onClick={() => setAcik((onceki) => !onceki)}
-        className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-muted hover:text-metin focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none hover:bg-muted hover:text-metin focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <MoreHorizontal aria-hidden="true" className="size-4" />
+        <MoreHorizontal aria-hidden="true" className="size-5" />
       </button>
       {acik ? (
         <div className="absolute top-full right-0 z-30 mt-1 flex w-40 flex-col rounded-lg border border-kenar bg-card p-1 shadow-[0_8px_24px_-12px_rgb(22_33_27/0.25)]">

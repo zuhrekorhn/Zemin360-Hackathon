@@ -18,11 +18,11 @@ import {
   FirmaOzeti,
   IhtiyacKarti,
   IlgiGosterenKarti,
+  YeniIhtiyacMenusu,
 } from "@/components/kurum-paneli";
 import { BosDurum } from "@/components/panel";
 import { Sayfa } from "@/components/sayfa";
 import { HataKutusu } from "@/components/sohbet";
-import { Button } from "@/components/ui/button";
 import {
   type IsbirligiOzeti,
   type KurumOnerisi,
@@ -92,7 +92,9 @@ function KurumPaneliIcerigi() {
   }, [oku]);
 
   const kartlar = ilanlariSirala(hesap.ihtiyac_kartlari);
-  const acikIhtiyac = kartlar.filter((kart) => !ilanKapali(kart)).length;
+  const acikKartlar = kartlar.filter((kart) => !ilanKapali(kart));
+  const acikIhtiyac = acikKartlar.length;
+  const ilkAcikIhtiyac = acikKartlar[0] ?? null;
   const bekleyen = kurumBekleyenleri(oneriler ?? [], isbirlikleri ?? []);
   const bekleyenAdet = kurumBekleyenSayisi(bekleyen);
   const sayilar = ihtiyacSayilari(oneriler ?? []);
@@ -202,21 +204,7 @@ function KurumPaneliIcerigi() {
                   baslik="İhtiyaçlarınız"
                   sayi={acikIhtiyac}
                 />
-                <nav
-                  aria-label="Yeni ihtiyaç"
-                  className="flex flex-wrap items-center gap-2"
-                >
-                  {KAPILAR.map((kapi) => (
-                    <Button
-                      key={kapi.aranan}
-                      asChild
-                      variant="outline"
-                      size="lg"
-                    >
-                      <Link href={kapi.yol}>{kapi.baslik}</Link>
-                    </Button>
-                  ))}
-                </nav>
+                <YeniIhtiyacMenusu />
               </div>
               <ul className="flex flex-col gap-4">
                 {kartlar.map((kart) => (
@@ -263,7 +251,17 @@ function KurumPaneliIcerigi() {
                 Yükleniyor…
               </p>
             ) : isbirlikleri.length === 0 ? (
-              <BosDurum metin="Henüz iş birliğiniz yok. Bir aday ilginizi kabul ettiğinde iş birliği burada açılır ve iletişim bilgileri görünür." />
+              <BosDurum
+                metin="Henüz iş birliğiniz yok. Bir aday ilginizi kabul ettiğinde iş birliği burada açılır ve iletişim bilgileri görünür."
+                eylem={
+                  ilkAcikIhtiyac
+                    ? {
+                        href: `/kurum/oneriler?ihtiyac=${ilkAcikIhtiyac.id}`,
+                        etiket: "Adayları gör",
+                      }
+                    : undefined
+                }
+              />
             ) : (
               <ul className="flex flex-col gap-4">
                 {isbirligiSirasi(isbirlikleri).map((isbirligi) => (

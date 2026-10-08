@@ -133,6 +133,8 @@ ajan · pipeline · embedding · vektör · rubrik · skor · eşik · token · 
 
 Gence "Reddedildi", "Elendi", "Başarısız" gibi etiketler gösterilmez.
 
+Bir listenin kendisi "Adaylarınız" gibi durumu söylüyorsa "Aday" etiketi satırlarda tekrarlanmaz; etiket yalnızca bir şey söylüyorsa yazılır (9 Eki 2026).
+
 ### 5.10 Sohbet soruları
 - **Tek soru** sorar. İki soru tek mesajda birleşecekse ikincisi ilkinin devamı olmalı.
 - Gerekirse bir örnek verir: "Sayıyla anlatabilir misin? Örneğin kaç kişi kullandı ya da ne kadar zaman kazandırdı?"
@@ -195,6 +197,5 @@ Gence "Reddedildi", "Elendi", "Başarısız" gibi etiketler gösterilmez.
 | Hatalar insan diliyle (§ 5.4) | İngilizce şema metni gösterilmez (`lib/ayrinti.ts`); 401/403/404/409/422 cümleleri `lib/hata.ts`; backend'de boş alan cümleleri tek yerde (`app/core/alan_adlari.py`) |
 | LLM'in yazdığı kullanıcı metni | Bütün istemlere `app/core/kullanici_dili.py` › `KULLANICI_DILI_KURALLARI` eklenir |
 
-**Bilinen sınırlar:** Firmanın aday listesinde uyum hâlâ yüzdeyle yazıyor (`SkorRozeti`); firma
-ekranları ayrıca ele alınacak. "Pilot uygulama" firma kartında bir iş birliği türünün adıdır; rehber yalnızca
+**Bilinen sınırlar:** "Pilot uygulama" firma kartında bir iş birliği türünün adıdır; rehber yalnızca
 tek başına "pilot"u yasaklar.

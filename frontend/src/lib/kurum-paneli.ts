@@ -66,7 +66,8 @@ export type AdaySatiri = {
   ad: string;
   /** Genç adayda rolü, firma adayda "Firma". */
   alt: string;
-  etiket: string;
+  /** Durum etiketi; yalnızca bir şey söylüyorsa. Listenin kendisi "Adaylarınız" olduğu için "Aday" tekrarlanmaz. */
+  etiket: string | null;
   /** Bağlantı rengi: karşılıklı ilgi ve ilgi anları. */
   baglanti: boolean;
   /** Adayın olduğu ihtiyacın aday sayfası. */
@@ -92,7 +93,7 @@ export function adaySatirlari(oneriler: KurumOnerisi[]): AdaySatiri[] {
     anahtar: oneri.eslesme_id,
     ad: oneri.aday_adi,
     alt: oneri.rol_alani ?? "Firma",
-    etiket: firmaDurumEtiketi(oneri.durum),
+    etiket: oneri.durum === "onerildi" ? null : firmaDurumEtiketi(oneri.durum),
     baglanti:
       oneri.durum === "kabul_edildi" || oneri.durum === "genc_ilgilendi",
     hedef: `/kurum/oneriler?ihtiyac=${oneri.ihtiyac_karti_id}`,
