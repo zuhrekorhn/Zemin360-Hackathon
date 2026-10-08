@@ -108,7 +108,7 @@ function ErisimDagilimi({ veri }: { veri: GozlemYaniti }) {
       {veri.erisim.length === 0 ? (
         <BosDurum metin="Bu dönemde okunan kanıt linki yok." />
       ) : (
-        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
+        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
           {veri.erisim.map((p) => {
             const digerleri = Object.entries(p.erisimler).filter(
               ([erisim, sayi]) => erisim !== "acik" && sayi > 0,
@@ -158,7 +158,7 @@ function Servisler({ veri }: { veri: GozlemYaniti }) {
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-sm font-medium text-ana">Servis durumu</h3>
-      <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
+      <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
         {veri.servisler.map((s) => {
           const ozet = servisOzeti(s);
           return (

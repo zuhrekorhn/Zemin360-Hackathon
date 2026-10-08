@@ -2,15 +2,16 @@
  * Genç, kurum ve GİRVAK panellerinin ortak parçaları
  * (docs/kimlik-ve-dongu.md § 7).
  *
- * Görsel dil (docs/design-language.md): panel bir "belge"; bölümler hairline
- * çizgiyle ayrılır, aynı yuvarlak kart kalıbı her yere basılmaz. Boş bölüm
- * bir eyleme davet olarak yazılır — çıkmaz sokak yok.
+ * Görsel dil (docs/design-language.md): bölümler başlıkla ayrılır, içerik
+ * `KUTU` yüzeylerinde durur. Boş bölüm bir eyleme davet olarak yazılır, çıkmaz sokak yok.
  */
 
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
 import type { Iletisim } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import {
   epostaTaslagi,
   taslakYonu,
@@ -21,18 +22,24 @@ export function PanelBolumu({
   id,
   baslik,
   aciklama,
+  kutu = false,
   children,
 }: {
   id?: string;
   baslik: string;
   aciklama?: string;
+  /** Bölümün tamamı bir `KUTU` içinde (iş birliği planı gibi tek parça içerik). */
+  kutu?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <section
       id={id}
       aria-labelledby={id ? `${id}-baslik` : undefined}
-      className="flex scroll-mt-20 flex-col gap-4 border-t border-kenar pt-8"
+      className={cn(
+        "flex scroll-mt-24 flex-col gap-4",
+        kutu && cn(KUTU, "px-6 py-6"),
+      )}
     >
       <div className="flex flex-col gap-1">
         <h2
