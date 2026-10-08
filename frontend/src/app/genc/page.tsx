@@ -1,5 +1,6 @@
 "use client";
 
+import { ListeIskeleti } from "@/components/ui/iskelet";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -50,6 +51,7 @@ import {
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { adGosterimi } from "@/lib/ad";
 import { useOturum } from "@/lib/oturum";
+import { useSekmeBasligi } from "@/lib/sekme-basligi";
 import { cn } from "@/lib/utils";
 
 /**
@@ -76,6 +78,7 @@ type CalismaEksikleri = { id: string; baslik: string; eksikler: Eksik[] };
 
 function GencPaneliIcerigi() {
   const hesap = useGirisliHesap();
+  useSekmeBasligi("Fırsatlar");
   const { tazele } = useOturum();
   const router = useRouter();
 
@@ -325,9 +328,7 @@ function GencPaneliIcerigi() {
                 aciklama="Kartına ve çalışma tercihlerine uyan firma ihtiyaçları."
               />
               {firsatlar === null ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  Yükleniyor…
-                </p>
+                <ListeIskeleti />
               ) : firsatlar.length === 0 ? (
                 <div
                   className={cn(

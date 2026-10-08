@@ -1,5 +1,6 @@
 "use client";
 
+import { useSekmeBasligi } from "@/lib/sekme-basligi";
 import { Plus } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -74,6 +75,7 @@ function KartIcerigi() {
   const parametreler = useParams<{ id: string }>();
   const kartId = parametreler.id;
   const hesap = useGirisliHesap();
+  useSekmeBasligi("Kartım");
   const sahibi = hesap.rol === "genc";
 
   const [kart, setKart] = useState<YetenekKartiYaniti | null>(null);

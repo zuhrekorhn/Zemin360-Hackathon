@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Sayfa kabuğu — uygulamadaki her iç sayfanın düzeni tek yerde
  * (docs/design-language.md § Sayfa düzeni).
@@ -16,7 +18,9 @@
 import type { ReactNode } from "react";
 
 import { HataKutusu } from "@/components/sohbet";
+import { SayfaIskeleti } from "@/components/ui/iskelet";
 import type { Hata } from "@/lib/hata";
+import { useSekmeBasligi } from "@/lib/sekme-basligi";
 import { cn } from "@/lib/utils";
 
 export type Genislik = "genis" | "icerik" | "form" | "dar";
@@ -75,6 +79,8 @@ export function SayfaBasligi({
   eylem?: ReactNode;
   children?: ReactNode;
 }) {
+  // Sekme başlığı sayfa başlığıyla aynı (yalnızca düz metin başlıklarda).
+  useSekmeBasligi(typeof baslik === "string" ? baslik : null);
   return (
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div className="flex min-w-0 flex-1 basis-80 flex-col gap-2">
@@ -111,9 +117,7 @@ export function SayfaDurumu({
       {hata ? (
         <HataKutusu hata={hata} tekrarDene={tekrarDene} />
       ) : (
-        <p className="text-sm text-muted-foreground" role="status">
-          Yükleniyor…
-        </p>
+        <SayfaIskeleti genis={genislik === "genis"} />
       )}
     </Sayfa>
   );

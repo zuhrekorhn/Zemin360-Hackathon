@@ -3,10 +3,15 @@
 import { X } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 
+/** Panelin içinde Tab ile gezilebilen öğeler. */
+const ODAKLANABILIR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 /**
  * Sağdan açılan panel: bir öğenin bütün işlerini sayfadan ayırmadan tek yerde
  * toplar (kart sayfasında "Güçlendir", "Kartı düzenle"). Arka plan karartılır;
- * Escape ve dışarı tıklama kapatır, açıkken sayfa kaymaz, odak panele gider.
+ * Escape ve dışarı tıklama kapatır, açıkken sayfa kaymaz, odak panele gider
+ * ve panelin dışına çıkmaz (Tab içeride döner).
  * Mobilde tam genişlik.
  */
 export function YanPanel({
@@ -43,7 +48,28 @@ export function YanPanel({
     document.body.style.overflow = "hidden";
     panel.current?.focus();
     function tus(olay: KeyboardEvent) {
-      if (olay.key === "Escape") kapat.current();
+      if (olay.key === "Escape") {
+        kapat.current();
+        return;
+      }
+      if (olay.key !== "Tab") return;
+      // Odak panelin içinde döner: Tab son öğeden ilkine, Shift+Tab tersine.
+      const ogeler =
+        panel.current?.querySelectorAll<HTMLElement>(ODAKLANABILIR);
+      if (!ogeler || ogeler.length === 0) {
+        olay.preventDefault();
+        return;
+      }
+      const ilk = ogeler[0];
+      const son = ogeler[ogeler.length - 1];
+      const aktif = document.activeElement;
+      if (olay.shiftKey && (aktif === ilk || aktif === panel.current)) {
+        olay.preventDefault();
+        son.focus();
+      } else if (!olay.shiftKey && aktif === son) {
+        olay.preventDefault();
+        ilk.focus();
+      }
     }
     document.addEventListener("keydown", tus);
     return () => {

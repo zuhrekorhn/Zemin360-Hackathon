@@ -1,5 +1,6 @@
 "use client";
 
+import { ListeIskeleti } from "@/components/ui/iskelet";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -40,6 +41,7 @@ import {
   kurumOzetCumlesi,
 } from "@/lib/kurum-paneli";
 import { useOturum } from "@/lib/oturum";
+import { useSekmeBasligi } from "@/lib/sekme-basligi";
 import { isbirligiSirasi } from "@/lib/takip";
 
 /**
@@ -63,6 +65,7 @@ export default function KurumPaneli() {
 
 function KurumPaneliIcerigi() {
   const hesap = useGirisliHesap();
+  useSekmeBasligi("Panelim");
   const { tazele } = useOturum();
   const [oneriler, setOneriler] = useState<KurumOnerisi[] | null>(null);
   const [isbirlikleri, setIsbirlikleri] = useState<IsbirligiOzeti[] | null>(
@@ -248,9 +251,7 @@ function KurumPaneliIcerigi() {
               sayi={isbirlikleri?.length}
             />
             {isbirlikleri === null ? (
-              <p className="text-sm text-muted-foreground" role="status">
-                Yükleniyor…
-              </p>
+              <ListeIskeleti satir={1} />
             ) : isbirlikleri.length === 0 ? (
               <BosDurum
                 metin="Henüz iş birliğiniz yok. Bir aday ilginizi kabul ettiğinde iş birliği burada açılır ve iletişim bilgileri görünür."

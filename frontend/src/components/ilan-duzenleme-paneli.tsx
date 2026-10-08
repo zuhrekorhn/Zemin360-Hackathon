@@ -1,5 +1,6 @@
 "use client";
 
+import { ListeIskeleti } from "@/components/ui/iskelet";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -112,9 +113,7 @@ export function IlanDuzenlemePaneli({
 
       {!kart ? (
         hata ? null : (
-          <p className="text-sm text-muted-foreground" role="status">
-            Yükleniyor…
-          </p>
+          <ListeIskeleti satir={3} />
         )
       ) : kaydedildi ? (
         <section className="flex flex-col gap-3">

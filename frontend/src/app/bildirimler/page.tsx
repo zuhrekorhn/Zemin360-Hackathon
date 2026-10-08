@@ -1,5 +1,6 @@
 "use client";
 
+import { ListeIskeleti } from "@/components/ui/iskelet";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -130,9 +131,7 @@ function BildirimListesi() {
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
       {liste === null ? (
-        <p className="text-sm text-muted-foreground" role="status">
-          Yükleniyor…
-        </p>
+        <ListeIskeleti />
       ) : liste.length === 0 ? (
         <BosDurum metin={BOS_METINLERI[hesap.rol] ?? BOS_METINLERI.girvak} />
       ) : (

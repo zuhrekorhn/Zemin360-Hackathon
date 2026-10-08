@@ -1,5 +1,6 @@
 "use client";
 
+import { ListeIskeleti } from "@/components/ui/iskelet";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -94,9 +95,7 @@ export function GozlemPaneli() {
           <DegerlendirmeOzeti veri={veri} />
         </>
       ) : hata ? null : (
-        <p className="text-sm text-muted-foreground" role="status">
-          Yükleniyor…
-        </p>
+        <ListeIskeleti satir={3} />
       )}
     </PanelBolumu>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { ListeIskeleti } from "@/components/ui/iskelet";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
@@ -60,9 +61,7 @@ function IsbirlikleriListesi() {
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
       {liste === null ? (
-        <p className="text-sm text-muted-foreground" role="status">
-          Yükleniyor…
-        </p>
+        <ListeIskeleti />
       ) : liste.length === 0 ? (
         <BosDurum
           metin={hitapla(

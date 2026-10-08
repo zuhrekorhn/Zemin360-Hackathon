@@ -1,5 +1,6 @@
 "use client";
 
+import { ListeIskeleti } from "@/components/ui/iskelet";
 import { useEffect, useRef, useState } from "react";
 
 import { CalismaTercihleriAlanlari } from "@/components/genc-profil-alanlari";
@@ -133,9 +134,7 @@ export function CalismaTercihleri() {
 
       {!profil ? (
         hata ? null : (
-          <p className="text-sm text-muted-foreground" role="status">
-            Yükleniyor…
-          </p>
+          <ListeIskeleti satir={1} />
         )
       ) : duzenleniyor ? (
         <form className="flex flex-col gap-4" onSubmit={kaydet}>

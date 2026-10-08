@@ -1,5 +1,6 @@
 "use client";
 
+import { ListeIskeleti } from "@/components/ui/iskelet";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -108,11 +109,7 @@ function GirvakSayfasi() {
 
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
-      {sayilar === null && !hata ? (
-        <p className="text-sm text-muted-foreground" role="status">
-          Yükleniyor…
-        </p>
-      ) : null}
+      {sayilar === null && !hata ? <ListeIskeleti satir={3} /> : null}
 
       {sayilar ? (
         <PanelBolumu
