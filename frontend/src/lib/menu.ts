@@ -8,6 +8,23 @@ import { kartYolu, panelYolu } from "@/lib/yonlendirme";
 
 export type MenuBaglantisi = { yol: string; etiket: string };
 
+/**
+ * Adresin hangi menü bağlantısına ait olduğu: en uzun eşleşen yol kazanır, yani
+ * her zaman en çok biri etkindir. `/kurum/kart` hem "Panelim" (`/kurum`) hem
+ * "Firma kartı"nın altında kalır; ikisi birden etkin görünmesin.
+ */
+export function etkinBaglanti(
+  pathname: string,
+  baglantilar: MenuBaglantisi[],
+): string | null {
+  const eslesenler = baglantilar.filter(
+    (b) => pathname === b.yol || pathname.startsWith(`${b.yol}/`),
+  );
+  if (eslesenler.length === 0) return null;
+  return eslesenler.reduce((en, b) => (b.yol.length > en.yol.length ? b : en))
+    .yol;
+}
+
 export function menuBaglantilari(
   hesap: Pick<MeYaniti, "rol" | "yetenek_karti">,
 ): { baglantilar: MenuBaglantisi[]; ayar: MenuBaglantisi | null } {

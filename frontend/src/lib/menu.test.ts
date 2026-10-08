@@ -1,9 +1,27 @@
 import { describe, expect, it } from "vitest";
 
-import { menuBaglantilari } from "@/lib/menu";
+import { etkinBaglanti, menuBaglantilari } from "@/lib/menu";
 
 const etiketler = (hesap: Parameters<typeof menuBaglantilari>[0]) =>
   menuBaglantilari(hesap).baglantilar.map((b) => `${b.etiket} ${b.yol}`);
+
+describe("etkinBaglanti", () => {
+  const { baglantilar } = menuBaglantilari({
+    rol: "kurum",
+    yetenek_karti: null,
+  });
+
+  it("iç içe yollarda yalnızca en özgül bağlantı etkin", () => {
+    expect(etkinBaglanti("/kurum/kart", baglantilar)).toBe("/kurum/kart");
+    expect(etkinBaglanti("/kurum", baglantilar)).toBe("/kurum");
+  });
+
+  it("alt sayfalar üst bağlantıda kalır; menüde olmayan yol hiçbirinde", () => {
+    expect(etkinBaglanti("/kurum/oneriler", baglantilar)).toBe("/kurum");
+    expect(etkinBaglanti("/tanimlama", baglantilar)).toBe("/tanimlama");
+    expect(etkinBaglanti("/bildirimler", baglantilar)).toBeNull();
+  });
+});
 
 describe("menuBaglantilari", () => {
   it("genç: Fırsatlar, Kartım, İş birliklerim; ayar Hesabım", () => {

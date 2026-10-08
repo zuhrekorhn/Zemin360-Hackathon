@@ -26,7 +26,11 @@ import { basHarfler } from "@/components/kart-yan-sutunu";
 import { MENU_ODAK, MenuKabugu } from "@/components/menu-kabugu";
 import { adGosterimi } from "@/lib/ad";
 import type { MeYaniti } from "@/lib/api";
-import { menuBaglantilari, type MenuBaglantisi } from "@/lib/menu";
+import {
+  etkinBaglanti,
+  menuBaglantilari,
+  type MenuBaglantisi,
+} from "@/lib/menu";
 import { cn } from "@/lib/utils";
 import { useOturum } from "@/lib/oturum";
 
@@ -207,9 +211,11 @@ export function UstMenu() {
     router.push("/");
   };
 
+  const etkin = etkinBaglanti(pathname, baglantilar);
+
   const baglantiListesi = (mobil: boolean, kapat?: () => void) =>
     baglantilar.map((baglanti) => {
-      const aktif = aktifMi(baglanti.yol);
+      const aktif = baglanti.yol === etkin;
       return (
         <Link
           key={baglanti.yol}
