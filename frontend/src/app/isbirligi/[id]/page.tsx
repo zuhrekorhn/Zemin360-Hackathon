@@ -6,12 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
-import {
-  DurumEtiketi,
-  IletisimSatiri,
-  PanelBolumu,
-  tarihYaz,
-} from "@/components/panel";
+import { IsbirligiKenari } from "@/components/isbirligi-kenari";
+import { DurumEtiketi, PanelBolumu, tarihYaz } from "@/components/panel";
 import { OnayAlani } from "@/components/onay-alani";
 import { FormAlani, HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
@@ -48,7 +44,7 @@ import { panelYolu } from "@/lib/yonlendirme";
  * İş birliği sayfası, Takip Ajanı (docs/takip.md § 8). Kullanıcıya
  * "ajan" denmez; hitap bakan hesaba göre (rehber § 3).
  *
- * İki tarafa aynı sayfa. Üç hâl:
+ * İki tarafa aynı sayfa; solda bağlam (`IsbirligiKenari`), sağda iş. Üç hâl:
  *   plan_bekliyor — ajanın önerdiği plan düzenlenir, iki taraf onaylar;
  *   aktif         — adımlar iki taraflı işaretlenir, gecikme görünür;
  *   tamamlandi    — son adımla kendiliğinden; gencin kartında tamamlanan iş birliği.
@@ -62,7 +58,7 @@ const PLAN_BEKLEME_EN_COK = 8;
 
 export default function IsbirligiSayfasi() {
   return (
-    <GirisKapisi>
+    <GirisKapisi genislik="genis">
       <IsbirligiIcerigi />
     </GirisKapisi>
   );
@@ -127,7 +123,9 @@ function IsbirligiIcerigi() {
   }
 
   if (!detay) {
-    return <SayfaDurumu hata={hata} tekrarDene={() => void oku()} />;
+    return (
+      <SayfaDurumu genislik="genis" hata={hata} tekrarDene={() => void oku()} />
+    );
   }
 
   const taraf: Taraf | null =
@@ -136,99 +134,84 @@ function IsbirligiIcerigi() {
     taraf === "genc" ? "kurum" : taraf === "kurum" ? "genc" : null;
 
   return (
-    <Sayfa>
-      <SayfaBasligi
-        baslik={`${detay.kurum_adi} · ${detay.aday_adi}`}
-        etiket={
-          <DurumEtiketi
-            metin={ISBIRLIGI_DURUM_ETIKETLERI[detay.durum] ?? detay.durum}
-            baglanti={detay.durum === "tamamlandi"}
-          />
-        }
-        aciklama={
-          <>
-            {detay.rol_alani ?? "İş birliği ortağı"} ·{" "}
-            {tarihYaz(detay.baslangic_tarihi)} tarihinde başladı
-          </>
-        }
-      >
-        <p className="border-l-2 border-kenar pl-3 text-sm text-pretty">
-          {detay.problem_tanimi}
-          {detay.basari_kriteri ? (
-            <span className="mt-1 block text-muted-foreground">
-              Başarı ölçütü: {detay.basari_kriteri}
-            </span>
-          ) : null}
-        </p>
-        {detay.iletisim && karsiTaraf ? (
-          <IletisimSatiri
-            iletisim={detay.iletisim}
-            karsiTaraf={karsiTaraf}
-            taslak={{
-              adayTuru: detay.aday_turu,
-              // Aday tarafı yazıyorsa gönderen aday, alıcı ilanı açan firma.
-              gonderenAdi: taraf === "genc" ? detay.aday_adi : detay.kurum_adi,
-              aliciAdi: taraf === "genc" ? detay.kurum_adi : detay.aday_adi,
-              problem: detay.problem_tanimi,
-              basariKriteri: detay.basari_kriteri,
-              calisma: detay.calisma_basligi,
-            }}
-          />
-        ) : null}
-      </SayfaBasligi>
-
-      {detay.durum === "tamamlandi" ? (
-        <TamamlandiBandi detay={detay} taraf={taraf} hitap={hitap} />
-      ) : null}
-      {detay.durum === "sonlandi" ? <SonlandiBandi hitap={hitap} /> : null}
-
-      {detay.durum_ozeti ? (
-        <section className="flex flex-col gap-1 rounded-xl border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)] px-4 py-3">
-          <span className="text-xs text-muted-foreground">
-            Durum özeti · {tarihYaz(detay.ozet_tarihi, true)}
-          </span>
-          <p className="text-sm text-pretty">{detay.durum_ozeti}</p>
-        </section>
-      ) : null}
-
-      {hata ? <HataKutusu hata={hata} /> : null}
-
-      {detay.durum === "plan_bekliyor" ? (
-        <PlanTaslagi
+    <Sayfa genislik="genis">
+      <div className="grid items-start gap-8 lg:grid-cols-[19rem_minmax(0,1fr)]">
+        <IsbirligiKenari
           detay={detay}
           taraf={taraf}
-          hitap={hitap}
-          bekleniyor={bekleniyor}
-          planBekleniyor={planBekleniyor && beklemeSayisi < PLAN_BEKLEME_EN_COK}
-          yap={yap}
-        />
-      ) : (
-        <ZamanCizelgesi
-          detay={detay}
-          taraf={taraf}
-          hitap={hitap}
-          bekleniyor={bekleniyor}
-          yap={yap}
-        />
-      )}
-
-      {taraf && (detay.durum === "plan_bekliyor" || detay.durum === "aktif") ? (
-        <SureciSonlandir detay={detay} bekleniyor={bekleniyor} yap={yap} />
-      ) : null}
-
-      {/* Menüde "İş birliklerim" var; burada yalnızca listeye sakin bir dönüş. */}
-      <footer className="mt-auto border-t border-kenar pt-6">
-        <Link
-          href={
+          karsiTaraf={karsiTaraf}
+          listeYolu={
             hesap.rol === "girvak" ? panelYolu(hesap.rol) : "/isbirliklerim"
           }
-          className="text-sm text-baglanti underline underline-offset-4"
-        >
-          {hesap.rol === "girvak"
-            ? "Panele dön"
-            : hitapla(hitap, "Bütün iş birliklerin", "Bütün iş birlikleriniz")}
-        </Link>
-      </footer>
+          listeEtiketi={
+            hesap.rol === "girvak"
+              ? "Panele dön"
+              : hitapla(hitap, "Bütün iş birliklerin", "Bütün iş birlikleriniz")
+          }
+        />
+
+        <div className="order-1 flex min-w-0 flex-col gap-6 lg:order-2">
+          <SayfaBasligi
+            baslik={`${detay.kurum_adi} · ${detay.aday_adi}`}
+            etiket={
+              <DurumEtiketi
+                metin={ISBIRLIGI_DURUM_ETIKETLERI[detay.durum] ?? detay.durum}
+                baglanti={detay.durum === "tamamlandi"}
+              />
+            }
+            aciklama={
+              <>
+                {detay.rol_alani ?? "İş birliği ortağı"} ·{" "}
+                {tarihYaz(detay.baslangic_tarihi)} tarihinde başladı
+              </>
+            }
+          />
+
+          {detay.durum === "tamamlandi" ? (
+            <TamamlandiBandi detay={detay} taraf={taraf} hitap={hitap} />
+          ) : null}
+          {detay.durum === "sonlandi" ? <SonlandiBandi hitap={hitap} /> : null}
+
+          {detay.durum_ozeti ? (
+            <section className="flex flex-col gap-1 rounded-xl border border-kenar bg-card px-6 py-4 shadow-[0_1px_2px_rgb(22_33_27/0.05)]">
+              <span className="text-xs text-muted-foreground">
+                Durum özeti · {tarihYaz(detay.ozet_tarihi, true)}
+              </span>
+              <p className="text-sm leading-relaxed text-pretty">
+                {detay.durum_ozeti}
+              </p>
+            </section>
+          ) : null}
+
+          {hata ? <HataKutusu hata={hata} /> : null}
+
+          {detay.durum === "plan_bekliyor" ? (
+            <PlanTaslagi
+              detay={detay}
+              taraf={taraf}
+              hitap={hitap}
+              bekleniyor={bekleniyor}
+              planBekleniyor={
+                planBekleniyor && beklemeSayisi < PLAN_BEKLEME_EN_COK
+              }
+              yap={yap}
+            />
+          ) : (
+            <ZamanCizelgesi
+              detay={detay}
+              taraf={taraf}
+              hitap={hitap}
+              bekleniyor={bekleniyor}
+              yap={yap}
+            />
+          )}
+
+          {taraf &&
+          (detay.durum === "plan_bekliyor" || detay.durum === "aktif") ? (
+            <SureciSonlandir detay={detay} bekleniyor={bekleniyor} yap={yap} />
+          ) : null}
+        </div>
+      </div>
     </Sayfa>
   );
 }
@@ -247,7 +230,7 @@ function TamamlandiBandi({
   hitap: Hitap;
 }) {
   return (
-    <section className="flex flex-col gap-2 rounded-xl border border-baglanti bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)] px-4 py-4">
+    <section className="flex flex-col gap-2 rounded-xl border border-baglanti bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)] px-6 py-5">
       <p className="font-heading text-lg font-semibold text-ana">
         İş birliği tamamlandı
       </p>
@@ -283,7 +266,7 @@ function TamamlandiBandi({
 
 function SonlandiBandi({ hitap }: { hitap: Hitap }) {
   return (
-    <section className="flex flex-col gap-1 rounded-xl border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)] px-4 py-4">
+    <section className="flex flex-col gap-1 rounded-xl border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)] px-6 py-5">
       <p className="font-heading text-lg font-semibold text-ana">
         Bu süreç sonlandı
       </p>
@@ -421,6 +404,7 @@ function PlanTaslagi({
 
   return (
     <PanelBolumu
+      kutu
       id="plan"
       baslik={detay.surec_adi ?? "Plan"}
       aciklama="Adımlar bu tür iş birliklerinde izlenen yoldan gelir ve bu ihtiyaca göre uyarlanır; her adımda bir hazırlık önerisi var. İki taraf düzenleyip onaylar; onaylanan plan değiştirilemez."
@@ -711,6 +695,7 @@ function ZamanCizelgesi({
 
   return (
     <PanelBolumu
+      kutu
       id="cizelge"
       baslik={detay.surec_adi ?? "Zaman çizelgesi"}
       aciklama={`${tamamlanan}/${toplam} adım tamamlandı${
