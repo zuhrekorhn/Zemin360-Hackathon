@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUp } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { hitapla } from "@/lib/hitap";
@@ -32,12 +33,20 @@ export function Sohbet({
   /** Sohbet kutusunun altına yapışan yazma alanı. */
   altKisim?: React.ReactNode;
 }) {
+  const kutu = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = kutu.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [mesajlar, bekleniyor]);
+
   return (
     <div className="flex flex-col overflow-hidden rounded-[1.75rem] border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)]">
+      {/* Mesajlar kendi içinde kayar, yazma alanı hep görünür; yeni mesajda en alta inilir. */}
       <section
+        ref={kutu}
         aria-label="Sohbet"
         aria-live="polite"
-        className="flex min-h-72 flex-col gap-4 bg-muted/50 px-4 py-5 sm:px-6"
+        className="flex h-[min(62vh,640px)] min-h-72 flex-col gap-4 overflow-y-auto overscroll-contain bg-muted/50 px-4 py-5 sm:px-6"
       >
         {mesajlar.map((mesaj, sira) =>
           mesaj.kim === "ajan" ? (
@@ -175,7 +184,8 @@ export function CevapAlani({
           rows={2}
           disabled={bekleniyor}
           placeholder={hitapla(hitap, "Yazmaya başla…", "Yazmaya başlayın…")}
-          className="max-h-48 min-h-12 flex-1 resize-none bg-transparent px-2 py-1.5 text-[15px] outline-none disabled:opacity-60"
+          // Yazdıkça büyür (field-sizing), 12rem'den sonra kendi içinde kayar.
+          className="field-sizing-content max-h-48 min-h-12 flex-1 resize-none overflow-y-auto bg-transparent px-2 py-1.5 text-[15px] leading-relaxed outline-none disabled:opacity-60"
         />
         <Button
           type="submit"

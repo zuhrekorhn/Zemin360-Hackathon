@@ -3,12 +3,7 @@
  * Saf fonksiyonlar; testleri kanit.test.ts'de.
  */
 
-import type {
-  GuvenSkoru,
-  KanitParcasi,
-  SomutCiktiTaslagi,
-  SomutCiktiYaniti,
-} from "@/lib/api";
+import type { GuvenSkoru, KanitParcasi } from "@/lib/api";
 
 /** Şeması olmayan linke https:// ekler (genç linki çoğu zaman şemasız yazıyor). */
 export function kanitAdresi(url: string): string {
@@ -39,20 +34,6 @@ export function degerlendirildiMi(
     skor.sonuc_olculebilirligi,
     skor.rol_netligi,
   ].some((deger) => deger !== null);
-}
-
-/** Kayıtlı çalışmayı taslak önizlemesinin biçimine çevirir (önizleme tek link gösterir). */
-export function kayitliCiktiTaslagi(
-  cikti: SomutCiktiYaniti,
-): SomutCiktiTaslagi {
-  return {
-    baslik: cikti.baslik,
-    aciklama: cikti.aciklama,
-    kanit_linki: kanitLinkleri(cikti.kanitlar)[0]?.url ?? null,
-    is_turu: cikti.is_turu ?? null,
-    olculebilir_sonuc: cikti.olculebilir_sonuc ?? null,
-    kendi_rolu: cikti.kendi_rolu ?? null,
-  };
 }
 
 /** Yüklenen dosya ve görsel parçaları (eklenme sırasıyla). */

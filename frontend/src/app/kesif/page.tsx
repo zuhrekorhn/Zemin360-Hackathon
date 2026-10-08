@@ -66,10 +66,6 @@ function KesifSohbeti() {
   const sohbetAsamasi =
     sohbet.asama === "sohbet" || sohbet.asama === "baslatiliyor";
 
-  useEffect(() => {
-    sonMesaj.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [sohbet.mesajlar, sohbet.bekleniyor]);
-
   function gonder() {
     if (!girdi.trim() || sohbet.bekleniyor) return;
     sohbet.gonder(girdi);
@@ -138,28 +134,36 @@ function KesifSohbeti() {
     );
   }
 
+  if (sohbet.asama === "kaydedildi" && sohbet.kart) {
+    return (
+      <Sayfa genislik="genis">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+          <h1 className="sr-only">Kartın kaydedildi</h1>
+          <KayitliKart kart={sohbet.kart} onGuncelle={sohbet.setKart} />
+        </div>
+      </Sayfa>
+    );
+  }
+
+  // Taslak: sohbetten çıkan kartı gözden geçirip onaylama.
   return (
     <Sayfa genislik="genis">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-        {baslik}
-        {sohbet.hata ? (
-          <HataKutusu hata={sohbet.hata} tekrarDene={sohbet.tekrarDene} />
-        ) : null}
-
-        {sohbet.asama === "taslak" && sohbet.taslak ? (
-          <TaslakBolumu
-            taslak={sohbet.taslak}
-            bekleniyor={sohbet.bekleniyor}
-            onOnayla={(profil, duzeltilmisTaslak) =>
-              void sohbet.onayla(profil, duzeltilmisTaslak)
-            }
-          />
-        ) : null}
-
-        {sohbet.asama === "kaydedildi" && sohbet.kart ? (
-          <KayitliKart kart={sohbet.kart} onGuncelle={sohbet.setKart} />
-        ) : null}
-      </div>
+      <SayfaBasligi
+        baslik="Kartını gözden geçir"
+        aciklama="Sohbetten çıkan kart bu. Yanlış anlaşılan bir şey varsa düzelt; doğruysa onayla. Kartın sen onaylamadan kaydedilmez."
+      />
+      {sohbet.hata ? (
+        <HataKutusu hata={sohbet.hata} tekrarDene={sohbet.tekrarDene} />
+      ) : null}
+      {sohbet.taslak ? (
+        <TaslakBolumu
+          taslak={sohbet.taslak}
+          bekleniyor={sohbet.bekleniyor}
+          onOnayla={(profil, duzeltilmisTaslak) =>
+            void sohbet.onayla(profil, duzeltilmisTaslak)
+          }
+        />
+      ) : null}
     </Sayfa>
   );
 }

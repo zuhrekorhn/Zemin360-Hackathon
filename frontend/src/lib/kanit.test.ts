@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { GuvenSkoru, KanitParcasi, SomutCiktiYaniti } from "@/lib/api";
+import type { GuvenSkoru, KanitParcasi } from "@/lib/api";
 
 import {
   degerlendirildiMi,
@@ -9,7 +9,6 @@ import {
   girvakIncelemesiMetni,
   kanitAdresi,
   kanitLinkleri,
-  kayitliCiktiTaslagi,
   okunamayanSecenekleri,
 } from "./kanit";
 
@@ -50,25 +49,6 @@ describe("degerlendirildiMi", () => {
   it("kanıt, sonuç ya da rolden biri doluysa evet (0 da bir sonuçtur)", () => {
     expect(degerlendirildiMi(skor({ kanit_orijinalligi: 0 }))).toBe(true);
     expect(degerlendirildiMi(skor({ rol_netligi: 2 }))).toBe(true);
-  });
-});
-
-describe("kayitliCiktiTaslagi", () => {
-  it("önizlemede ilk link gösterilir", () => {
-    const cikti: SomutCiktiYaniti = {
-      id: "c",
-      baslik: "Kütüphane",
-      aciklama: null,
-      kanitlar: [
-        { id: "1", tur: "link", url: "ilk.org" },
-        { id: "2", tur: "link", url: "ikinci.org" },
-      ],
-      guven_skoru: null,
-    };
-    expect(kayitliCiktiTaslagi(cikti).kanit_linki).toBe("ilk.org");
-    expect(
-      kayitliCiktiTaslagi({ ...cikti, kanitlar: [] }).kanit_linki,
-    ).toBeNull();
   });
 });
 
