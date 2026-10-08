@@ -83,7 +83,9 @@ export function GozlemPaneli() {
         ))}
       </div>
 
-      {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku(gun)} /> : null}
+      {hata ? (
+        <HataKutusu hata={hata} tekrarDene={() => void oku(gun)} />
+      ) : null}
 
       {veri ? (
         <>
@@ -103,13 +105,11 @@ export function GozlemPaneli() {
 function ErisimDagilimi({ veri }: { veri: GozlemYaniti }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-medium text-ana">
-        Platform bazında erişim
-      </h3>
+      <h3 className="text-sm font-medium text-ana">Platform bazında erişim</h3>
       {veri.erisim.length === 0 ? (
         <BosDurum metin="Bu dönemde okunan kanıt linki yok." />
       ) : (
-        <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
+        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
           {veri.erisim.map((p) => {
             const digerleri = Object.entries(p.erisimler).filter(
               ([erisim, sayi]) => erisim !== "acik" && sayi > 0,
@@ -140,7 +140,9 @@ function ErisimDagilimi({ veri }: { veri: GozlemYaniti }) {
                 {digerleri.length > 0 ? (
                   <span className="text-xs text-pretty text-muted-foreground">
                     {digerleri
-                      .map(([erisim, sayi]) => `${erisimEtiketi(erisim)}: ${sayi}`)
+                      .map(
+                        ([erisim, sayi]) => `${erisimEtiketi(erisim)}: ${sayi}`,
+                      )
                       .join(" · ")}
                   </span>
                 ) : null}
@@ -157,7 +159,7 @@ function Servisler({ veri }: { veri: GozlemYaniti }) {
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-sm font-medium text-ana">Servis durumu</h3>
-      <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
+      <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
         {veri.servisler.map((s) => {
           const ozet = servisOzeti(s);
           return (

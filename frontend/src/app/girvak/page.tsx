@@ -160,7 +160,7 @@ function GirvakSayfasi() {
         {pasifler === null ? null : pasifler.length === 0 ? (
           <BosDurum metin="Şu an hareketsizlik süresini aşmış bir bağlantı yok." />
         ) : (
-          <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
+          <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
             {pasifler.map((pasif) => (
               <PasifSatiri
                 key={`${pasif.eslesme_id}-${pasif.tur}-${pasif.adim ?? ""}`}
@@ -175,7 +175,7 @@ function GirvakSayfasi() {
         {olaylar === null ? null : olaylar.length === 0 ? (
           <BosDurum metin="Henüz hatırlatma gönderilmedi. Tarama çalıştığında burada görünür." />
         ) : (
-          <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
+          <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
             {olaylar.map((olay) => (
               <li key={olay.id} className="flex flex-col gap-1 px-4 py-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -398,7 +398,7 @@ function SayiIzgarasi({
   ogeler: { etiket: string; sayi: number }[];
 }) {
   return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-kenar bg-kenar sm:grid-cols-3">
+    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-kenar bg-kenar sm:grid-cols-3">
       {ogeler.map((oge) => (
         <div key={oge.etiket} className="flex flex-col gap-1 bg-card px-4 py-3">
           <dt className="text-xs text-muted-foreground">{oge.etiket}</dt>

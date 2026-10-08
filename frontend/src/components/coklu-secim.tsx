@@ -42,8 +42,8 @@ export function CokluSecim({
               key={secenek.deger}
               className={
                 isaretli
-                  ? "flex cursor-pointer items-center gap-2 rounded-sm border border-baglanti bg-muted px-3 py-2 text-sm"
-                  : "flex cursor-pointer items-center gap-2 rounded-sm border border-kenar bg-card px-3 py-2 text-sm"
+                  ? "flex cursor-pointer items-center gap-2 rounded-lg border border-baglanti bg-muted px-3 py-2 text-sm"
+                  : "flex cursor-pointer items-center gap-2 rounded-lg border border-kenar bg-card px-3 py-2 text-sm"
               }
             >
               <input

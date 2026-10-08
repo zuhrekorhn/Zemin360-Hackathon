@@ -74,7 +74,7 @@ export function IncelemeKuyrugu() {
       {isaretler === null ? null : isaretler.length === 0 ? (
         <BosDurum metin="İncelenecek bir şey yok." />
       ) : (
-        <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
+        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
           {isaretler.map((isaret) => {
             const etiketler = kararEtiketleri(isaret.tur);
             const notAlani = `inceleme-notu-${isaret.id}`;

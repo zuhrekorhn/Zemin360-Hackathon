@@ -71,7 +71,7 @@ export function FirmaOnaylari() {
       {firmalar === null ? null : firmalar.length === 0 ? (
         <BosDurum metin="Onay bekleyen firma yok." />
       ) : (
-        <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
+        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar">
           {firmalar.map((firma) => {
             const ipucu = ipucuMetni(firma.ipucu, firma.eposta_alan_adi);
             const tur = FIRMA_TURLERI.find((t) => t.deger === firma.tur);

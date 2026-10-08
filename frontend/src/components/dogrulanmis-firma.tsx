@@ -7,7 +7,7 @@ import { DOGRULANMIS_FIRMA } from "@/lib/firma-dogrulama";
 export function DogrulanmisFirma({ dogrulandi }: { dogrulandi: boolean }) {
   if (!dogrulandi) return null;
   return (
-    <span className="rounded-sm border border-baglanti px-2 py-0.5 text-xs text-baglanti">
+    <span className="rounded-full bg-baglanti/10 px-2.5 py-0.5 text-xs font-medium text-baglanti">
       {DOGRULANMIS_FIRMA}
     </span>
   );

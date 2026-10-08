@@ -183,7 +183,7 @@ function IsbirligiIcerigi() {
       {detay.durum === "sonlandi" ? <SonlandiBandi hitap={hitap} /> : null}
 
       {detay.durum_ozeti ? (
-        <section className="flex flex-col gap-1 rounded-sm border border-kenar bg-card px-4 py-3">
+        <section className="flex flex-col gap-1 rounded-xl border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)] px-4 py-3">
           <span className="text-xs text-muted-foreground">
             Durum özeti · {tarihYaz(detay.ozet_tarihi, true)}
           </span>
@@ -247,7 +247,7 @@ function TamamlandiBandi({
   hitap: Hitap;
 }) {
   return (
-    <section className="flex flex-col gap-2 rounded-sm border border-baglanti bg-card px-4 py-4">
+    <section className="flex flex-col gap-2 rounded-xl border border-baglanti bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)] px-4 py-4">
       <p className="font-heading text-lg font-semibold text-ana">
         İş birliği tamamlandı
       </p>
@@ -283,7 +283,7 @@ function TamamlandiBandi({
 
 function SonlandiBandi({ hitap }: { hitap: Hitap }) {
   return (
-    <section className="flex flex-col gap-1 rounded-sm border border-kenar bg-card px-4 py-4">
+    <section className="flex flex-col gap-1 rounded-xl border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)] px-4 py-4">
       <p className="font-heading text-lg font-semibold text-ana">
         Bu süreç sonlandı
       </p>
@@ -327,7 +327,7 @@ function SureciSonlandir({
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-sm border border-kenar px-4 py-4">
+    <section className="flex flex-col gap-3 rounded-xl border border-kenar px-5 py-5">
       <FormAlani etiket="Neden" htmlFor="sonlanma-nedeni">
         <select
           id="sonlanma-nedeni"
@@ -428,7 +428,7 @@ function PlanTaslagi({
       <p className="text-sm text-pretty">{onay.metin}</p>
 
       {adimlar.length === 0 ? (
-        <div className="flex flex-col items-start gap-3 rounded-sm border border-dashed border-kenar px-5 py-4">
+        <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-kenar px-5 py-4">
           <p className="text-sm text-pretty text-muted-foreground">
             {planBekleniyor
               ? "Plan önerisi hazırlanıyor…"
@@ -601,7 +601,7 @@ function AdimEkle({
     );
   }
   return (
-    <div className="rounded-sm border border-dashed border-kenar px-4 py-3">
+    <div className="rounded-xl border border-dashed border-kenar px-4 py-3">
       <AdimFormu
         dugme="Adımı ekle"
         bekleniyor={bekleniyor}

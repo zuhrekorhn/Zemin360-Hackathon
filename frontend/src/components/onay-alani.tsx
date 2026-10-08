@@ -28,7 +28,7 @@ export function OnayAlani({
     <div
       role="alertdialog"
       aria-label={soru}
-      className="flex w-full flex-col gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm"
+      className="flex w-full flex-col gap-3 rounded-lg border border-kenar bg-muted px-4 py-3 text-sm"
     >
       <p className="text-pretty">{soru}</p>
       <div className="flex flex-wrap gap-2">

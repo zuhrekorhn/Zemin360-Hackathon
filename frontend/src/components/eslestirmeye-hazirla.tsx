@@ -36,7 +36,7 @@ export function EslestirmeyeHazirla({
   return (
     <div
       role="status"
-      className="flex flex-col gap-3 rounded-sm border border-kenar bg-muted px-4 py-3"
+      className="flex flex-col gap-3 rounded-xl bg-muted px-4 py-3"
     >
       <p className="text-sm text-pretty">
         Kart kaydedildi, ancak henüz eşleşmeye hazır değil; o an bağlantı

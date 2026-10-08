@@ -128,7 +128,7 @@ export function HataKutusu({
   return (
     <div
       role="status"
-      className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 rounded-xl border border-kenar bg-card px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
     >
       <p className="text-sm text-pretty">{hata.metin}</p>
       {tekrarDene ? (
