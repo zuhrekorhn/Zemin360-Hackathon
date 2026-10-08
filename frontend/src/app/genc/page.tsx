@@ -48,6 +48,7 @@ import {
   surecler,
 } from "@/lib/genc-paneli";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { adGosterimi } from "@/lib/ad";
 import { useOturum } from "@/lib/oturum";
 import { cn } from "@/lib/utils";
 
@@ -190,7 +191,7 @@ function GencPaneliIcerigi() {
   const guclendirmeyeGit = (ciktiId: string) => {
     if (kartId) router.push(`/kart/${kartId}#guclendir-${ciktiId}`);
   };
-  const ad = hesap.ad ?? hesap.email;
+  const ad = adGosterimi(hesap.ad ?? hesap.email);
 
   return (
     <Sayfa genislik="genis">
@@ -202,19 +203,28 @@ function GencPaneliIcerigi() {
           className="order-2 flex flex-col gap-4 lg:sticky lg:top-24 lg:order-1"
         >
           <KimlikOzeti ad={ad} kart={kart} />
-          <EksikAdimlar adimlar={eksikAdimlar(hesap)} />
+          {/* Kart yoksa çağrı sağdaki bantta; burada tekrarlanmaz. */}
+          <EksikAdimlar
+            adimlar={eksikAdimlar(hesap).filter((a) => a.anahtar !== "kart")}
+          />
           {kart ? (
             <KartDurumuKutusu
               calismalar={calismalar}
               onSec={guclendirmeyeGit}
             />
           ) : null}
-          <div id="surecler" className="scroll-mt-24">
-            <SurecListesi
-              satirlar={surecler(benimIlgilerim, gelenler ?? [], isbirlikleri)}
-              onGeriCek={ilgiyiCek}
-            />
-          </div>
+          {kart ? (
+            <div id="surecler" className="scroll-mt-24">
+              <SurecListesi
+                satirlar={surecler(
+                  benimIlgilerim,
+                  gelenler ?? [],
+                  isbirlikleri,
+                )}
+                onGeriCek={ilgiyiCek}
+              />
+            </div>
+          ) : null}
         </aside>
 
         <div className="order-1 flex min-w-0 flex-col gap-8 lg:order-2">

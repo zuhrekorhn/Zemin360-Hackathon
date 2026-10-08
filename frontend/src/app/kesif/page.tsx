@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
+import { CanliOnizleme } from "@/components/kesif/canli-onizleme";
 import { KayitliKart } from "@/components/kesif/kayitli-kart";
 import { TaslakBolumu } from "@/components/kesif/taslak-bolumu";
 import { useKesifSohbeti } from "@/components/kesif/use-kesif-sohbeti";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { CevapAlani, HataKutusu, Sohbet } from "@/components/sohbet";
-import { Button } from "@/components/ui/button";
+import { adGosterimi } from "@/lib/ad";
 import { kartYolu } from "@/lib/yonlendirme";
 
 /**
@@ -22,8 +23,10 @@ import { kartYolu } from "@/lib/yonlendirme";
  * atla" panele götürür, kartı olmayan genç eşleştirmeye girmez ve panel onu
  * kart tamamlamaya çağırır. Kayıt formundaki bilgiler sohbette sorulmaz.
  *
- * Görsel dil (docs/design-language.md): sohbet balonları yuvarlak/sıcak,
- * taslak ve kayıtlı kart hairline çizgili ve az yuvarlak — "resmi belge".
+ * Sohbet sürerken sağda kartın canlı hali (components/kesif/canli-onizleme.tsx):
+ * backend her turda taslağı döndürüyor; genç neyin sorulacağını ve ne kadar
+ * kaldığını görür. Görsel dil (docs/design-language.md): sohbet balonları
+ * yuvarlak/sıcak, kart hairline çizgili — "resmi belge".
  */
 
 export default function KesifSayfasi() {
@@ -56,9 +59,12 @@ function KartiOlanaYonlendir({ children }: { children: React.ReactNode }) {
 function KesifSohbeti() {
   // Kayıttan hemen sonra (onboarding): "Şimdilik atla" görünür.
   const ilkKez = useSearchParams().get("ilk") === "1";
+  const hesap = useGirisliHesap();
   const sohbet = useKesifSohbeti();
   const [girdi, setGirdi] = useState("");
   const sonMesaj = useRef<HTMLDivElement | null>(null);
+  const sohbetAsamasi =
+    sohbet.asama === "sohbet" || sohbet.asama === "baslatiliyor";
 
   useEffect(() => {
     sonMesaj.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -70,71 +76,90 @@ function KesifSohbeti() {
     setGirdi("");
   }
 
+  const baslik = (
+    <SayfaBasligi
+      baslik="Yetenek kartını oluştur"
+      aciklama={
+        <>
+          Kısa bir sohbetle neler yaptığını birlikte bir yetenek kartına
+          dönüştüreceğiz. Bu sohbet yapay zekâ desteğiyle ilerler. Kartın sen
+          onaylamadan kaydedilmez.
+          {ilkKez ? " Kayıtta verdiğin bilgileri tekrar sormayacağız." : null}
+        </>
+      }
+      eylem={
+        ilkKez && sohbet.asama !== "kaydedildi" ? (
+          <Link
+            href="/genc"
+            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-metin"
+          >
+            Şimdilik atla
+          </Link>
+        ) : null
+      }
+    />
+  );
+
+  // Sohbet sürerken: solda sohbet, sağda kartın canlı hali.
+  if (sohbetAsamasi) {
+    return (
+      <Sayfa genislik="genis">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="flex min-w-0 flex-col gap-6">
+            {baslik}
+            {sohbet.hata ? (
+              <HataKutusu hata={sohbet.hata} tekrarDene={sohbet.tekrarDene} />
+            ) : null}
+            <Sohbet
+              ajanAdi="Zemin360"
+              mesajlar={sohbet.mesajlar}
+              bekleniyor={sohbet.bekleniyor}
+              sonMesajRef={sonMesaj}
+              altKisim={
+                sohbet.asama === "sohbet" ? (
+                  <CevapAlani
+                    girdi={girdi}
+                    setGirdi={setGirdi}
+                    bekleniyor={sohbet.bekleniyor}
+                    gonder={gonder}
+                  />
+                ) : null
+              }
+            />
+          </div>
+          <aside aria-label="Kartın" className="lg:sticky lg:top-24">
+            <CanliOnizleme
+              taslak={sohbet.taslak}
+              ad={adGosterimi(hesap.ad ?? "")}
+            />
+          </aside>
+        </div>
+      </Sayfa>
+    );
+  }
+
   return (
-    <Sayfa>
-      <SayfaBasligi
-        baslik="Yetenek kartını oluştur"
-        aciklama={
-          <>
-            Kısa bir sohbetle neler yaptığını birlikte bir yetenek kartına
-            dönüştüreceğiz. Bu sohbet yapay zekâ desteğiyle ilerler. Kartın sen
-            onaylamadan kaydedilmez.
-            {ilkKez ? " Kayıtta verdiğin bilgileri tekrar sormayacağız." : null}
-          </>
-        }
-      >
-        {ilkKez && sohbet.asama !== "kaydedildi" ? (
-          <p className="text-sm text-pretty text-muted-foreground">
-            Şimdi vaktin yoksa sonra da yapabilirsin; ama kartın olmadan
-            firmalar seni göremez.{" "}
-            <Link href="/genc" className="text-baglanti underline">
-              Şimdilik atla
-            </Link>
-          </p>
+    <Sayfa genislik="genis">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
+        {baslik}
+        {sohbet.hata ? (
+          <HataKutusu hata={sohbet.hata} tekrarDene={sohbet.tekrarDene} />
         ) : null}
-      </SayfaBasligi>
 
-      {sohbet.asama === "sohbet" || sohbet.asama === "baslatiliyor" ? (
-        <Sohbet
-          ajanAdi="Zemin360"
-          mesajlar={sohbet.mesajlar}
-          bekleniyor={sohbet.bekleniyor}
-          sonMesajRef={sonMesaj}
-        />
-      ) : null}
+        {sohbet.asama === "taslak" && sohbet.taslak ? (
+          <TaslakBolumu
+            taslak={sohbet.taslak}
+            bekleniyor={sohbet.bekleniyor}
+            onOnayla={(profil, duzeltilmisTaslak) =>
+              void sohbet.onayla(profil, duzeltilmisTaslak)
+            }
+          />
+        ) : null}
 
-      {sohbet.hata ? (
-        <HataKutusu hata={sohbet.hata} tekrarDene={sohbet.tekrarDene} />
-      ) : null}
-
-      {sohbet.asama === "sohbet" ? (
-        <CevapAlani
-          girdi={girdi}
-          setGirdi={setGirdi}
-          bekleniyor={sohbet.bekleniyor}
-          gonder={gonder}
-        />
-      ) : null}
-
-      {sohbet.asama === "taslak" && sohbet.taslak ? (
-        <TaslakBolumu
-          taslak={sohbet.taslak}
-          bekleniyor={sohbet.bekleniyor}
-          onOnayla={(profil, duzeltilmisTaslak) =>
-            void sohbet.onayla(profil, duzeltilmisTaslak)
-          }
-        />
-      ) : null}
-
-      {sohbet.asama === "kaydedildi" && sohbet.kart ? (
-        <KayitliKart kart={sohbet.kart} onGuncelle={sohbet.setKart} />
-      ) : null}
-
-      <footer className="mt-auto border-t border-kenar pt-6">
-        <Button asChild variant="outline" size="lg">
-          <Link href="/genc">Panele dön</Link>
-        </Button>
-      </footer>
+        {sohbet.asama === "kaydedildi" && sohbet.kart ? (
+          <KayitliKart kart={sohbet.kart} onGuncelle={sohbet.setKart} />
+        ) : null}
+      </div>
     </Sayfa>
   );
 }

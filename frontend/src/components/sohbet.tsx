@@ -1,5 +1,7 @@
 "use client";
 
+import { ArrowUp } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { hitapla } from "@/lib/hitap";
 import { useHitap } from "@/lib/oturum";
@@ -21,48 +23,81 @@ export function Sohbet({
   mesajlar,
   bekleniyor,
   sonMesajRef,
+  altKisim,
 }: {
   ajanAdi: string;
   mesajlar: Mesaj[];
   bekleniyor: boolean;
   sonMesajRef: React.RefObject<HTMLDivElement | null>;
+  /** Sohbet kutusunun altına yapışan yazma alanı. */
+  altKisim?: React.ReactNode;
 }) {
   return (
-    <section
-      aria-label="Sohbet"
-      aria-live="polite"
-      className="flex flex-col gap-3 rounded-[1.75rem] bg-muted p-4 sm:p-6"
-    >
-      {mesajlar.map((mesaj, sira) => (
-        <p
-          key={`${mesaj.kim}-${sira}`}
-          className={
-            mesaj.kim === "ajan"
-              ? "max-w-[85%] rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-sm text-pretty break-words whitespace-pre-line ring-1 ring-kenar"
-              : "ml-auto max-w-[85%] rounded-3xl rounded-br-lg bg-ana px-4 py-3 text-sm text-pretty break-words whitespace-pre-line text-zemin"
-          }
-        >
-          {mesaj.kim === "ajan" ? (
-            <span className="mb-1 block font-medium text-baglanti">
-              {ajanAdi}
+    <div className="flex flex-col overflow-hidden rounded-[1.75rem] border border-kenar bg-card shadow-[0_1px_2px_rgb(22_33_27/0.05)]">
+      <section
+        aria-label="Sohbet"
+        aria-live="polite"
+        className="flex min-h-72 flex-col gap-4 bg-muted/50 px-4 py-5 sm:px-6"
+      >
+        {mesajlar.map((mesaj, sira) =>
+          mesaj.kim === "ajan" ? (
+            <div
+              key={`ajan-${sira}`}
+              className="flex max-w-[88%] items-end gap-2.5"
+            >
+              <span
+                aria-hidden="true"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-ana font-heading text-sm font-semibold text-zemin"
+              >
+                Z
+              </span>
+              <p className="rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-[15px] leading-relaxed text-pretty break-words whitespace-pre-line ring-1 ring-kenar">
+                <span className="mb-0.5 block text-xs font-medium text-baglanti">
+                  {ajanAdi}
+                </span>
+                {mesaj.metin}
+              </p>
+            </div>
+          ) : (
+            <p
+              key={`kullanici-${sira}`}
+              className="ml-auto max-w-[80%] rounded-3xl rounded-br-lg bg-ana px-4 py-3 text-[15px] leading-relaxed text-pretty break-words whitespace-pre-line text-zemin"
+            >
+              {mesaj.metin}
+            </p>
+          ),
+        )}
+
+        {bekleniyor ? (
+          <div className="flex items-end gap-2.5">
+            <span
+              aria-hidden="true"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-ana font-heading text-sm font-semibold text-zemin"
+            >
+              Z
             </span>
-          ) : null}
-          {mesaj.metin}
-        </p>
-      ))}
+            <p className="flex items-center gap-1.5 rounded-3xl rounded-bl-lg bg-card px-4 py-3.5 ring-1 ring-kenar">
+              <span className="sr-only">Yanıt hazırlanıyor…</span>
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  aria-hidden="true"
+                  style={{ animationDelay: `${i * 150}ms` }}
+                  className="size-2 rounded-full bg-baglanti/70 motion-safe:animate-pulse"
+                />
+              ))}
+            </p>
+          </div>
+        ) : null}
 
-      {bekleniyor ? (
-        <p className="flex max-w-[85%] items-center gap-2 rounded-3xl rounded-bl-lg bg-card px-4 py-3 text-sm text-muted-foreground ring-1 ring-kenar">
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
-          />
-          Yanıt hazırlanıyor…
-        </p>
+        <div ref={sonMesajRef} />
+      </section>
+      {altKisim ? (
+        <div className="border-t border-kenar bg-card p-3 sm:p-4">
+          {altKisim}
+        </div>
       ) : null}
-
-      <div ref={sonMesajRef} />
-    </section>
+    </div>
   );
 }
 
@@ -99,7 +134,10 @@ export function HataKutusu({
   );
 }
 
-/** Sohbet giriş alanı — Enter gönderir, Shift+Enter satır atlar. */
+/**
+ * Sohbet giriş alanı: Enter gönderir, Shift+Enter satır atlar. Sohbet
+ * kutusunun altına yapışık durur (`Sohbet` › `altKisim`); düğme alanın içinde.
+ */
 export function CevapAlani({
   girdi,
   setGirdi,
@@ -118,34 +156,40 @@ export function CevapAlani({
         olay.preventDefault();
         gonder();
       }}
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-2"
     >
       <label htmlFor="cevap" className="sr-only">
         {hitapla(hitap, "Yanıtın", "Yanıtınız")}
       </label>
-      <textarea
-        id="cevap"
-        value={girdi}
-        onChange={(olay) => setGirdi(olay.target.value)}
-        onKeyDown={(olay) => {
-          if (olay.key === "Enter" && !olay.shiftKey) {
-            olay.preventDefault();
-            gonder();
-          }
-        }}
-        rows={3}
-        disabled={bekleniyor}
-        placeholder={hitapla(hitap, "Yazmaya başla…", "Yazmaya başlayın…")}
-        className="w-full resize-y rounded-2xl border border-kenar bg-card px-4 py-3 text-sm outline-none focus-visible:border-baglanti focus-visible:ring-3 focus-visible:ring-baglanti/30 disabled:opacity-60"
-      />
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-muted-foreground">
-          Enter gönderir, Shift+Enter satır atlar.
-        </span>
-        <Button type="submit" size="lg" disabled={bekleniyor || !girdi.trim()}>
-          {hitapla(hitap, "Yanıtı gönder", "Yanıtı gönderin")}
+      <div className="flex items-end gap-2 rounded-2xl border border-kenar bg-zemin/60 p-2 focus-within:border-baglanti focus-within:ring-3 focus-within:ring-baglanti/25">
+        <textarea
+          id="cevap"
+          value={girdi}
+          onChange={(olay) => setGirdi(olay.target.value)}
+          onKeyDown={(olay) => {
+            if (olay.key === "Enter" && !olay.shiftKey) {
+              olay.preventDefault();
+              gonder();
+            }
+          }}
+          rows={2}
+          disabled={bekleniyor}
+          placeholder={hitapla(hitap, "Yazmaya başla…", "Yazmaya başlayın…")}
+          className="max-h-48 min-h-12 flex-1 resize-none bg-transparent px-2 py-1.5 text-[15px] outline-none disabled:opacity-60"
+        />
+        <Button
+          type="submit"
+          size="icon-lg"
+          disabled={bekleniyor || !girdi.trim()}
+          aria-label={hitapla(hitap, "Yanıtı gönder", "Yanıtı gönderin")}
+          className="rounded-xl"
+        >
+          <ArrowUp aria-hidden="true" />
         </Button>
       </div>
+      <span className="px-1 text-xs text-muted-foreground">
+        Enter gönderir, Shift+Enter satır atlar.
+      </span>
     </form>
   );
 }

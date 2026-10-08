@@ -282,6 +282,10 @@ function KartIcerigi() {
                 Yaptığın bir işi ekle; kanıt ve referansla güçlendirdikçe
                 fırsatlarda öne çıkarsın.
               </p>
+              <Button type="button" onClick={() => setIsEkleniyor(true)}>
+                <Plus aria-hidden="true" />
+                İlk çalışmanı ekle
+              </Button>
             </div>
           ) : (
             kart.somut_ciktilar.map((cikti) => (

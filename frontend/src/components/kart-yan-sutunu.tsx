@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { PilotRozeti } from "@/components/kart";
 import { Button } from "@/components/ui/button";
 import { KUTU } from "@/components/ui/yuzey";
+import { adGosterimi } from "@/lib/ad";
 import type { YetenekKartiYaniti } from "@/lib/api";
 import type { Eksik, KartAdimi } from "@/lib/calisma";
 import { kalanCumlesi, kartDurumu } from "@/lib/calisma";
@@ -76,15 +77,13 @@ export function KimlikKutusu({
         </span>
         <div className="flex min-w-0 flex-col">
           <span className="font-heading text-lg leading-tight font-semibold text-ana">
-            {kart.genc_adi}
+            {adGosterimi(kart.genc_adi)}
           </span>
-          <span className="text-sm text-pretty text-muted-foreground">
-            {cumleDuzeni(kart.rol_alani)} ·{" "}
-            {etiketle(
-              DENEYIM_ETIKETLERI,
-              kart.deneyim_seviyesi,
-            ).toLocaleLowerCase("tr")}{" "}
-            deneyim
+          <span className="text-sm text-metin">
+            {cumleDuzeni(kart.rol_alani)}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Deneyim: {etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}
           </span>
         </div>
       </div>

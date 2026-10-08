@@ -242,18 +242,22 @@ export function KimlikOzeti({
           <span className="font-heading text-lg leading-tight font-semibold text-ana">
             {ad}
           </span>
-          <span className="text-sm text-muted-foreground">
-            {kart
-              ? `${cumleDuzeni(kart.rol_alani)} · ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi).toLocaleLowerCase("tr")} deneyim`
-              : "Kartın henüz yok"}
+          <span className="text-sm text-metin">
+            {kart ? cumleDuzeni(kart.rol_alani) : "Kartın henüz yok"}
           </span>
+          {kart ? (
+            <span className="text-xs text-muted-foreground">
+              Deneyim: {etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi)}
+            </span>
+          ) : null}
         </div>
       </div>
-      <Button asChild variant="outline" className="w-full">
-        <Link href={kartYolu(kart)}>
-          {kart ? "Kartına git" : "Kartını oluştur"}
-        </Link>
-      </Button>
+      {/* Kart yoksa çağrı sağdaki bantta. */}
+      {kart ? (
+        <Button asChild variant="outline" className="w-full">
+          <Link href={kartYolu(kart)}>Kartına git</Link>
+        </Button>
+      ) : null}
     </section>
   );
 }

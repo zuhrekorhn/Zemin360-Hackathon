@@ -6,12 +6,15 @@
  * kullanır; bant yalnızca bağlantıyı hatırlatır ve yenisini gönderir.
  */
 
+import { Mail } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
 import { dogrulamaBaglantisiGonder, type MeYaniti } from "@/lib/api";
 import { hatayaCevir } from "@/lib/hata";
 import { hitapla, hitapRolden } from "@/lib/hitap";
+import { cn } from "@/lib/utils";
 
 export function EpostaDogrulamaBandi({ hesap }: { hesap: MeYaniti }) {
   const [durum, setDurum] = useState<"bos" | "gonderiliyor" | "gonderildi">(
@@ -37,9 +40,13 @@ export function EpostaDogrulamaBandi({ hesap }: { hesap: MeYaniti }) {
   return (
     <div
       role="note"
-      className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm text-pretty"
+      className={cn(
+        KUTU,
+        "flex flex-wrap items-center gap-x-4 gap-y-2 border-l-[3px] border-l-vurgu px-5 py-4 text-sm text-pretty",
+      )}
     >
-      <span>
+      <Mail aria-hidden="true" className="size-5 shrink-0 text-ana" />
+      <span className="min-w-0 flex-1 basis-64">
         {hitapla(
           hitap,
           `E-posta adresini henüz doğrulamadın. ${hesap.email} adresine gönderdiğimiz bağlantıyı aç.`,

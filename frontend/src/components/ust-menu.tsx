@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from "react";
 import { KarsilamaMenusu } from "@/components/karsilama/menu";
 import { basHarfler } from "@/components/kart-yan-sutunu";
 import { MENU_ODAK, MenuKabugu } from "@/components/menu-kabugu";
+import { adGosterimi } from "@/lib/ad";
 import type { MeYaniti } from "@/lib/api";
 import { menuBaglantilari, type MenuBaglantisi } from "@/lib/menu";
 import { cn } from "@/lib/utils";
@@ -80,7 +81,7 @@ function HesapMenusu({
     };
   }, [acik]);
 
-  const ad = hesap.ad ?? hesap.email;
+  const ad = hesap.ad ? adGosterimi(hesap.ad) : hesap.email;
   const ogeSinifi = cn(
     "flex min-h-10 w-full items-center rounded-md px-3 text-left text-sm text-metin hover:bg-muted",
     MENU_ODAK,
