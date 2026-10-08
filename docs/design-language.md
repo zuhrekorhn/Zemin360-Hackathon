@@ -44,7 +44,9 @@ Düzen kodda tek yerde; sayfa kendi kabuğunu yazmaz.
 
 - **Kenar payı** her yerde aynı: mobilde 20px, `sm` ve üstünde 32px.
 - **Başlık bloğu:** tek `h1` (Fraunces, 24→30px), altında açıklama. Başlığın yanında durum etiketi, sağda tek bir eylem olabilir.
-- **Yükleniyor ve hata** durumları da aynı kabukla ve aynı genişlikte çizilir (`SayfaDurumu`, `GirisKapisi genislik=`). Veri gelince içerik yana ya da aşağı kaymaz.
+- **Yükleniyor ve hata** durumları da aynı kabukla ve aynı genişlikte çizilir (`SayfaDurumu`, `GirisKapisi genislik=`). Yükleniyor düz yazı değil iskelettir (`components/ui/iskelet.tsx`): içeriğin yerini tutar, veri gelince içerik yana ya da aşağı kaymaz. Beklenmedik hata, olmayan adres ve sayfa geçişi için `app/error.tsx`, `not-found.tsx`, `loading.tsx` var; metinleri hitapsız.
+- **Sekme başlığı** sayfanın başlığıdır ("Panelim · Zemin360"): `SayfaBasligi` kendiliğinden ayarlar, özel başlıklı sayfalar `useSekmeBasligi` çağırır.
+- **Yan panel** açıkken odak panelin içinde kalır (Tab son öğeden ilkine döner), Escape kapatır.
 - **Menü** (`menu-kabugu.tsx`): karşılama ve uygulama menüsü aynı iskeleti giyer. Yapışkandır, 1200px'lik geniş kapsayıcıdadır ve yüksekliği 64px (`lg`'de 76px). Girişten önce ve sonra logo aynı yerde durur. İçerik dar sütunda ortalanır, menü geniş kalır. `lg` altında bağlantılar katlanır menüye girer, bildirim zili ve okunmamış sayısı katlanmadan görünür kalır. Etkin sayfa kalın yazı ve vurgu renginde alt çizgiyle gösterilir.
 - **Menü içeriği:** bağlantılar yalnızca sayfadır; bildirimler zil (her ekranda), ayar ve çıkış adın baş harfli hesap menüsünde. "Panele dön" düğmesi yazılmaz, menü var.
 - **Ekran "şimdi ne yapmalıyım" sırasıyla dizilir:** yanıt bekleyen iş en üstte ve vurgu renginde sol çizgiyle; boş bölüm çizilmez (yeni kullanıcı yedi boş kutu yerine tek çağrı görür); bölüm başına tek birincil eylem. Açıklama paragrafı yerine eylem: bir bölümün nasıl çalıştığı bir kez söylenir, her başlığın altında tekrarlanmaz.

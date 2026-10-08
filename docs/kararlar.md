@@ -181,6 +181,12 @@ Başka yerde tutulan kararlar:
   toplananlar `lib/sohbet-onizleme.ts`, zorunlular backend'deki `ZORUNLU_ALANLAR`'la aynı: ihtiyaçta
   problem ve başarı ölçütü, firma kartında ne yapıldığı ve yetkinlikler). Firma kartı düzenleme ve
   Firma profili gencin Hesabım'ıyla aynı kalıpta (yan menü + `FormBolumu`); "Panele dön" yok.
+  **3. tur:** aday sayfası Panelim iskeletinde (solda ihtiyaç özeti, yeniden hesapla, düzenle ve
+  "diğer ihtiyaçlarınız"; adayın çalışmaları varsayılan kapalı, karar düğmesi görünür kalır). GİRVAK
+  paneli ve iş birliği sayfası da iki sütun: solda yan menü ya da bağlam (`IsbirligiKenari`), sağda iş;
+  `PanelBolumu` çizgi yerine başlık ve `KUTU` kullanır. Hata, bulunamadı ve yükleniyor sayfaları
+  (`error.tsx`, `not-found.tsx`, `loading.tsx`, `global-error.tsx`), iskelet yer tutucular
+  (`ui/iskelet.tsx`), sayfa başına sekme başlığı (`lib/sekme-basligi.ts`) ve yan panelde odak hapsi.
 
 ## D — İlan düzenleme
 
