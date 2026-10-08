@@ -1,13 +1,15 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-import { Sayfa, SayfaBasligi } from "@/components/sayfa";
+import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { OnayAlani } from "@/components/onay-alani";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
-import { BolumBasligi } from "@/components/genc-paneli";
+import { BolumBasligi, YanKutu } from "@/components/genc-paneli";
 import {
   BelgeKarti,
   CiktiOzeti,
@@ -21,7 +23,9 @@ import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { KUTU } from "@/components/ui/yuzey";
 import {
+  type IhtiyacKartiOzeti,
   type Oneri,
+  type SomutCiktiYaniti,
   type Oneriler,
   eslestirmeCalistir,
   eslestirmeOnerileri,
@@ -38,7 +42,12 @@ import {
   ilgiGosterenleriAyir,
   onerininAdayAdi,
 } from "@/lib/ilgi";
-import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
+import { arananEtiketi, ilanKapali } from "@/lib/ilan";
+import {
+  DENEYIM_ETIKETLERI,
+  IS_TURU_ETIKETLERI,
+  etiketle,
+} from "@/lib/sabitler";
 import { cn } from "@/lib/utils";
 
 /**
@@ -59,8 +68,10 @@ import { cn } from "@/lib/utils";
 
 export default function OnerilerSayfasi() {
   return (
-    <GirisKapisi roller={["kurum"]}>
-      <OnerilerIcerigi />
+    <GirisKapisi roller={["kurum"]} genislik="genis">
+      <Suspense fallback={<SayfaDurumu genislik="genis" />}>
+        <OnerilerIcerigi />
+      </Suspense>
     </GirisKapisi>
   );
 }
@@ -70,11 +81,12 @@ function OnerilerIcerigi() {
   const kurumId = hesap.kurum_id;
   const kartVar = hesap.ihtiyac_kartlari.length > 0;
   // Kurum panelinden `?ihtiyac=<id>` ile gelinir; yoksa en son ihtiyaç kartı.
-  const [ihtiyacKartiId, setIhtiyacKartiId] = useState<string | null>(null);
+  // Yan sütundaki "diğer ihtiyaçlar" aynı sayfada adresi değiştirir; liste yeniden okunur.
+  const ihtiyacKartiId = useSearchParams().get("ihtiyac");
+  const sonOkunan = useRef<string | null | undefined>(undefined);
   const [veri, setVeri] = useState<Oneriler | null>(null);
   const [yukleniyor, setYukleniyor] = useState(kartVar);
   const [hata, setHata] = useState<Hata | null>(null);
-  const okundu = useRef(false);
 
   /**
    * `tazele` false: hesaplanmış listeyi okur (sayfa açılışı).
@@ -103,13 +115,11 @@ function OnerilerIcerigi() {
   );
 
   useEffect(() => {
-    if (okundu.current || !kartVar) return;
-    okundu.current = true;
-    // Adres çubuğu yalnızca tarayıcıda; okuma bağlandıktan sonra.
-    const kart = new URLSearchParams(window.location.search).get("ihtiyac");
-    setIhtiyacKartiId(kart);
-    void onerileriGetir(kart);
-  }, [kartVar, onerileriGetir]);
+    // Aynı adres için bir kez oku (StrictMode efekti iki kez çalıştırır).
+    if (!kartVar || sonOkunan.current === ihtiyacKartiId) return;
+    sonOkunan.current = ihtiyacKartiId;
+    void onerileriGetir(ihtiyacKartiId);
+  }, [kartVar, ihtiyacKartiId, onerileriGetir]);
 
   async function durumuYaz(
     oneri: Oneri,
@@ -148,84 +158,240 @@ function OnerilerIcerigi() {
     void durumuYaz(oneri, simdilikDegil);
   }
 
-  const gosterilenKart = veri
-    ? hesap.ihtiyac_kartlari.find((kart) => kart.id === veri.ihtiyac_karti_id)
-    : undefined;
+  const gosterilenKart = hesap.ihtiyac_kartlari.find(
+    (kart) => kart.id === (veri?.ihtiyac_karti_id ?? ihtiyacKartiId),
+  );
   // Ortak ilanının adayları firmalar (docs/kararlar.md F5).
   const ortak = gosterilenKart?.aranan === "firma";
+  const digerIhtiyaclar = hesap.ihtiyac_kartlari.filter(
+    (kart) => !ilanKapali(kart) && kart.id !== gosterilenKart?.id,
+  );
 
   return (
-    <Sayfa>
-      <SayfaBasligi
-        baslik="Uygun adaylar"
-        aciklama={
-          ortak
-            ? "İhtiyacınıza uyan firmalar, uyumuyla ve neden uygun olduklarıyla birlikte. Karar sizin."
-            : "İhtiyacınıza uyan gençler, uyumuyla ve neden uygun olduklarıyla birlikte. Karar sizin."
-        }
-        eylem={
-          kartVar ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              disabled={yukleniyor}
-              onClick={() =>
+    <Sayfa genislik="genis">
+      <div className="grid items-start gap-8 lg:grid-cols-[19rem_minmax(0,1fr)]">
+        <aside
+          aria-label="İhtiyacınız"
+          className="order-2 flex flex-col gap-4 lg:sticky lg:top-24 lg:order-1"
+        >
+          {gosterilenKart ? (
+            <IhtiyacOzeti
+              kart={gosterilenKart}
+              yukleniyor={yukleniyor}
+              onYenidenHesapla={() =>
                 void onerileriGetir(
                   veri?.ihtiyac_karti_id ?? ihtiyacKartiId,
                   true,
                 )
               }
+            />
+          ) : null}
+          {digerIhtiyaclar.length > 0 ? (
+            <DigerIhtiyaclar kartlar={digerIhtiyaclar} />
+          ) : null}
+        </aside>
+
+        <div className="order-1 flex min-w-0 flex-col gap-6 lg:order-2">
+          <SayfaBasligi
+            baslik="Uygun adaylar"
+            aciklama={
+              ortak
+                ? "İhtiyacınıza uyan firmalar, uyumuyla ve neden uygun olduklarıyla birlikte. Karar sizin."
+                : "İhtiyacınıza uyan gençler, uyumuyla ve neden uygun olduklarıyla birlikte. Karar sizin."
+            }
+          >
+            {gosterilenKart ? (
+              // Geniş ekranda yan sütunda; dar ekranda yan sütun altta kalır, bağlam burada.
+              <p className="line-clamp-2 border-l-[3px] border-vurgu pl-3 text-sm leading-relaxed text-pretty lg:hidden">
+                {gosterilenKart.problem_tanimi}
+              </p>
+            ) : null}
+          </SayfaBasligi>
+
+          {hata ? (
+            <HataKutusu
+              hata={hata}
+              tekrarDene={() => void onerileriGetir(ihtiyacKartiId)}
+            />
+          ) : null}
+
+          {yukleniyor ? (
+            <p
+              role="status"
+              className="flex items-center gap-2 text-sm text-muted-foreground"
             >
-              Yeniden hesapla
-            </Button>
-          ) : null
-        }
-      >
-        {gosterilenKart ? (
-          <p className="border-l-[3px] border-vurgu pl-3 text-[15px] leading-relaxed text-pretty">
-            {gosterilenKart.problem_tanimi}
-          </p>
-        ) : null}
-      </SayfaBasligi>
+              <span
+                aria-hidden="true"
+                className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
+              />
+              Adaylar hazırlanıyor…
+            </p>
+          ) : null}
 
-      {hata ? (
-        <HataKutusu
-          hata={hata}
-          tekrarDene={() => void onerileriGetir(ihtiyacKartiId)}
-        />
-      ) : null}
+          {!kartVar ? <KurumYok /> : null}
 
-      {yukleniyor ? (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full bg-baglanti motion-safe:animate-pulse"
-          />
-          Adaylar hazırlanıyor…
+          {!yukleniyor && veri ? (
+            <OneriListesi
+              veri={veri}
+              ilan={
+                gosterilenKart
+                  ? {
+                      firmaAdi: hesap.ad ?? "",
+                      problem: gosterilenKart.problem_tanimi,
+                      basariKriteri: gosterilenKart.basari_kriteri ?? null,
+                    }
+                  : null
+              }
+              ortak={ortak}
+              onIlgileniyorum={ilgilendigimiSoyle}
+              onSimdilikDegil={simdilikDegilDe}
+            />
+          ) : null}
+        </div>
+      </div>
+    </Sayfa>
+  );
+}
+
+/** Yan sütun: hangi ihtiyacın adaylarına baktığınız, yeniden hesaplama ve düzenleme. */
+function IhtiyacOzeti({
+  kart,
+  yukleniyor,
+  onYenidenHesapla,
+}: {
+  kart: IhtiyacKartiOzeti;
+  yukleniyor: boolean;
+  onYenidenHesapla: () => void;
+}) {
+  const aranan = arananEtiketi(kart.aranan);
+  return (
+    <section className={cn(KUTU, "flex flex-col gap-4 px-5 py-5")}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-heading text-base font-semibold text-ana">
+          İhtiyacınız
+        </h2>
+        {aranan ? <DurumEtiketi metin={aranan} /> : null}
+      </div>
+      <p className="border-l-[3px] border-vurgu pl-3 text-[15px] leading-relaxed text-pretty">
+        {kart.problem_tanimi}
+      </p>
+      {kart.basari_kriteri ? (
+        <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+          <span className="font-medium text-metin">Başarı ölçütü: </span>
+          {kart.basari_kriteri}
         </p>
       ) : null}
+      <div className="flex flex-col gap-3 border-t border-kenar pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          disabled={yukleniyor}
+          onClick={onYenidenHesapla}
+          className="w-full"
+        >
+          Yeniden hesapla
+        </Button>
+        <Link
+          href={`/kurum?duzenle=${kart.id}`}
+          className="w-fit text-sm text-baglanti underline underline-offset-4"
+        >
+          İhtiyacı düzenle
+        </Link>
+      </div>
+    </section>
+  );
+}
 
-      {!kartVar ? <KurumYok /> : null}
+/** Başka bir ihtiyacın adaylarına geçiş (panele dönmeden). */
+function DigerIhtiyaclar({ kartlar }: { kartlar: IhtiyacKartiOzeti[] }) {
+  return (
+    <YanKutu baslik="Diğer ihtiyaçlarınız">
+      <ul className="-mx-2 flex flex-col">
+        {kartlar.map((kart) => (
+          <li key={kart.id}>
+            <Link
+              href={`/kurum/oneriler?ihtiyac=${kart.id}`}
+              className="flex flex-col gap-1 rounded-md px-2 py-2 hover:bg-muted"
+            >
+              <span className="line-clamp-2 text-sm text-pretty">
+                {kart.problem_tanimi}
+              </span>
+              {arananEtiketi(kart.aranan) ? (
+                <span className="text-[13px] text-muted-foreground">
+                  {arananEtiketi(kart.aranan)}
+                </span>
+              ) : null}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </YanKutu>
+  );
+}
 
-      {!yukleniyor && veri ? (
-        <OneriListesi
-          veri={veri}
-          ilan={
-            gosterilenKart
-              ? {
-                  firmaAdi: hesap.ad ?? "",
-                  problem: gosterilenKart.problem_tanimi,
-                  basariKriteri: gosterilenKart.basari_kriteri ?? null,
-                }
-              : null
-          }
-          ortak={ortak}
-          onIlgileniyorum={ilgilendigimiSoyle}
-          onSimdilikDegil={simdilikDegilDe}
-        />
-      ) : null}
-    </Sayfa>
+/**
+ * Adayın çalışmaları: varsayılan kapalı, yalnızca başlık ve tür. Ayrıntılar
+ * (sonuç, pay, kanıt, güven göstergesi) istenince açılır; böylece karar düğmesi
+ * iki iç içe kutunun altında kalmaz.
+ */
+function CalismaBolumu({
+  ciktilar,
+  kartId,
+}: {
+  ciktilar: SomutCiktiYaniti[];
+  kartId: string;
+}) {
+  const [acik, setAcik] = useState(false);
+  if (ciktilar.length === 0) {
+    return (
+      <section className="flex flex-col gap-2">
+        <AltBaslik>Çalışmaları</AltBaslik>
+        <p className="text-sm text-muted-foreground">
+          Bu karta henüz çalışma eklenmemiş.
+        </p>
+      </section>
+    );
+  }
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <AltBaslik>Çalışmaları ({ciktilar.length})</AltBaslik>
+        <button
+          type="button"
+          aria-expanded={acik}
+          onClick={() => setAcik((onceki) => !onceki)}
+          className="inline-flex items-center gap-1 rounded-md text-sm text-baglanti outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          {acik ? "Ayrıntıları gizle" : "Ayrıntıları göster"}
+          <ChevronDown
+            aria-hidden="true"
+            className={cn("size-4 transition-transform", acik && "rotate-180")}
+          />
+        </button>
+      </div>
+      {acik ? (
+        ciktilar.map((cikti) => (
+          <CiktiOzeti key={cikti.id} cikti={cikti} kartId={kartId} />
+        ))
+      ) : (
+        <ul className="flex flex-col gap-1.5">
+          {ciktilar.map((cikti) => (
+            <li
+              key={cikti.id}
+              className="flex items-baseline justify-between gap-3 rounded-lg bg-muted/60 px-3.5 py-2.5 text-sm"
+            >
+              <span className="font-medium text-pretty">{cikti.baslik}</span>
+              {cikti.is_turu ? (
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {etiketle(IS_TURU_ETIKETLERI, cikti.is_turu)}
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -470,18 +636,7 @@ function OneriKarti({
       <EtiketSatiri etiket="Araçlar" degerler={kart.araclar_teknolojiler} />
       <EtiketSatiri etiket="Sektör ilgisi" degerler={kart.sektor_ilgi_alani} />
 
-      <section className="flex flex-col gap-3">
-        <AltBaslik>Çalışmaları</AltBaslik>
-        {kart.somut_ciktilar.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Bu karta henüz çalışma eklenmemiş.
-          </p>
-        ) : (
-          kart.somut_ciktilar.map((cikti) => (
-            <CiktiOzeti key={cikti.id} cikti={cikti} kartId={kart.id} />
-          ))
-        )}
-      </section>
+      <CalismaBolumu ciktilar={kart.somut_ciktilar} kartId={kart.id} />
     </BelgeKarti>
   );
 }
