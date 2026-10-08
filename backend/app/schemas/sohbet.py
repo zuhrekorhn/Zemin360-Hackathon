@@ -7,13 +7,12 @@ istekleri de aynı biçimde.
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field
 
-# Boşluktan ibaret olmayan metin. Onaydaki ad alanı için: kayıt e-postayla
-# upsert ediliyor ve boş ad yeni kayıtta NOT NULL'a takılırdı; 422 daha net.
-DoluMetin = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+# Sohbette tek cevabın üst sınırı. Her turda bütün geçmiş modele yeniden gidiyor;
+# yapıştırılan çok uzun bir metin her tur maliyeti katlar ve bağlam sınırına çarpar.
+CEVAP_EN_COK = 6000
 
 
 class SohbetBaslatIstegi(BaseModel):
@@ -22,4 +21,4 @@ class SohbetBaslatIstegi(BaseModel):
 
 class SohbetCevapIstegi(BaseModel):
     oturum_id: uuid.UUID
-    cevap: str = Field(min_length=1)
+    cevap: str = Field(min_length=1, max_length=CEVAP_EN_COK)

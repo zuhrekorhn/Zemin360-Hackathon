@@ -17,6 +17,7 @@ import asyncio
 import uuid
 from types import SimpleNamespace
 
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from sqlalchemy import select
 
 from app.api.auth import hesap_olustur
@@ -308,6 +309,48 @@ class SahipliGrafik:
 
     async def ainvoke(self, girdi, config=None):
         return {"taslak": {}, "sonraki_soru": "Devam?", "taslak_hazir": False, **girdi}
+
+
+class GecmisliGrafik(SahipliGrafik):
+    """Yarım kalmış sohbet: iki balon ve bekleyen bir soru."""
+
+    async def aget_state(self, _config):
+        return SimpleNamespace(
+            values={
+                "sahip_hesap_id": self.sahip,
+                "taslak": {"rol_alani": "backend geliştirici"},
+                "sonraki_soru": "Sonucu sayıyla anlatır mısın?",
+                "mesajlar": [
+                    AIMessage(content="Ne yaptın?"),
+                    HumanMessage(content="Bir kütüphane sistemi."),
+                    SystemMessage(content="gizli talimat"),
+                ],
+            }
+        )
+
+
+def test_yarim_sohbet_yalnizca_sahibine_geri_yuklenir():
+    """Sayfa yenilenince sohbet kaybolmasın; ama kimlik bilen herkes okuyamasın."""
+
+    async def adimlar(istemci, d):
+        app.state.kesif_grafigi = GecmisliGrafik(d.genc1.hesap.id)
+        try:
+            yol = f"/kesif/sohbet/{uuid.uuid4()}"
+            await durumlar(istemci, "GET", yol, {None: 401, d.kurum1: 403, d.genc2: 404})
+            yanit = await istemci.get(yol, headers=d.genc1.baslik)
+            assert yanit.status_code == 200
+            govde = yanit.json()
+            assert govde["mesajlar"] == [
+                {"kim": "ajan", "metin": "Ne yaptın?"},
+                {"kim": "kullanici", "metin": "Bir kütüphane sistemi."},
+            ]
+            assert govde["soru"] == "Sonucu sayıyla anlatır mısın?"
+            assert govde["taslak"]["rol_alani"] == "backend geliştirici"
+            assert govde["taslak_hazir"] is False
+        finally:
+            del app.state.kesif_grafigi
+
+    senaryo(adimlar)
 
 
 def test_sohbetleri_yalnizca_rolun_sahibi_surdurur():

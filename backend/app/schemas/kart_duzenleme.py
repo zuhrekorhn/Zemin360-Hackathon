@@ -21,6 +21,9 @@ Etiketler = Annotated[
     list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]],
     Field(max_length=30),
 ]
+# Bir kartta en çok bu kadar çalışma: her çalışma güçlü modelle bir değerlendirme ve
+# (referans verilirse) bir e-posta başlatır; sınırsız liste maliyet ve spam demek.
+MAX_CALISMA = 20
 DeneyimSeviyesi = Literal["potansiyel", "baslangic", "orta", "ileri"]
 
 

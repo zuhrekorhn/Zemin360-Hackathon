@@ -21,7 +21,7 @@ from app.agents.kesif import (
     profil_baglami,
 )
 from app.api.auth import hesap_olustur
-from app.api.kesif import KART_EKSIK
+from app.api.kesif import KART_COK_UZUN, KART_EKSIK
 from app.core.is_kalemi import birlesik_aciklama, kanit_bekliyor
 from app.core.kimlik import token_uret
 from app.core.metin import gecerli_eposta
@@ -274,6 +274,34 @@ def test_onay_arac_listesi_bos_karti_kabul_eder(monkeypatch):
     """Çalışması olmayan gencin araç listesi boş olabilir."""
     yanit = asyncio.run(_taslagi_onayla(monkeypatch, {**taslak(), "araclar_teknolojiler": []}))
     assert yanit.status_code == 201
+
+
+@pytest.mark.parametrize(
+    "fazla",
+    [
+        {"somut_ciktilar": [{"baslik": f"Çalışma {i}"} for i in range(21)]},
+        {"araclar_teknolojiler": [f"Araç{i}" for i in range(31)]},
+        {"sertifikalar": ["x" * 101]},
+        {"somut_ciktilar": [{"baslik": "x" * 201}]},
+        {"somut_ciktilar": [{"baslik": "Ok", "aciklama": "x" * 2001}]},
+        {"somut_ciktilar": [{"baslik": "Ok", "referans_email": "a" * 250 + "@o.com"}]},
+    ],
+    ids=["21-calisma", "31-arac", "uzun-sertifika", "uzun-baslik", "uzun-aciklama", "uzun-eposta"],
+)
+def test_onay_sinirlari_asan_karti_kabul_etmez(monkeypatch, fazla):
+    """Taslak ekranında her alan düzenlenebiliyor: sınır sunucuda da olmalı (kart
+    düzenlemedeki sınırlarla aynı). Tek onayla yüzlerce çalışma açılamaz."""
+    yanit = asyncio.run(_taslagi_onayla(monkeypatch, {**taslak(), **fazla}))
+    assert yanit.status_code == 422
+    assert yanit.json()["detail"] == KART_COK_UZUN
+
+
+def test_onay_bos_ve_tekrar_eden_etiketleri_sessizce_temizler(monkeypatch):
+    """Sohbetin çıktısı kusurlu olabilir; bu bir hata değil, temizlenir."""
+    kusurlu = {**taslak(), "araclar_teknolojiler": ["Python", " ", "Python", "SQL"]}
+    yanit = asyncio.run(_taslagi_onayla(monkeypatch, kusurlu))
+    assert yanit.status_code == 201
+    assert yanit.json()["araclar_teknolojiler"] == ["Python", "SQL"]
 
 
 def test_duzeltilmis_taslakla_eksik_alan_tamamlanir(monkeypatch):

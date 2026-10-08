@@ -35,6 +35,7 @@ from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.dogrulama import FormCevabi, Iliski
 from app.servisler.dogrulama import referans_taramasi
+from app.servisler.dogrulama.referans import KALEM_BASINA_ISTEK
 from tests.veritabani import api_istemcisi, geri_alinan_oturum
 
 SIMDI = dt.datetime(2026, 10, 2, 12, tzinfo=dt.UTC)
@@ -225,13 +226,21 @@ def test_geri_cekme(eposta_gonderilmez):
             )
             assert yanit.status_code == 409
 
-            # Aynı adrese yeni istek açılabilir (bekleyen yok).
-            yeni = await istemci.post(
+            # Aynı adrese hemen yeniden istenemez: "iste, geri çek, yeniden iste" döngüsü
+            # bir kişiye sınırsız e-posta göndermesin.
+            ayni = await istemci.post(
                 f"/dogrulama/kalem/{cikti.id}/referans",
                 headers=_baslik(hesap),
                 json={"referans_email": "yanlis@adres.com"},
             )
-            assert yeni.status_code == 201
+            assert ayni.status_code == 409
+            # Yanlış yazılan adres düzeltilince (farklı adres) istek açılır.
+            duzeltilmis = await istemci.post(
+                f"/dogrulama/kalem/{cikti.id}/referans",
+                headers=_baslik(hesap),
+                json={"referans_email": "dogru@adres.com"},
+            )
+            assert duzeltilmis.status_code == 201
 
     asyncio.run(senaryo())
 
@@ -327,3 +336,23 @@ def test_kesif_onayi_kendi_adresini_referans_yapmaz():
     kalem = _is_kalemi(taslak, "baska@ornek.com")
     assert [r.referans_email for r in kalem.referans_istekleri] == ["elif@ornek.com"]
     assert kalem.referans_istekleri[0].token
+
+
+def test_kalem_basina_referans_istegi_sinirlidir(eposta_gonderilmez):
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            hesap, cikti = await _genc_ve_kalem(oturum)
+            yol = f"/dogrulama/kalem/{cikti.id}/referans"
+            for sira in range(KALEM_BASINA_ISTEK):
+                yanit = await istemci.post(
+                    yol, headers=_baslik(hesap), json={"referans_email": f"kisi{sira}@adres.com"}
+                )
+                assert yanit.status_code == 201
+            fazla = await istemci.post(
+                yol, headers=_baslik(hesap), json={"referans_email": "fazla@adres.com"}
+            )
+            assert fazla.status_code == 409
+            assert str(KALEM_BASINA_ISTEK) in fazla.json()["detail"]
+            assert len(eposta_gonderilmez.gonderilenler) == KALEM_BASINA_ISTEK
+
+    asyncio.run(senaryo())

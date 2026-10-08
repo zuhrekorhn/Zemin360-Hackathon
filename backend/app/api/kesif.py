@@ -9,6 +9,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
+from langchain_core.messages import AIMessage, HumanMessage
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -38,6 +39,8 @@ from app.schemas.kesif import (
     OnayliKart,
     SohbetBaslatIstegi,
     SohbetCevapIstegi,
+    SohbetDevamYaniti,
+    SohbetMesaji,
     SohbetYaniti,
     SomutCiktiTaslagi,
     YetenekKartiYaniti,
@@ -62,6 +65,10 @@ SOHBET_YOK = "Bu sohbet bulunamadı. Yeni bir sohbet başlatabilirsin."
 
 SEHIR_GEREKLI = "Şehir gerekli: fırsatlar şehre göre eşleşiyor."
 KART_EKSIK = "Kartında rol, deneyim ve en az bir sektör ilgisi olmalı."
+KART_COK_UZUN = (
+    "Kartındaki bazı metinler çok uzun ya da çalışma sayısı çok fazla. "
+    "Metinleri kısaltıp en çok 20 çalışma bırakarak tekrar dene."
+)
 KART_ZATEN_VAR = (
     "Kartın zaten var. Yeni kart yerine onu düzenleyebilir, çalışma ekleyerek güçlendirebilirsin."
 )
@@ -131,6 +138,44 @@ async def sohbet_cevap(
     return _yanit(istek.oturum_id, durum)
 
 
+def _mesajlar(durum: dict) -> list[SohbetMesaji]:
+    """Checkpoint'teki mesajlardan ekranda görünen balonlar (sistem mesajı yok)."""
+    balonlar: list[SohbetMesaji] = []
+    for mesaj in durum.get("mesajlar") or []:
+        if isinstance(mesaj, AIMessage):
+            kim = "ajan"
+        elif isinstance(mesaj, HumanMessage):
+            kim = "kullanici"
+        else:
+            continue
+        metin = mesaj.content if isinstance(mesaj.content, str) else ""
+        if metin.strip():
+            balonlar.append(SohbetMesaji(kim=kim, metin=metin))
+    return balonlar
+
+
+@router.get("/sohbet/{oturum_id}", response_model=SohbetDevamYaniti)
+async def sohbet_devam(
+    oturum_id: uuid.UUID, request: Request, hesap: Hesap = Depends(rol_gerekli(ROL_GENC))
+) -> SohbetDevamYaniti:
+    """Yarım kalan sohbeti geri getirir: sayfa yenilenince anlatılan her şey kaybolmasın.
+
+    Sohbet checkpointer'da duruyor (`oturum_id` = thread_id); ön yüz kimliği tarayıcıda
+    saklar. Sahibi değilse ya da sohbet yoksa 404 (varlık sızmasın).
+    """
+    mevcut = await _grafik(request).aget_state({"configurable": {"thread_id": str(oturum_id)}})
+    if not mevcut.values or not sohbetin_sahibi_mi(mevcut.values, hesap):
+        raise HTTPException(status_code=404, detail=SOHBET_YOK)
+    yaniti = _yanit(oturum_id, mevcut.values)
+    return SohbetDevamYaniti(
+        oturum_id=oturum_id,
+        mesajlar=_mesajlar(mevcut.values),
+        soru=yaniti.soru,
+        taslak=yaniti.taslak,
+        taslak_hazir=yaniti.taslak_hazir,
+    )
+
+
 @router.post("/kart/onayla", response_model=YetenekKartiYaniti, status_code=201)
 async def kart_onayla(
     istek: KartOnaylaIstegi,
@@ -179,7 +224,10 @@ async def kart_onayla(
     try:
         onayli = OnayliKart.model_validate(taslak.model_dump())
     except ValidationError as hata:
-        raise HTTPException(status_code=422, detail=KART_EKSIK) from hata
+        cok_uzun = any(e["type"] in ("string_too_long", "too_long") for e in hata.errors())
+        raise HTTPException(
+            status_code=422, detail=KART_COK_UZUN if cok_uzun else KART_EKSIK
+        ) from hata
 
     # Kart token'daki hesabın profiline bağlanır; onay yalnızca eşleştirmeyi
     # etkileyen alanları günceller (docs/kimlik-ve-dongu.md § 4).
@@ -196,9 +244,9 @@ async def kart_onayla(
         rol_alani=onayli.rol_alani,
         deneyim_seviyesi=onayli.deneyim_seviyesi,
         sektor_ilgi_alani=onayli.sektor_ilgi_alani,
-        araclar_teknolojiler=taslak.araclar_teknolojiler,
-        sertifikalar=taslak.sertifikalar,
-        diller=taslak.diller,
+        araclar_teknolojiler=onayli.araclar_teknolojiler,
+        sertifikalar=onayli.sertifikalar,
+        diller=onayli.diller,
         kanit_bekleyen=kanit_bekliyor(is_kalemleri),
         somut_ciktilar=is_kalemleri,
     )

@@ -238,6 +238,29 @@ def test_geri_cekme_ve_simdilik_degil():
     senaryo(adimlar)
 
 
+def test_ilgi_ac_kapa_firmaya_tek_bildirim_yazar():
+    """İlgi göster, geri çek, yeniden göster: geçişler uygulanır ama firma 24 saatte
+    aynı eşleşme için tek bildirim alır."""
+
+    async def adimlar(istemci, d):
+        yol = f"/eslestirme/{d.E1.id}"
+        for _ in range(3):
+            assert (
+                await istemci.post(f"{yol}/genc-ilgi", headers=d.genc1.baslik, json=ONAY)
+            ).json()["durum"] == "genc_ilgilendi"
+            assert (await istemci.post(f"{yol}/ilgiyi-geri-cek", headers=d.genc1.baslik)).json()[
+                "durum"
+            ] == "onerildi"
+        sayi = await d.oturum.scalar(
+            select(func.count())
+            .select_from(Bildirim)
+            .where(Bildirim.hesap_id == d.kurum1.hesap.id, Bildirim.tur == TUR_GENC_ILGI)
+        )
+        assert sayi == 1
+
+    senaryo(adimlar)
+
+
 def test_kapali_ihtiyaca_ilgi_gosterilemez_skor_engellemez():
     """Eskiden skor eşiğinin altı 409'du; eşik kalktı, düşük skor ilgiyi engellemez."""
 

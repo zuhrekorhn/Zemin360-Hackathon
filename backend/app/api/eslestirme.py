@@ -73,7 +73,7 @@ from app.schemas.eslestirme import (
 )
 from app.servisler import eslesme_epostasi
 from app.servisler import eslestirme as servis
-from app.servisler.bildirim import bildirim_ekle
+from app.servisler.bildirim import bildirim_ekle, yakinda_yazildi_mi
 from app.servisler.eslestirme import (
     IHTIYAC_ACIK,
     eslesmeleri_oku,
@@ -271,14 +271,16 @@ async def genc_ilgi(
         eslesme.baslatan = TARAF_ADAY
         eslesme.genc_ilgi_tarihi = eslesme.son_aktivite_tarihi
         eslesme.genc_iletisim_onayi_tarihi = eslesme.son_aktivite_tarihi
-        bildirim_ekle(
-            oturum,
-            taraf_hesabi(eslesme, TARAF_ILAN),
-            TUR_GENC_ILGI,
-            f"{taraf_adi(eslesme, TARAF_ADAY)} ihtiyacınızla ilgileniyor. Siz de "
-            "ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır.",
-            eslesme.id,
-        )
+        firma_hesabi = taraf_hesabi(eslesme, TARAF_ILAN)
+        if not await yakinda_yazildi_mi(oturum, firma_hesabi, TUR_GENC_ILGI, eslesme.id):
+            bildirim_ekle(
+                oturum,
+                firma_hesabi,
+                TUR_GENC_ILGI,
+                f"{taraf_adi(eslesme, TARAF_ADAY)} ihtiyacınızla ilgileniyor. Siz de "
+                "ilgilenirseniz iletişim bilgileriniz karşılıklı paylaşılır.",
+                eslesme.id,
+            )
     await oturum.commit()
     return _durum_yaniti(eslesme, hesap)
 

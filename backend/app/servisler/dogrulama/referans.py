@@ -69,7 +69,18 @@ class ReferansZatenBekliyor(Exception):
     """Aynı kalemde aynı kişiden bekleyen istek var (409)."""
 
 
+class ReferansSiniri(ReferansZatenBekliyor):
+    """Kötüye kullanım sınırı: aynı adrese kısa sürede ikinci istek ya da çalışma başına
+    istek sayısı doldu (409, aynı yanıt yolu)."""
+
+
 KENDI_REFERANSI = "Kendi e-posta adresini referans olarak gösteremezsin."
+# "İste → geri çek → yeniden iste" döngüsü aynı kişiye sınırsız e-posta göndermesin
+# (docs/dogrulama.md § 7). Sınırlar kalem başına; bir kalem için 5 kişi bol.
+REFERANS_BEKLEME_SAAT = 24
+KALEM_BASINA_ISTEK = 5
+SIK_ISTEK = "Bu adrese az önce bir istek gönderildi. Bir gün sonra yeniden isteyebilirsin."
+ISTEK_SINIRI = f"Bir çalışma için en fazla {KALEM_BASINA_ISTEK} referans isteyebilirsin."
 YANIT_YOK_BILDIRIMI = (
     "Bir referans isteğin süresinde yanıtlanmadı. Bu olumsuz bir işaret değil; "
     "istersen yeniden isteyebilir ya da başka birinden referans isteyebilirsin."
@@ -324,6 +335,16 @@ def isteme_engeli(cikti: SomutCikti, referans_email: str, gencin_epostasi: str |
         for r in cikti.referans_istekleri
     ):
         raise ReferansZatenBekliyor(ZATEN_BEKLENIYOR)
+    if len(cikti.referans_istekleri) >= KALEM_BASINA_ISTEK:
+        raise ReferansSiniri(ISTEK_SINIRI)
+    sinir = _simdi() - dt.timedelta(hours=REFERANS_BEKLEME_SAAT)
+    if any(
+        _ayni_adres(r.referans_email, referans_email)
+        and r.gonderim_tarihi is not None
+        and r.gonderim_tarihi > sinir
+        for r in cikti.referans_istekleri
+    ):
+        raise ReferansSiniri(SIK_ISTEK)
 
 
 async def istek_epostasi_kur(

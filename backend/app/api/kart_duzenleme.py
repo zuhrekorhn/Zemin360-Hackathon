@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -35,6 +35,7 @@ from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.kart_duzenleme import (
+    MAX_CALISMA,
     Guclendirme,
     IsKalemiGirdisi,
     IsKalemiGuncelleme,
@@ -50,6 +51,10 @@ from app.servisler.sahiplik import yetenek_kartinin_sahibi_mi
 router = APIRouter(prefix="/yetenek-kartlari", tags=["kart-duzenleme"])
 
 IS_KALEMI_BULUNAMADI = "Çalışma bulunamadı."
+CALISMA_SINIRI = (
+    f"Kartında en fazla {MAX_CALISMA} çalışma olabilir. "
+    "Yenisini eklemek için birini sil ya da birleştir."
+)
 
 
 async def _sahibinin_karti(oturum: AsyncSession, hesap: Hesap, kart_id: uuid.UUID) -> YetenekKarti:
@@ -192,6 +197,8 @@ async def is_kalemi_ekle(
     oturum: AsyncSession = Depends(get_session),
 ) -> YetenekKartiYaniti:
     kart = await _sahibinin_karti(oturum, hesap, kart_id)
+    if len(kart.somut_ciktilar) >= MAX_CALISMA:
+        raise HTTPException(status_code=409, detail=CALISMA_SINIRI)
     duzenleme.is_kalemi_ekle(kart, istek.model_dump(), kanit_linki=istek.kanit_linki)
     return await _sonuclandir(oturum, kart, True, arka_plan)
 

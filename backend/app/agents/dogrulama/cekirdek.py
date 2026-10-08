@@ -26,6 +26,7 @@ from app.agents.dogrulama.kurallar import (
     sonuc_puani,
 )
 from app.agents.dogrulama.not_sablonu import not_yaz
+from app.core.istem_guvenligi import veri_temizle
 from app.core.kanit_okuma.belge import KaynakSeviyesi
 
 # Kural ya da istem değişince artar: eski göstergeler ayırt edilir, önbellek tazelenir.
@@ -79,17 +80,25 @@ Cikarici = Callable[[dict[str, str]], Awaitable[KanitCikarimi]]
 def cikarim_girdisi(girdi: DegerlendirmeGirdisi, okunan: OkunanKanit | None) -> dict[str, str]:
     """Modele giden alanlar; önbellek özeti de bunlardan hesaplanır."""
     okunabildi = okunan is not None and not okunan.erisim.okunamadi_mi and okunan.metin
-    return {
-        "baslik": girdi.baslik,
-        "iddia_sahibi": girdi.iddia_sahibi or "(belirtilmemiş)",
-        "aciklama": girdi.aciklama or "(yazılmamış)",
-        "sonuc": girdi.sonuc or "(yazılmamış)",
-        "pay": girdi.pay or "(yazılmamış)",
-        "yetenekler": ", ".join(girdi.yetenekler) or "(yok)",
-        "kanit_adresi": _kanit_adresi(okunan),
-        "kanit_metni": (okunan.model_metni or okunan.metin) if okunabildi else "(kanıt metni yok)",
-        "itiraz_notu": girdi.itiraz_notu or "(itiraz yok)",
-    }
+    # Kanıt sayfasının metni başkasının yazdığı veri: `</kanit_metni>` yazan biri
+    # sınırdan çıkıp talimat veremesin (app/core/istem_guvenligi.py). Gencin alanları
+    # da aynı etiketle sınırlandığı için hepsi süzülür.
+    return veri_temizle(
+        {
+            "baslik": girdi.baslik,
+            "iddia_sahibi": girdi.iddia_sahibi or "(belirtilmemiş)",
+            "aciklama": girdi.aciklama or "(yazılmamış)",
+            "sonuc": girdi.sonuc or "(yazılmamış)",
+            "pay": girdi.pay or "(yazılmamış)",
+            "yetenekler": ", ".join(girdi.yetenekler) or "(yok)",
+            "kanit_adresi": _kanit_adresi(okunan),
+            "kanit_metni": (okunan.model_metni or okunan.metin)
+            if okunabildi
+            else "(kanıt metni yok)",
+            "itiraz_notu": girdi.itiraz_notu or "(itiraz yok)",
+        },
+        ("kanit_metni",),
+    )
 
 
 def _kanit_adresi(okunan: OkunanKanit | None) -> str:

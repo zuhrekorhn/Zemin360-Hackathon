@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, BeforeValidator, Field, StringConstraints
 
 from app.core.is_kalemi import IsTuru, is_turu_hosgorulu
 from app.core.musaitlik import KatiMusaitlikler
 from app.schemas.dogrulama import GuvenSkoruYaniti, KanitParcasiYaniti
-from app.schemas.kart_duzenleme import DeneyimSeviyesi, DoluKisaMetin, Etiketler
+from app.schemas.kart_duzenleme import (
+    MAX_CALISMA,
+    DeneyimSeviyesi,
+    DoluKisaMetin,
+    Etiketler,
+    Metin,
+)
 from app.schemas.sohbet import SohbetBaslatIstegi, SohbetCevapIstegi
 
 __all__ = ["SohbetBaslatIstegi", "SohbetCevapIstegi"]
@@ -42,6 +48,37 @@ class KartTaslagi(BaseModel):
     somut_ciktilar: list[SomutCiktiTaslagi] = Field(default_factory=list)
 
 
+def _etiketleri_temizle(deger: object) -> object:
+    """Boş ve tekrarlanan etiketleri atar: sohbetin çıktısı kusurlu olabilir, sınır
+    kontrolü yalnızca gerçekten fazla olanı yakalasın."""
+    if not isinstance(deger, list):
+        return deger
+    temiz: list[str] = []
+    for oge in deger:
+        metin = oge.strip() if isinstance(oge, str) else oge
+        if metin and metin not in temiz:
+            temiz.append(metin)
+    return temiz
+
+
+OnayEtiketleri = Annotated[Etiketler, BeforeValidator(_etiketleri_temizle)]
+
+
+class OnayliCikti(BaseModel):
+    """Onaydaki bir çalışmanın sınırları: kart düzenlemedeki `IsKalemiGirdisi` ile aynı."""
+
+    baslik: DoluKisaMetin
+    aciklama: Metin | None = None
+    olculebilir_sonuc: Metin | None = None
+    kendi_rolu: Metin | None = None
+    kanit_linki: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None = (
+        None
+    )
+    referans_email: (
+        Annotated[str, StringConstraints(strip_whitespace=True, max_length=254)] | None
+    ) = None
+
+
 class OnayliKart(BaseModel):
     """Onayda kaydedilecek kartın zorunlu alanları.
 
@@ -53,7 +90,30 @@ class OnayliKart(BaseModel):
 
     rol_alani: DoluKisaMetin
     deneyim_seviyesi: DeneyimSeviyesi
-    sektor_ilgi_alani: Annotated[Etiketler, Field(min_length=1)]
+    sektor_ilgi_alani: Annotated[OnayEtiketleri, Field(min_length=1)]
+    # Kullanıcı taslakta her alanı düzenleyebiliyor: sınırlar sunucuda da olmalı, yoksa
+    # tek bir onay isteği yüzlerce çalışma (yüzlerce değerlendirme ve e-posta) açabilir.
+    araclar_teknolojiler: OnayEtiketleri = Field(default_factory=list)
+    sertifikalar: OnayEtiketleri = Field(default_factory=list)
+    diller: OnayEtiketleri = Field(default_factory=list)
+    somut_ciktilar: list[OnayliCikti] = Field(default_factory=list, max_length=MAX_CALISMA)
+
+
+class SohbetMesaji(BaseModel):
+    """Sohbet geçmişinde bir balon: `ajan` (Zemin360) ya da `kullanici`."""
+
+    kim: Literal["ajan", "kullanici"]
+    metin: str
+
+
+class SohbetDevamYaniti(BaseModel):
+    """Yarım kalmış sohbeti geri yükler (sayfa yenilenince ya da sekme kapanınca)."""
+
+    oturum_id: uuid.UUID
+    mesajlar: list[SohbetMesaji]
+    soru: str | None = None
+    taslak: KartTaslagi
+    taslak_hazir: bool
 
 
 class SohbetYaniti(BaseModel):

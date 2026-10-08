@@ -39,6 +39,7 @@ from app.models.kurum import Kurum
 from app.models.referans_istegi import ReferansIstegi
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
+from app.schemas.kart_duzenleme import MAX_CALISMA
 from app.servisler.dogrulama import ucuncu_taraf_puani
 from tests.kanit_yardimcisi import link_parcasi
 from tests.sahte_hesap import GENC_KAYIT_EKI
@@ -301,6 +302,29 @@ def test_kart_alanlari_ve_is_kalemi_ekle_sil(kart_hazirlama_arka_plani_yok):
                 json={"baslik": "Kulüp web sitesi"},
             )
             assert yeniden.json()["deneyim_seviyesi"] == "baslangic"
+
+    asyncio.run(senaryo())
+
+
+def test_karta_en_fazla_sinir_kadar_calisma_eklenir(kart_hazirlama_arka_plani_yok):
+    """Her çalışma bir değerlendirme (ve referansla e-posta) başlatır: üst sınır şart."""
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum, api_istemcisi(oturum) as istemci:
+            hesap, _, kart, _a, _b = await _genc_ve_kart(oturum)
+            baslik = _baslik(hesap)
+            yol = f"/yetenek-kartlari/{kart.id}/ciktilar"
+            mevcut = len(
+                (await istemci.get(f"/yetenek-kartlari/{kart.id}", headers=baslik)).json()[
+                    "somut_ciktilar"
+                ]
+            )
+            for sira in range(MAX_CALISMA - mevcut):
+                yanit = await istemci.post(yol, headers=baslik, json={"baslik": f"İş {sira}"})
+                assert yanit.status_code == 201
+            fazla = await istemci.post(yol, headers=baslik, json={"baslik": "Fazla"})
+            assert fazla.status_code == 409
+            assert str(MAX_CALISMA) in fazla.json()["detail"]
 
     asyncio.run(senaryo())
 

@@ -4,13 +4,25 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, StringConstraints, model_validator
 
 from app.core.kimlik import SIFRE_EN_AZ
 from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
-from app.schemas.sohbet import DoluMetin
+
+# Kayıttaki ad, referans e-postasının konusuna ve firmaya gösterilen kartın başlığına
+# giriyor: tek satır ve kısa olmalı (satır sonu ya da çok uzun metinle oltalama
+# cümlesi yazılamasın).
+Ad = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=100,
+        pattern=r"^[^\r\n\t]+$",
+    ),
+]
 
 
 class KayitIstegi(BaseModel):
@@ -20,7 +32,7 @@ class KayitIstegi(BaseModel):
     # GİRVAK açık kayıtla açılamaz (not § 2): yalnızca betik/tohum veriyle.
     rol: Literal["genc", "kurum"]
     # Gencin adı ya da kurumun adı; profil bununla açılır.
-    ad: DoluMetin
+    ad: Ad
     # Genç için zorunlu: kayıt formunun yapısal alanları (docs/kimlik-ve-dongu.md
     # § 2). Firma kaydı bunu göndermez.
     genc_profili: GencKayitProfili | None = None
