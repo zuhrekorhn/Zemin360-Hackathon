@@ -15,29 +15,33 @@ import { cn } from "@/lib/utils";
  * önizleme. Firmaya "siz".
  */
 
+/**
+ * Kartın o anki hali. Başlık sohbetten çıkana kadar firmanın adı durur (boş,
+ * soluk bir yer tutucu yerine kartın kime ait olduğu görünür).
+ */
 function TaslakKutusu({
   etiket,
   baslik,
+  firmaAdi,
   children,
 }: {
   etiket: string;
   baslik: string | null;
+  firmaAdi: string;
   children: React.ReactNode;
 }) {
+  const gorunen = baslik ?? firmaAdi;
   return (
     <section
       aria-label={etiket}
       className={cn(KUTU, "flex flex-col gap-3 px-5 py-5")}
     >
       <p className="text-xs font-medium text-muted-foreground">{etiket}</p>
-      <p
-        className={cn(
-          "font-heading text-lg leading-snug font-semibold",
-          baslik ? "text-ana" : "text-muted-foreground italic",
-        )}
-      >
-        {baslik ?? "Sohbet ilerledikçe belirecek"}
-      </p>
+      {gorunen ? (
+        <p className="line-clamp-5 font-heading text-lg leading-snug font-semibold text-pretty text-ana">
+          {gorunen}
+        </p>
+      ) : null}
       {children}
     </section>
   );
@@ -83,8 +87,9 @@ export function IhtiyacOnizleme({
         bilgiler={ihtiyacToplananlari(taslak, ortak)}
       />
       <TaslakKutusu
-        etiket={firmaAdi || "İhtiyacınız oluşuyor"}
+        etiket="İhtiyacınız oluşuyor"
         baslik={taslak?.problem_tanimi ?? null}
+        firmaAdi={firmaAdi}
       >
         <Parca etiket="Başarı ölçütü" metin={taslak?.basari_kriteri} />
         <Parca etiket="Ölçüt ayrıntısı" metin={olcutParcalari.join(" · ")} />
@@ -123,8 +128,9 @@ export function FirmaKartiOnizleme({
         bilgiler={firmaKartiToplananlari(taslak)}
       />
       <TaslakKutusu
-        etiket={firmaAdi || "Kartınız oluşuyor"}
+        etiket="Kartınız oluşuyor"
         baslik={taslak?.ne_yapiyoruz ?? null}
+        firmaAdi={firmaAdi}
       >
         {yetkinlikler.length > 0 ? (
           <ul className="flex flex-wrap gap-1.5 border-t border-kenar pt-3">
