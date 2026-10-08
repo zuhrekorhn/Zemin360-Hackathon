@@ -627,6 +627,18 @@ export function sohbetBaslat(): Promise<SohbetYaniti> {
   });
 }
 
+/** Yarım kalan sohbetin geri yüklenen hali: balonlar, bekleyen soru, taslak. */
+export type SohbetDevamYaniti = SohbetYaniti & {
+  mesajlar: { kim: "ajan" | "kullanici"; metin: string }[];
+};
+
+/** GET /kesif/sohbet/{id} — sayfa yenilenince sohbet kaldığı yerden sürer. */
+export function sohbetDevam(oturumId: string): Promise<SohbetDevamYaniti> {
+  return apiIstek<SohbetDevamYaniti>(`/kesif/sohbet/${oturumId}`, {
+    cache: "no-store",
+  });
+}
+
 /** POST /kesif/sohbet/cevap — cevabı işler, sıradaki soruyu ya da taslağı döner. */
 export function sohbetCevap(
   oturumId: string,

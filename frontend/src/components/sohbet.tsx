@@ -17,6 +17,9 @@ import { useHitap } from "@/lib/oturum";
 
 export type Mesaj = { kim: "ajan" | "kullanici"; metin: string };
 
+/** Tek cevabın üst sınırı: backend'deki `CEVAP_EN_COK` ile aynı (app/schemas/sohbet.py). */
+export const CEVAP_EN_COK = 6000;
+
 export type SohbetHatasi = { metin: string; kota: boolean };
 
 export function Sohbet({
@@ -182,6 +185,7 @@ export function CevapAlani({
             }
           }}
           rows={2}
+          maxLength={CEVAP_EN_COK}
           disabled={bekleniyor}
           placeholder={hitapla(hitap, "Yazmaya başla…", "Yazmaya başlayın…")}
           // Yazdıkça büyür (field-sizing), 12rem'den sonra kendi içinde kayar.
@@ -197,8 +201,19 @@ export function CevapAlani({
           <ArrowUp aria-hidden="true" />
         </Button>
       </div>
-      <span className="px-1 text-xs text-muted-foreground">
-        Enter gönderir, Shift+Enter satır atlar.
+      <span className="flex items-center justify-between gap-3 px-1 text-xs text-muted-foreground">
+        <span>Enter gönderir, Shift+Enter satır atlar.</span>
+        {girdi.length > CEVAP_EN_COK * 0.8 ? (
+          <span
+            role="status"
+            className={
+              girdi.length >= CEVAP_EN_COK ? "font-medium text-destructive" : ""
+            }
+          >
+            {girdi.length}/{CEVAP_EN_COK}
+            {girdi.length >= CEVAP_EN_COK ? " · en fazla bu kadar yazılır" : ""}
+          </span>
+        ) : null}
       </span>
     </form>
   );

@@ -7,11 +7,14 @@ import {
   type GencProfili,
   type KartTaslagi,
   type YetenekKartiYaniti,
+  ApiHatasi,
   kartOnayla,
   sohbetBaslat,
   sohbetCevap,
+  sohbetDevam,
 } from "@/lib/api";
 import { hatayaCevir } from "@/lib/hata";
+import { kayitliSohbet, sohbetiKaydet, sohbetiUnut } from "@/lib/kesif-oturumu";
 import { useOturum } from "@/lib/oturum";
 
 /**
@@ -48,7 +51,26 @@ export function useKesifSohbeti() {
     setHata(null);
     setBekleniyor(true);
     try {
+      // Yarım kalmış sohbet varsa kaldığı yerden sürer (yenileme, sekme kapanması).
+      const eski = kayitliSohbet();
+      if (eski) {
+        try {
+          const devam = await sohbetDevam(eski);
+          setOturumId(devam.oturum_id);
+          setMesajlar(devam.mesajlar);
+          setTaslak(devam.taslak);
+          setAsama(devam.taslak_hazir ? "taslak" : "sohbet");
+          return;
+        } catch (sebep) {
+          // Başka hesabın ya da silinmiş sohbet (404): unut ve yenisini aç.
+          // Başka bir hata (ağ, sunucu) gerçek hatadır, yeni sohbetle örtülmez.
+          if (!(sebep instanceof ApiHatasi && sebep.durumKodu === 404))
+            throw sebep;
+          sohbetiUnut();
+        }
+      }
       const yanit = await sohbetBaslat();
+      sohbetiKaydet(yanit.oturum_id);
       setOturumId(yanit.oturum_id);
       setMesajlar(yanit.soru ? [{ kim: "ajan", metin: yanit.soru }] : []);
       setTaslak(yanit.taslak);
@@ -120,6 +142,7 @@ export function useKesifSohbeti() {
     setBekleniyor(true);
     try {
       setKart(await kartOnayla(oturumId, profil, duzeltilmisTaslak));
+      sohbetiUnut();
       setAsama("kaydedildi");
       // Menüdeki "Kartım" yeni karta bağlansın (/me).
       void tazele();
