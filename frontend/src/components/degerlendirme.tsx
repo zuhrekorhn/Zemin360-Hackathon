@@ -41,7 +41,10 @@ export function Degerlendirme({
   kararaItiraz,
   bekleniyor,
   onItiraz,
+  ayrac = true,
 }: {
+  /** Üstte ayırıcı çizgi (kendi kutusunda gösterilirken kapalı). */
+  ayrac?: boolean;
   kimlik: string;
   not: string | null;
   incelemeBekliyor: boolean;
@@ -54,7 +57,13 @@ export function Degerlendirme({
   const notlar = notuBasliklaraAyir(not);
 
   return (
-    <section className="flex flex-col gap-3 border-t border-kenar pt-4">
+    <section
+      className={
+        ayrac
+          ? "flex flex-col gap-3 border-t border-kenar pt-4"
+          : "flex flex-col gap-3"
+      }
+    >
       {notlar.length > 0 ? (
         <div className="flex flex-col gap-2">
           <h4 className="text-sm font-semibold text-ana">

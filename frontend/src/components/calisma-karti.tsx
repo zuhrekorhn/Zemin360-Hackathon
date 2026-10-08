@@ -9,6 +9,7 @@ import {
   IsKalemiSilmeOnayi,
 } from "@/components/kart-duzenleme";
 import { Button } from "@/components/ui/button";
+import { YanPanel } from "@/components/ui/yan-panel";
 import { DIKKAT, KUTU } from "@/components/ui/yuzey";
 import type {
   KanitDurumu,
@@ -92,18 +93,18 @@ export function CalismaKarti({
             </a>
           ) : null}
         </div>
-        {kip === "oku" && cikti.aciklama ? (
+        {cikti.aciklama ? (
           <p className="line-clamp-2 max-w-prose text-sm text-pretty text-muted-foreground">
             {cikti.aciklama}
           </p>
         ) : null}
-        {kip === "oku" && cikti.kendi_rolu ? (
+        {cikti.kendi_rolu ? (
           <p className="text-sm text-pretty">
             <span className="font-medium">Payın: </span>
             {cikti.kendi_rolu}
           </p>
         ) : null}
-        {kip === "oku" && cikti.olculebilir_sonuc ? (
+        {cikti.olculebilir_sonuc ? (
           <p className="text-sm text-pretty">
             <span className="font-medium">Sonuç: </span>
             {cikti.olculebilir_sonuc}
@@ -111,18 +112,24 @@ export function CalismaKarti({
         ) : null}
       </header>
 
-      {kip === "duzenle" ? (
-        <div className="border-t border-kenar pt-4">
-          <IsKalemiDuzenleFormu
-            kartId={kartId}
-            cikti={cikti}
-            onGuncel={onGuncel}
-            onHata={onHata}
-            onKapat={() => setKip("oku")}
-            onSil={() => setKip("sil")}
-          />
-        </div>
-      ) : kip === "sil" ? (
+      <YanPanel
+        acik={kip === "duzenle"}
+        onKapat={() => setKip("oku")}
+        ust="Çalışmayı düzenle"
+        baslik={cikti.baslik}
+        alt="Kanıt ve referanslar Güçlendir'de."
+      >
+        <IsKalemiDuzenleFormu
+          kartId={kartId}
+          cikti={cikti}
+          onGuncel={onGuncel}
+          onHata={onHata}
+          onKapat={() => setKip("oku")}
+          onSil={() => setKip("sil")}
+        />
+      </YanPanel>
+
+      {kip === "sil" ? (
         <IsKalemiSilmeOnayi
           kartId={kartId}
           cikti={cikti}

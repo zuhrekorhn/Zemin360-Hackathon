@@ -80,10 +80,7 @@ export function KartAlanlariFormu({
   }
 
   return (
-    <form
-      className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4"
-      onSubmit={kaydet}
-    >
+    <form className="flex flex-col gap-4" onSubmit={kaydet}>
       <KartAlanlari
         kimlik="kart"
         degerler={alanlar}
@@ -290,10 +287,7 @@ export function IsKalemiEkleFormu({
   }
 
   return (
-    <form
-      className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4"
-      onSubmit={ekle}
-    >
+    <form className="flex flex-col gap-4" onSubmit={ekle}>
       <IsKalemiFormu
         kimlik="yeni-is-kalemi"
         cikti={taslak}

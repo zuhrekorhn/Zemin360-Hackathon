@@ -17,6 +17,11 @@ import { cn } from "@/lib/utils";
  * (docs/agent-specs.md § 4): eksik başlıklar sayılır, çalışma çalışma gösterilir.
  */
 
+/** Kullanıcının yazdığı rolün ilk harfi büyük: "backend geliştirici" → "Backend geliştirici". */
+export function cumleDuzeni(metin: string): string {
+  return metin.charAt(0).toLocaleUpperCase("tr") + metin.slice(1);
+}
+
 /** Adın baş harfleri: "Elif Demir" → "ED". */
 export function basHarfler(ad: string): string {
   return ad
@@ -74,7 +79,7 @@ export function KimlikKutusu({
             {kart.genc_adi}
           </span>
           <span className="text-sm text-pretty text-muted-foreground">
-            {kart.rol_alani} ·{" "}
+            {cumleDuzeni(kart.rol_alani)} ·{" "}
             {etiketle(
               DENEYIM_ETIKETLERI,
               kart.deneyim_seviyesi,
@@ -228,9 +233,11 @@ export function SiradakiAdimBandi({
       className="flex flex-col gap-4 rounded-xl bg-ana px-6 py-5 text-zemin sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="flex min-w-0 flex-col gap-1">
-        <p className="text-xs font-medium text-zemin/70">Sıradaki adım</p>
-        <p className="font-heading text-lg leading-snug font-semibold text-balance">
-          “{adim.calisma}”: {adim.adim.kisa.toLocaleLowerCase("tr")}
+        <p className="truncate text-xs font-medium text-zemin/70">
+          Sıradaki adım · {adim.calisma}
+        </p>
+        <p className="font-heading text-xl leading-snug font-semibold text-balance">
+          {adim.adim.kisa}
         </p>
         <p className="text-sm text-pretty text-zemin/80">
           {kalanCumlesi(adim)}

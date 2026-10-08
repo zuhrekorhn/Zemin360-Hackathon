@@ -7,7 +7,7 @@ import { FirmaBasligi, KosulEtiketleri } from "@/components/firsatlar";
 import { OnayAlani } from "@/components/onay-alani";
 import { IletisimSatiri } from "@/components/panel";
 import { Button } from "@/components/ui/button";
-import { basHarfler } from "@/components/kart-yan-sutunu";
+import { basHarfler, cumleDuzeni } from "@/components/kart-yan-sutunu";
 import { KUTU } from "@/components/ui/yuzey";
 import type {
   BanaGelenIlgi,
@@ -144,10 +144,7 @@ export function KabulEdilenIlgi({
 }) {
   return (
     <li
-      className={cn(
-        KUTU,
-        "flex flex-col gap-3 border-baglanti/40 px-6 py-5",
-      )}
+      className={cn(KUTU, "flex flex-col gap-3 border-baglanti/40 px-6 py-5")}
     >
       <p className="text-xs font-medium text-baglanti">Karşılıklı ilgi</p>
       <FirmaBasligi ihtiyac={ilgi.ihtiyac_karti} />
@@ -215,13 +212,7 @@ export function YanKutu({
   className?: string;
 }) {
   return (
-    <section
-      className={cn(
-        KUTU,
-        "flex flex-col gap-3 px-5 py-5",
-        className,
-      )}
-    >
+    <section className={cn(KUTU, "flex flex-col gap-3 px-5 py-5", className)}>
       <h2 className="font-heading text-base font-semibold text-ana">
         {baslik}
       </h2>
@@ -253,13 +244,15 @@ export function KimlikOzeti({
           </span>
           <span className="text-sm text-muted-foreground">
             {kart
-              ? `${kart.rol_alani} · ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi).toLocaleLowerCase("tr")} deneyim`
+              ? `${cumleDuzeni(kart.rol_alani)} · ${etiketle(DENEYIM_ETIKETLERI, kart.deneyim_seviyesi).toLocaleLowerCase("tr")} deneyim`
               : "Kartın henüz yok"}
           </span>
         </div>
       </div>
       <Button asChild variant="outline" className="w-full">
-        <Link href={kartYolu(kart)}>{kart ? "Kartına git" : "Kartını oluştur"}</Link>
+        <Link href={kartYolu(kart)}>
+          {kart ? "Kartına git" : "Kartını oluştur"}
+        </Link>
       </Button>
     </section>
   );
@@ -346,7 +339,9 @@ function SurecSatiriGorunumu({
   );
   const ust = (
     <span className="flex items-center justify-between gap-3">
-      <span className="min-w-0 truncate text-sm font-medium">{satir.firma}</span>
+      <span className="min-w-0 truncate text-sm font-medium">
+        {satir.firma}
+      </span>
       {etiket}
     </span>
   );

@@ -40,7 +40,11 @@ import {
   referansYenidenIste,
 } from "@/lib/api";
 import { type AdimTuru, type Eksik, eksikler } from "@/lib/calisma";
-import { baslikGosterimi, notuBasliklaraAyir } from "@/lib/guven-gostergesi";
+import {
+  baslikGosterimi,
+  ilkCumle,
+  notuBasliklaraAyir,
+} from "@/lib/guven-gostergesi";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { degerlendirildiMi, dosyaParcalari, kanitLinkleri } from "@/lib/kanit";
 import { cn } from "@/lib/utils";
@@ -106,7 +110,10 @@ export function GuclendirPaneli({
     skor,
   });
   const notlar = Object.fromEntries(
-    notuBasliklaraAyir(skor?.gerekce_metni).map((p) => [p.baslik, p.metin]),
+    notuBasliklaraAyir(skor?.gerekce_metni).map((p) => [
+      p.baslik,
+      ilkCumle(p.metin),
+    ]),
   );
   const eksikTurler = liste.map((e) => e.tur);
   const sirali = [
@@ -229,6 +236,7 @@ export function GuclendirPaneli({
           <Degerlendirme
             kimlik={cikti.id}
             not={null}
+            ayrac={false}
             incelemeBekliyor={durum?.inceleme_bekliyor ?? false}
             kararaItiraz={durum?.dogrulanamadi ?? false}
             bekleniyor={bekleniyor}

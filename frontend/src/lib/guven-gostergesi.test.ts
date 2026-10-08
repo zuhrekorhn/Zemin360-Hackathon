@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   baslikGosterimi,
   gostergeDoluMu,
+  ilkCumle,
   notuBasliklaraAyir,
 } from "./guven-gostergesi";
 
@@ -75,5 +76,14 @@ describe("gostergeDoluMu", () => {
 
   it("tek bir başlık doluysa evet (0 da dolu sayılır)", () => {
     expect(gostergeDoluMu({ ...bos, ucuncu_taraf_onayi: 0 })).toBe(true);
+  });
+});
+
+describe("ilkCumle", () => {
+  it("ilk cümleyi alır; noktasız metni olduğu gibi bırakır", () => {
+    expect(
+      ilkCumle("Payını yazmamışsın. Doğru kanıtı paylaşarak belirtebilirsin."),
+    ).toBe("Payını yazmamışsın.");
+    expect(ilkCumle("Sürüm 1.2 hazır")).toBe("Sürüm 1.2 hazır");
   });
 });

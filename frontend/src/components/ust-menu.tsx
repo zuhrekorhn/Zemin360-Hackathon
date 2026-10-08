@@ -22,6 +22,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { KarsilamaMenusu } from "@/components/karsilama/menu";
+import { basHarfler } from "@/components/kart-yan-sutunu";
 import { MENU_ODAK, MenuKabugu } from "@/components/menu-kabugu";
 import type { MeYaniti } from "@/lib/api";
 import { menuBaglantilari, type MenuBaglantisi } from "@/lib/menu";
@@ -39,9 +40,11 @@ function Rozet({ sayi }: { sayi: number }) {
   );
 }
 
-/** Adın baş harfi; ad yoksa e-postanın. */
+/** Adın baş harfleri (kart sayfasıyla aynı); ad yoksa e-postanın ilk harfi. */
 function basHarf(hesap: MeYaniti): string {
-  return (hesap.ad ?? hesap.email).trim().charAt(0).toLocaleUpperCase("tr");
+  return hesap.ad
+    ? basHarfler(hesap.ad)
+    : hesap.email.charAt(0).toLocaleUpperCase("tr");
 }
 
 function HesapMenusu({
@@ -98,7 +101,7 @@ function HesapMenusu({
       >
         <span
           aria-hidden="true"
-          className="flex size-8 items-center justify-center rounded-full bg-ana font-heading text-sm font-semibold text-zemin"
+          className="flex size-8 items-center justify-center rounded-full bg-ana font-heading text-xs font-semibold text-zemin"
         >
           {basHarf(hesap)}
         </span>
@@ -254,9 +257,7 @@ export function UstMenu() {
               <Bell aria-hidden="true" className="size-5" />
               <span className="sr-only">
                 Bildirimler
-                {okunmamis_bildirim
-                  ? `, ${okunmamis_bildirim} okunmamış`
-                  : ""}
+                {okunmamis_bildirim ? `, ${okunmamis_bildirim} okunmamış` : ""}
               </span>
               {okunmamis_bildirim ? (
                 <span className="absolute top-1 right-0.5">

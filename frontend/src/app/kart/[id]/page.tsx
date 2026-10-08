@@ -29,7 +29,6 @@ import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { YanPanel } from "@/components/ui/yan-panel";
-import { KUTU } from "@/components/ui/yuzey";
 import {
   type KanitDurumu,
   type YetenekKartiYaniti,
@@ -40,7 +39,6 @@ import {
 import { eksikler, kartinSiradakiAdimi } from "@/lib/calisma";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
-import { cn } from "@/lib/utils";
 
 /**
  * Yetenek kartı ve güven göstergesi (docs/agent-specs.md § 1 ve § 4).
@@ -255,17 +253,15 @@ function KartIcerigi() {
                 çalışmanın üzerindeki düğmeyi kullan.
               </p>
             </div>
-            {!isEkleniyor ? (
-              <Button
-                type="button"
-                size="lg"
-                className="px-4"
-                onClick={() => setIsEkleniyor(true)}
-              >
-                <Plus aria-hidden="true" />
-                Çalışma ekle
-              </Button>
-            ) : null}
+            <Button
+              type="button"
+              size="lg"
+              className="px-4"
+              onClick={() => setIsEkleniyor(true)}
+            >
+              <Plus aria-hidden="true" />
+              Çalışma ekle
+            </Button>
           </div>
 
           {kayitNotu ? (
@@ -275,17 +271,6 @@ function KartIcerigi() {
             >
               {kayitNotu}
             </p>
-          ) : null}
-
-          {isEkleniyor ? (
-            <div className={cn(KUTU, "px-5 py-5")}>
-              <IsKalemiEkleFormu
-                kartId={kart.id}
-                onGuncel={duzenlendi}
-                onHata={setHata}
-                onKapat={() => setIsEkleniyor(false)}
-              />
-            </div>
           ) : null}
 
           {kart.somut_ciktilar.length === 0 ? (
@@ -326,6 +311,21 @@ function KartIcerigi() {
           onHata={setHata}
         />
       ) : null}
+
+      <YanPanel
+        acik={isEkleniyor}
+        onKapat={() => setIsEkleniyor(false)}
+        ust="Kartına ekle"
+        baslik="Yeni çalışma"
+        alt="Yaptığın bir işi anlat. Kanıt ve referansı kaydettikten sonra Güçlendir'den eklersin."
+      >
+        <IsKalemiEkleFormu
+          kartId={kart.id}
+          onGuncel={duzenlendi}
+          onHata={setHata}
+          onKapat={() => setIsEkleniyor(false)}
+        />
+      </YanPanel>
 
       <YanPanel
         acik={kartDuzenleniyor}

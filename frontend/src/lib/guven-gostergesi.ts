@@ -44,7 +44,11 @@ export function baslikGosterimi(
     };
   }
   const kelime = SEVIYE_KELIMELERI[deger] ?? String(deger);
-  return { metin: kelime, sozlu: `${kelime}, 3 üzerinden ${deger}`, seviye: deger };
+  return {
+    metin: kelime,
+    sozlu: `${kelime}, 3 üzerinden ${deger}`,
+    seviye: deger,
+  };
 }
 
 /** Göstergenin dört başlığı ve veri alanları (docs/agent-specs.md § 4). */
@@ -92,4 +96,14 @@ export function notuBasliklaraAyir(
     if (metin) parcalar.push({ baslik: eslesme[1] as BaslikAdi, metin });
   });
   return parcalar;
+}
+
+/**
+ * Notun ilk cümlesi. Değerlendirme notunun son başlığı genel bir öneriyle
+ * bitiyor ("… açıkça belirtebilirsin"); adımın yanında yalnızca o başlığın
+ * kendi tespiti gösterilir.
+ */
+export function ilkCumle(metin: string): string {
+  const eslesme = metin.match(/^.*?[.!?](?=\s|$)/);
+  return (eslesme ? eslesme[0] : metin).trim();
 }
