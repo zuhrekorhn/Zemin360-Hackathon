@@ -1,5 +1,5 @@
 import { SeviyeCubugu } from "@/components/seviye-cubugu";
-import { DIKKAT } from "@/components/ui/yuzey";
+import { DIKKAT, KUTU } from "@/components/ui/yuzey";
 import type { GuvenSkoru, SomutCiktiYaniti } from "@/lib/api";
 import {
   GOSTERGE_BASLIKLARI,
@@ -7,6 +7,7 @@ import {
   gostergeDoluMu,
 } from "@/lib/guven-gostergesi";
 import { kartDosyasiAdresi } from "@/lib/api";
+import { uyumMetni } from "@/lib/ilgi";
 import { dosyaParcalari, kanitAdresi, kanitLinkleri } from "@/lib/kanit";
 import { IS_TURU_ETIKETLERI, etiketle } from "@/lib/sabitler";
 import { type Uygunluk, uygunlukRozeti } from "@/lib/uygunluk";
@@ -19,8 +20,8 @@ import { cn } from "@/lib/utils";
  * kapalıyken de çizilsin diye) — böylece vitrindeki görünümle gerçek
  * ekranlardaki görünüm ayrışmıyor.
  *
- * Görsel dil (docs/design-language.md): hairline çizgi, az yuvarlak köşe,
- * resmi belge hissi.
+ * Görsel dil (docs/design-language.md): bütün kutular `KUTU` yüzeyi; çalışma ve
+ * gösterge satırları hairline çizgiyle ayrılır.
  */
 
 /**
@@ -79,25 +80,34 @@ export function GuvenGostergesi({ skor }: { skor: GuvenSkoru }) {
   );
 }
 
-/** Hairline çerçeveli belge kartı: başlık şeridi + gövde + isteğe bağlı etek. */
+/** `KUTU` yüzeyli kart: başlık şeridi + gövde + isteğe bağlı etek. */
 export function BelgeKarti({
   baslik,
   altbaslik,
   rozet,
   children,
   etek,
+  vurgulu = false,
 }: {
   baslik: string;
   altbaslik?: string | null;
   rozet?: React.ReactNode;
   children?: React.ReactNode;
   etek?: React.ReactNode;
+  /** Yanıt bekleyen kart: vurgu renginde sol çizgi (docs/design-language.md). */
+  vurgulu?: boolean;
 }) {
   return (
-    <article className="rounded-sm border border-kenar bg-card">
-      <div className="flex items-start justify-between gap-4 border-b border-kenar px-5 py-4">
+    <article
+      className={cn(
+        KUTU,
+        "overflow-hidden",
+        vurgulu && "border-l-[3px] border-l-vurgu",
+      )}
+    >
+      <div className="flex items-start justify-between gap-4 border-b border-kenar px-6 py-5">
         <div className="min-w-0">
-          <h3 className="font-heading text-base font-semibold text-ana">
+          <h3 className="font-heading text-xl leading-snug font-semibold text-ana">
             {baslik}
           </h3>
           {altbaslik ? (
@@ -110,7 +120,7 @@ export function BelgeKarti({
       </div>
 
       {children ? (
-        <div className="flex flex-col gap-3 px-5 py-4 text-sm">{children}</div>
+        <div className="flex flex-col gap-4 px-6 py-5 text-sm">{children}</div>
       ) : null}
 
       {etek}
@@ -119,13 +129,14 @@ export function BelgeKarti({
 }
 
 /**
- * Eşleşme skoru. Yüzdeye çevriliyor çünkü 0.6839 kimseye bir şey anlatmıyor;
- * ondalık gösterilmiyor ki olduğundan hassas görünmesin.
+ * Uyum kelimeyle (Güçlü / İyi / Olası uyum; docs/icerik-rehberi.md § 4). Skor
+ * yalnızca sıralar; yüzde olarak gösterilince ölçü gibi okunuyordu, en iyi aday
+ * bile "%56" diye caydırıyordu. Listede olmak zaten konuyla ilgili olmak demek.
  */
-export function SkorRozeti({ skor }: { skor: number }) {
+export function UyumRozeti({ skor }: { skor: number }) {
   return (
-    <span className="rounded-sm border border-kenar px-2.5 py-1 font-mono text-sm text-ana">
-      %{Math.round(skor * 100)} uyum
+    <span className="rounded-full bg-baglanti/10 px-2.5 py-1 text-xs font-medium text-baglanti">
+      {uyumMetni(skor)}
     </span>
   );
 }
@@ -139,7 +150,7 @@ export function KismenUygunRozeti({
   const metin = uygunlukRozeti(uygunluk);
   if (!metin) return null;
   return (
-    <span className="rounded-sm border border-baglanti px-2.5 py-1 text-xs text-baglanti">
+    <span className="rounded-full bg-vurgu/15 px-2.5 py-1 text-xs font-medium text-metin">
       {metin}
     </span>
   );
@@ -201,7 +212,7 @@ export function CiktiOzeti({
   const linkler = kanitLinkleri(cikti.kanitlar);
   const dosyalar = dosyaParcalari(cikti.kanitlar);
   return (
-    <div className="flex flex-col gap-2 rounded-sm border border-kenar">
+    <div className="flex flex-col gap-2 overflow-hidden rounded-lg border border-kenar">
       <div className="flex flex-col gap-1 px-4 py-3">
         <div className="flex items-start justify-between gap-3">
           <p className="font-medium">
@@ -300,7 +311,7 @@ export function CiktiOzeti({
 export function PilotRozeti({ sayi }: { sayi: number }) {
   if (sayi < 1) return null;
   return (
-    <span className="rounded-sm border border-baglanti px-2.5 py-1 text-xs text-baglanti">
+    <span className="rounded-full bg-baglanti/10 px-2.5 py-1 text-xs font-medium text-baglanti">
       {sayi} tamamlanan iş birliği
     </span>
   );

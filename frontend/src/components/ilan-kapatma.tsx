@@ -13,33 +13,21 @@ import { KAPANMA_NEDENLERI, type KapanmaNedeni } from "@/lib/ilan";
  *
  * Tarayıcının onay penceresi değil, sayfa içi alan: rehber § 5.6 eylem adlı
  * butonlar istiyor ("Kapat" / "Vazgeç") ve neden seçimi aynı yerde. Firmaya "siz".
+ * Açıp kapatmak ihtiyaç kartının "⋯" menüsünün işi; bu bileşen açıkken çizilir.
  */
 export function IlanKapatma({
   kartId,
   onKapandi,
+  onVazgec,
 }: {
   kartId: string;
   onKapandi: () => void;
+  onVazgec: () => void;
 }) {
-  const [acik, setAcik] = useState(false);
   const [neden, setNeden] = useState<KapanmaNedeni | null>(null);
   const [bekleniyor, setBekleniyor] = useState(false);
   const [hata, setHata] = useState<Hata | null>(null);
   const ad = useId();
-
-  if (!acik) {
-    return (
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        className="w-fit shrink-0"
-        onClick={() => setAcik(true)}
-      >
-        İhtiyacı kapat
-      </Button>
-    );
-  }
 
   async function kapat() {
     if (!neden || bekleniyor) return;
@@ -55,7 +43,7 @@ export function IlanKapatma({
   }
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm">
+    <div className="flex w-full flex-col gap-3 border-t border-kenar bg-muted/60 px-6 py-5 text-sm">
       <p className="text-pretty">
         Bu ihtiyaç kapatılsın mı? Bekleyen adaylara “fırsat kapandı” bildirimi
         gider ve yeni aday aranmaz. Kapanan ihtiyaç tekrar açılmaz.
@@ -94,11 +82,7 @@ export function IlanKapatma({
           size="sm"
           variant="outline"
           disabled={bekleniyor}
-          onClick={() => {
-            setAcik(false);
-            setNeden(null);
-            setHata(null);
-          }}
+          onClick={onVazgec}
         >
           Vazgeç
         </Button>

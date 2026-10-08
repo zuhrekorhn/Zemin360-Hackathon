@@ -166,6 +166,15 @@ Başka yerde tutulan kararlar:
   firma–firma iş birliği.
 - **F20. Demo verisi üç firma türünü de gösterir:** bir KOBİ, kartlı ve doğrulanmış bir girişim,
   ortak ilanı açık bir kurumsal (`scripts/demo_hesaplari.py`, `scripts/demo_zenginlestir.py`).
+- **F21. Firmanın ekranları gencinkiyle aynı dilde (9 Eki 2026).** Panel `genis` iki sütun: solda
+  firma özeti, "Tamamlanacaklar" ve "Adaylarınız"; sağda "şimdi ne yapmalıyım" sırasıyla önce
+  yanıt bekleyenler (ilgi gösteren aday, plan onayı, geciken adım), sonra ihtiyaçlar, firma
+  olarak gelen fırsatlar, iş birlikleri. İhtiyaç satırında tek birincil eylem ("Adayları gör");
+  düzenle ve kapat "⋯" menüsünde, kapatma onayı kartın içinde. **Aday listesinde uyum yüzdeyle
+  değil kelimeyle** (Güçlü / İyi / Olası uyum, `UyumRozeti`): skor yalnızca sıralar. Aday
+  kartları `KUTU` yüzeyinde, yanıt bekleyen kart vurgu çizgisiyle; "Panele dön" yok, menü var.
+  Kararlar `lib/kurum-paneli.ts`'de saf ve testli. Menüde aynı anda tek sayfa etkin
+  (`lib/menu.ts` › `etkinBaglanti`).
 
 ## D — İlan düzenleme
 

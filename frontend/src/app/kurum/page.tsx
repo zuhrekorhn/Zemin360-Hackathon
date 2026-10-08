@@ -1,22 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { EpostaDogrulamaBandi } from "@/components/eposta-dogrulama-bandi";
-import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { FirmaFirsatlari } from "@/components/firma-firsatlari";
-import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
-import { IlanKapatma } from "@/components/ilan-kapatma";
-import { IsbirligiSatiri } from "@/components/isbirligi-satiri";
-import { SkorRozeti } from "@/components/kart";
 import {
-  BosDurum,
-  DurumEtiketi,
-  IletisimSatiri,
-  PanelBolumu,
-  tarihYaz,
-} from "@/components/panel";
+  BolumBasligi,
+  EksikAdimlar,
+  IsbirligiBekleyeni,
+} from "@/components/genc-paneli";
+import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
+import { IsbirligiSatiri } from "@/components/isbirligi-satiri";
+import {
+  AdayListesi,
+  FirmaOzeti,
+  IhtiyacKarti,
+  IlgiGosterenKarti,
+} from "@/components/kurum-paneli";
+import { BosDurum } from "@/components/panel";
+import { Sayfa } from "@/components/sayfa";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,18 +29,25 @@ import {
   isbirliklerim,
   onerilerim,
 } from "@/lib/api";
-import { firmaKartiCagrisi } from "@/lib/firma-karti";
-import { firmaProfilBandi } from "@/lib/firma-profil";
 import { type Hata, hatayaCevir } from "@/lib/hata";
-import { firmaDurumEtiketi } from "@/lib/ilgi";
-import { KAPILAR, arananEtiketi, ilanKapali, ilanlariSirala } from "@/lib/ilan";
+import { KAPILAR, ilanKapali, ilanlariSirala } from "@/lib/ilan";
+import {
+  adaySatirlari,
+  firmaEksikAdimlari,
+  ihtiyacSayilari,
+  kurumBekleyenSayisi,
+  kurumBekleyenleri,
+  kurumOzetCumlesi,
+} from "@/lib/kurum-paneli";
 import { useOturum } from "@/lib/oturum";
 import { isbirligiSirasi } from "@/lib/takip";
 
 /**
- * Kurum paneli (docs/kimlik-ve-dongu.md § 7): ihtiyaç kartlarım (her
- * biri kendi önerilerine gider), önerilerim (durumları ve gencin adıyla),
- * iş birliklerim (e-postalarla).
+ * Firma paneli (docs/kimlik-ve-dongu.md § 7, docs/kararlar.md G18): gencin ana
+ * sayfasıyla aynı iskelet. Solda kim olduğunuz (firma, tamamlanacaklar,
+ * adaylarınız), sağda ne yapacağınız, "şimdi ne yapmalıyım" sırasıyla: önce
+ * yanıtınızı bekleyen işler, sonra ihtiyaçlar, firma olarak gelen fırsatlar,
+ * iş birlikleri. Boş bölüm çizilmez.
  *
  * Panel yalnızca okur; eşleştirmeyi çalıştırmak (dil modeli çağrısı olabilir)
  * öneriler sayfasının işi.
@@ -44,7 +55,7 @@ import { isbirligiSirasi } from "@/lib/takip";
 
 export default function KurumPaneli() {
   return (
-    <GirisKapisi roller={["kurum"]}>
+    <GirisKapisi roller={["kurum"]} genislik="genis">
       <KurumPaneliIcerigi />
     </GirisKapisi>
   );
@@ -53,10 +64,13 @@ export default function KurumPaneli() {
 function KurumPaneliIcerigi() {
   const hesap = useGirisliHesap();
   const { tazele } = useOturum();
+  const router = useRouter();
   const [oneriler, setOneriler] = useState<KurumOnerisi[] | null>(null);
   const [isbirlikleri, setIsbirlikleri] = useState<IsbirligiOzeti[] | null>(
     null,
   );
+  // Kapatma onayı açık olan ihtiyaç; aynı anda biri.
+  const [kapatilan, setKapatilan] = useState<string | null>(null);
   const [hata, setHata] = useState<Hata | null>(null);
   const okundu = useRef(false);
 
@@ -77,246 +91,192 @@ function KurumPaneliIcerigi() {
     void oku();
   }, [oku]);
 
-  const kartlar = hesap.ihtiyac_kartlari;
-  const bant = firmaProfilBandi(hesap);
-  const kartCagrisi = firmaKartiCagrisi(hesap);
+  const kartlar = ilanlariSirala(hesap.ihtiyac_kartlari);
+  const acikIhtiyac = kartlar.filter((kart) => !ilanKapali(kart)).length;
+  const bekleyen = kurumBekleyenleri(oneriler ?? [], isbirlikleri ?? []);
+  const bekleyenAdet = kurumBekleyenSayisi(bekleyen);
+  const sayilar = ihtiyacSayilari(oneriler ?? []);
+  const adaySayisi = oneriler
+    ? Object.values(sayilar).reduce((toplam, s) => toplam + s.aday, 0)
+    : null;
+  const ad = hesap.ad ?? "Firma paneli";
 
   return (
-    <Sayfa>
-      <SayfaBasligi
-        baslik={hesap.ad ?? "Firma paneli"}
-        aciklama="İhtiyaçlarınız, adaylarınız ve iş birlikleriniz burada."
-      />
-
-      {/* İki kapı (docs/kararlar.md F9). */}
-      <nav aria-label="Ne arıyorsunuz?" className="grid gap-3 sm:grid-cols-2">
-        {KAPILAR.map((kapi) => (
-          <Link
-            key={kapi.aranan}
-            href={kapi.yol}
-            className="flex flex-col gap-1 rounded-sm border border-kenar bg-card px-4 py-4 transition-colors hover:border-ana"
-          >
-            <span className="font-heading text-lg font-semibold text-ana">
-              {kapi.baslik}
-            </span>
-            <span className="text-sm text-pretty text-muted-foreground">
-              {kapi.aciklama}
-            </span>
-          </Link>
-        ))}
-      </nav>
-
-      {kartCagrisi ? (
-        // Engellemez (docs/kararlar.md F9): yalnızca iş birliği ortağı olarak bulunmak için gerekli.
-        <div
-          role="note"
-          className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm text-pretty"
-        >
-          <span>{kartCagrisi}</span>
-          <Link href="/kurum/kart" className="text-baglanti underline">
-            Firma kartını oluştur
-          </Link>
-        </div>
-      ) : null}
-
-      <EpostaDogrulamaBandi hesap={hesap} />
-
-      {bant ? (
-        // Engellemez (docs/kararlar.md F9): eski hesaplar için.
-        <div
-          role="note"
-          className="flex flex-wrap items-center gap-3 rounded-sm border border-kenar bg-muted px-4 py-3 text-sm text-pretty"
-        >
-          <span>{bant}</span>
-          <Link href="/kurum/profil" className="text-baglanti underline">
-            Firma profiline git
-          </Link>
-        </div>
-      ) : null}
-
+    <Sayfa genislik="genis">
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
-      <PanelBolumu id="ihtiyaclar" baslik="İhtiyaç kartlarım">
-        {kartlar.length === 0 ? (
-          <BosDurum
-            metin="Henüz bir ihtiyaç tanımlamadınız. Kısa bir sohbetle ihtiyacınızı netleştirin, size uygun adayları gösterelim."
-            eylem={{ href: "/tanimlama", etiket: "İhtiyacınızı tanımlayın" }}
-          />
-        ) : (
-          <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
-            {ilanlariSirala(kartlar).map((kart) => (
-              <li
-                key={kart.id}
-                className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
-              >
-                <div className="flex flex-1 flex-col gap-1">
-                  <span className="text-sm text-pretty">
-                    {kart.problem_tanimi}
-                  </span>
-                  <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    {tarihYaz(kart.olusturma_tarihi)}
-                    {arananEtiketi(kart.aranan) ? (
-                      <DurumEtiketi metin={arananEtiketi(kart.aranan) ?? ""} />
-                    ) : null}
-                    {ilanKapali(kart) ? (
-                      <DurumEtiketi metin="Kapandı" />
-                    ) : !kart.embedding_var ? (
-                      " · henüz adaylarla eşleştirilmedi"
-                    ) : null}
-                  </span>
-                </div>
-                <Button asChild size="sm" className="w-fit shrink-0">
-                  <Link href={`/kurum/oneriler?ihtiyac=${kart.id}`}>
-                    Adayları gör
-                  </Link>
-                </Button>
-                {ilanKapali(kart) ? null : (
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="outline"
-                    className="w-fit shrink-0"
-                  >
-                    <Link href={`/kurum/ilan/${kart.id}/duzenle`}>Düzenle</Link>
-                  </Button>
-                )}
-                {ilanKapali(kart) ? null : (
-                  // Kapanınca /me tazelenir: liste durumu oradan okuyor;
-                  // öneriler de "kapandı" olduğu için yeniden okunur.
-                  <IlanKapatma
-                    kartId={kart.id}
+      <div className="grid items-start gap-8 lg:grid-cols-[19rem_minmax(0,1fr)]">
+        <aside
+          aria-label="Özet"
+          className="order-2 flex flex-col gap-4 lg:sticky lg:top-24 lg:order-1"
+        >
+          <FirmaOzeti ad={ad} kartVar={hesap.firma_karti_var} />
+          <EksikAdimlar adimlar={firmaEksikAdimlari(hesap)} />
+          {kartlar.length > 0 ? (
+            <AdayListesi satirlar={adaySatirlari(oneriler ?? [])} />
+          ) : null}
+        </aside>
+
+        <div className="order-1 flex min-w-0 flex-col gap-8 lg:order-2">
+          <header className="flex flex-col gap-1.5">
+            <h1 className="font-heading text-3xl font-semibold text-balance text-ana sm:text-4xl">
+              {ad}
+            </h1>
+            <p className="text-[15px] text-pretty text-muted-foreground">
+              {kurumOzetCumlesi(bekleyenAdet, acikIhtiyac, adaySayisi)}
+            </p>
+          </header>
+
+          <EpostaDogrulamaBandi hesap={hesap} />
+
+          {kartlar.length === 0 ? (
+            // İki kapı (docs/kararlar.md F9): ilk ihtiyaç tek çağrı.
+            <section className="flex flex-col items-start gap-4 rounded-xl bg-ana px-7 py-8 text-zemin">
+              <p className="text-xs font-medium text-zemin/70">İlk adım</p>
+              <h2 className="font-heading text-2xl font-semibold text-balance">
+                Önce ihtiyacınızı tanımlayalım
+              </h2>
+              <p className="max-w-prose text-[15px] leading-relaxed text-pretty text-zemin/85">
+                Kısa bir sohbetle ihtiyacınızı netleştirin; size uygun adayları
+                gösterelim. Genç yetenek ya da iş birliği ortağı
+                arayabilirsiniz.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href={KAPILAR[0].yol}
+                  className="inline-flex h-10 items-center rounded-lg bg-vurgu px-4 text-sm font-semibold text-metin hover:bg-vurgu/90"
+                >
+                  {KAPILAR[0].baslik}
+                </Link>
+                <Link
+                  href={KAPILAR[1].yol}
+                  className="inline-flex h-10 items-center rounded-lg border border-zemin/40 px-4 text-sm font-semibold text-zemin hover:bg-zemin/10"
+                >
+                  {KAPILAR[1].baslik}
+                </Link>
+              </div>
+            </section>
+          ) : null}
+
+          {bekleyenAdet > 0 ? (
+            <section
+              aria-labelledby="bekleyenler"
+              className="flex flex-col gap-4"
+            >
+              <BolumBasligi
+                id="bekleyenler"
+                baslik="Sizi bekleyenler"
+                sayi={bekleyenAdet}
+              />
+              <ul className="flex flex-col gap-3">
+                {bekleyen.ilgiler.map((oneri) => (
+                  <IlgiGosterenKarti key={oneri.eslesme_id} oneri={oneri} />
+                ))}
+                {bekleyen.planlar.map((isbirligi) => (
+                  <IsbirligiBekleyeni
+                    key={isbirligi.isbirligi_id}
+                    isbirligi={isbirligi}
+                    tur="plan"
+                  />
+                ))}
+                {bekleyen.gecikenler.map((isbirligi) => (
+                  <IsbirligiBekleyeni
+                    key={isbirligi.isbirligi_id}
+                    isbirligi={isbirligi}
+                    tur="gecikme"
+                  />
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {kartlar.length > 0 ? (
+            <section
+              id="ihtiyaclar"
+              aria-labelledby="ihtiyaclar-baslik"
+              className="flex scroll-mt-24 flex-col gap-4"
+            >
+              <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+                <BolumBasligi
+                  id="ihtiyaclar-baslik"
+                  baslik="İhtiyaçlarınız"
+                  sayi={acikIhtiyac}
+                />
+                <nav
+                  aria-label="Yeni ihtiyaç"
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  {KAPILAR.map((kapi) => (
+                    <Button
+                      key={kapi.aranan}
+                      asChild
+                      variant="outline"
+                      size="lg"
+                    >
+                      <Link href={kapi.yol}>{kapi.baslik}</Link>
+                    </Button>
+                  ))}
+                </nav>
+              </div>
+              <ul className="flex flex-col gap-4">
+                {kartlar.map((kart) => (
+                  <IhtiyacKarti
+                    key={kart.id}
+                    kart={kart}
+                    sayi={sayilar[kart.id]}
+                    kapatiliyor={kapatilan === kart.id}
+                    onDuzenle={() =>
+                      router.push(`/kurum/ilan/${kart.id}/duzenle`)
+                    }
+                    onKapatmaAc={() => setKapatilan(kart.id)}
+                    onKapatmaBirak={() => setKapatilan(null)}
+                    // Kapanınca /me tazelenir: liste durumu oradan okuyor;
+                    // öneriler de "kapandı" olduğu için yeniden okunur.
                     onKapandi={() => {
+                      setKapatilan(null);
                       void tazele();
                       void oku();
                     }}
                   />
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </PanelBolumu>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
-      <PanelBolumu
-        id="oneriler"
-        baslik="Adaylarım"
-        aciklama="Tüm ihtiyaçlarınızdan, en son hareket olan önce. İlginizi ihtiyacın aday sayfasından bildirebilirsiniz."
-      >
-        {oneriler === null ? (
-          <p className="text-sm text-muted-foreground" role="status">
-            Yükleniyor…
-          </p>
-        ) : oneriler.length === 0 ? (
-          <BosDurum
-            metin={
-              kartlar.length === 0
-                ? "Adaylar bir ihtiyaçtan çıkar. Önce ihtiyacınızı tanımlayın."
-                : "Henüz aday yok. Bir ihtiyacın adaylarını açtığınızda uygun adaylar hesaplanır ve burada da listelenir."
-            }
-            eylem={
-              kartlar.length === 0
-                ? { href: "/tanimlama", etiket: "İhtiyacınızı tanımlayın" }
-                : {
-                    href: `/kurum/oneriler?ihtiyac=${kartlar[0].id}`,
-                    etiket: "Adayları gör",
-                  }
-            }
-          />
-        ) : (
-          <ul className="flex flex-col divide-y divide-kenar rounded-sm border border-kenar">
-            {oneriler.map((oneri) => {
-              // Etiketler docs/icerik-rehberi.md § 5.9 (lib/ilgi.ts).
-              const durum = {
-                metin: firmaDurumEtiketi(oneri.durum),
-                baglanti:
-                  oneri.durum === "kabul_edildi" ||
-                  oneri.durum === "genc_ilgilendi",
-              };
-              return (
-                <li
-                  key={oneri.eslesme_id}
-                  className="flex flex-col gap-2 px-4 py-3"
-                >
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    {oneri.yetenek_karti_id ? (
-                      <Link
-                        href={`/kart/${oneri.yetenek_karti_id}`}
-                        className="font-medium text-ana underline-offset-4 hover:underline"
-                      >
-                        {oneri.aday_adi}
-                      </Link>
-                    ) : (
-                      // Firma adayı: kartı öneriler sayfasında (docs/kararlar.md F9).
-                      <span className="font-medium text-ana">
-                        {oneri.aday_adi}
-                      </span>
-                    )}
-                    <span className="text-sm text-muted-foreground">
-                      {oneri.rol_alani ?? "Firma"}
-                    </span>
-                    <span className="ml-auto flex items-center gap-2">
-                      <DurumEtiketi
-                        metin={durum.metin}
-                        baglanti={durum.baglanti}
-                      />
-                      <SkorRozeti skor={oneri.skor} />
-                    </span>
-                  </div>
-                  <p className="line-clamp-1 text-xs text-muted-foreground">
-                    {oneri.problem_tanimi}
-                  </p>
-                  {oneri.durum === "onerildi" ? (
-                    <Link
-                      href={`/kurum/oneriler?ihtiyac=${oneri.ihtiyac_karti_id}`}
-                      className="w-fit text-sm text-baglanti underline"
-                    >
-                      “Neden uygun?” açıklamasını okuyun
-                    </Link>
-                  ) : null}
-                  {oneri.iletisim ? (
-                    <IletisimSatiri
-                      iletisim={oneri.iletisim}
-                      karsiTaraf="genc"
-                      taslak={{
-                        adayTuru: oneri.aday_turu,
-                        gonderenAdi: hesap.ad ?? "",
-                        aliciAdi: oneri.aday_adi,
-                        problem: oneri.problem_tanimi,
-                        basariKriteri: oneri.basari_kriteri,
-                        calisma: oneri.calisma_basligi,
-                      }}
-                    />
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </PanelBolumu>
+          {hesap.firma_karti_var ? (
+            // Aday olarak (firma kartıyla) gördükleri: fırsatlar ve ilgiler.
+            <FirmaFirsatlari />
+          ) : null}
 
-      {hesap.firma_karti_var ? (
-        // Aday olarak (firma kartıyla) gördükleri: fırsatlar ve ilgiler.
-        <FirmaFirsatlari />
-      ) : null}
-
-      <PanelBolumu id="isbirlikleri" baslik="İş birliklerim">
-        {isbirlikleri === null ? (
-          <p className="text-sm text-muted-foreground" role="status">
-            Yükleniyor…
-          </p>
-        ) : isbirlikleri.length === 0 ? (
-          <BosDurum metin="Henüz iş birliğiniz yok. Bir aday ilginizi kabul ettiğinde iş birliği burada açılır ve iletişim bilgileri görünür." />
-        ) : (
-          <ul className="flex flex-col gap-4">
-            {isbirligiSirasi(isbirlikleri).map((isbirligi) => (
-              <IsbirligiSatiri
-                key={isbirligi.isbirligi_id}
-                isbirligi={isbirligi}
-              />
-            ))}
-          </ul>
-        )}
-      </PanelBolumu>
+          <section
+            id="isbirlikleri"
+            aria-labelledby="isbirlikleri-baslik"
+            className="flex scroll-mt-24 flex-col gap-4"
+          >
+            <BolumBasligi
+              id="isbirlikleri-baslik"
+              baslik="İş birliklerim"
+              sayi={isbirlikleri?.length}
+            />
+            {isbirlikleri === null ? (
+              <p className="text-sm text-muted-foreground" role="status">
+                Yükleniyor…
+              </p>
+            ) : isbirlikleri.length === 0 ? (
+              <BosDurum metin="Henüz iş birliğiniz yok. Bir aday ilginizi kabul ettiğinde iş birliği burada açılır ve iletişim bilgileri görünür." />
+            ) : (
+              <ul className="flex flex-col gap-4">
+                {isbirligiSirasi(isbirlikleri).map((isbirligi) => (
+                  <IsbirligiSatiri
+                    key={isbirligi.isbirligi_id}
+                    isbirligi={isbirligi}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </div>
     </Sayfa>
   );
 }

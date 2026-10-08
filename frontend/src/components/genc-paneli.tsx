@@ -60,7 +60,7 @@ export function BolumBasligi({
 }
 
 /** "Seni bekleyenler"in satır kabı: vurgu renginde sol çizgi. */
-function BekleyenKabi({ children }: { children: React.ReactNode }) {
+export function BekleyenKabi({ children }: { children: React.ReactNode }) {
   return (
     <li
       className={cn(
@@ -170,7 +170,10 @@ export function KabulEdilenIlgi({
   );
 }
 
-/** İş birliğinde gencin yapacağı bir şey: plan onayı ya da geciken adım. */
+/**
+ * İş birliğinde kullanıcının yapacağı bir şey: plan onayı ya da geciken adım.
+ * Başlıkta karşı taraf: aday tarafındaki ilanı açan firmayı, ilan sahibi firma adayı görür.
+ */
 export function IsbirligiBekleyeni({
   isbirligi,
   tur,
@@ -178,12 +181,14 @@ export function IsbirligiBekleyeni({
   isbirligi: IsbirligiOzeti;
   tur: "plan" | "gecikme";
 }) {
+  const karsiAd =
+    isbirligi.tarafim === "kurum" ? isbirligi.aday_adi : isbirligi.kurum_adi;
   return (
     <BekleyenKabi>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="font-heading text-base font-semibold text-ana">
-            {isbirligi.kurum_adi}
+            {karsiAd}
           </span>
           <span className="text-sm text-muted-foreground">
             {tur === "plan"

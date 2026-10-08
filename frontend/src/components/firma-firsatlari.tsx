@@ -6,14 +6,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
 import { useGirisliHesap } from "@/components/giris-kapisi";
 import { KismenUygunRozeti } from "@/components/kart";
-import {
-  BosDurum,
-  DurumEtiketi,
-  IletisimSatiri,
-  PanelBolumu,
-} from "@/components/panel";
+import { BolumBasligi } from "@/components/genc-paneli";
+import { BosDurum, DurumEtiketi, IletisimSatiri } from "@/components/panel";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
 import {
   type EslesmeDurumYaniti,
   type FirmaAdayEslesmesi,
@@ -32,6 +29,7 @@ import {
 } from "@/lib/firma-ilgi";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { ILETISIM_ONAYI_KUTUSU, NEDEN_UYGUN, uyumMetni } from "@/lib/ilgi";
+import { cn } from "@/lib/utils";
 
 /**
  * Firmanın aday olarak gördükleri (docs/kararlar.md F8):
@@ -83,15 +81,16 @@ export function FirmaFirsatlari() {
     <>
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
 
-      <PanelBolumu
+      <Bolum
         id="firsatlar"
         baslik="Size uygun iş birliği fırsatları"
+        sayi={firsatlar.length}
         aciklama="Firma kartınıza uyan iş birliği fırsatları. İlgilendiğiniz fırsatı ihtiyacın sahibi firmaya bildirebilirsiniz; o da ilgilenirse iletişim bilgileriniz paylaşılır."
       >
         {firsatlar.length === 0 ? (
           <BosDurum metin="Şu an kartınıza uyan bir fırsat yok. Firmalar yeni ihtiyaçlar tanımladıkça burada görünür." />
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-4">
             {firsatlar.map((firsat) => (
               <FirsatKarti
                 key={firsat.eslesme_id}
@@ -101,15 +100,16 @@ export function FirmaFirsatlari() {
             ))}
           </ul>
         )}
-      </PanelBolumu>
+      </Bolum>
 
       {gelenler.length > 0 ? (
-        <PanelBolumu
+        <Bolum
           id="gelen-ilgiler"
           baslik="Size gelen ilgiler"
+          sayi={gelenler.length}
           aciklama="Bu firmalar iş birliği ihtiyaçları için sizinle ilgileniyor. Kabul ederseniz iletişim bilgileriniz paylaşılır ve iş birliği başlar."
         >
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-4">
             {gelenler.map((satir) => (
               <IlgiSatiri
                 key={satir.eslesme_id}
@@ -119,12 +119,12 @@ export function FirmaFirsatlari() {
               />
             ))}
           </ul>
-        </PanelBolumu>
+        </Bolum>
       ) : null}
 
       {ilgilerimiz.length > 0 ? (
-        <PanelBolumu id="ilgilerimiz" baslik="İlgilerimiz">
-          <ul className="flex flex-col gap-3">
+        <Bolum id="ilgilerimiz" baslik="İlgilerimiz">
+          <ul className="flex flex-col gap-4">
             {ilgilerimiz.map((satir) => (
               <IlgiSatiri
                 key={satir.eslesme_id}
@@ -135,9 +135,39 @@ export function FirmaFirsatlari() {
               />
             ))}
           </ul>
-        </PanelBolumu>
+        </Bolum>
       ) : null}
     </>
+  );
+}
+
+/** Panelin diğer bölümleriyle aynı başlık ve aralık. */
+function Bolum({
+  id,
+  baslik,
+  sayi,
+  aciklama,
+  children,
+}: {
+  id: string;
+  baslik: string;
+  sayi?: number;
+  aciklama?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      aria-labelledby={`${id}-baslik`}
+      className="flex scroll-mt-24 flex-col gap-4"
+    >
+      <BolumBasligi
+        id={`${id}-baslik`}
+        baslik={baslik}
+        sayi={sayi}
+        aciklama={aciklama}
+      />
+      {children}
+    </section>
   );
 }
 
@@ -146,13 +176,13 @@ function IlanOzeti({ satir }: { satir: FirmaAdayEslesmesi }) {
   return (
     <>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <span className="flex flex-wrap items-center gap-2 font-heading text-lg font-semibold text-ana">
+        <span className="flex flex-wrap items-center gap-2 font-heading text-xl leading-snug font-semibold text-ana">
           {ilan.kurum.ad}
           <DogrulanmisFirma dogrulandi={ilan.kurum.dogrulandi} />
         </span>
         <span className="flex flex-wrap items-center gap-2">
           <KismenUygunRozeti uygunluk={satir.uygunluk} />
-          <span className="rounded-sm border border-baglanti px-2 py-0.5 text-xs text-baglanti">
+          <span className="rounded-full bg-baglanti/10 px-2.5 py-1 text-xs font-medium text-baglanti">
             {uyumMetni(satir.uyum)}
           </span>
         </span>
@@ -194,13 +224,13 @@ function FirsatKarti({
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4">
+    <li className={cn(KUTU, "flex flex-col gap-3.5 px-6 py-5")}>
       <IlanOzeti satir={firsat} />
-      <section className="flex flex-col gap-1">
+      <section className="flex flex-col gap-1 rounded-lg border-l-[3px] border-baglanti bg-baglanti/[0.06] px-4 py-3">
         <h4 className="font-heading text-sm font-semibold text-ana">
           {NEDEN_UYGUN}
         </h4>
-        <p className="text-sm text-pretty text-muted-foreground">
+        <p className="text-sm leading-relaxed text-pretty">
           {firsat.gerekce_metni ?? "Açıklama henüz hazır değil."}
         </p>
       </section>
@@ -215,7 +245,7 @@ function FirsatKarti({
             İlgileniyoruz
           </Button>
         ) : (
-          <div className="flex flex-col gap-3 rounded-sm border border-kenar bg-muted px-3 py-3">
+          <div className="flex flex-col gap-3 rounded-lg bg-muted px-4 py-3">
             <p className="text-sm text-pretty">{FIRMA_ILETISIM_ONAYI}</p>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -282,7 +312,7 @@ function IlgiSatiri({
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-sm border border-kenar bg-card px-4 py-4">
+    <li className={cn(KUTU, "flex flex-col gap-3.5 px-6 py-5")}>
       <IlanOzeti satir={satir} />
       <div className="flex flex-wrap items-center gap-3 border-t border-kenar pt-3">
         <DurumEtiketi

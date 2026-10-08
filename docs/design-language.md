@@ -26,7 +26,7 @@ Yön: **"kök"** metaforu — doğrulanmış güven, büyüyen bir ağ, kök sal
 ## Yerleşim İlkeleri
 
 - Hero alanı jenerik "başlık + buton + gradyan" olmasın — gerçek bir sohbet anını göstersin (Keşif Ajanı'nın sorduğu bir soru + bir "neden eşleşti" gerekçe kartı örneği).
-- **İki farklı görsel dil, kasıtlı:** sohbet panelleri yuvarlak/sıcak (chat-bubble hissi); doğrulama/skor gösterimleri daha az yuvarlak, hairline çizgili, "resmi belge" hissi. Bu ayrım ürünün kendi gerilimini (sıcak sohbet vs. ciddi doğrulama) görsel olarak da taşır.
+- **Tek yüzey dili (9 Eki 2026):** genç ve firma ekranlarının bütün kutuları `KUTU` yüzeyi (12px köşe, hairline kenar). Eskiden doğrulama/skor gösterimleri "resmi belge" hissi için az yuvarlaktı; firma tarafı da genç tarafıyla aynı dile geçince bu ayrım kalktı. Sohbet paneli yine sıcak (chat-bubble); ciddiyeti köşe değil içerik taşır: seviye kelimesi, çubuk, hairline ayraçlar.
 - Gövde metni sola hizalı (Türkçe diyakritikler ragged-right'ta daha okunaklı); hero'da merkez hizalama.
 
 ## Sayfa Düzeni

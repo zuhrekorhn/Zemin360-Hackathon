@@ -60,7 +60,7 @@ export function BosDurum({
   eylem?: { href: string; etiket: string };
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-sm border border-dashed border-kenar px-5 py-4">
+    <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-kenar px-6 py-5">
       <p className="text-sm text-pretty text-muted-foreground">{metin}</p>
       {eylem ? (
         <Button asChild size="lg">
@@ -149,8 +149,8 @@ export function DurumEtiketi({
     <span
       className={
         baglanti
-          ? "rounded-sm border border-baglanti px-2 py-0.5 text-xs text-baglanti"
-          : "rounded-sm border border-kenar px-2 py-0.5 text-xs text-muted-foreground"
+          ? "shrink-0 rounded-full bg-baglanti/10 px-2.5 py-0.5 text-xs font-medium text-baglanti"
+          : "shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
       }
     >
       {metin}

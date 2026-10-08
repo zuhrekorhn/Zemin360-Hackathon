@@ -1,7 +1,6 @@
 /**
- * "Neden uygun?" örneği. Gerçek ekranlardaki BelgeKarti:
- * doğrulama gösterimleri hairline, az yuvarlak, "resmi belge" hissi
- * (design-language.md § Yerleşim).
+ * "Neden uygun?" örneği. Gerçek ekranlardaki BelgeKarti: `KUTU` yüzeyi,
+ * satırlar hairline çizgiyle (design-language.md § Sayfa Düzeni).
  *
  * Seviye yalnızca renge dayanmaz: kelime (Zayıf/Orta/Güçlü) her zaman
  * görünür, çubuğun kendi aria-label'ı var.
