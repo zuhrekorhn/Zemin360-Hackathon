@@ -50,7 +50,13 @@ export function menuBaglantilari(
     };
   }
   return {
-    baglantilar: [{ yol: panelYolu(hesap.rol), etiket: "Panel" }],
+    baglantilar: [
+      { yol: panelYolu(hesap.rol), etiket: "Genel bakış" },
+      { yol: "/girvak/kararlar", etiket: "Karar bekleyenler" },
+      { yol: "/girvak/canlilik", etiket: "Canlılık" },
+      { yol: "/girvak/gozlem", etiket: "Gözlem" },
+      { yol: "/girvak/sayilar", etiket: "Sayılar" },
+    ],
     ayar: null,
   };
 }

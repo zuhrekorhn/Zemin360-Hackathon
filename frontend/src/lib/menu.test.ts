@@ -55,7 +55,13 @@ describe("menuBaglantilari", () => {
       "Firma kartı /kurum/kart",
     ]);
     expect(menuBaglantilari({ rol: "girvak", yetenek_karti: null })).toEqual({
-      baglantilar: [{ yol: "/girvak", etiket: "Panel" }],
+      baglantilar: [
+        { yol: "/girvak", etiket: "Genel bakış" },
+        { yol: "/girvak/kararlar", etiket: "Karar bekleyenler" },
+        { yol: "/girvak/canlilik", etiket: "Canlılık" },
+        { yol: "/girvak/gozlem", etiket: "Gözlem" },
+        { yol: "/girvak/sayilar", etiket: "Sayılar" },
+      ],
       ayar: null,
     });
   });

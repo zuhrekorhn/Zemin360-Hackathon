@@ -1,454 +1,49 @@
 "use client";
 
-import { ListeIskeleti } from "@/components/ui/iskelet";
-import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-
+import { BekleyenlerKutusu } from "@/components/girvak/bekleyenler";
+import { HedefKarti } from "@/components/girvak/hedef-karti";
+import { PanelBolumu } from "@/components/panel";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
-import { FirmaOnaylari } from "@/components/firma-onaylari";
-import { GozlemPaneli } from "@/components/gozlem-paneli";
-import { IncelemeKuyrugu } from "@/components/inceleme-kuyrugu";
-import { GirisKapisi } from "@/components/giris-kapisi";
-import {
-  BosDurum,
-  DurumEtiketi,
-  PanelBolumu,
-  tarihYaz,
-} from "@/components/panel";
 import { HataKutusu } from "@/components/sohbet";
-import { Button } from "@/components/ui/button";
-import { KUTU } from "@/components/ui/yuzey";
-import {
-  type CanlilikOlayi,
-  type GirvakSayilari,
-  type PasifBaglanti,
-  type ProgramHedefi,
-  type TaramaSonucu,
-  canlilikOlaylari,
-  girvakSayilari,
-  pasifBaglantilar,
-  taramaCalistir,
-} from "@/lib/api";
-import {
-  alicilarMetni,
-  hedefBasligi,
-  hedefYuzdesi,
-  pasifSureMetni,
-  turEtiketi,
-} from "@/lib/canlilik";
-import { type Hata, hatayaCevir } from "@/lib/hata";
-import { cn } from "@/lib/utils";
+import { ListeIskeleti } from "@/components/ui/iskelet";
+import { girvakSayilari } from "@/lib/api";
+import { useYukle } from "@/lib/yukle";
 
 /**
- * GİRVAK paneli (docs/canlilik.md § 7).
- *
- *   1. Program hedefleri — programın kendi adıyla ve platformda neyi
- *      saydığımızla; aradaki fark gizlenmez.
- *   2. Canlılık — "Taramayı şimdi çalıştır" (canlıda aynı işi cron yapar),
- *      şu an pasifleşen bağlantılar, son Canlılık olayları.
- *   3. Platform sayıları.
- * Kişisel veri yalnızca ad; e-posta yok.
+ * GİRVAK genel bakışı (docs/canlilik.md § 7): önce sizi bekleyen kararlar, sonra
+ * program hedefleri programın kendi adıyla ve platformda neyi saydığımızla; aradaki
+ * fark gizlenmez. Ayrıntılar menüdeki öteki sayfalarda. Kişisel veri yalnızca ad.
  */
-
-/** Yan menü: ekrandaki sıra "ne yapmalıyım" sırası (önce karar bekleyenler, sonra izleme). */
-const BOLUMLER = [
-  { id: "hedefler", etiket: "Program hedefleri" },
-  { id: "firma-onaylari", etiket: "Onay bekleyen firmalar" },
-  { id: "inceleme", etiket: "İnceleme kuyruğu" },
-  { id: "canlilik", etiket: "Canlılık taraması" },
-  { id: "gozlem", etiket: "Gözlem" },
-  { id: "pasifler", etiket: "Pasifleşen bağlantılar" },
-  { id: "olaylar", etiket: "Son hatırlatmalar" },
-  { id: "sayilar", etiket: "Platform sayıları" },
-];
-
-export default function GirvakPaneli() {
-  return (
-    <GirisKapisi roller={["girvak"]} genislik="genis">
-      <GirvakSayfasi />
-    </GirisKapisi>
-  );
-}
-
-function GirvakSayfasi() {
-  const [sayilar, setSayilar] = useState<GirvakSayilari | null>(null);
-  const [pasifler, setPasifler] = useState<PasifBaglanti[] | null>(null);
-  const [olaylar, setOlaylar] = useState<CanlilikOlayi[] | null>(null);
-  const [tarama, setTarama] = useState<TaramaSonucu | null>(null);
-  const [taraniyor, setTaraniyor] = useState(false);
-  const [hata, setHata] = useState<Hata | null>(null);
-  const okundu = useRef(false);
-
-  const oku = useCallback(async () => {
-    setHata(null);
-    try {
-      const [s, p, o] = await Promise.all([
-        girvakSayilari(),
-        pasifBaglantilar(),
-        canlilikOlaylari(),
-      ]);
-      setSayilar(s);
-      setPasifler(p);
-      setOlaylar(o);
-    } catch (sebep) {
-      setHata(hatayaCevir(sebep));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (okundu.current) return;
-    okundu.current = true;
-    void oku();
-  }, [oku]);
-
-  async function taramayiCalistir() {
-    setHata(null);
-    setTaraniyor(true);
-    try {
-      setTarama(await taramaCalistir());
-      await oku();
-    } catch (sebep) {
-      setHata(hatayaCevir(sebep));
-    } finally {
-      setTaraniyor(false);
-    }
-  }
+export default function GirvakGenelBakis() {
+  const { veri: sayilar, hata, yenile } = useYukle(girvakSayilari);
 
   return (
-    <Sayfa genislik="genis">
-      <div className="grid items-start gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
-        <nav
-          aria-label="GİRVAK paneli bölümleri"
-          className="hidden flex-col gap-1 lg:sticky lg:top-24 lg:flex"
+    <Sayfa>
+      <SayfaBasligi
+        baslik="Genel bakış"
+        aciklama="Program hedefleri gerçek sayılarla ve karar bekleyen işler. Kişisel bilgi olarak yalnızca ad görünür."
+      />
+
+      <BekleyenlerKutusu />
+
+      {hata ? (
+        <HataKutusu hata={hata} tekrarDene={() => void yenile()} />
+      ) : null}
+      {sayilar === null && !hata ? <ListeIskeleti satir={3} /> : null}
+
+      {sayilar ? (
+        <PanelBolumu
+          id="hedefler"
+          baslik="Program hedefleri"
+          aciklama="Her hedefin altında platformda neyi saydığımız yazıyor; programın tanımıyla bizim ölçümümüz birebir aynı olmayabilir."
         >
-          {BOLUMLER.map((bolum) => (
-            <a
-              key={bolum.id}
-              href={`#${bolum.id}`}
-              className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-metin"
-            >
-              {bolum.etiket}
-            </a>
-          ))}
-        </nav>
-
-        <div className="flex min-w-0 flex-col gap-10">
-          <SayfaBasligi
-            baslik="GİRVAK paneli"
-            aciklama="Program hedefleri gerçek sayılarla, pasifleşen bağlantılar ve son hatırlatmalar. Kişisel bilgi olarak yalnızca ad görünür."
-          />
-
-          {hata ? (
-            <HataKutusu hata={hata} tekrarDene={() => void oku()} />
-          ) : null}
-
-          {sayilar === null && !hata ? <ListeIskeleti satir={3} /> : null}
-
-          {sayilar ? (
-            <PanelBolumu
-              id="hedefler"
-              baslik="Program hedefleri"
-              aciklama="Her hedefin altında platformda neyi saydığımız yazıyor; programın tanımıyla bizim ölçümümüz birebir aynı olmayabilir."
-            >
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {sayilar.hedefler.map((hedef) => (
-                  <HedefKarti key={hedef.anahtar} hedef={hedef} />
-                ))}
-              </ul>
-            </PanelBolumu>
-          ) : null}
-
-          {/* Yanıt bekleyen işler hedeflerin hemen altında: önce karar, sonra izleme. */}
-          <FirmaOnaylari />
-
-          <IncelemeKuyrugu />
-
-          <PanelBolumu
-            id="canlilik"
-            baslik="Canlılık taraması"
-            aciklama="Hareketsiz kalan öneri, ilgi, plan ve adımlar için ilgili kişiye bir hatırlatma bırakır; aynı dönemde aynı hatırlatmayı tekrarlamaz. Canlıda bu işi zamanlanmış görev günde iki kez yapar."
-          >
-            <div
-              className={cn(
-                KUTU,
-                "flex flex-wrap items-center gap-x-4 gap-y-3 px-6 py-5",
-              )}
-            >
-              <Button
-                type="button"
-                size="lg"
-                disabled={taraniyor}
-                onClick={() => void taramayiCalistir()}
-              >
-                {taraniyor ? "Taranıyor…" : "Taramayı şimdi çalıştır"}
-              </Button>
-              {tarama ? <TaramaOzeti sonuc={tarama} /> : null}
-            </div>
-          </PanelBolumu>
-
-          <GozlemPaneli />
-
-          <PanelBolumu
-            id="pasifler"
-            baslik="Pasifleşen bağlantılar"
-            aciklama="Şu an hareketsizlik süresini aşmış kayıtlar; en uzun süredir hareketsiz olan önce. Bu liste okunurken hiçbir hatırlatma gönderilmez."
-          >
-            {pasifler === null ? null : pasifler.length === 0 ? (
-              <BosDurum metin="Şu an hareketsizlik süresini aşmış bir bağlantı yok." />
-            ) : (
-              <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
-                {pasifler.map((pasif) => (
-                  <PasifSatiri
-                    key={`${pasif.eslesme_id}-${pasif.tur}-${pasif.adim ?? ""}`}
-                    pasif={pasif}
-                  />
-                ))}
-              </ul>
-            )}
-          </PanelBolumu>
-
-          <PanelBolumu id="olaylar" baslik="Son hatırlatmalar">
-            {olaylar === null ? null : olaylar.length === 0 ? (
-              <BosDurum metin="Henüz hatırlatma gönderilmedi. Tarama çalıştığında burada görünür." />
-            ) : (
-              <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
-                {olaylar.map((olay) => (
-                  <li key={olay.id} className="flex flex-col gap-1 px-5 py-4">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <DurumEtiketi metin={turEtiketi(olay.tur)} />
-                      <span className="text-sm">
-                        {olay.alici_adi ?? "—"}
-                        {olay.alici_rol ? (
-                          <span className="text-muted-foreground">
-                            {" "}
-                            ({olay.alici_rol === "genc" ? "genç" : "firma"})
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {tarihYaz(olay.tetiklenme_tarihi, true)}
-                      </span>
-                    </div>
-                    {olay.mesaj_metni ? (
-                      <p className="text-sm text-pretty text-muted-foreground">
-                        {olay.mesaj_metni}
-                      </p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </PanelBolumu>
-
-          {sayilar ? (
-            <div id="sayilar" className="flex scroll-mt-24 flex-col gap-10">
-              <PanelBolumu baslik="Hesaplar ve kartlar">
-                <SayiIzgarasi
-                  ogeler={[
-                    { etiket: "Genç hesabı", sayi: sayilar.hesap.genc },
-                    { etiket: "Firma hesabı", sayi: sayilar.hesap.kurum },
-                    { etiket: "Yetenek kartı", sayi: sayilar.yetenek_karti },
-                    { etiket: "İhtiyaç kartı", sayi: sayilar.ihtiyac_karti },
-                  ]}
-                />
-              </PanelBolumu>
-
-              <PanelBolumu
-                baslik="Eşleşmeler ve iş birlikleri"
-                aciklama="Öneriden tamamlanan iş birliğine: firma ilgilenir, genç kabul eder, plan iki tarafça onaylanır ve adım adım tamamlanır."
-              >
-                <SayiIzgarasi
-                  ogeler={[
-                    { etiket: "Önerildi", sayi: sayilar.eslesme.onerildi },
-                    {
-                      etiket: "Gencin yanıtı bekleniyor",
-                      sayi: sayilar.eslesme.ilgileniliyor,
-                    },
-                    {
-                      etiket: "Kabul edildi",
-                      sayi: sayilar.eslesme.kabul_edildi,
-                    },
-                    {
-                      etiket: "Reddedildi",
-                      sayi: sayilar.eslesme.reddedildi,
-                    },
-                    { etiket: "İş birliği", sayi: sayilar.isbirligi },
-                    {
-                      etiket: "Planı bekleyen",
-                      sayi: sayilar.isbirligi_durumlari.plan_bekliyor,
-                    },
-                    {
-                      etiket: "Süren iş birliği",
-                      sayi: sayilar.isbirligi_durumlari.aktif,
-                    },
-                    {
-                      etiket: "Tamamlanan iş birliği",
-                      sayi: sayilar.isbirligi_durumlari.tamamlandi,
-                    },
-                  ]}
-                />
-              </PanelBolumu>
-
-              <PanelBolumu
-                baslik="Genç–firma ve firma–firma"
-                aciklama="Yukarıdaki toplamların eşleşme türüne göre dağılımı. Firma–firma, bir firmanın iş birliği ortağı aradığı ihtiyaçlardan çıkan eşleşmeler."
-              >
-                <SayiIzgarasi
-                  ogeler={[
-                    {
-                      etiket: "Genç–firma karşılıklı ilgi",
-                      sayi: sayilar.kirilim.genc_firma.karsilikli_ilgi,
-                    },
-                    {
-                      etiket: "Genç–firma iş birliği",
-                      sayi: sayilar.kirilim.genc_firma.isbirligi,
-                    },
-                    {
-                      etiket: "Genç–firma tamamlanan",
-                      sayi: sayilar.kirilim.genc_firma.tamamlanan,
-                    },
-                    {
-                      etiket: "Firma–firma öneri",
-                      sayi: sayilar.kirilim.firma_firma.oneri,
-                    },
-                    {
-                      etiket: "Firma–firma karşılıklı ilgi",
-                      sayi: sayilar.kirilim.firma_firma.karsilikli_ilgi,
-                    },
-                    {
-                      etiket: "Firma–firma iş birliği",
-                      sayi: sayilar.kirilim.firma_firma.isbirligi,
-                    },
-                    {
-                      etiket: "Firma–firma tamamlanan",
-                      sayi: sayilar.kirilim.firma_firma.tamamlanan,
-                    },
-                  ]}
-                />
-              </PanelBolumu>
-
-              <PanelBolumu
-                baslik="Kapanan ihtiyaçlar"
-                aciklama="Firmaların ihtiyacı kapatırken seçtiği neden. Nedeni yalnızca siz görürsünüz."
-              >
-                <SayiIzgarasi
-                  ogeler={[
-                    {
-                      etiket: "Platformda bulundu",
-                      sayi: sayilar.kapanan_ihtiyaclar.platformda_bulundu,
-                    },
-                    {
-                      etiket: "Başka yoldan bulundu",
-                      sayi: sayilar.kapanan_ihtiyaclar.baska_yoldan_bulundu,
-                    },
-                    {
-                      etiket: "Vazgeçildi",
-                      sayi: sayilar.kapanan_ihtiyaclar.vazgecildi,
-                    },
-                    {
-                      etiket: "Yanlış girildi",
-                      sayi: sayilar.kapanan_ihtiyaclar.hatali_girildi,
-                    },
-                  ]}
-                />
-              </PanelBolumu>
-            </div>
-          ) : null}
-        </div>
-      </div>
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {sayilar.hedefler.map((hedef) => (
+              <HedefKarti key={hedef.anahtar} hedef={hedef} />
+            ))}
+          </ul>
+        </PanelBolumu>
+      ) : null}
     </Sayfa>
-  );
-}
-
-/** Program hedefi: programın adıyla başlık, büyük sayı, ilerleme çizgisi, altında bizim ölçümümüz. */
-function HedefKarti({ hedef }: { hedef: ProgramHedefi }) {
-  const yuzde = hedefYuzdesi(hedef.sayi, hedef.hedef);
-  const baslik = hedefBasligi(hedef.hedef, hedef.program_adi);
-  return (
-    <li className={cn(KUTU, "flex flex-col gap-3 px-5 py-5")}>
-      <span className="text-sm font-medium text-pretty text-ana">{baslik}</span>
-      <p className="flex items-baseline gap-1.5">
-        <span className="font-mono text-4xl text-ana">{hedef.sayi}</span>
-        <span className="font-mono text-base text-muted-foreground">
-          / {hedef.hedef}
-        </span>
-      </p>
-      <div
-        className="h-1.5 w-full overflow-hidden rounded-full bg-kenar"
-        role="progressbar"
-        aria-valuenow={hedef.sayi}
-        aria-valuemin={0}
-        aria-valuemax={hedef.hedef}
-        aria-label={baslik}
-      >
-        <div className="h-full bg-baglanti" style={{ width: `${yuzde}%` }} />
-      </div>
-      <span className="text-xs text-pretty text-muted-foreground">
-        Platformda: {hedef.olcum}
-      </span>
-    </li>
-  );
-}
-
-function TaramaOzeti({ sonuc }: { sonuc: TaramaSonucu }) {
-  const turler = Object.entries(sonuc.olaylar);
-  return (
-    <p className="text-sm text-pretty" role="status">
-      {turler.length === 0
-        ? "Yeni hatırlatma yok: hareketsizlik süresini aşan kayıt yok ya da bu dönemde zaten hatırlatıldı."
-        : `${sonuc.bildirim} bildirim gönderildi. ${turler
-            .map(([tur, sayi]) => `${turEtiketi(tur)}: ${sayi}`)
-            .join(", ")}.`}
-      <span className="ml-1 text-xs text-muted-foreground">
-        ({sonuc.sure_sn} sn)
-      </span>
-    </p>
-  );
-}
-
-function PasifSatiri({ pasif }: { pasif: PasifBaglanti }) {
-  return (
-    <li className="flex flex-col gap-1 px-4 py-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <DurumEtiketi metin={turEtiketi(pasif.tur)} />
-        <span className="text-sm">
-          {pasif.genc_adi} · {pasif.kurum_adi}
-        </span>
-        {pasif.isbirligi_id ? (
-          <Link
-            href={`/isbirligi/${pasif.isbirligi_id}`}
-            className="ml-auto text-sm text-baglanti underline"
-          >
-            İş birliğini aç
-          </Link>
-        ) : null}
-      </div>
-      <p className="text-sm text-pretty text-muted-foreground">
-        {pasifSureMetni(pasif.tur, pasif.gun)}
-        {pasif.adim ? ` · “${pasif.adim}”` : ""} · hatırlatılacak:{" "}
-        {alicilarMetni(pasif.alicilar)} ·{" "}
-        {pasif.son_hatirlatma
-          ? `son hatırlatma ${tarihYaz(pasif.son_hatirlatma, true)}`
-          : "henüz hatırlatılmadı"}
-      </p>
-    </li>
-  );
-}
-
-/** Hairline ızgara: tek kutuda hizalı sayılar. */
-function SayiIzgarasi({
-  ogeler,
-}: {
-  ogeler: { etiket: string; sayi: number }[];
-}) {
-  return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-kenar bg-kenar shadow-[0_1px_2px_rgb(22_33_27/0.05)] sm:grid-cols-3">
-      {ogeler.map((oge) => (
-        <div key={oge.etiket} className="flex flex-col gap-1 bg-card px-4 py-3">
-          <dt className="text-xs text-muted-foreground">{oge.etiket}</dt>
-          <dd className="font-mono text-2xl text-ana">{oge.sayi}</dd>
-        </div>
-      ))}
-    </dl>
   );
 }

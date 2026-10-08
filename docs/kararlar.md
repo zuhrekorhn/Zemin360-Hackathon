@@ -187,6 +187,9 @@ Başka yerde tutulan kararlar:
   `PanelBolumu` çizgi yerine başlık ve `KUTU` kullanır. Hata, bulunamadı ve yükleniyor sayfaları
   (`error.tsx`, `not-found.tsx`, `loading.tsx`, `global-error.tsx`), iskelet yer tutucular
   (`ui/iskelet.tsx`), sayfa başına sekme başlığı (`lib/sekme-basligi.ts`) ve yan panelde odak hapsi.
+  **4. tur:** GİRVAK tek uzun sayfa olmaktan çıktı; menüde kendi sayfaları var (Genel bakış, Karar bekleyenler,
+  Canlılık, Gözlem, Sayılar) ve menü her rolde o rolün sayfalarını gösterir. Genel bakış önce "sizi bekleyenler"i
+  söyler. Okuma tek kancada (`lib/yukle.ts` › `useYukle`), sayı grupları veriden (`lib/girvak-sayilari.ts`).
 
 ## D — İlan düzenleme
 
