@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   firmaDurumEtiketi,
   firmaEylemleri,
+  gerekceBekleniyor,
   gencDurumEtiketi,
   gencEylemleri,
   ilgiGosterenleriAyir,
@@ -102,5 +103,29 @@ describe("onerininAdayAdi", () => {
         firma_karti: { firma_adi: "Market X" },
       }),
     ).toBe("Market X");
+  });
+});
+
+describe("gerekceBekleniyor", () => {
+  it("bekleyen adayın gerekçesi yoksa bekliyor sayılır", () => {
+    expect(
+      gerekceBekleniyor([
+        { durum: "onerildi", gerekce_metni: "Uygun." },
+        { durum: "ilgileniliyor", gerekce_metni: null },
+      ]),
+    ).toBe(true);
+  });
+
+  it("gerekçeler hazırsa ya da eksik olan kapanmış kayıtsa beklemez", () => {
+    expect(
+      gerekceBekleniyor([{ durum: "onerildi", gerekce_metni: "Uygun." }]),
+    ).toBe(false);
+    expect(
+      gerekceBekleniyor([
+        { durum: "kapandi", gerekce_metni: null },
+        { durum: "kabul_edildi", gerekce_metni: null },
+      ]),
+    ).toBe(false);
+    expect(gerekceBekleniyor([])).toBe(false);
   });
 });

@@ -167,7 +167,3 @@ export function degerlendirmeBekliyor(
 ): boolean {
   return ciktilar.some((cikti) => cikti.guven_skoru === null);
 }
-
-/** Bekleyen değerlendirme için yenileme aralığı ve en fazla deneme (≈ 1 dk). */
-export const YENILEME_ARALIGI_MS = 4000;
-export const YENILEME_EN_FAZLA = 15;

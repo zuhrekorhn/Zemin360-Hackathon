@@ -39,6 +39,7 @@ import {
   NEDEN_UYGUN,
   firmaDurumEtiketi,
   firmaEylemleri,
+  gerekceBekleniyor,
   ilgiGosterenleriAyir,
   onerininAdayAdi,
 } from "@/lib/ilgi";
@@ -49,6 +50,7 @@ import {
   etiketle,
 } from "@/lib/sabitler";
 import { cn } from "@/lib/utils";
+import { YENILEME_ARALIGI_MS, YENILEME_EN_FAZLA } from "@/lib/yenileme";
 
 /**
  * Eşleştirme önerileri — kurum tarafı (docs/agent-specs.md § 3).
@@ -95,10 +97,13 @@ function OnerilerIcerigi() {
    * burada olabilir, o yüzden açılışta değil yalnızca istenince.
    */
   const onerileriGetir = useCallback(
-    async (kart: string | null, tazele = false) => {
+    async (kart: string | null, tazele = false, sessiz = false) => {
       if (!kurumId) return;
-      setHata(null);
-      setYukleniyor(true);
+      // `sessiz`: arka plan yenilemesi; yükleniyor ya da hata göstermez.
+      if (!sessiz) {
+        setHata(null);
+        setYukleniyor(true);
+      }
       try {
         setVeri(
           await (tazele
@@ -106,9 +111,9 @@ function OnerilerIcerigi() {
             : eslestirmeOnerileri(kurumId, kart)),
         );
       } catch (sebep) {
-        setHata(hatayaCevir(sebep));
+        if (!sessiz) setHata(hatayaCevir(sebep));
       } finally {
-        setYukleniyor(false);
+        if (!sessiz) setYukleniyor(false);
       }
     },
     [kurumId],
@@ -120,6 +125,24 @@ function OnerilerIcerigi() {
     sonOkunan.current = ihtiyacKartiId;
     void onerileriGetir(ihtiyacKartiId);
   }, [kartVar, ihtiyacKartiId, onerileriGetir]);
+
+  // İlan düzenlenince gerekçeler arka planda yeniden yazılır; bu sürede liste
+  // "açıklama henüz hazır değil" kalmasın: hazır olana dek sessizce yenilenir.
+  const gerekceSuruyor = veri !== null && gerekceBekleniyor(veri.oneriler);
+  useEffect(() => {
+    if (!gerekceSuruyor) return;
+    let deneme = 0;
+    const zamanlayici = setInterval(() => {
+      if (document.hidden) return;
+      deneme += 1;
+      if (deneme > YENILEME_EN_FAZLA) {
+        clearInterval(zamanlayici);
+        return;
+      }
+      void onerileriGetir(ihtiyacKartiId, false, true);
+    }, YENILEME_ARALIGI_MS);
+    return () => clearInterval(zamanlayici);
+  }, [gerekceSuruyor, ihtiyacKartiId, onerileriGetir]);
 
   async function durumuYaz(
     oneri: Oneri,

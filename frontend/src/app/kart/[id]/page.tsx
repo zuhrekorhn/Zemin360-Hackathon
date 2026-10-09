@@ -38,13 +38,12 @@ import {
   yetenekKartiHazirla,
 } from "@/lib/api";
 import {
-  YENILEME_ARALIGI_MS,
-  YENILEME_EN_FAZLA,
   degerlendirmeBekliyor,
   eksikler,
   kartinSiradakiAdimi,
 } from "@/lib/calisma";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { YENILEME_ARALIGI_MS, YENILEME_EN_FAZLA } from "@/lib/yenileme";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
 /**

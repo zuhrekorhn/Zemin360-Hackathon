@@ -53,8 +53,7 @@ export const UYUM_KADEMELERI = [
 
 export function uyumMetni(skor: number): string {
   return (
-    UYUM_KADEMELERI.find((kademe) => skor >= kademe.alt)?.metin ??
-    "Olası uyum"
+    UYUM_KADEMELERI.find((kademe) => skor >= kademe.alt)?.metin ?? "Olası uyum"
   );
 }
 
@@ -105,4 +104,19 @@ export function onerininAdayAdi(oneri: {
   firma_karti: { firma_adi: string } | null;
 }): string {
   return oneri.firma_karti?.firma_adi ?? oneri.yetenek_karti?.genc_adi ?? "";
+}
+
+/**
+ * İlan düzenlenince bekleyen adayların gerekçesi silinir, yenisi yanıttan
+ * sonra arka planda yazılır (backend ilan_duzenleme). Listede böyle bir aday
+ * varken sayfa kendini yeniler.
+ */
+export function gerekceBekleniyor(
+  oneriler: readonly { durum: string; gerekce_metni: string | null }[],
+): boolean {
+  return oneriler.some(
+    (oneri) =>
+      !oneri.gerekce_metni &&
+      (oneri.durum === "onerildi" || oneri.durum === "ilgileniliyor"),
+  );
 }
