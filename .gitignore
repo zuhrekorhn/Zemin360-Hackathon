@@ -21,3 +21,8 @@ out/
 .idea/
 # Yerel kanıt dosyası deposu (DEPO_SAGLAYICI=yerel)
 backend/yuklemeler/
+
+# Yerel yapay zekâ asistanı bağlam dosyaları (repoya girmez)
+CLAUDE.md
+**/CLAUDE.md
+.claude/
