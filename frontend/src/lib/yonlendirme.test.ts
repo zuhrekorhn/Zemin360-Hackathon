@@ -136,7 +136,13 @@ describe("kayittanSonra", () => {
     expect(kayittanSonra("kurum", null)).toBe("/kurum");
   });
   it("güvenli sonra öncelikli, güvensiz olan yok sayılır", () => {
-    expect(kayittanSonra("genc", "/kart/1")).toBe("/kart/1");
+    expect(kayittanSonra("genc", "/bildirimler")).toBe("/bildirimler");
     expect(kayittanSonra("genc", "//kotu.site")).toBe("/kesif?ilk=1");
+  });
+  it("başkasının oturumundan kalan kart, iş birliği ve ilan adresleri yok sayılır", () => {
+    expect(kayittanSonra("kurum", "/kart/36db5daf")).toBe("/kurum");
+    expect(kayittanSonra("genc", "/kart/1")).toBe("/kesif?ilk=1");
+    expect(kayittanSonra("kurum", "/isbirligi/7")).toBe("/kurum");
+    expect(kayittanSonra("kurum", "/kurum/ilan/3/duzenle")).toBe("/kurum");
   });
 });

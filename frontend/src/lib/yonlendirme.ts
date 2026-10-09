@@ -59,13 +59,23 @@ export function giristenSonra(rol: Rol, sonra: string | null): string {
 }
 
 /**
+ * Yeni hesabın sahibi olmadığı kaynak sayfaları: kayıtlı başka bir hesabın
+ * oturumundan kalan `sonra` (ör. çıkış yapılan gencin kart adresi) yeni
+ * hesabı başkasının kartına, yani "bulunamadı"ya götürüyordu.
+ */
+const KAYITTA_SAYILMAYAN_YOLLAR = ["/kart/", "/isbirligi/", "/kurum/ilan/"];
+
+/**
  * Kayıttan sonra nereye (docs/agent-specs.md § 1): genç doğrudan Keşif
  * sohbetine (onboarding; "Şimdilik atla" oradan panele), diğerleri panele.
- * Güvenli bir `sonra` varsa o öncelikli.
+ * Güvenli bir `sonra` varsa o öncelikli; yalnızca yeni hesabın sahibi
+ * olamayacağı kaynak sayfaları (kart, iş birliği, ilan) yok sayılır.
  */
 export function kayittanSonra(rol: Rol, sonra: string | null): string {
   const hedef = guvenliSonra(sonra);
-  if (hedef) return hedef;
+  if (hedef && !KAYITTA_SAYILMAYAN_YOLLAR.some((o) => hedef.startsWith(o))) {
+    return hedef;
+  }
   return rol === "genc" ? "/kesif?ilk=1" : panelYolu(rol);
 }
 
