@@ -21,9 +21,16 @@ _OKUNAMADI: dict[ErisimDurumu, str] = {
 }
 
 
+_KANIT_ADI = {"link": "link", "dosya": "dosya", "gorsel": "görsel"}
+
+
 def kanit_cumlesi(puan: int | None, okunan: OkunanKanit | None, *, celisiyor: bool) -> str:
     if okunan is None:
         return "Henüz kanıt eklemedin."
+    # Yüklenen dosya ve görsele "link" demek yanlış okunuyordu.
+    ad = _KANIT_ADI.get(okunan.tur, "link")
+    if ad != "link":
+        return _belge_cumlesi(ad, puan, okunan, celisiyor=celisiyor)
     if puan is None:
         return _OKUNAMADI.get(okunan.erisim, "Kanıt değerlendirilemedi.")
     if okunan.erisim is ErisimDurumu.BULUNAMADI:
@@ -39,6 +46,21 @@ def kanit_cumlesi(puan: int | None, okunan: OkunanKanit | None, *, celisiyor: bo
     if puan == 2:
         return "Link çalışmana götürüyor ama sana ait olduğunu gösteren bir işaret yok."
     return "Link çalışmana götürüyor ve senin olduğu görülüyor."
+
+
+def _belge_cumlesi(ad: str, puan: int | None, okunan: OkunanKanit, *, celisiyor: bool) -> str:
+    """Yüklenen dosya ve görselin kanıt cümlesi; kural `kanit_cumlesi` ile aynı."""
+    if puan is None:
+        return f"Yüklediğin {ad} değerlendirilemedi."
+    if puan == 0:
+        return f"Yüklediğin {ad} bu çalışmayla ilgili görünmüyor."
+    if celisiyor:
+        return "Kanıttaki bilgiler anlattığınla örtüşmüyor."
+    if okunan.seviye is KaynakSeviyesi.BEYAN:
+        return f"Yüklediğin {ad} çalışmanla ilgili ama doğrulanabilir bir işaret taşımıyor."
+    if puan == 2:
+        return f"Yüklediğin {ad} çalışmanla ilgili ama sana ait olduğunu gösteren bir işaret yok."
+    return f"Yüklediğin {ad} çalışmanla ilgili ve senin olduğu görülüyor."
 
 
 def sonuc_cumlesi(puan: int | None) -> str:

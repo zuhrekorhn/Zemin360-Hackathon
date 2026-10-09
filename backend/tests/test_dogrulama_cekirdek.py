@@ -123,6 +123,23 @@ def test_not_sen_hitabiyla_ve_rehbere_uygun(kanit, sonuc):
     assert metin_ihlalleri(metin, hitap="sen") == []
 
 
+@pytest.mark.parametrize(("tur", "ad"), [("gorsel", "görsel"), ("dosya", "dosya")])
+@pytest.mark.parametrize("kanit", [None, 0, 1, 2, 3])
+def test_yuklenen_kanita_link_denmez(tur, ad, kanit):
+    """Yüklenen görsel ve dosya için "link" cümlesi kurulmaz; dil rehbere uygun kalır."""
+    belge = OkunanKanit(erisim=E.ACIK, seviye=S.KAMUYA_ACIK, metin=METIN, url="x", tur=tur)
+    metin = not_yaz(BaslikPuanlari(kanit, 2, 2), belge, kanit_celisiyor=False, oneri=None)
+    assert "link" not in metin.lower()
+    assert ad in metin or kanit is None and "değerlendirilemedi" in metin
+    assert metin_ihlalleri(metin, hitap="sen") == []
+
+
+def test_alakasiz_gorsel_gorsel_olarak_anilir():
+    belge = OkunanKanit(erisim=E.ACIK, seviye=S.KAMUYA_ACIK, metin=METIN, url="x", tur="gorsel")
+    metin = not_yaz(BaslikPuanlari(0, 2, 2), belge, kanit_celisiyor=False, oneri=None)
+    assert "Yüklediğin görsel bu çalışmayla ilgili görünmüyor." in metin
+
+
 def test_kurala_aykiri_oneri_atilir():
     assert temiz_oneri("Rolünüzü daha net yazabilirsiniz.") is None
     assert temiz_oneri("Puanını artırmak için sayı ekle.") is None
