@@ -185,93 +185,103 @@ function KayitFormu() {
           </div>
         </fieldset>
 
-        <FormAlani
-          etiket={rol === "kurum" ? "Firmanın adı" : "Adın"}
-          htmlFor="ad"
-        >
-          <Input
-            id="ad"
-            value={ad}
-            onChange={(olay) => setAd(olay.target.value)}
-            required
-            autoComplete={rol === "kurum" ? "organization" : "name"}
-          />
-        </FormAlani>
-        {rol === "genc" ? (
-          <p className="-mt-3 text-xs text-pretty text-muted-foreground">
-            Adın kartında firmalara görünür. E-postan ise yalnızca karşılıklı
-            ilgi oluştuğunda o firmayla paylaşılır.
+        {rol ? null : (
+          <p className="text-sm text-muted-foreground">
+            Devam etmek için yukarıdan birini seç.
           </p>
-        ) : null}
-
-        <FormAlani etiket="E-posta" htmlFor="email">
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(olay) => setEmail(olay.target.value)}
-            required
-            autoComplete="email"
-          />
-        </FormAlani>
-
-        <FormAlani etiket="Şifre" htmlFor="sifre">
-          <Input
-            id="sifre"
-            type="password"
-            value={sifre}
-            onChange={(olay) => setSifre(olay.target.value)}
-            required
-            minLength={SIFRE_EN_AZ}
-            autoComplete="new-password"
-          />
-        </FormAlani>
-        <p className="-mt-3 text-xs text-muted-foreground">
-          En az {SIFRE_EN_AZ} karakter.
-        </p>
-
-        {rol === "genc" ? (
-          <GencProfilAlanlari form={profil} onDegis={setProfil} />
-        ) : null}
-        {rol === "kurum" ? (
-          <FirmaProfilAlanlari form={firma} onDegis={setFirma} />
-        ) : null}
+        )}
 
         {rol ? (
           <>
-            <label className="flex items-start gap-2 text-sm text-pretty">
-              <input
-                type="checkbox"
-                checked={kvkkOnay}
-                onChange={(olay) => setKvkkOnay(olay.target.checked)}
+            <FormAlani
+              etiket={rol === "kurum" ? "Firmanın adı" : "Adın"}
+              htmlFor="ad"
+            >
+              <Input
+                id="ad"
+                value={ad}
+                onChange={(olay) => setAd(olay.target.value)}
                 required
-                className="mt-0.5 accent-ana"
+                autoComplete={rol === "kurum" ? "organization" : "name"}
               />
-              <span>
-                <Link
-                  href="/kvkk"
-                  target="_blank"
-                  className="text-baglanti underline"
-                >
-                  KVKK aydınlatma metnini
-                </Link>{" "}
-                okudum; verilerimin bu metinde anlatılan amaçlarla işlenmesini
-                onaylıyorum.
-              </span>
-            </label>
+            </FormAlani>
+            {rol === "genc" ? (
+              <p className="-mt-3 text-xs text-pretty text-muted-foreground">
+                Adın kartında firmalara görünür. E-postan ise yalnızca
+                karşılıklı ilgi oluştuğunda o firmayla paylaşılır.
+              </p>
+            ) : null}
+
+            <FormAlani etiket="E-posta" htmlFor="email">
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(olay) => setEmail(olay.target.value)}
+                required
+                autoComplete="email"
+              />
+            </FormAlani>
+
+            <FormAlani etiket="Şifre" htmlFor="sifre">
+              <Input
+                id="sifre"
+                type="password"
+                value={sifre}
+                onChange={(olay) => setSifre(olay.target.value)}
+                required
+                minLength={SIFRE_EN_AZ}
+                autoComplete="new-password"
+              />
+            </FormAlani>
+            <p className="-mt-3 text-xs text-muted-foreground">
+              En az {SIFRE_EN_AZ} karakter.
+            </p>
+
+            {rol === "genc" ? (
+              <GencProfilAlanlari form={profil} onDegis={setProfil} />
+            ) : null}
+            {rol === "kurum" ? (
+              <FirmaProfilAlanlari form={firma} onDegis={setFirma} />
+            ) : null}
+
+            {rol ? (
+              <>
+                <label className="flex items-start gap-2 text-sm text-pretty">
+                  <input
+                    type="checkbox"
+                    checked={kvkkOnay}
+                    onChange={(olay) => setKvkkOnay(olay.target.checked)}
+                    required
+                    className="mt-0.5 accent-ana"
+                  />
+                  <span>
+                    <Link
+                      href="/kvkk"
+                      target="_blank"
+                      className="text-baglanti underline"
+                    >
+                      KVKK aydınlatma metnini
+                    </Link>{" "}
+                    okudum; verilerimin bu metinde anlatılan amaçlarla
+                    işlenmesini onaylıyorum.
+                  </span>
+                </label>
+              </>
+            ) : null}
+
+            {hata ? <HataKutusu hata={hata} /> : null}
+
+            <Button
+              type="submit"
+              size="lg"
+              disabled={bekleniyor || !rol}
+              className="w-fit"
+            >
+              {bekleniyor ? "Kayıt olunuyor…" : "Kayıt ol"}
+            </Button>
           </>
         ) : null}
-
-        {hata ? <HataKutusu hata={hata} /> : null}
-
-        <Button
-          type="submit"
-          size="lg"
-          disabled={bekleniyor || !rol}
-          className="w-fit"
-        >
-          {bekleniyor ? "Kayıt olunuyor…" : "Kayıt ol"}
-        </Button>
       </form>
 
       <p className="text-sm text-muted-foreground">
