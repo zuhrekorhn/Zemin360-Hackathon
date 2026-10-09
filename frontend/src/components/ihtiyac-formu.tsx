@@ -4,11 +4,13 @@ import { useState } from "react";
 
 import { CokluSecim } from "@/components/coklu-secim";
 import { useGirisliHesap } from "@/components/giris-kapisi";
+import { OnayCubugu } from "@/components/onay-cubugu";
 import { FormAlani } from "@/components/sohbet";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { KUTU } from "@/components/ui/yuzey";
 import type { IhtiyacTaslagi, KurumProfili } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { ISBIRLIGI_TURLERI } from "@/lib/firma-karti";
 import { FIRMA_TURLERI, onaydaFirmaBilgisiSorulmali } from "@/lib/firma-profil";
 import {
@@ -48,6 +50,16 @@ export function IhtiyacFormu({
   const eksikAlanlar = useGirisliHesap().eksik_profil_alanlari;
   const firmaBilgisiSor =
     !duzenleme && onaydaFirmaBilgisiSorulmali(eksikAlanlar);
+  // Sayfada (taslak onayı) bölümler kutuda ve onay alta yapışık şeritte; yan
+  // panelde (`formId` verilir) form zaten bir yüzeyin içinde, düz kalır.
+  const kutulu = !formId;
+  const bolumSinifi = cn(
+    "flex flex-col gap-4",
+    kutulu && cn(KUTU, "px-5 py-5"),
+  );
+  const bilgiMetni = duzenleme
+    ? "Değişiklikten sonra uygun adaylar yeniden belirlenir; ilgilendiğiniz ve size ilgi gösteren adaylar korunur, onlara ayrıntıların güncellendiği bildirilir."
+    : "Onaylanan ihtiyaç, eşleşen adaylara gösterilir.";
   const bosSecim = duzenleme ? FARK_ETMEZ : "";
   const [sektor, setSektor] = useState("");
   const [sehir, setSehir] = useState("");
@@ -116,8 +128,14 @@ export function IhtiyacFormu({
         );
       }}
     >
-      <section className="flex flex-col gap-4">
-        {baslikGizle ? null : (
+      <section className={bolumSinifi}>
+        {baslikGizle ? (
+          kutulu ? (
+            <h2 className="font-heading text-xl font-semibold text-ana">
+              İhtiyaç
+            </h2>
+          ) : null
+        ) : (
           <div className="flex flex-col gap-1">
             <h2 className="font-heading text-xl font-semibold text-ana">
               {duzenleme ? "İhtiyaç kartınız" : "İhtiyaç kartı taslağınız"}
@@ -133,6 +151,7 @@ export function IhtiyacFormu({
         <MetinAlani
           id="problem"
           etiket="Problem"
+          satir={5}
           deger={problem}
           setDeger={setProblem}
           enUzun={PROBLEM_EN_UZUN}
@@ -147,7 +166,7 @@ export function IhtiyacFormu({
           sohbetteBos={!taslak.basari_kriteri}
         />
         <div className="flex flex-col gap-3">
-          <div className="grid gap-4 @md:grid-cols-3">
+          <div className="grid items-end gap-4 @md:grid-cols-3">
             <OlcutAlani
               id="mevcut-deger"
               etiket="Bugünkü durum"
@@ -187,7 +206,7 @@ export function IhtiyacFormu({
         />
       </section>
 
-      <section className="flex flex-col gap-4">
+      <section className={bolumSinifi}>
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-xl font-semibold text-ana">
             Firma bilgileri
@@ -359,28 +378,22 @@ export function IhtiyacFormu({
 
           {/* Genç akışı (docs/kararlar.md G1): eşik üstü
               adaylar ihtiyacı fırsat olarak görür. */}
-          <p className="text-sm text-pretty text-muted-foreground">
-            {duzenleme
-              ? "Değişiklikten sonra uygun adaylar yeniden belirlenir; ilgilendiğiniz ve size ilgi gösteren adaylar korunur, onlara ayrıntıların güncellendiği bildirilir."
-              : "Onaylanan ihtiyaç, eşleşen adaylara gösterilir."}
-          </p>
-
-          {formId ? null : (
-            <Button
-              type="submit"
-              size="lg"
-              disabled={bekleniyor}
-              className="w-fit"
-            >
-              {bekleniyor
-                ? "Kaydediliyor…"
-                : duzenleme
-                  ? "Değişiklikleri kaydet"
-                  : "Kartı onayla"}
-            </Button>
+          {kutulu ? null : (
+            <p className="text-sm text-pretty text-muted-foreground">
+              {bilgiMetni}
+            </p>
           )}
         </div>
       </section>
+
+      {/* Onay her zaman görünür: uzun formda sayfanın sonuna inmek gerekmesin. */}
+      {kutulu ? (
+        <OnayCubugu
+          metin={bilgiMetni}
+          etiket={duzenleme ? "Değişiklikleri kaydet" : "Kartı onayla"}
+          bekleniyor={bekleniyor}
+        />
+      ) : null}
     </form>
   );
 }
@@ -439,6 +452,7 @@ function MetinAlani({
   enUzun,
   sohbetteBos = false,
   istegeBagli = false,
+  satir = 3,
 }: {
   id: string;
   etiket: string;
@@ -447,13 +461,14 @@ function MetinAlani({
   enUzun: number;
   sohbetteBos?: boolean;
   istegeBagli?: boolean;
+  satir?: number;
 }) {
   const eksik = !istegeBagli && sohbetteBos && !deger.trim();
   return (
     <FormAlani etiket={etiket} htmlFor={id} istegeBagli={istegeBagli}>
       <Textarea
         id={id}
-        rows={3}
+        rows={satir}
         required={!istegeBagli}
         maxLength={enUzun}
         value={deger}

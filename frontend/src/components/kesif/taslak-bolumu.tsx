@@ -10,6 +10,7 @@ import { KartAlanlari } from "@/components/kart-alanlari";
 import { FormAlani } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { SECIM_SINIFI } from "@/components/ui/secim";
+import { OnayCubugu } from "@/components/onay-cubugu";
 import { KUTU } from "@/components/ui/yuzey";
 import type { GencProfili, KartTaslagi, SomutCiktiTaslagi } from "@/lib/api";
 import {
@@ -171,21 +172,11 @@ export function TaslakBolumu({
       </div>
 
       {/* Onay her zaman görünür: uzun taslakta sayfanın sonuna inmek gerekmesin. */}
-      <div className="sticky bottom-4 z-20">
-        <div className="flex flex-col gap-3 rounded-xl bg-ana px-6 py-4 text-zemin shadow-[0_12px_32px_-16px_rgb(22_33_27/0.6)] sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-pretty text-zemin/85">
-            Doğruysa onayla; kartın kaydedilir ve fırsatlarla eşleşir. Sonra
-            istediğin zaman düzenleyebilirsin. E-postan kartta görünmez.
-          </p>
-          <button
-            type="submit"
-            disabled={bekleniyor}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-vurgu px-5 text-sm font-semibold text-metin outline-none hover:bg-vurgu/90 focus-visible:ring-3 focus-visible:ring-zemin/60 disabled:opacity-60"
-          >
-            {bekleniyor ? "Kaydediliyor…" : "Kartı onayla"}
-          </button>
-        </div>
-      </div>
+      <OnayCubugu
+        metin="Doğruysa onayla; kartın kaydedilir ve fırsatlarla eşleşir. Sonra istediğin zaman düzenleyebilirsin. E-postan kartta görünmez."
+        etiket="Kartı onayla"
+        bekleniyor={bekleniyor}
+      />
     </form>
   );
 }
