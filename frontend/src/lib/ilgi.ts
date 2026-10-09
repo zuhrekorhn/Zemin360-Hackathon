@@ -120,3 +120,14 @@ export function gerekceBekleniyor(
       (oneri.durum === "onerildi" || oneri.durum === "ilgileniliyor"),
   );
 }
+
+/**
+ * Adayın gerekçesi yokken "Neden uygun?" kutusundaki cümle. Sayfa kendini
+ * yenilerken kullanıcıdan bir şey istenmez; yenileme pes edince (gerekçe
+ * yazılamadı) düğmeye yönlendirilir.
+ */
+export function gerekceYokMetni(hazirlaniyor: boolean): string {
+  return hazirlaniyor
+    ? "Bu aday için açıklama hazırlanıyor; birkaç saniye içinde burada görünür."
+    : "Bu aday için açıklama hazırlanamadı. Uyum ve sıralama bundan etkilenmiyor; “Adayları yenile” ile tekrar deneyebilirsiniz.";
+}

@@ -62,6 +62,7 @@ Her kavramın **tek** adı var. "Kullanma" sütunundaki karşılıklar kullanıc
 | Firmanın tanımladığı ihtiyaç | **ihtiyaç** (firma tarafında) | talep, ilan | Başlıkta "ihtiyaç kartı" olabilir |
 | Gencin gördüğü eşleşen ihtiyaç | **fırsat** | ihtiyaç kartı, ilan, iş ilanı | Aynı kayıt, gence "fırsat" olarak görünür |
 | Firmanın gördüğü eşleşen genç | **aday** | yetenek, profil, sonuç | |
+| Aday listesini baştan çıkaran düğme | **Adayları yenile** | yeniden hesapla, tazele, pipeline'ı çalıştır | Yeni katılanları ve eksik açıklamaları getirir; yalnızca firma tarafında |
 | Platformu kullanan kuruluş | **firma** | kurum (yeni metinlerde), şirket, kuruluş | Startup, KOBİ, kurumsal hepsi "firma" |
 | Eşleşmenin gücü | **uyum**: "Güçlü uyum", "İyi uyum", "Olası uyum" | skor, eşleşme puanı, benzerlik, yüzde ("%56 uyum") | Yüzde sıralama için olan bir sayıyı ölçü gibi gösterip caydırıyordu (8 Eki 2026) |
 | Eşleşmenin açıklaması | **Neden uygun?** | gerekçe, gerekçe metni, bu eşleşmenin gerekçesi | İki tarafta da aynı başlık |

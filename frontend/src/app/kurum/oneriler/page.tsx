@@ -3,7 +3,15 @@
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import { DogrulanmisFirma } from "@/components/dogrulanmis-firma";
@@ -40,6 +48,7 @@ import {
   firmaDurumEtiketi,
   firmaEylemleri,
   gerekceBekleniyor,
+  gerekceYokMetni,
   ilgiGosterenleriAyir,
   onerininAdayAdi,
 } from "@/lib/ilgi";
@@ -68,6 +77,9 @@ import { YENILEME_ARALIGI_MS, YENILEME_EN_FAZLA } from "@/lib/yenileme";
  * docs/icerik-rehberi.md § 5.9 (lib/ilgi.ts).
  */
 
+/** Gerekçeler arka planda yazılıyor ve sayfa hâlâ yeniliyor mu (kartlara taşınır). */
+const GerekceHazirlaniyor = createContext(false);
+
 export default function OnerilerSayfasi() {
   return (
     <GirisKapisi roller={["kurum"]} genislik="genis">
@@ -89,6 +101,8 @@ function OnerilerIcerigi() {
   const [veri, setVeri] = useState<Oneriler | null>(null);
   const [yukleniyor, setYukleniyor] = useState(kartVar);
   const [hata, setHata] = useState<Hata | null>(null);
+  // Sessiz yenileme sınıra gelip gerekçeyi bulamadı: kutu düğmeye yönlendirir.
+  const [yenilemeVazgecti, setYenilemeVazgecti] = useState(false);
 
   /**
    * `tazele` false: hesaplanmış listeyi okur (sayfa açılışı).
@@ -103,6 +117,7 @@ function OnerilerIcerigi() {
       if (!sessiz) {
         setHata(null);
         setYukleniyor(true);
+        setYenilemeVazgecti(false);
       }
       try {
         setVeri(
@@ -137,6 +152,7 @@ function OnerilerIcerigi() {
       deneme += 1;
       if (deneme > YENILEME_EN_FAZLA) {
         clearInterval(zamanlayici);
+        setYenilemeVazgecti(true);
         return;
       }
       void onerileriGetir(ihtiyacKartiId, false, true);
@@ -254,21 +270,25 @@ function OnerilerIcerigi() {
           {!kartVar ? <KurumYok /> : null}
 
           {!yukleniyor && veri ? (
-            <OneriListesi
-              veri={veri}
-              ilan={
-                gosterilenKart
-                  ? {
-                      firmaAdi: hesap.ad ?? "",
-                      problem: gosterilenKart.problem_tanimi,
-                      basariKriteri: gosterilenKart.basari_kriteri ?? null,
-                    }
-                  : null
-              }
-              ortak={ortak}
-              onIlgileniyorum={ilgilendigimiSoyle}
-              onSimdilikDegil={simdilikDegilDe}
-            />
+            <GerekceHazirlaniyor.Provider
+              value={gerekceSuruyor && !yenilemeVazgecti}
+            >
+              <OneriListesi
+                veri={veri}
+                ilan={
+                  gosterilenKart
+                    ? {
+                        firmaAdi: hesap.ad ?? "",
+                        problem: gosterilenKart.problem_tanimi,
+                        basariKriteri: gosterilenKart.basari_kriteri ?? null,
+                      }
+                    : null
+                }
+                ortak={ortak}
+                onIlgileniyorum={ilgilendigimiSoyle}
+                onSimdilikDegil={simdilikDegilDe}
+              />
+            </GerekceHazirlaniyor.Provider>
           ) : null}
         </div>
       </div>
@@ -313,7 +333,7 @@ function IhtiyacOzeti({
           onClick={onYenidenHesapla}
           className="w-full"
         >
-          Yeniden hesapla
+          Adayları yenile
         </Button>
         <Link
           href={`/kurum?duzenle=${kart.id}`}
@@ -505,7 +525,7 @@ function OneriListesi({
         </p>
         <p>
           Yeni gençler katıldıkça ya da ihtiyacınızı netleştirdikçe yeniden
-          hesaplayın.
+          yenileyin.
         </p>
       </BosKutu>
     );
@@ -565,6 +585,7 @@ function OneriListesi({
 
 /** "Neden uygun?": gencin Fırsatlar ekranındaki gerekçe kutusuyla aynı. */
 function NedenUygunKutusu({ metin }: { metin: string | null }) {
+  const hazirlaniyor = useContext(GerekceHazirlaniyor);
   return (
     <section className="flex flex-col gap-1 rounded-lg border-l-[3px] border-baglanti bg-baglanti/[0.06] px-4 py-3">
       <h4 className="font-heading text-sm font-semibold text-ana">
@@ -573,9 +594,11 @@ function NedenUygunKutusu({ metin }: { metin: string | null }) {
       {metin ? (
         <p className="text-sm leading-relaxed text-pretty">{metin}</p>
       ) : (
-        <p className="text-sm text-pretty text-muted-foreground">
-          Bu aday için açıklama henüz hazır değil. Uyum ve sıralama bundan
-          etkilenmiyor; “Yeniden hesapla” ile tekrar denenir.
+        <p
+          role={hazirlaniyor ? "status" : undefined}
+          className="text-sm text-pretty text-muted-foreground"
+        >
+          {gerekceYokMetni(hazirlaniyor)}
         </p>
       )}
     </section>

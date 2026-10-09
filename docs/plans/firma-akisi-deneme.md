@@ -163,6 +163,6 @@ Taslak gelince formda bir yetkinlik ekle, "Kartı onayla".
 ## Bilinen sınırlar
 
 - **Canlılık** firma–firma eşleşmelerine hatırlatma göndermez (karar 18).
-- **Profil değişikliği:** Firma profili (tür, şehir, doğrulama) değişince mevcut öneriler kendiliğinden yeniden hesaplanmaz. Öneriler sayfasındaki "Yeniden hesapla" günceller.
+- **Profil değişikliği:** Firma profili (tür, şehir, doğrulama) değişince mevcut öneriler kendiliğinden yeniden hesaplanmaz. Öneriler sayfasındaki "Adayları yenile" günceller.
 - **Bekleme:** Sayfalar arka plan işleri bitince kendiliğinden yenilenmez (kart hazırlama, plan önerisi).
 - **Metinler:** Tanımlama sayfasının başlığı ve sohbet adı hâlâ "Tanımlama Ajanı"; toplu metin denetiminde.

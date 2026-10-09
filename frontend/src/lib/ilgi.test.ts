@@ -4,6 +4,7 @@ import {
   firmaDurumEtiketi,
   firmaEylemleri,
   gerekceBekleniyor,
+  gerekceYokMetni,
   gencDurumEtiketi,
   gencEylemleri,
   ilgiGosterenleriAyir,
@@ -127,5 +128,19 @@ describe("gerekceBekleniyor", () => {
       ]),
     ).toBe(false);
     expect(gerekceBekleniyor([])).toBe(false);
+  });
+});
+
+describe("gerekceYokMetni", () => {
+  it("hazırlanırken kullanıcıdan bir şey istemez", () => {
+    const metin = gerekceYokMetni(true);
+    expect(metin).toContain("hazırlanıyor");
+    expect(metin).not.toContain("Adayları yenile");
+  });
+
+  it("pes edince düğmeye yönlendirir", () => {
+    const metin = gerekceYokMetni(false);
+    expect(metin).toContain("hazırlanamadı");
+    expect(metin).toContain("Adayları yenile");
   });
 });
