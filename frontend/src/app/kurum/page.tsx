@@ -18,6 +18,7 @@ import {
   AdayListesi,
   FirmaOzeti,
   IhtiyacKarti,
+  KapananIhtiyaclar,
   IlgiGosterenKarti,
   YeniIhtiyacMenusu,
 } from "@/components/kurum-paneli";
@@ -99,6 +100,7 @@ function KurumPaneliIcerigi() {
 
   const kartlar = ilanlariSirala(hesap.ihtiyac_kartlari);
   const acikKartlar = kartlar.filter((kart) => !ilanKapali(kart));
+  const kapaliKartlar = kartlar.filter(ilanKapali);
   const acikIhtiyac = acikKartlar.length;
   const ilkAcikIhtiyac = acikKartlar[0] ?? null;
   const bekleyen = kurumBekleyenleri(oneriler ?? [], isbirlikleri ?? []);
@@ -108,6 +110,25 @@ function KurumPaneliIcerigi() {
     ? Object.values(sayilar).reduce((toplam, s) => toplam + s.aday, 0)
     : null;
   const ad = hesap.ad ?? "Firma paneli";
+
+  const ihtiyacSatiri = (kart: (typeof kartlar)[number]) => (
+    <IhtiyacKarti
+      key={kart.id}
+      kart={kart}
+      sayi={sayilar[kart.id]}
+      kapatiliyor={kapatilan === kart.id}
+      onDuzenle={() => setDuzenlenen(kart.id)}
+      onKapatmaAc={() => setKapatilan(kart.id)}
+      onKapatmaBirak={() => setKapatilan(null)}
+      // Kapanınca /me tazelenir: liste durumu oradan okuyor;
+      // öneriler de "kapandı" olduğu için yeniden okunur.
+      onKapandi={() => {
+        setKapatilan(null);
+        void tazele();
+        void oku();
+      }}
+    />
+  );
 
   return (
     <Sayfa genislik="genis">
@@ -212,26 +233,20 @@ function KurumPaneliIcerigi() {
                 />
                 <YeniIhtiyacMenusu />
               </div>
-              <ul className="flex flex-col gap-4">
-                {kartlar.map((kart) => (
-                  <IhtiyacKarti
-                    key={kart.id}
-                    kart={kart}
-                    sayi={sayilar[kart.id]}
-                    kapatiliyor={kapatilan === kart.id}
-                    onDuzenle={() => setDuzenlenen(kart.id)}
-                    onKapatmaAc={() => setKapatilan(kart.id)}
-                    onKapatmaBirak={() => setKapatilan(null)}
-                    // Kapanınca /me tazelenir: liste durumu oradan okuyor;
-                    // öneriler de "kapandı" olduğu için yeniden okunur.
-                    onKapandi={() => {
-                      setKapatilan(null);
-                      void tazele();
-                      void oku();
-                    }}
-                  />
-                ))}
-              </ul>
+              {acikKartlar.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Şu an açık bir ihtiyacınız yok.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-4">
+                  {acikKartlar.map(ihtiyacSatiri)}
+                </ul>
+              )}
+              {kapaliKartlar.length > 0 ? (
+                <KapananIhtiyaclar sayi={kapaliKartlar.length}>
+                  {kapaliKartlar.map(ihtiyacSatiri)}
+                </KapananIhtiyaclar>
+              ) : null}
             </section>
           ) : null}
 

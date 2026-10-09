@@ -299,3 +299,40 @@ export function YeniIhtiyacMenusu() {
     </div>
   );
 }
+
+/**
+ * Kapanan ihtiyaçlar: kapanan ilan tekrar açılmaz (docs/kararlar.md F7) ama
+ * geçmişi görülebilsin. Panel yalnızca açık ihtiyaçları gösterir; kapananlar
+ * varsayılan olarak kapalı bu bölümde durur.
+ */
+export function KapananIhtiyaclar({
+  sayi,
+  children,
+}: {
+  sayi: number;
+  children: React.ReactNode;
+}) {
+  const [acik, setAcik] = useState(false);
+  return (
+    <section aria-label="Kapanan ihtiyaçlar" className="flex flex-col gap-4">
+      <button
+        type="button"
+        aria-expanded={acik}
+        aria-controls="kapanan-ihtiyaclar"
+        onClick={() => setAcik((onceki) => !onceki)}
+        className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-muted-foreground outline-none hover:text-metin focus-visible:ring-3 focus-visible:ring-baglanti/40"
+      >
+        Kapanan ihtiyaçlar ({sayi})
+        <ChevronDown
+          aria-hidden="true"
+          className={cn("size-4 transition-transform", acik && "rotate-180")}
+        />
+      </button>
+      {acik ? (
+        <ul id="kapanan-ihtiyaclar" className="flex flex-col gap-4">
+          {children}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
