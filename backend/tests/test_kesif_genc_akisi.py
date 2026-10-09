@@ -150,6 +150,9 @@ def test_referansi_verilmis_kaleme_kanit_sorulmaz():
             ),
             "takip_turu": 0,
             "fallback_indeksi": 0,
+            # "Başka çalışma var mı?" sorusu sorulmuş: kalem için başka soru kalmadı.
+            "ek_takip_turu": 1,
+            "sorulan_ekler": ["baska_calisma"],
         }
     )
     assert sonuc["taslak_hazir"] is True

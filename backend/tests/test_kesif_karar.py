@@ -20,6 +20,7 @@ from app.agents.kesif import (
     YEDEK_SORULAR,
     SomutCiktiTaslak,
     TaslakCikarimi,
+    _baska_calisma_eksigi,
     _birlestir,
     _cikti_eksikleri,
     _karar,
@@ -31,6 +32,10 @@ from app.core.is_kalemi import is_kalemi_metni
 
 def karar(durum: dict) -> dict:
     return asyncio.run(_karar(durum))
+
+
+# "Başka çalışma var mı?" sorusu sorulmuş: çalışma başına sorular bitmiş kartın kapanışı.
+BASKA_SORULDU = {"ek_takip_turu": 1, "sorulan_ekler": ["baska_calisma"]}
 
 
 def dolu_taslak(**degisiklikler) -> dict:
@@ -121,6 +126,7 @@ def test_zorunlu_tavaninda_kart_yine_de_kapanir():
             "taslak": dolu_taslak(rol_alani=None, somut_ciktilar=tam_cikti),
             "takip_turu": motor.MAKS_ZORUNLU_TURU,
             "fallback_indeksi": 0,
+            **BASKA_SORULDU,
         }
     )
     assert sonuc["taslak_hazir"] is True
@@ -172,6 +178,7 @@ def test_cikti_detaylari_tamsa_kart_kapanir():
             ),
             "takip_turu": 0,
             "fallback_indeksi": 0,
+            **BASKA_SORULDU,
         }
     )
     assert sonuc["taslak_hazir"] is True
@@ -221,11 +228,12 @@ def test_hepsi_sorulduysa_kart_kapanir_ve_israr_edilmez():
         {
             "taslak": dolu_taslak(somut_ciktilar=OLCUTSUZ_ROLSUZ),
             "takip_turu": 0,
-            "ek_takip_turu": 3,
+            "ek_takip_turu": 4,
             "sorulan_ekler": [
                 "olcut:Kütüphane sistemi",
                 "rol:Kütüphane sistemi",
                 "kanit:Kütüphane sistemi",
+                "baska_calisma",
             ],
             "fallback_indeksi": 0,
         }
@@ -252,6 +260,65 @@ def test_ikinci_calismanin_payi_ve_kaniti_da_sorulur():
 def test_ucuncu_calismadan_sonra_yalnizca_kanit_sorulur():
     anahtarlar = soru_anahtarlari(4)
     assert anahtarlar[6:] == ["kanit:c3", "kanit:c4"]
+
+
+def test_calisma_sorulari_bitince_baska_calisma_sorulur():
+    """Tek çalışma anlatıp kapanan sohbet kartı tek çalışmayla bırakıyordu."""
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(
+                somut_ciktilar=[
+                    {
+                        "kimlik": "c1",
+                        "baslik": "Kütüphane sistemi",
+                        "olculebilir_sonuc": "400 kitap",
+                        "kendi_rolu": "hepsini ben yazdım",
+                        "kanit_linki": "https://github.com/elif/kutuphane",
+                    }
+                ]
+            ),
+            "takip_turu": 0,
+            "fallback_indeksi": 0,
+        }
+    )
+    assert sonuc["taslak_hazir"] is False
+    assert "başka bir çalışma" in sonuc["sonraki_soru"]
+    assert sonuc["sorulan_ekler"] == ["baska_calisma"]
+
+
+def test_baska_calisma_en_son_ve_bir_kez_sorulur():
+    anahtarlar = [a for a, _ in _baska_calisma_eksigi(dolu_taslak(somut_ciktilar=calismalar(2)))]
+    assert anahtarlar == ["baska_calisma"]
+    # Çalışma başına sorular önce gelir: birleşik sırada son kural bu.
+    birlesik = [a for a, _ in KESIF.ek_eksikler(dolu_taslak(somut_ciktilar=calismalar(1)))]
+    assert birlesik[-1] == "baska_calisma"
+
+
+def test_baska_calisma_sorulmayan_durumlar():
+    assert _baska_calisma_eksigi(dolu_taslak(somut_ciktilar=[])) == []
+    assert _baska_calisma_eksigi(dolu_taslak(somut_ciktilar=calismalar(3))) == []
+
+
+def test_yok_denen_baska_calisma_tekrarlanmaz():
+    sonuc = karar(
+        {
+            "taslak": dolu_taslak(
+                somut_ciktilar=[
+                    {
+                        "kimlik": "c1",
+                        "baslik": "Kütüphane sistemi",
+                        "olculebilir_sonuc": "400 kitap",
+                        "kendi_rolu": "hepsini ben yazdım",
+                        "kanit_linki": "https://github.com/elif/kutuphane",
+                    }
+                ]
+            ),
+            "takip_turu": 0,
+            "fallback_indeksi": 0,
+            **BASKA_SORULDU,
+        }
+    )
+    assert sonuc["taslak_hazir"] is True
 
 
 def test_ek_soru_tavani():
@@ -288,6 +355,7 @@ def test_olcut_ve_rol_ayri_kalir_rubrik_birlesik_okur():
             ),
             "takip_turu": 0,
             "fallback_indeksi": 0,
+            **BASKA_SORULDU,
         }
     )
     cikti = sonuc["taslak"]["somut_ciktilar"][0]

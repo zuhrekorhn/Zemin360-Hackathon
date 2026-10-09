@@ -284,6 +284,24 @@ def _cikti_eksikleri(taslak: dict[str, Any]) -> list[tuple[str, str]]:
     ]
 
 
+# Bir çalışma anlatıp sohbetin kapanması kartı tek çalışmayla bırakıyordu; genç
+# başka bir çalışması olduğunu söyleme fırsatı bulamıyordu. Çalışma başına
+# sorulara (`_cikti_eksikleri`) ek olarak bir kez sorulur; "yok" geçerli cevap.
+BASKA_CALISMA_SORUSU = (
+    "Kartına eklemek istediğin başka bir çalışma var mı? Varsa kısaca anlat; "
+    "yoksa “yok” demen yeterli."
+)
+# Bu sayıya ulaşmış karta sorulmaz; sohbet uzamasın.
+BASKA_CALISMA_SORMA_SINIRI = 3
+
+
+def _baska_calisma_eksigi(taslak: dict[str, Any]) -> list[tuple[str, str]]:
+    sayi = len(taslak.get("somut_ciktilar") or [])
+    if 1 <= sayi < BASKA_CALISMA_SORMA_SINIRI:
+        return [("baska_calisma", BASKA_CALISMA_SORUSU)]
+    return []
+
+
 def _calisma_sorulari(cikti: dict[str, Any], *, ayrintili: bool) -> list[tuple[str, str]]:
     """Bir çalışmanın eksik bilgileri için (anahtar, soru) çiftleri."""
     baslik = cikti.get("baslik") or "bu çalışma"
@@ -370,7 +388,7 @@ KESIF = motor.AjanTanimi(
     ),
     zorunlu_alanlar=ZORUNLU_ALANLAR,
     yedek_sorular=YEDEK_SORULAR,
-    ek_eksikler=_cikti_eksikleri,
+    ek_eksikler=motor.ek_sorular(_cikti_eksikleri, _baska_calisma_eksigi),
     maks_ek_turu=MAKS_EK_TURU,
     oncelikli_dal=_calismasiz_genc_dali,
     ek_dal=_fallback_dali,
