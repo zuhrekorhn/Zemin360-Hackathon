@@ -156,3 +156,18 @@ export function kartDurumu(eksikListeleri: Eksik[][]): {
     eksik: eksikListeleri.reduce((t, l) => t + l.length, 0),
   };
 }
+
+/**
+ * Değerlendirme kart onayından ya da kanıttan sonra arka planda çalışıyor;
+ * sayfa açıldığında göstergesi henüz yazılmamış çalışma "bekliyor" görünür.
+ * Böyle bir çalışma varsa sayfa kendini yeniler (kart sayfası).
+ */
+export function degerlendirmeBekliyor(
+  ciktilar: readonly { guven_skoru: GuvenSkoru | null }[],
+): boolean {
+  return ciktilar.some((cikti) => cikti.guven_skoru === null);
+}
+
+/** Bekleyen değerlendirme için yenileme aralığı ve en fazla deneme (≈ 1 dk). */
+export const YENILEME_ARALIGI_MS = 4000;
+export const YENILEME_EN_FAZLA = 15;

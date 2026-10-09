@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { GuvenSkoru } from "@/lib/api";
 import {
+  degerlendirmeBekliyor,
   eksikler,
   kalanCumlesi,
   kartDurumu,
@@ -120,5 +121,20 @@ describe("kartinSiradakiAdimi", () => {
       tamam: 1,
       eksik: 4,
     });
+  });
+});
+
+describe("degerlendirmeBekliyor", () => {
+  const var_ = skor(2, 2, 2, null);
+
+  it("göstergesi olmayan çalışma varsa bekliyor sayılır", () => {
+    expect(
+      degerlendirmeBekliyor([{ guven_skoru: var_ }, { guven_skoru: null }]),
+    ).toBe(true);
+  });
+
+  it("hepsinin göstergesi varsa ya da çalışma yoksa beklemez", () => {
+    expect(degerlendirmeBekliyor([{ guven_skoru: var_ }])).toBe(false);
+    expect(degerlendirmeBekliyor([])).toBe(false);
   });
 });

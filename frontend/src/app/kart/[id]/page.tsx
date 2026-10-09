@@ -37,7 +37,13 @@ import {
   yetenekKartiGetir,
   yetenekKartiHazirla,
 } from "@/lib/api";
-import { eksikler, kartinSiradakiAdimi } from "@/lib/calisma";
+import {
+  YENILEME_ARALIGI_MS,
+  YENILEME_EN_FAZLA,
+  degerlendirmeBekliyor,
+  eksikler,
+  kartinSiradakiAdimi,
+} from "@/lib/calisma";
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { DENEYIM_ETIKETLERI, etiketle } from "@/lib/sabitler";
 
@@ -92,9 +98,10 @@ function KartIcerigi() {
   const [panelCikti, setPanelCikti] = useState<string | null>(adrestekiCalisma);
   const okundu = useRef(false);
 
+  // `sessiz`: arka plan yenilemesi; hata kutusu açmaz, mevcut ekranı bozmaz.
   const kartiGetir = useCallback(
-    async (kimlik: string) => {
-      setHata(null);
+    async (kimlik: string, sessiz = false) => {
+      if (!sessiz) setHata(null);
       try {
         const gelen = await yetenekKartiGetir(kimlik);
         setKart(gelen);
@@ -111,7 +118,7 @@ function KartIcerigi() {
           ),
         );
       } catch (sebep) {
-        setHata(hatayaCevir(sebep));
+        if (!sessiz) setHata(hatayaCevir(sebep));
       } finally {
         setYukleniyor(false);
       }
@@ -124,6 +131,25 @@ function KartIcerigi() {
     okundu.current = true;
     void kartiGetir(kartId);
   }, [kartId, kartiGetir]);
+
+  // Değerlendirme arka planda sürerken gösterge "bekliyor" kalmasın: bekleyen
+  // çalışma varken sayfa kendini yeniler; bitince ya da sınıra gelince durur.
+  const degerlendirmeSuruyor =
+    sahibi && kart !== null && degerlendirmeBekliyor(kart.somut_ciktilar);
+  useEffect(() => {
+    if (!degerlendirmeSuruyor || !kartId) return;
+    let deneme = 0;
+    const zamanlayici = setInterval(() => {
+      if (document.hidden) return;
+      deneme += 1;
+      if (deneme > YENILEME_EN_FAZLA) {
+        clearInterval(zamanlayici);
+        return;
+      }
+      void kartiGetir(kartId, true);
+    }, YENILEME_ARALIGI_MS);
+    return () => clearInterval(zamanlayici);
+  }, [degerlendirmeSuruyor, kartId, kartiGetir]);
 
   /** Düzenleme sonrası: kanıt durumları (referans geçmişi dahil) da değişmiş olabilir. */
   function duzenlendi(_kart: YetenekKartiYaniti, not?: string) {
