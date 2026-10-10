@@ -9,6 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.firma_dogrulama import AlanAdiIpucu, GirvakKarari
+from app.schemas.eslestirme import Ilerleme
 
 
 class HesapSayilari(BaseModel):
@@ -139,3 +140,75 @@ class IncelemeKarariIstegi(BaseModel):
     # kapandi: "sorun yok" (talepte "onayla"); dogrulanamadi: talepte "reddet".
     karar: Literal["kapandi", "dogrulanamadi"]
     girvak_notu: str | None = Field(default=None, max_length=500)
+
+
+# --- Altı ihtiyaç alanı: özet (docs/canlilik.md § 7) ---------------------------------------
+# GİRVAK panelinin "Özet" sayfası. Yalnızca sayılar; cümleleri arayüz kurar.
+
+
+class KesifOzeti(BaseModel):
+    """01 Genç yeteneklerin keşfi."""
+
+    kayitli_genc: int
+    kart_olusturan_genc: int
+    firsat_goren_genc: int
+
+
+class DogrulukOzeti(BaseModel):
+    """02 Profil ve portfolyo doğruluğu."""
+
+    calisma: int
+    degerlendirilen_calisma: int
+    bekleyen_inceleme: int
+
+
+class EslesmeOzeti(BaseModel):
+    """03 Kurum–kişi eşleşmesi."""
+
+    oneri_toplam: int
+    karsilikli_ilgi: int
+
+
+class AgOzeti(BaseModel):
+    """04 Yaşayan bir ağ."""
+
+    takilan_surec: int
+    hatirlatma_30_gun: int
+
+
+class TanimOzeti(BaseModel):
+    """05 İhtiyaçların net tanımı."""
+
+    ihtiyac: int
+    olculebilir_ihtiyac: int
+
+
+class TakipOzeti(BaseModel):
+    """06 Şeffaf iş birliği takibi."""
+
+    isbirligi: int
+    tamamlanan: int
+    gecikmis_adim: int
+
+
+class Ozet(BaseModel):
+    kesif: KesifOzeti
+    dogruluk: DogrulukOzeti
+    eslesme: EslesmeOzeti
+    ag: AgOzeti
+    tanim: TanimOzeti
+    takip: TakipOzeti
+
+
+class GirvakIsbirligi(BaseModel):
+    """GİRVAK'ın iş birlikleri listesi: taraflar ve ilerleme; e-posta ve iletişim yok."""
+
+    isbirligi_id: uuid.UUID
+    durum: str
+    baslangic_tarihi: dt.date | None
+    aday_turu: Literal["genc", "firma"]
+    aday_adi: str
+    kurum_adi: str
+    rol_alani: str | None = None
+    problem_tanimi: str
+    ilerleme: Ilerleme

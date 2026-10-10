@@ -23,6 +23,7 @@ from app.api import (
     girvak,
     girvak_gozlem,
     girvak_inceleme,
+    girvak_ozet,
     health,
     hesap_baglama,
     ihtiyac_kartlari,
@@ -108,6 +109,7 @@ app.include_router(isbirlikleri.router)
 app.include_router(girvak.router)
 app.include_router(girvak_gozlem.router)
 app.include_router(girvak_inceleme.router)
+app.include_router(girvak_ozet.router)
 app.include_router(takip.router)
 app.include_router(canlilik.router)
 app.include_router(profil.router)
