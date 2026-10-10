@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { IsbirligiSatiri } from "@/components/isbirligi-satiri";
+import { KapaliBolum } from "@/components/kapali-bolum";
 import { BosDurum } from "@/components/panel";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { HataKutusu } from "@/components/sohbet";
@@ -24,6 +25,8 @@ export default function IsbirliklerimSayfasi() {
     </GirisKapisi>
   );
 }
+
+const ILKLER_SINIFI = "grid gap-4 lg:grid-cols-2";
 
 function IsbirlikleriListesi() {
   const hesap = useGirisliHesap();
@@ -46,6 +49,13 @@ function IsbirlikleriListesi() {
     okundu.current = true;
     void oku();
   }, [oku]);
+
+  // Süren ve onay bekleyenler listede; tamamlananlar açılır bölümde (geçmiş korunur).
+  const suren = (liste ?? []).filter((i) => i.durum !== "tamamlandi");
+  const biten = (liste ?? []).filter((i) => i.durum === "tamamlandi");
+  const satir = (isbirligi: IsbirligiOzeti) => (
+    <IsbirligiSatiri key={isbirligi.isbirligi_id} isbirligi={isbirligi} />
+  );
 
   return (
     <Sayfa genislik="genis">
@@ -76,14 +86,29 @@ function IsbirlikleriListesi() {
           }
         />
       ) : (
-        <ul className="grid gap-4 lg:grid-cols-2">
-          {liste.map((isbirligi) => (
-            <IsbirligiSatiri
-              key={isbirligi.isbirligi_id}
-              isbirligi={isbirligi}
-            />
-          ))}
-        </ul>
+        <>
+          {suren.length > 0 ? (
+            <ul className={ILKLER_SINIFI}>{suren.map(satir)}</ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {hitapla(
+                hitap,
+                "Şu an süren bir iş birliğin yok.",
+                "Şu an süren bir iş birliğiniz yok.",
+              )}
+            </p>
+          )}
+          {biten.length > 0 ? (
+            <KapaliBolum
+              baslik="Tamamlanan iş birlikleri"
+              sayi={biten.length}
+              acik={suren.length === 0}
+              listeSinifi={ILKLER_SINIFI}
+            >
+              {biten.map(satir)}
+            </KapaliBolum>
+          ) : null}
+        </>
       )}
     </Sayfa>
   );

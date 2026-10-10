@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BekleyenKabi, YanKutu } from "@/components/genc-paneli";
 import { IlanKapatma } from "@/components/ilan-kapatma";
@@ -312,47 +312,5 @@ export function YeniIhtiyacMenusu() {
         </div>
       ) : null}
     </div>
-  );
-}
-
-/**
- * Açılır bölüm: panelde yalnızca güncel işler görünür, biten kayıtlar (kapanan
- * ihtiyaçlar, tamamlanan iş birlikleri) başlığın arkasında durur ve geçmişe
- * erişim korunur. `acik`: ilk durum (güncel iş kalmadıysa bitenler açık gelir).
- */
-export function KapaliBolum({
-  baslik,
-  sayi,
-  acik: ilkDurum = false,
-  children,
-}: {
-  baslik: string;
-  sayi: number;
-  acik?: boolean;
-  children: React.ReactNode;
-}) {
-  const [acik, setAcik] = useState(ilkDurum);
-  const listeId = useId();
-  return (
-    <section aria-label={baslik} className="flex flex-col gap-4">
-      <button
-        type="button"
-        aria-expanded={acik}
-        aria-controls={listeId}
-        onClick={() => setAcik((onceki) => !onceki)}
-        className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-muted-foreground outline-none hover:text-metin focus-visible:ring-3 focus-visible:ring-baglanti/40"
-      >
-        {baslik} ({sayi})
-        <ChevronDown
-          aria-hidden="true"
-          className={cn("size-4 transition-transform", acik && "rotate-180")}
-        />
-      </button>
-      {acik ? (
-        <ul id={listeId} className="flex flex-col gap-4">
-          {children}
-        </ul>
-      ) : null}
-    </section>
   );
 }

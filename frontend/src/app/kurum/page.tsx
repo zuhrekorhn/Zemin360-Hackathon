@@ -14,11 +14,11 @@ import {
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { IlanDuzenlemePaneli } from "@/components/ilan-duzenleme-paneli";
 import { IsbirligiSatiri } from "@/components/isbirligi-satiri";
+import { KapaliBolum } from "@/components/kapali-bolum";
 import {
   AdayListesi,
   FirmaOzeti,
   IhtiyacKarti,
-  KapaliBolum,
   IlgiGosterenKarti,
   YeniIhtiyacMenusu,
 } from "@/components/kurum-paneli";
