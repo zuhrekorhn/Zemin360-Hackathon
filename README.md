@@ -49,6 +49,18 @@ Hiçbir taslak kullanıcı onaylamadan kaydedilmez.
 | Canlılık | Kişiye özel, nötr hatırlatma metni | Toplu, jenerik mesaj yerine bağlama uygun dil | Model yanıt vermezse şablon; hatırlatma kaybolmaz |
 | Embedding (Voyage) | Kart ve ilanı vektöre çevirmek; uzun kanıtta ilgili parçayı seçmek | Anlamsal benzerlik | Alt sınırlar etiketli havuzla ölçülerek seçildi (genç–ilan 0.48, firma–firma 0.52) |
 
+**Neden Gemini, neden iki katman:** tek sağlayıcının hızlı ve güçlü model katmanları aynı
+arayüzle kullanılıyor; hangi işin hangi katmana düştüğü tek yerde (`app/core/llm.py`) ve model
+adları `.env`'den, yani model kod değişmeden değişir. Sohbetlerin alan çıkarımı her turda
+çağrılır, format zaten nettir: hızlı katman, düşünme `minimal`. Varsayılan düşünmede tur ~6 sn
+sürüyordu ve model kullanıcının söylemediği bilgiyi taslağa ekliyordu; `minimal`'de ~2 sn ve
+uydurma yok. Eşleştirme gerekçesi, Doğrulama'nın kanıt çıkarımı ve Takip planı tek seferlik
+ama nüansa bağlıdır: güçlü katman.
+
+**Sınırlar:** model yalnızca metni anlar ve yazar, karar vermez; puan, listeye girme ve durum
+geçişi kuraldır. Çıkarılan her alan kullanıcı onayından geçer. Model ya da sağlayıcı hata
+verirse yedek modele, o da olmazsa şablon metne düşülür; akış durmaz.
+
 **Maliyet ve dayanıklılık:** iki model katmanı (çıkarım için hızlı, gerekçe ve rubrik için
 güçlü), her katmanda yedek model; hız sınırı ya da arızada aynı istem yedeğe gider. Her çağrının
 modeli, süresi ve token kullanımı günlüğe yazılır. Kullanıcı metni istemde veri etiketleri
@@ -78,9 +90,19 @@ flowchart TD
 - Kullanılan desenler (Strategy, Chain of Responsibility, Adapter, Null Object, State Machine…) ve
   bilinen borç: `docs/architecture.md`.
 
-**Teknoloji:** Python 3.11+, FastAPI, LangGraph, SQLAlchemy (async), Alembic, PostgreSQL +
-pgvector · Gemini (iki katman), Voyage AI · Next.js 16, React 19, Tailwind, shadcn/ui · pytest,
-Vitest, Ruff, ESLint.
+**Teknoloji seçimleri ve nedenleri** (ayrıntı: `docs/architecture.md` § Teknoloji Kararları):
+
+| Seçim | Neden |
+|---|---|
+| FastAPI (Python) | Yapay zekâ orkestrasyonuyla aynı dil, async, otomatik OpenAPI belgesi. |
+| LangGraph (yalnızca sohbetler) | Yerleşik durum kalıcılığı: model hata verse sohbet kaldığı yerden sürer. Tek seferlik hesaplar grafik kullanmaz. |
+| PostgreSQL + pgvector | Yüzlerce–birkaç bin kartlık hacimde ayrı vektör veritabanı gereksiz yük; ilişkisel veri ve embedding tek yerde, tek işlemde. |
+| Voyage AI embedding | Dil modelinden bağımsız, ucuz çağrı; ulaşılamazsa kart yine kaydedilir, embedding sonradan tamamlanır. |
+| Gemini, iki katman | Yukarıda: hızlı çıkarım, güçlü gerekçe, yedek zincir. |
+| Next.js + Tailwind + shadcn/ui | Erişilebilir hazır bileşenler; tema tek CSS değişkenleri kümesinden. |
+| E-posta + şifre, JWT | Bilinçli düşük karmaşıklık; sahiplik kuralları tek modülde, başkasının kaynağı 404. |
+
+Test ve kalite araçları: pytest, Vitest, Ruff, ESLint.
 
 ## Kurulum
 
