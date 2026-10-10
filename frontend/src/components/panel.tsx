@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 
+import { EpostaEylemleri } from "@/components/eposta-eylemleri";
 import { Button } from "@/components/ui/button";
 import { KUTU } from "@/components/ui/yuzey";
 import type { Iletisim } from "@/lib/api";
@@ -117,21 +118,16 @@ export function IletisimSatiri({
                   {satir.eposta}
                 </a>
                 {taslak ? (
-                  <Button asChild size="sm" variant="outline">
-                    <a
-                      href={
-                        epostaTaslagi(
-                          {
-                            ...taslak,
-                            yon: taslakYonu(karsiTaraf, taslak.adayTuru),
-                          },
-                          satir.eposta,
-                        ).href
-                      }
-                    >
-                      E-posta yaz
-                    </a>
-                  </Button>
+                  <EpostaEylemleri
+                    eposta={satir.eposta}
+                    {...epostaTaslagi(
+                      {
+                        ...taslak,
+                        yon: taslakYonu(karsiTaraf, taslak.adayTuru),
+                      },
+                      satir.eposta,
+                    )}
+                  />
                 ) : null}
               </>
             ) : (

@@ -11,7 +11,8 @@
 export const MAILTO_SINIRI = 1500;
 
 /** Kimin kime yazdığı. `ilan` = ilanı açan firma, `aday` = önerilen genç ya da firma. */
-export type TaslakYonu = "ilan-genc" | "genc-ilan" | "ilan-firma" | "firma-ilan";
+export type TaslakYonu =
+  "ilan-genc" | "genc-ilan" | "ilan-firma" | "firma-ilan";
 
 export type TaslakGirdisi = {
   yon: TaslakYonu;
@@ -30,7 +31,16 @@ export type EpostaBaglami = Omit<TaslakGirdisi, "yon"> & {
   adayTuru: "genc" | "firma";
 };
 
-export type EpostaTaslagi ={ konu: string; govde: string; href: string };
+/**
+ * `href`: mailto bağlantısı (bilgisayarın e-posta ayarına bağlı).
+ * `gmailHref`: Gmail'de dolu bir yazma penceresi açar, ayara bağlı değil.
+ */
+export type EpostaTaslagi = {
+  konu: string;
+  govde: string;
+  href: string;
+  gmailHref: string;
+};
 
 type Secenek = { calisma: boolean; kriter: boolean; problemSiniri: number };
 
@@ -58,7 +68,10 @@ export function kisalt(metin: string, sinir: number): string {
 
 /** Cümle sonu noktası ve boşluk atılır; metin cümle içinde kullanılacak. */
 function ozet(metin: string | null | undefined): string {
-  return (metin ?? "").replace(/\s+/g, " ").trim().replace(/[.\s]+$/, "");
+  return (metin ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.\s]+$/, "");
 }
 
 function govdeKur(girdi: TaslakGirdisi, secenek: Secenek): string {
@@ -142,6 +155,15 @@ function konuKur(girdi: TaslakGirdisi): string {
   }
 }
 
+/** Gmail'de alıcı, konu ve metni dolu bir yazma penceresi açan adres. */
+export function gmailAdresi(
+  aliciEposta: string,
+  konu: string,
+  govde: string,
+): string {
+  return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(aliciEposta)}&su=${encodeURIComponent(konu)}&body=${encodeURIComponent(govde)}`;
+}
+
 /**
  * `mailto:` taslağı. Alıcı adresi çağıranın elindeki, yetkiyle açılmış
  * `iletisim` alanından gelir; bu fonksiyon adres üretmez ya da saklamaz.
@@ -155,7 +177,12 @@ export function epostaTaslagi(
   for (const secenek of SECENEKLER) {
     const govde = govdeKur(girdi, secenek);
     const href = `mailto:${aliciEposta}?subject=${encodeURIComponent(konu)}&body=${encodeURIComponent(govde)}`;
-    sonuc = { konu, govde, href };
+    sonuc = {
+      konu,
+      govde,
+      href,
+      gmailHref: gmailAdresi(aliciEposta, konu, govde),
+    };
     if (href.length <= MAILTO_SINIRI) break;
   }
   // SECENEKLER boş değil; son seçenek de sığmazsa en kısa hâliyle döner.
@@ -167,6 +194,7 @@ export function taslakYonu(
   karsiTaraf: "genc" | "kurum",
   adayTuru: "genc" | "firma",
 ): TaslakYonu {
-  if (karsiTaraf === "genc") return adayTuru === "firma" ? "ilan-firma" : "ilan-genc";
+  if (karsiTaraf === "genc")
+    return adayTuru === "firma" ? "ilan-firma" : "ilan-genc";
   return adayTuru === "firma" ? "firma-ilan" : "genc-ilan";
 }

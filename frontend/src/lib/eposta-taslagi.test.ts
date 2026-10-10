@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  gmailAdresi,
   MAILTO_SINIRI,
   type TaslakGirdisi,
   epostaTaslagi,
@@ -54,8 +55,14 @@ describe("epostaTaslagi", () => {
   });
 
   it("firma → firma: iki yönde de siz diliyle", () => {
-    const ilan = govde({ ...TEMEL, yon: "ilan-firma", aliciAdi: "Ayaz Sensör" });
-    expect(ilan).toContain("Ayaz Sensör olarak yaptıklarınız ihtiyacımızla örtüşüyor.");
+    const ilan = govde({
+      ...TEMEL,
+      yon: "ilan-firma",
+      aliciAdi: "Ayaz Sensör",
+    });
+    expect(ilan).toContain(
+      "Ayaz Sensör olarak yaptıklarınız ihtiyacımızla örtüşüyor.",
+    );
     const aday = govde({ ...TEMEL, yon: "firma-ilan" });
     expect(aday).toContain("ihtiyacınız için sizinle eşleştik");
     expect(aday).toContain("hedefinize nasıl katkı verebileceğimizi");
@@ -73,14 +80,22 @@ describe("epostaTaslagi", () => {
   });
 
   it("hiçbir yönde 'pilot' kelimesi geçmez", () => {
-    for (const yon of ["ilan-genc", "genc-ilan", "ilan-firma", "firma-ilan"] as const) {
+    for (const yon of [
+      "ilan-genc",
+      "genc-ilan",
+      "ilan-firma",
+      "firma-ilan",
+    ] as const) {
       const t = epostaTaslagi({ ...TEMEL, yon }, "a@b.com");
       expect(`${t.konu} ${t.govde}`.toLowerCase()).not.toContain("pilot");
     }
   });
 
   it("Türkçe harfleri ve satır sonlarını kodlar, adres olduğu gibi kalır", () => {
-    const { href } = epostaTaslagi({ ...TEMEL, yon: "ilan-genc" }, "elif@ornek.org");
+    const { href } = epostaTaslagi(
+      { ...TEMEL, yon: "ilan-genc" },
+      "elif@ornek.org",
+    );
     expect(href.startsWith("mailto:elif@ornek.org?subject=")).toBe(true);
     expect(href).toContain("%0D%0A");
     expect(href).not.toMatch(/[ğüşıöçĞÜŞİÖÇ]/);
@@ -89,7 +104,13 @@ describe("epostaTaslagi", () => {
   it("uzun metinde bağlantı sınırı aşılmaz; önce çalışma, sonra ölçüt düşer", () => {
     const uzun = "Çok uzun bir açıklama cümlesi ğüşiöç ".repeat(40);
     const t = epostaTaslagi(
-      { ...TEMEL, yon: "ilan-genc", problem: uzun, basariKriteri: uzun, calisma: uzun },
+      {
+        ...TEMEL,
+        yon: "ilan-genc",
+        problem: uzun,
+        basariKriteri: uzun,
+        calisma: uzun,
+      },
       "a@b.com",
     );
     expect(t.href.length).toBeLessThanOrEqual(MAILTO_SINIRI);
@@ -112,5 +133,19 @@ describe("kisalt", () => {
     const k = kisalt("bir iki üç dört beş altı yedi sekiz", 20);
     expect(k.endsWith("…")).toBe(true);
     expect(k.length).toBeLessThanOrEqual(20);
+  });
+});
+
+describe("gmailAdresi", () => {
+  it("alıcı, konu ve metni Gmail yazma adresine kodlar", () => {
+    const govde = "Satır 1\nSatır 2";
+    const adres = gmailAdresi("ayse@test.example", "Merhaba: tanışalım", govde);
+    expect(
+      adres.startsWith("https://mail.google.com/mail/?view=cm&fs=1&to="),
+    ).toBe(true);
+    const url = new URL(adres);
+    expect(url.searchParams.get("to")).toBe("ayse@test.example");
+    expect(url.searchParams.get("su")).toBe("Merhaba: tanışalım");
+    expect(url.searchParams.get("body")).toBe(govde);
   });
 });
