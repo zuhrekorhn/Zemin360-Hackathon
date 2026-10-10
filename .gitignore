@@ -26,3 +26,7 @@ backend/yuklemeler/
 CLAUDE.md
 **/CLAUDE.md
 .claude/
+
+# Yerel araç dosyası (next dev her çalışışta yeniden üretir)
+AGENTS.md
+**/AGENTS.md

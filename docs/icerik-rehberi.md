@@ -80,7 +80,7 @@ Her kavramın **tek** adı var. "Kullanma" sütunundaki karşılıklar kullanıc
 
 GİRVAK programı yöneten, teknik olmayan kişidir; hitap "siz". Panele üç soruyla girer: program nasıl
 gidiyor, benden ne bekleniyor, nerede takılma var. Her cümle iç terim içermez, her karar düğmesinin
-sonucu yazar, her sayının neyi saydığı yazar (`girvak-metin-taslagi.md`).
+sonucu yazar, her sayının neyi saydığı yazar.
 
 | Kavram | Kullan | Kullanma | Not |
 |---|---|---|---|

@@ -41,8 +41,7 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 **Hackathona kadar:**
 
 - [ ] Repoyu GitHub'a gönder; CI'ın ilk koşusunun yeşil olduğunu gör (rozet README'de).
-- [ ] Prova: demo senaryosu yerelde baştan sona en az iki kez (`plans/genc-akisi-deneme.md`,
-      `plans/firma-akisi-deneme.md`); sonra bu iki dosya tek bir demo senaryosuna dönüşür.
+- [ ] Prova: demo senaryosu yerelde baştan sona en az iki kez (`demo-test-rehberi.md`).
 - [ ] Tohum veri (demo hikâyesiyle aynı): birkaç tamamlanmış ve bir adımı gecikmiş iş birliği,
       aynı ilana uyan iki benzer genç kartı (biri tamamlanmış iş birlikli, bonus farkı görünsün),
       tarihleri geri alınmış kayıtlar (`scripts/zamani_geri_al.py`).
