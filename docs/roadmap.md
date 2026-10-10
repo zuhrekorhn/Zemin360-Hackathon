@@ -1,9 +1,9 @@
 # Yol Haritası
 
 > **Durum (10 Eki 2026):** altı ajan, üç rol ve iki kapılı eşleşme döngüsü çalışıyor; kod, belgeler
-> ve testler birbiriyle tutarlı, repo GitHub'da ve CI yeşil. Hackathon 9–11 Ekim (Kolektif House
-> Levent): kod ve repo 10 Ekim'de jüriye gitti, sunum 11 Ekim'de (5 dakika demo + 3 dakika soru).
-> Demo yerelde yapılır; canlıya alma hackathon kapsamında yok. Kalan işler yalnızca sunuma hazırlık.
+> ve testler birbiriyle tutarlı, CI yeşil. Zemin360 hackathonu (9–11 Ekim) için geliştirildi; demo
+> yerelde çalışır, canlıya alma bu kapsamda yok. Aşağıdaki liste bilinen sınırları ve ürünleşme
+> için sıradaki işleri gösterir.
 
 ## "Tam" ne demek
 
@@ -38,22 +38,14 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 | E-posta | Brevo / Resend gönderici, "eşleştiniz" e-postası, "E-posta yaz" | `architecture.md` |
 | Toparlama (7–10 Eki) | Katman düzeltmeleri, belgeler koda göre yeniden, karar kaydı, CI, katkı rehberi; plan belgeleri ve yayına alma kalıntıları silindi; README'ye teknoloji seçimleri ve model katmanı gerekçesi | `architecture.md`, `kararlar.md`, `CONTRIBUTING.md` |
 
-## Kalan işler
-
-**Sunuma kadar (11 Eki):**
-
-- [ ] Sunum ve konuşma metnini gözden geçirmek; demo akışını yerelde en az iki kez prova etmek
-      (her provadan önce `yerel_sifirla.py` + `demo_hesaplari` + `demo_zenginlestir`).
-- [ ] Yedek demo videosu (LLM gecikmesine karşı); çekilince README'ye bağlantı.
-- [ ] Sunumu PDF ya da PPTX olarak dışa aktarıp yedeklemek.
-- [ ] Elle deneme: Takip'te "Süreci sonlandır", e-postada Brevo ile gerçek gönderim.
+## Sonraki adımlar
 
 **Açık kararlar:**
 
 - [ ] Kart bonusunun kart düzeyi formülü (`matching-algorithm.md` § 4.1, iki seçenek).
 - [ ] Güçlü katmanda Pro'ya geçilip geçilmeyeceği (aynı girdiyle karşılaştırma; model `.env`'den).
 
-**Hackathon sonrası (bilinen borç):**
+**Ürünleşme öncesi (bilinen borç):**
 
 - [ ] `api/canlilik.py` ve `api/takip.py`'deki orkestrasyon `app/servisler/`'e.
 - [ ] `agents/eslestirme.py`: aday sorguları servise; genç ve firma adayı ikiz fonksiyonları tek
@@ -62,7 +54,7 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 - [ ] `genc_*` kolonlarının "aday" adıyla yeniden adlandırılması (`kararlar.md` F12).
 - [ ] **İstek hız sınırı** (8 Eki incelemesi): hiçbir uçta yok; Keşif sohbeti, `/auth/giris`,
       doğrulama ve embedding uçları hesap ve IP başına sınırlanmalı (maliyet, kaba kuvvet). Ürünleşmeden önce şart.
-- [ ] Referans istemeyi e-postası doğrulanmış hesaba bağlamak (demo hesapları doğrulanmamış; prova sonrası).
+- [ ] Referans istemeyi e-postası doğrulanmış hesaba bağlamak (demo hesapları doğrulanmamış).
 - [ ] Aynı gencin farklı çalışmalarında aynı kanıt adresi (`github.com/kullanici` gibi profil kökü):
       tekrar işareti ve profil kökü için puan tavanı (`dogrulama.md`).
 - [ ] İlan düzenlenince karar verilmiş kayıtlarda adaya yazılan metin (`aday_gerekce_metni`) yeniden üretilmiyor.
@@ -77,7 +69,7 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 - [ ] **Terim tutarlılığı: "pilot uygulama".** Hackathon brifi (GİRVAK) "pilot uygulama" ve "iş birliği ve pilot
 süreçleri" diyor; firma kartında "Pilot uygulama" yazıyor ama firma–firma iş birliği planında "Deneme işi"
 (`takip_surecleri.py`, `takip.py` istemleri, `icerik-rehberi.md` § 4, `kararlar.md` T1). Tek terime çekmek
-istemlerdeki "pilot yazma" kuralını ve onu koruyan testleri de değiştirir; jüri sonrası.
+istemlerdeki "pilot yazma" kuralını ve onu koruyan testleri de değiştirir.
 - [ ] GİRVAK paneli: zaman serisi grafikleri (rapor şimdilik tarayıcıdan yazdırılır).
 - [ ] Ürünleşme: canlıya alma, zamanlanmış tarama, KVKK metninin kesinleşmesi.
 

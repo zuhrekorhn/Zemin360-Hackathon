@@ -233,7 +233,7 @@ Hepsi her push'ta CI'da çalışır. Ücretli canlı ölçümler ayrı betiklerd
 | [`docs/dogrulama.md`](docs/dogrulama.md) | Doğrulama: kaynak seviyeleri, okuma zinciri, puan kuralları, ölçüm |
 | [`docs/takip.md`](docs/takip.md) · [`docs/canlilik.md`](docs/canlilik.md) · [`docs/kimlik-ve-dongu.md`](docs/kimlik-ve-dongu.md) | Takip, Canlılık, kimlik ve eşleşme durumları |
 | [`docs/design-language.md`](docs/design-language.md) · [`docs/icerik-rehberi.md`](docs/icerik-rehberi.md) | Görsel dil; arayüz metinleri ve terim sözlüğü |
-| [`docs/roadmap.md`](docs/roadmap.md) | Durum ve kalan işler |
+| [`docs/roadmap.md`](docs/roadmap.md) | Durum ve sonraki adımlar |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Kod kuralları ve "bitti" tanımı |
 
 ## Bilinen sınırlar
