@@ -26,8 +26,18 @@ const oneri = (
     rol_alani: null,
   }) as KurumOnerisi;
 
-const isbirligi = (id: string, durum: string, geciken = 0): IsbirligiOzeti =>
-  ({ isbirligi_id: id, durum, ilerleme: { geciken } }) as IsbirligiOzeti;
+const isbirligi = (
+  id: string,
+  durum: string,
+  geciken = 0,
+  planimiOnayladim = false,
+): IsbirligiOzeti =>
+  ({
+    isbirligi_id: id,
+    durum,
+    ilerleme: { geciken },
+    planimi_onayladim: planimiOnayladim,
+  }) as IsbirligiOzeti;
 
 describe("kurumBekleyenleri", () => {
   it("yalnızca firmanın yanıtını bekleyen işleri toplar", () => {
@@ -48,6 +58,19 @@ describe("kurumBekleyenleri", () => {
     expect(b.planlar.map((i) => i.isbirligi_id)).toEqual(["x"]);
     expect(b.gecikenler.map((i) => i.isbirligi_id)).toEqual(["y"]);
     expect(kurumBekleyenSayisi(b)).toBe(3);
+  });
+});
+
+describe("kurumBekleyenleri: plan onayı", () => {
+  it("planı kendisi onaylamış firma için plan bekleyen sayılmaz", () => {
+    const b = kurumBekleyenleri(
+      [],
+      [
+        isbirligi("onayli", "plan_bekliyor", 0, true),
+        isbirligi("bekleyen", "plan_bekliyor", 0, false),
+      ],
+    );
+    expect(b.planlar.map((i) => i.isbirligi_id)).toEqual(["bekleyen"]);
   });
 });
 

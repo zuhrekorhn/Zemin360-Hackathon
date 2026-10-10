@@ -33,7 +33,10 @@ export function bekleyenler(
 ): Bekleyenler {
   return {
     ilgiler: gelenler.filter((ilgi) => ilgi.durum === "ilgileniliyor"),
-    planlar: isbirlikleri.filter((i) => i.durum === "plan_bekliyor"),
+    planlar: isbirlikleri.filter(
+      // Yalnızca planı henüz onaylamamış taraf bekleniyor sayılır.
+      (i) => i.durum === "plan_bekliyor" && !i.planimi_onayladim,
+    ),
     gecikenler: isbirlikleri.filter(
       (i) => i.durum === "aktif" && i.ilerleme.geciken > 0,
     ),
@@ -100,8 +103,7 @@ export function surecler(
       anahtar: isbirligi.isbirligi_id,
       firma: isbirligi.kurum_adi,
       dogrulandi: false,
-      etiket:
-        ISBIRLIGI_DURUM_ETIKETLERI[isbirligi.durum] ?? "İş birliği",
+      etiket: ISBIRLIGI_DURUM_ETIKETLERI[isbirligi.durum] ?? "İş birliği",
       baglanti: isbirligi.durum === "aktif" || isbirligi.durum === "tamamlandi",
       hedef: `/isbirligi/${isbirligi.isbirligi_id}`,
       geriCekilebilir: null,
@@ -111,7 +113,12 @@ export function surecler(
   return satirlar.sort((a, b) => b.tarih.localeCompare(a.tarih));
 }
 
-export type EksikAdim = { anahtar: string; metin: string; href: string; etiket: string };
+export type EksikAdim = {
+  anahtar: string;
+  metin: string;
+  href: string;
+  etiket: string;
+};
 
 /** Eşleştirmenin kullandığı tercihler; kart sayfasında düzenlenir (docs/kararlar.md G10). */
 const TERCIH_ALANLARI = ["sehir", "calisma_modelleri", "musaitlikler"];
@@ -171,7 +178,8 @@ export function ozetCumlesi(
   firsat: number | null,
   kartVar: boolean,
 ): string {
-  if (!kartVar) return "Kartını oluşturduğunda sana uygun fırsatlar burada görünür.";
+  if (!kartVar)
+    return "Kartını oluşturduğunda sana uygun fırsatlar burada görünür.";
   if (bekleyen > 0) return `Yanıtını bekleyen ${bekleyen} iş var.`;
   if (firsat && firsat > 0) return `Kartına uyan ${firsat} fırsat var.`;
   return "Kartını güçlendirdikçe yeni fırsatlar gelir.";

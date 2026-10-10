@@ -45,8 +45,15 @@ const gelen = (
     isbirligi_id: isbirligi,
   }) as BanaGelenIlgi;
 
-const isbirligi = (id: string, durum: string, tarih: string, geciken = 0) =>
+const isbirligi = (
+  id: string,
+  durum: string,
+  tarih: string,
+  geciken = 0,
+  planimiOnayladim = false,
+) =>
   ({
+    planimi_onayladim: planimiOnayladim,
     isbirligi_id: id,
     durum,
     baslangic_tarihi: tarih,
@@ -71,11 +78,30 @@ describe("bekleyenler", () => {
   });
 });
 
+describe("bekleyenler: plan onayı", () => {
+  it("planı kendisi onaylamış genç için plan bekleyen sayılmaz", () => {
+    const b = bekleyenler(
+      [],
+      [
+        isbirligi("onayli", "plan_bekliyor", "1", 0, true),
+        isbirligi("bekleyen", "plan_bekliyor", "1", 0, false),
+      ],
+    );
+    expect(b.planlar.map((x) => x.isbirligi_id)).toEqual(["bekleyen"]);
+  });
+});
+
 describe("surecler", () => {
   it("tek liste, en yeni önce; iş birliğine dönüşen ilgi bir kez görünür", () => {
     const satirlar = surecler(
-      [ilgim("x", "genc_ilgilendi", "2026-10-03"), ilgim("y", "kabul_edildi", "2026-10-04", "i1")],
-      [gelen("z", "kapandi", "2026-10-01"), gelen("w", "ilgileniliyor", "2026-10-06")],
+      [
+        ilgim("x", "genc_ilgilendi", "2026-10-03"),
+        ilgim("y", "kabul_edildi", "2026-10-04", "i1"),
+      ],
+      [
+        gelen("z", "kapandi", "2026-10-01"),
+        gelen("w", "ilgileniliyor", "2026-10-06"),
+      ],
       [isbirligi("i1", "aktif", "2026-10-05")],
     );
     expect(satirlar.map((s) => [s.anahtar, s.etiket])).toEqual([

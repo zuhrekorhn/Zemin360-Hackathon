@@ -223,3 +223,6 @@ class IsbirligiOzeti(BaseModel):
     iletisim: Iletisim
     # Takip: plan_bekliyor | aktif | tamamlandi ve adım ilerlemesi.
     ilerleme: Ilerleme
+    # İsteyen taraf planın mevcut hâlini onayladı mı. Plan iki onayla aktif olur;
+    # panel "sizi bekliyor" demek için yalnızca onaylamamış tarafa bakar.
+    planimi_onayladim: bool = False

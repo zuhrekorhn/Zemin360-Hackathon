@@ -47,6 +47,12 @@ def _taraf_kosulu(hesap: Hesap):
     return or_(false(), *kosullar)
 
 
+def _plan_onayli_mi(isbirligi: Isbirligi, taraf: str | None) -> bool:
+    """İsteyen tarafın plan onayı (genç = aday tarafı, kurum = ilan tarafı)."""
+    onay = {"genc": isbirligi.genc_plan_onayi, "kurum": isbirligi.kurum_plan_onayi}.get(taraf or "")
+    return onay is not None
+
+
 @router.get("/isbirliklerim", response_model=list[IsbirligiOzeti])
 async def isbirliklerim(
     hesap: Hesap = Depends(rol_gerekli(ROL_GENC, ROL_KURUM)),
@@ -89,6 +95,7 @@ async def isbirliklerim(
             # Gencin kabulü olmadan açılmış eski iş birliği:
             # durum `kabul_edildi` değilse e-postalar açılmaz, satır gösterilmez.
             continue
+        taraf = eslesmedeki_taraf(hesap, eslesme)
         ozetler.append(
             IsbirligiOzeti(
                 isbirligi_id=isbirligi.id,
@@ -100,12 +107,13 @@ async def isbirliklerim(
                 genc_adi=eslesme.yetenek_karti.kullanici.ad if eslesme.yetenek_karti else None,
                 kurum_adi=eslesme.ihtiyac_karti.kurum.ad,
                 rol_alani=eslesme.yetenek_karti.rol_alani if eslesme.yetenek_karti else None,
-                tarafim=eslesmedeki_taraf(hesap, eslesme),
+                tarafim=taraf,
                 problem_tanimi=eslesme.ihtiyac_karti.problem_tanimi,
                 basari_kriteri=eslesme.ihtiyac_karti.basari_kriteri,
                 calisma_basligi=calisma_basligi(eslesme),
                 iletisim=acik,
                 ilerleme=ilerleme_hesapla(isbirligi.milestonelar),
+                planimi_onayladim=_plan_onayli_mi(isbirligi, taraf),
             )
         )
     return ozetler

@@ -1371,6 +1371,8 @@ export type IsbirligiOzeti = {
   calisma_basligi: string | null;
   iletisim: Iletisim;
   ilerleme: Ilerleme;
+  /** İsteyen taraf planın mevcut hâlini onayladı (plan iki onayla aktif olur). */
+  planimi_onayladim?: boolean;
 };
 
 export function isbirliklerim(): Promise<IsbirligiOzeti[]> {

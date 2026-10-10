@@ -26,7 +26,10 @@ export function kurumBekleyenleri(
 ): KurumBekleyenleri {
   return {
     ilgiler: oneriler.filter((o) => o.durum === "genc_ilgilendi"),
-    planlar: isbirlikleri.filter((i) => i.durum === "plan_bekliyor"),
+    planlar: isbirlikleri.filter(
+      // Yalnızca planı henüz onaylamamış taraf bekleniyor sayılır.
+      (i) => i.durum === "plan_bekliyor" && !i.planimi_onayladim,
+    ),
     gecikenler: isbirlikleri.filter(
       (i) => i.durum === "aktif" && i.ilerleme.geciken > 0,
     ),

@@ -153,3 +153,21 @@ def test_isaret_yetkisi():
             )
 
     senaryo(adimlar)
+
+
+def test_ozet_satiri_isteyenin_plan_onayini_tasir():
+    """Panel "sizi bekliyor" derken yalnızca planı onaylamamış tarafı sayar."""
+
+    async def adimlar(istemci, d):
+        isb = await isbirligi_ac(d, adimlar=2)
+        isb.durum = "plan_bekliyor"
+        isb.genc_plan_onayi = None
+        isb.kurum_plan_onayi = dt.datetime.now(dt.UTC)
+        await d.oturum.commit()
+
+        kurum = (await istemci.get("/isbirliklerim", headers=d.kurum1.baslik)).json()
+        genc = (await istemci.get("/isbirliklerim", headers=d.genc1.baslik)).json()
+        assert [s["planimi_onayladim"] for s in kurum] == [True]
+        assert [s["planimi_onayladim"] for s in genc] == [False]
+
+    senaryo(adimlar)
