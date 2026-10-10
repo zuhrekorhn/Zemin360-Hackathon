@@ -45,6 +45,7 @@ export function menuBaglantilari(
         { yol: panelYolu("kurum"), etiket: "Panelim" },
         { yol: "/tanimlama", etiket: "Yeni ihtiyaç" },
         { yol: "/kurum/kart", etiket: "Firma kartı" },
+        { yol: "/isbirliklerim", etiket: "İş birliklerim" },
       ],
       ayar: { yol: "/kurum/profil", etiket: "Firma profili" },
     };

@@ -147,7 +147,7 @@ Tablo testle birebir sabitlenmiştir (`tests/test_eslesme_durumu.py`, `tests/tes
 | `/bildirimler` | herkes (girişli) | Liste, "hepsini okundu say" |
 
 **Menü** (`frontend/src/lib/menu.ts`): genç için Fırsatlar, Kartım, İş birliklerim; firma için
-Panelim, Yeni ihtiyaç, Firma kartı; GİRVAK için Panel. Bildirimler her ekranda zil ve okunmamış
+Panelim, Yeni ihtiyaç, Firma kartı, İş birliklerim; GİRVAK için Panel. Bildirimler her ekranda zil ve okunmamış
 sayısı; ayar sayfası (genç "Hesabım", firma "Firma profili") ve çıkış adın altındaki hesap menüsünde.
 
 **Yönlendirme:** giriş gerektiren sayfa `GirisKapisi` ile sarılır; girişsiz açılırsa

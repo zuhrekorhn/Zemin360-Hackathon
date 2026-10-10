@@ -19,6 +19,7 @@ describe("etkinBaglanti", () => {
   it("alt sayfalar üst bağlantıda kalır; menüde olmayan yol hiçbirinde", () => {
     expect(etkinBaglanti("/kurum/oneriler", baglantilar)).toBe("/kurum");
     expect(etkinBaglanti("/tanimlama", baglantilar)).toBe("/tanimlama");
+    expect(etkinBaglanti("/isbirliklerim", baglantilar)).toBe("/isbirliklerim");
     expect(etkinBaglanti("/bildirimler", baglantilar)).toBeNull();
   });
 });
@@ -53,6 +54,7 @@ describe("menuBaglantilari", () => {
       "Panelim /kurum",
       "Yeni ihtiyaç /tanimlama",
       "Firma kartı /kurum/kart",
+      "İş birliklerim /isbirliklerim",
     ]);
     expect(menuBaglantilari({ rol: "girvak", yetenek_karti: null })).toEqual({
       baglantilar: [
