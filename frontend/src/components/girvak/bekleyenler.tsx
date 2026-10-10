@@ -33,7 +33,7 @@ export function BekleyenlerKutusu() {
 
   const kalemler = [
     { sayi: firmalar.veri.length, etiket: "firma onayınızı bekliyor" },
-    { sayi: incelemeler.veri.length, etiket: "işaret incelemenizi bekliyor" },
+    { sayi: incelemeler.veri.length, etiket: "inceleme sizi bekliyor" },
   ].filter((k) => k.sayi > 0);
 
   return (
@@ -47,7 +47,7 @@ export function BekleyenlerKutusu() {
       >
         {kalemler.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Şu an karar bekleyen bir şey yok.
+            Şu an sizden bekleyen bir karar yok.
           </p>
         ) : (
           <>

@@ -9,12 +9,12 @@ import type { ServisDurumu } from "@/lib/api";
 export const GOZLEM_GUNLERI = [7, 30, 90] as const;
 
 const ERISIM_ETIKETLERI: Record<string, string> = {
-  acik: "Açık",
-  giris_gerekli: "Giriş istiyor",
-  engellendi: "Engelledi",
-  icerik_yok: "İçerik yok",
+  acik: "Açıldı",
+  giris_gerekli: "Giriş istedi",
+  engellendi: "Girişi engelledi",
+  icerik_yok: "İçerik bulunamadı",
   bulunamadi: "Bulunamadı",
-  guvensiz: "Güvenli değil",
+  guvensiz: "Güvenli bulunmadı",
   hata: "Okunamadı",
 };
 
@@ -39,13 +39,13 @@ export function platformEtiketi(platform: string): string {
 }
 
 const SERVIS_ETIKETLERI: Record<string, string> = {
-  eposta: "E-posta",
-  oauth: "Hesap bağlama",
-  depo: "Dosya deposu",
+  eposta: "E-posta gönderimi",
+  oauth: "Hesap bağlama (GitHub vb.)",
+  depo: "Dosya saklama",
   virus: "Virüs taraması",
-  yedek_okuyucu: "Yedek okuyucu",
-  uzak_okuyucu: "Uzak okuyucu",
-  gorsel_arayici: "Görsel arama",
+  yedek_okuyucu: "Yedek link okuyucu",
+  uzak_okuyucu: "Uzak link okuyucu",
+  gorsel_arayici: "Görsel kaynak araması",
 };
 
 export function servisEtiketi(servis: string): string {
@@ -76,13 +76,13 @@ export function servisOzeti(s: ServisDurumu): ServisOzeti {
     s.son_hata !== null &&
     (s.son_basari === null ||
       new Date(s.son_hata).getTime() > new Date(s.son_basari).getTime());
-  if (sonHataYeni) return { etiket: "Son çağrı hatalı", sorunlu: true };
+  if (sonHataYeni) return { etiket: "Son denemede hata", sorunlu: true };
   if (s.basari_sayisi + s.hata_sayisi > 0)
     return { etiket: "Çalışıyor", sorunlu: false };
-  return { etiket: "Henüz çağrılmadı", sorunlu: false };
+  return { etiket: "Henüz kullanılmadı", sorunlu: false };
 }
 
 /** "12 başarılı · 1 hatalı" */
 export function servisSayilari(s: ServisDurumu): string {
-  return `${s.basari_sayisi} başarılı · ${s.hata_sayisi} hatalı`;
+  return `${s.basari_sayisi} başarılı, ${s.hata_sayisi} hatalı`;
 }

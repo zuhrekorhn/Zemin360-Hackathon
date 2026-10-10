@@ -27,7 +27,7 @@ function satir(tur: string, ayrinti: Record<string, unknown>): IncelemeSatiri {
 
 describe("inceleme metinleri", () => {
   it("türün etiketi, bilinmeyen tür için genel etiket", () => {
-    expect(turEtiketi("itiraz_siniri")).toBe("İtiraz hakkı doldu");
+    expect(turEtiketi("itiraz_siniri")).toBe("Gencin itiraz hakkı doldu");
     expect(turEtiketi("yeni_bir_tur")).toBe("İnceleme");
   });
 
@@ -71,7 +71,7 @@ describe("inceleme metinleri", () => {
       "Aranacak kod: z360-abcd1234",
     ]);
     expect(kararEtiketleri("profil_kodu_elle").kapandi).toBe(
-      "Kod profilde, bağla",
+      "Kod profilde var, hesabı bağla",
     );
   });
 });
@@ -99,7 +99,11 @@ describe("aynı çalışma başka hesapta", () => {
   it("eşleşmenin nedenini ve öteki kartı verir", () => {
     const s = satir("ayni_iddia_cok_hesapta", {
       eslesmeler: [
-        { neden: "adres", adres: "https://github.com/a/b", diger_kart_id: "k2" },
+        {
+          neden: "adres",
+          adres: "https://github.com/a/b",
+          diger_kart_id: "k2",
+        },
         { neden: "gorsel", dosya_adi: "afis.png", diger_kart_id: "k2" },
         { neden: "dosya", dosya_adi: "rapor.pdf", diger_kart_id: "k3" },
       ],
@@ -127,8 +131,8 @@ describe("şüpheli referans yanıtı", () => {
       ],
     });
     expect(ayrintiSatirlari(s)).toEqual([
-      "Referans yanıtı: genç ile aynı internet bağlantısından yanıtlanmış · form 8 saniyede gönderilmiş · bu kişi 4 farklı gence referans vermiş",
-      "Referans yanıtı: form sayfası açılmadan gönderilmiş",
+      "Neden şüpheli: gençle aynı internet bağlantısından yanıtlanmış · form yalnızca 8 saniyede doldurulmuş · bu kişi 4 farklı gence referans vermiş",
+      "Neden şüpheli: form sayfası hiç açılmadan yanıt gelmiş",
     ]);
   });
 });
@@ -138,7 +142,11 @@ describe("belge, çelişki ve başka sayfadaki görsel", () => {
     const belge = satir("belge_tutarsiz", {
       bulgular: [
         { neden: "bozuk_imza", parca_id: "p1", dosya_adi: "sertifika.pdf" },
-        { neden: "ad_eslesmedi", parca_id: "p1", adres: "https://dogrula.ornek.com/1" },
+        {
+          neden: "ad_eslesmedi",
+          parca_id: "p1",
+          adres: "https://dogrula.ornek.com/1",
+        },
       ],
     });
     expect(ayrintiSatirlari(belge)).toEqual([
@@ -149,7 +157,11 @@ describe("belge, çelişki ve başka sayfadaki görsel", () => {
 
     const celiski = satir("kanit_celisiyor", {
       celiskiler: [
-        { iddia: "pay", alinti: "Takım lideri: Ayşe", adres: "https://ornek.com" },
+        {
+          iddia: "pay",
+          alinti: "Takım lideri: Ayşe",
+          adres: "https://ornek.com",
+        },
       ],
     });
     expect(ayrintiSatirlari(celiski)).toEqual([
@@ -158,7 +170,13 @@ describe("belge, çelişki ve başka sayfadaki görsel", () => {
     expect(incelenecekBelgeler(celiski)).toEqual([]);
 
     const gorsel = satir("gorsel_baskasinda", {
-      sayfalar: [{ parca_id: "g1", dosya_adi: "afis.png", adres: "https://behance.net/x" }],
+      sayfalar: [
+        {
+          parca_id: "g1",
+          dosya_adi: "afis.png",
+          adres: "https://behance.net/x",
+        },
+      ],
     });
     expect(ayrintiSatirlari(gorsel)).toEqual([
       "afis.png şu sayfada da var: https://behance.net/x",

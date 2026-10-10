@@ -20,8 +20,8 @@ export default function GirvakGenelBakis() {
   return (
     <Sayfa>
       <SayfaBasligi
-        baslik="Genel bakış"
-        aciklama="Program hedefleri gerçek sayılarla ve karar bekleyen işler. Kişisel bilgi olarak yalnızca ad görünür."
+        baslik="Özet"
+        aciklama="Programın nerede olduğunu ve sizden bekleyen kararları buradan görürsünüz. Kişisel bilgi olarak yalnızca ad görünür; e-posta adresleri size hiç gösterilmez."
       />
 
       <BekleyenlerKutusu />
@@ -35,7 +35,7 @@ export default function GirvakGenelBakis() {
         <PanelBolumu
           id="hedefler"
           baslik="Program hedefleri"
-          aciklama="Her hedefin altında platformda neyi saydığımız yazıyor; programın tanımıyla bizim ölçümümüz birebir aynı olmayabilir."
+          aciklama="Hedefler programın kendi adlarıyla yazıldı. Her kartın altında Zemin360'ın bu hedef için neyi saydığı yazıyor; programın tanımıyla birebir aynı olmayabilir."
         >
           <ul className="grid gap-4 sm:grid-cols-2">
             {sayilar.hedefler.map((hedef) => (

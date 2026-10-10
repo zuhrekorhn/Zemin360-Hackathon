@@ -27,7 +27,7 @@ export function HedefKarti({ hedef }: { hedef: ProgramHedefi }) {
         <div className="h-full bg-baglanti" style={{ width: `${yuzde}%` }} />
       </div>
       <span className="text-xs text-pretty text-muted-foreground">
-        Platformda: {hedef.olcum}
+        Sayılan: {hedef.olcum}
       </span>
     </li>
   );

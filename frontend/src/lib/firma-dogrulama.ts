@@ -17,22 +17,23 @@ export function ipucuMetni(
   switch (ipucu) {
     case "uyusuyor":
       return {
-        metin: `E-posta uzantısı (${epostaAlanAdi}) web sitesiyle uyuşuyor.`,
+        metin: `E-posta adresi (@${epostaAlanAdi}) web sitesiyle uyuşuyor.`,
         olumlu: true,
       };
     case "uyusmuyor":
       return {
-        metin: `E-posta uzantısı (${epostaAlanAdi}) web sitesiyle uyuşmuyor.`,
+        metin: `E-posta adresi (@${epostaAlanAdi}) web sitesiyle uyuşmuyor.`,
         olumlu: false,
       };
     case "ucretsiz_eposta":
       return {
-        metin: `Herkese açık bir e-posta servisi kullanılmış (${epostaAlanAdi}); uzantı firmayı göstermiyor.`,
+        metin: `Firma kişisel bir e-posta servisi kullanmış (@${epostaAlanAdi}); adres firmayı göstermiyor.`,
         olumlu: false,
       };
     case "site_yok":
       return {
-        metin: "Web sitesi yazılmamış; e-posta uzantısı karşılaştırılamadı.",
+        metin:
+          "Web sitesi yazılmamış, bu yüzden e-posta adresiyle karşılaştıramadık.",
         olumlu: false,
       };
     case "eposta_yok":

@@ -58,10 +58,10 @@ describe("menuBaglantilari", () => {
     ]);
     expect(menuBaglantilari({ rol: "girvak", yetenek_karti: null })).toEqual({
       baglantilar: [
-        { yol: "/girvak", etiket: "Genel bakış" },
+        { yol: "/girvak", etiket: "Özet" },
         { yol: "/girvak/kararlar", etiket: "Karar bekleyenler" },
-        { yol: "/girvak/canlilik", etiket: "Canlılık" },
-        { yol: "/girvak/gozlem", etiket: "Gözlem" },
+        { yol: "/girvak/canlilik", etiket: "Takılan süreçler" },
+        { yol: "/girvak/gozlem", etiket: "Sistem durumu" },
         { yol: "/girvak/sayilar", etiket: "Sayılar" },
       ],
       ayar: null,

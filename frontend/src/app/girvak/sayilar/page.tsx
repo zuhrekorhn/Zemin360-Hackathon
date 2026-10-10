@@ -14,8 +14,8 @@ export default function GirvakSayilar() {
   return (
     <Sayfa>
       <SayfaBasligi
-        baslik="Platform sayıları"
-        aciklama="Hesaplar, eşleşmeler ve iş birliklerinin dökümü."
+        baslik="Sayılar"
+        aciklama="Zemin360'ta şu ana kadar olanların dökümü: kaç hesap, kaç eşleşme, kaç iş birliği."
       />
       {hata ? (
         <HataKutusu hata={hata} tekrarDene={() => void yenile()} />

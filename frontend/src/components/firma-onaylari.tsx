@@ -65,7 +65,7 @@ export function FirmaOnaylari() {
     <PanelBolumu
       id="firma-onaylari"
       baslik="Onay bekleyen firmalar"
-      aciklama="Sistemin ipucu e-posta uzantısıyla web sitesinin adresini karşılaştırır; siteye bağlanmaz. Kararı siz verirsiniz. Onaylanan firmanın adının yanında “Doğrulanmış firma” işareti görünür."
+      aciklama="Firmanın kayıtta yazdığı e-posta adresinin web sitesiyle uyuşup uyuşmadığına bakıyoruz (siteye girmeden). Bu yalnızca bir ipucu, karar sizin. Onayla: firmaya bildirim gider ve adının yanında “Doğrulanmış firma” görünür. Şimdilik değil: firmaya bir şey gitmez, firma “Doğrulama bekleniyor” görmeye devam eder."
     >
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
       {firmalar === null ? null : firmalar.length === 0 ? (

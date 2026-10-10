@@ -26,11 +26,11 @@ function servis(ek: Partial<ServisDurumu>): ServisDurumu {
 
 describe("etiketler", () => {
   it("bilinen değerler Türkçe, bilinmeyen olduğu gibi", () => {
-    expect(erisimEtiketi("giris_gerekli")).toBe("Giriş istiyor");
+    expect(erisimEtiketi("giris_gerekli")).toBe("Giriş istedi");
     expect(erisimEtiketi("yeni_durum")).toBe("yeni_durum");
     expect(platformEtiketi("web")).toBe("Diğer siteler");
     expect(platformEtiketi("youtube")).toBe("YouTube");
-    expect(servisEtiketi("oauth")).toBe("Hesap bağlama");
+    expect(servisEtiketi("oauth")).toBe("Hesap bağlama (GitHub vb.)");
     expect(servisEtiketi("baska")).toBe("baska");
   });
 });
@@ -60,23 +60,26 @@ describe("servisOzeti", () => {
       son_hata: "2026-10-05T11:00:00Z",
     });
     expect(servisOzeti(hataliSon)).toEqual({
-      etiket: "Son çağrı hatalı",
+      etiket: "Son denemede hata",
       sorunlu: true,
     });
     const duzeldi = { ...hataliSon, son_basari: "2026-10-05T12:00:00Z" };
-    expect(servisOzeti(duzeldi)).toEqual({ etiket: "Çalışıyor", sorunlu: false });
+    expect(servisOzeti(duzeldi)).toEqual({
+      etiket: "Çalışıyor",
+      sorunlu: false,
+    });
   });
 
   it("hiç çağrı yoksa henüz çağrılmadı", () => {
     expect(servisOzeti(servis({}))).toEqual({
-      etiket: "Henüz çağrılmadı",
+      etiket: "Henüz kullanılmadı",
       sorunlu: false,
     });
   });
 
   it("sayılar", () => {
     expect(servisSayilari(servis({ basari_sayisi: 12, hata_sayisi: 1 }))).toBe(
-      "12 başarılı · 1 hatalı",
+      "12 başarılı, 1 hatalı",
     );
   });
 });

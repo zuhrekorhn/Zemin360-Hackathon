@@ -25,24 +25,24 @@ HEDEFLER: tuple[ProgramHedefi, ...] = (
         anahtar="basvuru",
         hedef=80,
         program_adi="startup başvurusu",
-        olcum="en az bir yetenek kartı olan genç",
+        olcum="yetenek kartı oluşturan genç",
     ),
     ProgramHedefi(
         anahtar="kurum",
         hedef=20,
         program_adi="kurum",
-        olcum="en az bir ihtiyaç kartı olan kurum",
+        olcum="ihtiyaç tanımlayan firma",
     ),
     ProgramHedefi(
         anahtar="eslesme",
         hedef=10,
         program_adi="eşleşme",
-        olcum="gencin kabul ettiği (karşılıklı onaylı) eşleşme",
+        olcum="iki tarafın da ilgilendiği (karşılıklı ilgi) eşleşme",
     ),
     ProgramHedefi(
         anahtar="pilot",
         hedef=5,
         program_adi="pilot",
-        olcum="iki tarafça tamamlanmış iş birliği",
+        olcum="iki tarafın da tamamladığı iş birliği (her türden)",
     ),
 )

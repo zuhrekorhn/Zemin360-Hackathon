@@ -67,12 +67,12 @@ export function IncelemeKuyrugu() {
   return (
     <PanelBolumu
       id="inceleme"
-      baslik="İnceleme kuyruğu"
-      aciklama="Sistemin gördüğü sinyaller ve gençlerin talepleri. İşaret puanı kendiliğinden değiştirmez; kararı siz verirsiniz ve genç sonucu bildirim olarak görür."
+      baslik="İncelemeler"
+      aciklama="Sistemin dikkat çektiği durumlar ve gençlerin talepleri. Hiçbir durum güven göstergesini kendiliğinden düşürmez; kararı siz verirsiniz ve genç sonucu bildirim olarak görür. “Sorun yok” incelemeyi kapatır; “Doğrulanamadı” ilgili çalışmayı doğrulanamadı olarak işaretler, genç bunu görür ve itiraz edebilir."
     >
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
       {isaretler === null ? null : isaretler.length === 0 ? (
-        <BosDurum metin="İncelenecek bir şey yok." />
+        <BosDurum metin="İncelenecek bir durum yok." />
       ) : (
         <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
           {isaretler.map((isaret) => {
@@ -123,7 +123,7 @@ export function IncelemeKuyrugu() {
                     href={`/kart/${isaret.kart_id}`}
                     className="w-fit text-sm text-baglanti underline"
                   >
-                    Kartı aç
+                    Gencin kartını aç
                   </Link>
                 ) : null}
                 {karsilastirilacakKartlar(isaret).map((kartId, i) => (
@@ -132,7 +132,9 @@ export function IncelemeKuyrugu() {
                     href={`/kart/${kartId}`}
                     className="w-fit text-sm text-baglanti underline"
                   >
-                    {i === 0 ? "Öteki kartı aç" : `${i + 1}. öteki kartı aç`}
+                    {i === 0
+                      ? "Diğer gencin kartını aç"
+                      : `${i + 1}. gencin kartını aç`}
                   </Link>
                 ))}
                 <label htmlFor={notAlani} className="sr-only">

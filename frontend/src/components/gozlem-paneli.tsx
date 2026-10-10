@@ -62,8 +62,8 @@ export function GozlemPaneli() {
   return (
     <PanelBolumu
       id="gozlem"
-      baslik="Gözlem"
-      aciklama="Kanıt linklerinin ne kadarının açılabildiği ve dış servislerin durumu. Kayıtlarda kişi ya da adres bulunmaz; 90 gün saklanır."
+      baslik="Kanıt linkleri ve dış servisler"
+      aciklama="Buradaki kayıtlar kişi ya da adres içermez ve 90 gün saklanır."
     >
       <div
         className="flex flex-wrap items-center gap-2"
@@ -104,9 +104,11 @@ export function GozlemPaneli() {
 function ErisimDagilimi({ veri }: { veri: GozlemYaniti }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-medium text-ana">Platform bazında erişim</h3>
+      <h3 className="text-sm font-medium text-ana">
+        Kanıt linkleri açılabiliyor mu?
+      </h3>
       {veri.erisim.length === 0 ? (
-        <BosDurum metin="Bu dönemde okunan kanıt linki yok." />
+        <BosDurum metin="Bu dönemde denenen kanıt linki yok." />
       ) : (
         <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
           {veri.erisim.map((p) => {
@@ -120,7 +122,8 @@ function ErisimDagilimi({ veri }: { veri: GozlemYaniti }) {
                     {platformEtiketi(p.platform)}
                   </span>
                   <span className="font-mono text-sm text-ana">
-                    {yuzdeYaz(p.acik_orani)} açık · {p.toplam} okuma
+                    {yuzdeYaz(p.acik_orani)} açılabildi · {p.toplam} link
+                    denendi
                   </span>
                 </div>
                 <div
@@ -157,7 +160,10 @@ function ErisimDagilimi({ veri }: { veri: GozlemYaniti }) {
 function Servisler({ veri }: { veri: GozlemYaniti }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-medium text-ana">Servis durumu</h3>
+      <h3 className="text-sm font-medium text-ana">Dış servisler</h3>
+      <p className="text-xs text-pretty text-muted-foreground">
+        “Kapalı” olan servisler bilerek açılmamıştır; sorun sayılmaz.
+      </p>
       <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
         {veri.servisler.map((s) => {
           const ozet = servisOzeti(s);
@@ -190,9 +196,8 @@ function DegerlendirmeOzeti({ veri }: { veri: GozlemYaniti }) {
   if (d.sayi === 0) return null;
   return (
     <p className="text-sm text-pretty text-muted-foreground">
-      {d.sayi} değerlendirme · ortalama {sureYaz(d.ortalama_sure_ms)} · yapay
-      zekâya giden {d.girdi_token.toLocaleString("tr-TR")}, gelen{" "}
-      {d.cikti_token.toLocaleString("tr-TR")} metin birimi.
+      Bu dönemde {d.sayi} çalışma değerlendirildi; ortalama{" "}
+      {sureYaz(d.ortalama_sure_ms)} sürdü.
     </p>
   );
 }

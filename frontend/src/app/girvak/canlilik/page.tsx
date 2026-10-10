@@ -44,8 +44,8 @@ export default function GirvakCanlilik() {
   return (
     <Sayfa>
       <SayfaBasligi
-        baslik="Canlılık"
-        aciklama="Hareketsiz kalan bağlantılar ve onlara bırakılan hatırlatmalar."
+        baslik="Takılan süreçler"
+        aciklama="Cevap beklerken ya da ilerlemeden duran süreçler ve onlara gönderilen hatırlatmalar."
       />
       {hata ? (
         <HataKutusu

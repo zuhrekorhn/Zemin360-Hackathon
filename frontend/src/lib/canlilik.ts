@@ -9,21 +9,28 @@ export const CANLILIK_TUR_ETIKETLERI: Record<string, string> = {
   ilgi_yanitsiz_1: "Yanıtsız ilgi",
   ilgi_yanitsiz_2: "Yanıtsız ilgi (son hatırlatma)",
   plan_onaysiz: "Onaylanmayan plan",
-  isbirligi_hareketsiz: "Hareketsiz iş birliği",
+  isbirligi_hareketsiz: "İlerlemeyen iş birliği",
   adim_gecikti: "Gecikmiş adım",
-  yeni_firsat: "Yeni fırsat",
+  yeni_firsat: "Gence yeni fırsat bildirimi",
   // Genç akışı: genç ilgi gösterdi, firma yanıt vermedi (GİRVAK panelinde).
   genc_ilgisi_yanitsiz: "Yanıtsız genç ilgisi",
   // Doğrulama: tarama özetinde görünen sayaçlar (olay değil).
   referans_hatirlatma: "Referans hatırlatması",
   referans_yanit_yok: "Yanıtsız referans",
-  link_yoklandi: "Yoklanan kanıt linki",
+  link_yoklandi: "Kontrol edilen kanıt linki",
   link_curudu: "Açılmayan kanıt linki",
 };
 
 export function turEtiketi(tur: string): string {
   return CANLILIK_TUR_ETIKETLERI[tur] ?? tur;
 }
+
+/**
+ * Takılma süreleri (gün). Kaynak backend `canlilik_kurallari.ESIKLER`; orada
+ * değişirse bu cümle de değişmeli (docs/canlilik.md § 1).
+ */
+export const TAKILMA_SURELERI =
+  "Takılma süreleri: öneri 7 gün, ilgiye yanıt 3 gün, plan onayı 5 gün, iş birliği 14 gün; adım, hedef tarihinden bir gün sonra.";
 
 const ROL_ADLARI: Record<string, string> = { genc: "genç", kurum: "firma" };
 
@@ -39,7 +46,7 @@ export function alicilarMetni(alicilar: string[]): string {
 export function pasifSureMetni(tur: string, gun: number): string {
   return tur === "adim_gecikti"
     ? `hedef tarihi ${gun} gün geçti`
-    : `${gun} gündür hareket yok`;
+    : `${gun} gündür ilerleme yok`;
 }
 
 /** Hedef ilerlemesi 0-100 (hedef aşıldıysa 100'de durur; çizgi taşmasın). */

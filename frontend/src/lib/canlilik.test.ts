@@ -11,7 +11,7 @@ import {
 describe("turEtiketi", () => {
   it("bilinen türler Türkçe etiketle, bilinmeyen olduğu gibi", () => {
     expect(turEtiketi("adim_gecikti")).toBe("Gecikmiş adım");
-    expect(turEtiketi("yeni_firsat")).toBe("Yeni fırsat");
+    expect(turEtiketi("yeni_firsat")).toBe("Gence yeni fırsat bildirimi");
     expect(turEtiketi("bilinmeyen")).toBe("bilinmeyen");
   });
 });
@@ -26,7 +26,7 @@ describe("alicilarMetni", () => {
 describe("pasifSureMetni", () => {
   it("gecikmede hedeften, diğerlerinde hareketten beri", () => {
     expect(pasifSureMetni("adim_gecikti", 3)).toBe("hedef tarihi 3 gün geçti");
-    expect(pasifSureMetni("oneri_bekliyor", 8)).toBe("8 gündür hareket yok");
+    expect(pasifSureMetni("oneri_bekliyor", 8)).toBe("8 gündür ilerleme yok");
   });
 });
 

@@ -7,16 +7,16 @@ import type { IncelemeSatiri } from "@/lib/api";
 import { platformAdi } from "@/lib/hesap-baglama";
 
 const TUR_ETIKETLERI: Record<string, string> = {
-  itiraz_siniri: "İtiraz hakkı doldu",
+  itiraz_siniri: "Gencin itiraz hakkı doldu",
   ad_degisikligi: "Ad değişikliği talebi",
   ayni_iddia_cok_hesapta: "Aynı çalışma başka bir hesapta",
   ayni_belge_iki_hesapta: "Aynı belge başka bir hesapta",
-  gorsel_baskasinda: "Görsel başka bir portfolyoda",
+  gorsel_baskasinda: "Görsel başka bir sayfada da var",
   referans_supheli: "Şüpheli referans yanıtı",
-  belge_tutarsiz: "Belge tutarsız",
-  kanit_celisiyor: "Kanıt iddiayla çelişiyor",
-  profil_kodu_elle: "Doğrulama kodu elle kontrol edilecek",
-  edevlet_barkodu: "e-Devlet barkodu doğrulanacak",
+  belge_tutarsiz: "Belgede tutarsızlık var",
+  kanit_celisiyor: "Kanıt, çalışmanın anlatımıyla çelişiyor",
+  profil_kodu_elle: "Doğrulama kodunu elle kontrol edin",
+  edevlet_barkodu: "e-Devlet belgesini doğrulayın",
 };
 
 export function turEtiketi(tur: string): string {
@@ -31,7 +31,10 @@ export function kararEtiketleri(tur: string): {
   if (tur === "ad_degisikligi")
     return { kapandi: "Onayla", dogrulanamadi: "Reddet" };
   if (tur === "profil_kodu_elle")
-    return { kapandi: "Kod profilde, bağla", dogrulanamadi: "Kod yok" };
+    return {
+      kapandi: "Kod profilde var, hesabı bağla",
+      dogrulanamadi: "Kod yok",
+    };
   if (tur === "edevlet_barkodu")
     return { kapandi: "Belge doğrulandı", dogrulanamadi: "Doğrulanamadı" };
   return { kapandi: "Sorun yok", dogrulanamadi: "Doğrulanamadı" };
@@ -94,13 +97,13 @@ const TEKRAR_NEDENLERI: Record<string, string> = {
 function referansSinyali(sinyal: string, r: Record<string, unknown>): string {
   switch (sinyal) {
     case "ip_genc_ile_ayni":
-      return "genç ile aynı internet bağlantısından yanıtlanmış";
+      return "gençle aynı internet bağlantısından yanıtlanmış";
     case "tarayici_genc_ile_ayni":
-      return "gencin kullandığı tarayıcıdan yanıtlanmış";
+      return "gencin kendi tarayıcısından yanıtlanmış";
     case "hizli_yanit":
-      return `form ${String(r.form_suresi_sn ?? "birkaç")} saniyede gönderilmiş`;
+      return `form yalnızca ${String(r.form_suresi_sn ?? "birkaç")} saniyede doldurulmuş`;
     case "form_acilmadan":
-      return "form sayfası açılmadan gönderilmiş";
+      return "form sayfası hiç açılmadan yanıt gelmiş";
     case "cok_gence_yanit":
       return `bu kişi ${String(r.genc_sayisi ?? "birçok")} farklı gence referans vermiş`;
     default:
@@ -165,7 +168,7 @@ function turSatirlari(satir: IncelemeSatiri): string[] {
   if (satir.tur === "referans_supheli") {
     return nesneListesi(a.referanslar).map(
       (r) =>
-        `Referans yanıtı: ${metinListesi(r.sinyaller)
+        `Neden şüpheli: ${metinListesi(r.sinyaller)
           .map((sinyal) => referansSinyali(sinyal, r))
           .join(" · ")}`,
     );

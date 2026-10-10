@@ -10,7 +10,7 @@ export default function GirvakKararlar() {
     <Sayfa>
       <SayfaBasligi
         baslik="Karar bekleyenler"
-        aciklama="Onayınızı bekleyen firmalar ve sistemin işaretlediği kayıtlar. Karar verilen kayıt listeden çıkar."
+        aciklama="Kararınızı bekleyen firmalar ve sistemin kontrol edilmesini istediği kayıtlar. Karar verdiğiniz kayıt listeden çıkar."
       />
       <FirmaOnaylari />
       <IncelemeKuyrugu />

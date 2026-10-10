@@ -34,7 +34,7 @@ def test_program_hedefleri_iki_parcali_etiket_ve_olcum():
         assert [h.anahtar for h in HEDEFLER] == ["basvuru", "kurum", "eslesme", "pilot"]
         assert [once[h.anahtar]["hedef"] for h in HEDEFLER] == [80, 20, 10, 5]
         assert once["basvuru"]["program_adi"] == "startup başvurusu"
-        assert once["basvuru"]["olcum"] == "en az bir yetenek kartı olan genç"
+        assert once["basvuru"]["olcum"] == "yetenek kartı oluşturan genç"
 
         # Kartı olmayan genç başvuru sayılmaz; kartı olan sayılır (gencin tek
         # kartı var: yetenek_karti.kullanici_id tekil).

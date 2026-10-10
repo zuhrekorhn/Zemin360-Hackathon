@@ -52,10 +52,10 @@ export function menuBaglantilari(
   }
   return {
     baglantilar: [
-      { yol: panelYolu(hesap.rol), etiket: "Genel bakış" },
+      { yol: panelYolu(hesap.rol), etiket: "Özet" },
       { yol: "/girvak/kararlar", etiket: "Karar bekleyenler" },
-      { yol: "/girvak/canlilik", etiket: "Canlılık" },
-      { yol: "/girvak/gozlem", etiket: "Gözlem" },
+      { yol: "/girvak/canlilik", etiket: "Takılan süreçler" },
+      { yol: "/girvak/gozlem", etiket: "Sistem durumu" },
       { yol: "/girvak/sayilar", etiket: "Sayılar" },
     ],
     ayar: null,

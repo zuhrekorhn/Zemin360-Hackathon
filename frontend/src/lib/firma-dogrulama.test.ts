@@ -18,7 +18,7 @@ describe("ipucuMetni", () => {
 
   it("alan adını cümleye koyar", () => {
     expect(ipucuMetni("uyusuyor", "marketx.com").metin).toBe(
-      "E-posta uzantısı (marketx.com) web sitesiyle uyuşuyor.",
+      "E-posta adresi (@marketx.com) web sitesiyle uyuşuyor.",
     );
     expect(ipucuMetni("ucretsiz_eposta", "gmail.com").metin).toContain(
       "gmail.com",

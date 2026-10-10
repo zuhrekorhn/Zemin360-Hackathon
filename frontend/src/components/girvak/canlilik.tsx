@@ -9,7 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { KUTU } from "@/components/ui/yuzey";
 import type { CanlilikOlayi, PasifBaglanti, TaramaSonucu } from "@/lib/api";
-import { alicilarMetni, pasifSureMetni, turEtiketi } from "@/lib/canlilik";
+import {
+  TAKILMA_SURELERI,
+  alicilarMetni,
+  pasifSureMetni,
+  turEtiketi,
+} from "@/lib/canlilik";
 import { cn } from "@/lib/utils";
 
 const LISTE =
@@ -28,8 +33,8 @@ export function TaramaBolumu({
   return (
     <PanelBolumu
       id="tarama"
-      baslik="Canlılık taraması"
-      aciklama="Hareketsiz kalan öneri, ilgi, plan ve adımlar için ilgili kişiye bir hatırlatma bırakır; aynı dönemde aynı hatırlatmayı tekrarlamaz. Canlıda bu işi zamanlanmış görev günde iki kez yapar."
+      baslik="Takılanları kontrol et"
+      aciklama="Cevapsız kalan öneri ve ilgiler, onaylanmayan planlar ve gecikmiş adımlar için ilgili kişiye hatırlatma gönderir. Aynı kişiye aynı konuda ikinci kez hatırlatma gitmez. Kontrol bu düğmeyle başlatılır."
     >
       <div
         className={cn(
@@ -43,7 +48,7 @@ export function TaramaBolumu({
           disabled={taraniyor}
           onClick={onCalistir}
         >
-          {taraniyor ? "Taranıyor…" : "Taramayı şimdi çalıştır"}
+          {taraniyor ? "Kontrol ediliyor…" : "Şimdi kontrol et"}
         </Button>
         {sonuc ? <TaramaOzeti sonuc={sonuc} /> : null}
       </div>
@@ -56,8 +61,8 @@ function TaramaOzeti({ sonuc }: { sonuc: TaramaSonucu }) {
   return (
     <p className="text-sm text-pretty" role="status">
       {turler.length === 0
-        ? "Yeni hatırlatma yok: hareketsizlik süresini aşan kayıt yok ya da bu dönemde zaten hatırlatıldı."
-        : `${sonuc.bildirim} bildirim gönderildi. ${turler
+        ? "Yeni hatırlatma gerekmedi: takılan bir süreç yok ya da hatırlatma zaten gönderilmişti."
+        : `${sonuc.bildirim} hatırlatma gönderildi. ${turler
             .map(([tur, sayi]) => `${turEtiketi(tur)}: ${sayi}`)
             .join(", ")}.`}
       <span className="ml-1 text-xs text-muted-foreground">
@@ -75,11 +80,11 @@ export function PasifBaglantilar({
   return (
     <PanelBolumu
       id="pasifler"
-      baslik="Pasifleşen bağlantılar"
-      aciklama="Şu an hareketsizlik süresini aşmış kayıtlar; en uzun süredir hareketsiz olan önce. Bu liste okunurken hiçbir hatırlatma gönderilmez."
+      baslik="Şu an takılanlar"
+      aciklama={`Süresi dolmuş ve hâlâ ilerlemeyen süreçler; en uzun süredir bekleyen en üstte. Bu listeyi açmak kimseye hatırlatma göndermez. ${TAKILMA_SURELERI}`}
     >
       {pasifler === null ? null : pasifler.length === 0 ? (
-        <BosDurum metin="Şu an hareketsizlik süresini aşmış bir bağlantı yok." />
+        <BosDurum metin="Şu an takılan bir süreç yok." />
       ) : (
         <ul className={LISTE}>
           {pasifler.map((pasif) => (
@@ -113,7 +118,7 @@ function PasifSatiri({ pasif }: { pasif: PasifBaglanti }) {
       </div>
       <p className="text-sm text-pretty text-muted-foreground">
         {pasifSureMetni(pasif.tur, pasif.gun)}
-        {pasif.adim ? ` · “${pasif.adim}”` : ""} · hatırlatılacak:{" "}
+        {pasif.adim ? ` · “${pasif.adim}”` : ""} · hatırlatma gidecek kişi:{" "}
         {alicilarMetni(pasif.alicilar)} ·{" "}
         {pasif.son_hatirlatma
           ? `son hatırlatma ${tarihYaz(pasif.son_hatirlatma, true)}`
@@ -131,7 +136,7 @@ export function SonHatirlatmalar({
   return (
     <PanelBolumu id="olaylar" baslik="Son hatırlatmalar">
       {olaylar === null ? null : olaylar.length === 0 ? (
-        <BosDurum metin="Henüz hatırlatma gönderilmedi. Tarama çalıştığında burada görünür." />
+        <BosDurum metin="Henüz hatırlatma gönderilmedi. Kontrolden sonra gönderilenler burada görünür." />
       ) : (
         <ul className={LISTE}>
           {olaylar.map((olay) => (

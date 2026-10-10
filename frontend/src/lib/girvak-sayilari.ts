@@ -22,21 +22,30 @@ export function sayiGruplari(s: GirvakSayilari): SayiGrubu[] {
         { etiket: "Genç hesabı", sayi: s.hesap.genc },
         { etiket: "Firma hesabı", sayi: s.hesap.kurum },
         { etiket: "Yetenek kartı", sayi: s.yetenek_karti },
-        { etiket: "İhtiyaç kartı", sayi: s.ihtiyac_karti },
+        {
+          etiket: "Tanımlanan ihtiyaç (kapananlar dahil)",
+          sayi: s.ihtiyac_karti,
+        },
       ],
     },
     {
       kimlik: "eslesmeler",
       baslik: "Eşleşmeler ve iş birlikleri",
       aciklama:
-        "Öneriden tamamlanan iş birliğine: firma ilgilenir, genç kabul eder, plan iki tarafça onaylanır ve adım adım tamamlanır.",
+        "Bir eşleşmenin yolu: öneri, ilgi, karşılıklı ilgi, iş birliği, tamamlanma.",
       ogeler: [
         { etiket: "Önerildi", sayi: s.eslesme.onerildi },
-        { etiket: "Gencin yanıtı bekleniyor", sayi: s.eslesme.ilgileniliyor },
-        { etiket: "Kabul edildi", sayi: s.eslesme.kabul_edildi },
+        { etiket: "Adayın yanıtı bekleniyor", sayi: s.eslesme.ilgileniliyor },
+        {
+          etiket: "Karşılıklı ilgi (kabul edildi)",
+          sayi: s.eslesme.kabul_edildi,
+        },
         { etiket: "Reddedildi", sayi: s.eslesme.reddedildi },
-        { etiket: "İş birliği", sayi: s.isbirligi },
-        { etiket: "Planı bekleyen", sayi: s.isbirligi_durumlari.plan_bekliyor },
+        { etiket: "Açılan iş birliği", sayi: s.isbirligi },
+        {
+          etiket: "Plan onayı bekleyen",
+          sayi: s.isbirligi_durumlari.plan_bekliyor,
+        },
         { etiket: "Süren iş birliği", sayi: s.isbirligi_durumlari.aktif },
         {
           etiket: "Tamamlanan iş birliği",
@@ -46,9 +55,9 @@ export function sayiGruplari(s: GirvakSayilari): SayiGrubu[] {
     },
     {
       kimlik: "kirilim",
-      baslik: "Genç–firma ve firma–firma",
+      baslik: "Eşleşme türüne göre",
       aciklama:
-        "Yukarıdaki toplamların eşleşme türüne göre dağılımı. Firma–firma, bir firmanın iş birliği ortağı aradığı ihtiyaçlardan çıkan eşleşmeler.",
+        "Aynı sayıların iki türe göre dağılımı: genç–firma (firma genç arıyor) ve firma–firma (firma iş birliği ortağı arıyor).",
       ogeler: [
         {
           etiket: "Genç–firma karşılıklı ilgi",
@@ -59,7 +68,7 @@ export function sayiGruplari(s: GirvakSayilari): SayiGrubu[] {
           sayi: s.kirilim.genc_firma.isbirligi,
         },
         {
-          etiket: "Genç–firma tamamlanan",
+          etiket: "Genç–firma tamamlanan iş birliği",
           sayi: s.kirilim.genc_firma.tamamlanan,
         },
         { etiket: "Firma–firma öneri", sayi: s.kirilim.firma_firma.oneri },
@@ -72,7 +81,7 @@ export function sayiGruplari(s: GirvakSayilari): SayiGrubu[] {
           sayi: s.kirilim.firma_firma.isbirligi,
         },
         {
-          etiket: "Firma–firma tamamlanan",
+          etiket: "Firma–firma tamamlanan iş birliği",
           sayi: s.kirilim.firma_firma.tamamlanan,
         },
       ],
@@ -81,10 +90,10 @@ export function sayiGruplari(s: GirvakSayilari): SayiGrubu[] {
       kimlik: "kapananlar",
       baslik: "Kapanan ihtiyaçlar",
       aciklama:
-        "Firmaların ihtiyacı kapatırken seçtiği neden. Nedeni yalnızca siz görürsünüz.",
+        "Firmalar bir ihtiyacı kapatırken nedenini seçer; nedeni yalnızca siz görürsünüz. “Zemin360'ta bulundu”: firma aradığını burada buldu.",
       ogeler: [
         {
-          etiket: "Platformda bulundu",
+          etiket: "Zemin360'ta bulundu",
           sayi: s.kapanan_ihtiyaclar.platformda_bulundu,
         },
         {
@@ -92,7 +101,10 @@ export function sayiGruplari(s: GirvakSayilari): SayiGrubu[] {
           sayi: s.kapanan_ihtiyaclar.baska_yoldan_bulundu,
         },
         { etiket: "Vazgeçildi", sayi: s.kapanan_ihtiyaclar.vazgecildi },
-        { etiket: "Yanlış girildi", sayi: s.kapanan_ihtiyaclar.hatali_girildi },
+        {
+          etiket: "Yanlış ya da eksik girildi",
+          sayi: s.kapanan_ihtiyaclar.hatali_girildi,
+        },
       ],
     },
   ];
