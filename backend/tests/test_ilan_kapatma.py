@@ -64,6 +64,10 @@ def test_neden_zorunlu_ve_kume_disi_422():
 
 def test_kapatma_bekleyenleri_kapatir_neden_gizli_tekrar_yan_etkisiz():
     async def adimlar(istemci, d):
+        # Yerel veritabanında başka kapanmış ilanlar olabilir: sayılar farkla sınanır.
+        once = (await istemci.get("/girvak/sayilar", headers=d.girvak.baslik)).json()[
+            "kapanan_ihtiyaclar"
+        ]
         # E1'e genç ilgi gösterdi: kapatınca gence nötr bildirim gider.
         await istemci.post(f"/eslestirme/{d.E1.id}/genc-ilgi", headers=d.genc1.baslik, json=ONAY)
 
@@ -116,7 +120,7 @@ def test_kapatma_bekleyenleri_kapatir_neden_gizli_tekrar_yan_etkisiz():
 
         # GİRVAK sayısı nedenle.
         sayilar = (await istemci.get("/girvak/sayilar", headers=d.girvak.baslik)).json()
-        assert sayilar["kapanan_ihtiyaclar"]["platformda_bulundu"] == 1
+        assert sayilar["kapanan_ihtiyaclar"]["platformda_bulundu"] == once["platformda_bulundu"] + 1
 
         # Giriş hatası ayrı sayılır, "vazgeçildi"yi şişirmez.
         hatali = await istemci.post(
@@ -126,8 +130,8 @@ def test_kapatma_bekleyenleri_kapatir_neden_gizli_tekrar_yan_etkisiz():
         )
         assert hatali.status_code == 200
         sayilar = (await istemci.get("/girvak/sayilar", headers=d.girvak.baslik)).json()
-        assert sayilar["kapanan_ihtiyaclar"]["hatali_girildi"] == 1
-        assert sayilar["kapanan_ihtiyaclar"]["vazgecildi"] == 0
+        assert sayilar["kapanan_ihtiyaclar"]["hatali_girildi"] == once["hatali_girildi"] + 1
+        assert sayilar["kapanan_ihtiyaclar"]["vazgecildi"] == once["vazgecildi"]
 
     senaryo(adimlar)
 
