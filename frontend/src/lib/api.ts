@@ -1503,6 +1503,48 @@ export function girvakSayilari(): Promise<GirvakSayilari> {
   return apiIstek<GirvakSayilari>("/girvak/sayilar", { cache: "no-store" });
 }
 
+/* --- GİRVAK özeti ve iş birlikleri (backend: app/api/girvak_ozet.py) ---
+   Programın altı ihtiyaç alanı için sayılar; e-posta ve iletişim yok. */
+
+export type GirvakOzet = {
+  kesif: {
+    kayitli_genc: number;
+    kart_olusturan_genc: number;
+    firsat_goren_genc: number;
+  };
+  dogruluk: {
+    calisma: number;
+    degerlendirilen_calisma: number;
+    bekleyen_inceleme: number;
+  };
+  eslesme: { oneri_toplam: number; karsilikli_ilgi: number };
+  ag: { takilan_surec: number; hatirlatma_30_gun: number };
+  tanim: { ihtiyac: number; olculebilir_ihtiyac: number };
+  takip: { isbirligi: number; tamamlanan: number; gecikmis_adim: number };
+};
+
+export function girvakOzet(): Promise<GirvakOzet> {
+  return apiIstek<GirvakOzet>("/girvak/ozet", { cache: "no-store" });
+}
+
+export type GirvakIsbirligi = {
+  isbirligi_id: string;
+  durum: string;
+  baslangic_tarihi: string | null;
+  aday_turu: "genc" | "firma";
+  aday_adi: string;
+  kurum_adi: string;
+  rol_alani: string | null;
+  problem_tanimi: string;
+  ilerleme: Ilerleme;
+};
+
+export function girvakIsbirlikleri(): Promise<GirvakIsbirligi[]> {
+  return apiIstek<GirvakIsbirligi[]>("/girvak/isbirlikleri", {
+    cache: "no-store",
+  });
+}
+
 /* --- GİRVAK gözlem paneli (docs/dogrulama.md § 10.3) -------
    Tipler backend'deki app/schemas/gozlem.py ile birebir eşleşir. */
 
