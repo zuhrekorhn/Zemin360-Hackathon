@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
  * Sistem ipucu verir, karar GİRVAK'ın. "Onayla" firmaya bildirim gönderir;
  * "Şimdilik değil" sessizdir. Tam e-posta gösterilmez, yalnızca uzantısı.
  */
-export function FirmaOnaylari() {
+export function FirmaOnaylari({ onKarar }: { onKarar?: () => void }) {
   const [firmalar, setFirmalar] = useState<OnayBekleyenFirma[] | null>(null);
   const [isleniyor, setIsleniyor] = useState<string | null>(null);
   const [hata, setHata] = useState<Hata | null>(null);
@@ -50,6 +50,7 @@ export function FirmaOnaylari() {
     setIsleniyor(kurumId);
     try {
       await girvakFirmaDogrula(kurumId, secim);
+      onKarar?.();
       // Karar verilen firma listeden çıkar.
       setFirmalar(
         (liste) => liste?.filter((f) => f.kurum_id !== kurumId) ?? null,
