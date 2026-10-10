@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BosDurum, PanelBolumu, tarihYaz } from "@/components/panel";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
+import { KUTU } from "@/components/ui/yuzey";
 import {
   type OnayBekleyenFirma,
   girvakFirmaDogrula,
@@ -66,20 +67,20 @@ export function FirmaOnaylari({ onKarar }: { onKarar?: () => void }) {
     <PanelBolumu
       id="firma-onaylari"
       baslik="Onay bekleyen firmalar"
-      aciklama="Firmanın kayıtta yazdığı e-posta adresinin web sitesiyle uyuşup uyuşmadığına bakıyoruz (siteye girmeden). Bu yalnızca bir ipucu, karar sizin. Onayla: firmaya bildirim gider ve adının yanında “Doğrulanmış firma” görünür. Şimdilik değil: firmaya bir şey gitmez, firma “Doğrulama bekleniyor” görmeye devam eder."
+      aciklama="Firmanın kayıtta yazdığı e-posta adresinin web sitesiyle uyuşup uyuşmadığına bakıyoruz (siteye girmeden). Bu yalnızca bir ipucu, karar sizin."
     >
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
       {firmalar === null ? null : firmalar.length === 0 ? (
         <BosDurum metin="Onay bekleyen firma yok." />
       ) : (
-        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
+        <ul className="flex flex-col gap-3">
           {firmalar.map((firma) => {
             const ipucu = ipucuMetni(firma.ipucu, firma.eposta_alan_adi);
             const tur = FIRMA_TURLERI.find((t) => t.deger === firma.tur);
             return (
               <li
                 key={firma.kurum_id}
-                className="flex flex-col gap-2 px-4 py-3"
+                className={cn(KUTU, "flex flex-col gap-2 px-5 py-4")}
               >
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-medium text-ana">{firma.ad}</span>

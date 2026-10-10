@@ -3,10 +3,12 @@
 import { useState } from "react";
 
 import {
+  KontrolKutusu,
   PasifBaglantilar,
   SonHatirlatmalar,
-  TaramaBolumu,
+  TakilmaSureleri,
 } from "@/components/girvak/canlilik";
+import { IkiSutun } from "@/components/girvak/iki-sutun";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { HataKutusu } from "@/components/sohbet";
 import {
@@ -18,7 +20,10 @@ import {
 import { type Hata, hatayaCevir } from "@/lib/hata";
 import { useYukle } from "@/lib/yukle";
 
-/** Canlılık: taramayı çalıştır, hareketsiz kalan bağlantıları ve gönderilen hatırlatmaları gör. */
+/**
+ * Takılan süreçler: kontrolü başlat (yan sütun), takılanları ve gönderilen
+ * hatırlatmaları gör (ana içerik).
+ */
 export default function GirvakCanlilik() {
   const pasifler = useYukle(pasifBaglantilar);
   const olaylar = useYukle(canlilikOlaylari);
@@ -42,7 +47,7 @@ export default function GirvakCanlilik() {
   const hata = taramaHatasi ?? pasifler.hata ?? olaylar.hata;
 
   return (
-    <Sayfa>
+    <Sayfa genislik="genis">
       <SayfaBasligi
         baslik="Takılan süreçler"
         aciklama="Cevap beklerken ya da ilerlemeden duran süreçler ve onlara gönderilen hatırlatmalar."
@@ -57,13 +62,21 @@ export default function GirvakCanlilik() {
           }}
         />
       ) : null}
-      <TaramaBolumu
-        taraniyor={taraniyor}
-        sonuc={sonuc}
-        onCalistir={() => void tara()}
-      />
-      <PasifBaglantilar pasifler={pasifler.veri} />
-      <SonHatirlatmalar olaylar={olaylar.veri} />
+      <IkiSutun
+        yan={
+          <>
+            <KontrolKutusu
+              taraniyor={taraniyor}
+              sonuc={sonuc}
+              onCalistir={() => void tara()}
+            />
+            <TakilmaSureleri />
+          </>
+        }
+      >
+        <PasifBaglantilar pasifler={pasifler.veri} />
+        <SonHatirlatmalar olaylar={olaylar.veri} />
+      </IkiSutun>
     </Sayfa>
   );
 }

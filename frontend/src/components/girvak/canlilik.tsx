@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { YanKutu } from "@/components/genc-paneli";
 import {
   BosDurum,
   DurumEtiketi,
@@ -17,11 +18,11 @@ import {
 } from "@/lib/canlilik";
 import { cn } from "@/lib/utils";
 
-const LISTE =
-  "flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card";
+const LISTE = "flex flex-col gap-3";
+const SATIR = cn(KUTU, "flex flex-col gap-1 px-5 py-4");
 
-/** "Taramayı şimdi çalıştır" ve son çalıştırmanın özeti. */
-export function TaramaBolumu({
+/** Yan sütun: "Şimdi kontrol et" ve son kontrolün özeti. */
+export function KontrolKutusu({
   taraniyor,
   sonuc,
   onCalistir,
@@ -31,28 +32,39 @@ export function TaramaBolumu({
   onCalistir: () => void;
 }) {
   return (
-    <PanelBolumu
-      id="tarama"
-      baslik="Takılanları kontrol et"
-      aciklama="Cevapsız kalan öneri ve ilgiler, onaylanmayan planlar ve gecikmiş adımlar için ilgili kişiye hatırlatma gönderir. Aynı kişiye aynı konuda ikinci kez hatırlatma gitmez. Kontrol bu düğmeyle başlatılır."
-    >
-      <div
-        className={cn(
-          KUTU,
-          "flex flex-wrap items-center gap-x-4 gap-y-3 px-6 py-5",
-        )}
+    <YanKutu baslik="Takılanları kontrol et">
+      <p className="text-sm text-pretty text-muted-foreground">
+        Cevapsız kalan öneri ve ilgiler, onaylanmayan planlar ve gecikmiş
+        adımlar için ilgili kişiye hatırlatma gönderir. Aynı kişiye aynı konuda
+        ikinci kez hatırlatma gitmez.
+      </p>
+      <Button
+        type="button"
+        size="lg"
+        disabled={taraniyor}
+        onClick={onCalistir}
+        className="w-full"
       >
-        <Button
-          type="button"
-          size="lg"
-          disabled={taraniyor}
-          onClick={onCalistir}
-        >
-          {taraniyor ? "Kontrol ediliyor…" : "Şimdi kontrol et"}
-        </Button>
-        {sonuc ? <TaramaOzeti sonuc={sonuc} /> : null}
-      </div>
-    </PanelBolumu>
+        {taraniyor ? "Kontrol ediliyor…" : "Şimdi kontrol et"}
+      </Button>
+      {sonuc ? <TaramaOzeti sonuc={sonuc} /> : null}
+    </YanKutu>
+  );
+}
+
+/** Yan sütun: hangi durumun kaç gün sonra takılmış sayıldığı. */
+export function TakilmaSureleri() {
+  return (
+    <YanKutu baslik="Takılma süreleri">
+      <dl className="flex flex-col gap-2 text-sm">
+        {TAKILMA_SURELERI.map((s) => (
+          <div key={s.ne} className="flex justify-between gap-3">
+            <dt className="text-muted-foreground">{s.ne}</dt>
+            <dd className="text-right font-medium text-ana">{s.sure}</dd>
+          </div>
+        ))}
+      </dl>
+    </YanKutu>
   );
 }
 
@@ -81,7 +93,7 @@ export function PasifBaglantilar({
     <PanelBolumu
       id="pasifler"
       baslik="Şu an takılanlar"
-      aciklama={`Süresi dolmuş ve hâlâ ilerlemeyen süreçler; en uzun süredir bekleyen en üstte. Bu listeyi açmak kimseye hatırlatma göndermez. ${TAKILMA_SURELERI}`}
+      aciklama="Süresi dolmuş ve hâlâ ilerlemeyen süreçler; en uzun süredir bekleyen en üstte. Bu listeyi açmak kimseye hatırlatma göndermez."
     >
       {pasifler === null ? null : pasifler.length === 0 ? (
         <BosDurum metin="Şu an takılan bir süreç yok." />
@@ -101,7 +113,7 @@ export function PasifBaglantilar({
 
 function PasifSatiri({ pasif }: { pasif: PasifBaglanti }) {
   return (
-    <li className="flex flex-col gap-1 px-5 py-4">
+    <li className={SATIR}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <DurumEtiketi metin={turEtiketi(pasif.tur)} />
         <span className="text-sm">
@@ -140,7 +152,7 @@ export function SonHatirlatmalar({
       ) : (
         <ul className={LISTE}>
           {olaylar.map((olay) => (
-            <li key={olay.id} className="flex flex-col gap-1 px-5 py-4">
+            <li key={olay.id} className={SATIR}>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <DurumEtiketi metin={turEtiketi(olay.tur)} />
                 <span className="text-sm">

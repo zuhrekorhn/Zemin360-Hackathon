@@ -7,6 +7,7 @@ import { BosDurum, PanelBolumu, tarihYaz } from "@/components/panel";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { KUTU } from "@/components/ui/yuzey";
 import {
   type IncelemeSatiri,
   girvakIncelemeKarari,
@@ -14,6 +15,7 @@ import {
   kanitDosyasiAdresi,
 } from "@/lib/api";
 import { type Hata, hatayaCevir } from "@/lib/hata";
+import { cn } from "@/lib/utils";
 import {
   ayrintiSatirlari,
   incelenecekBelgeler,
@@ -68,18 +70,21 @@ export function IncelemeKuyrugu() {
     <PanelBolumu
       id="inceleme"
       baslik="İncelemeler"
-      aciklama="Sistemin dikkat çektiği durumlar ve gençlerin talepleri. Hiçbir durum güven göstergesini kendiliğinden düşürmez; kararı siz verirsiniz ve genç sonucu bildirim olarak görür. “Sorun yok” incelemeyi kapatır; “Doğrulanamadı” ilgili çalışmayı doğrulanamadı olarak işaretler, genç bunu görür ve itiraz edebilir."
+      aciklama="Sistemin dikkat çektiği durumlar ve gençlerin talepleri. Kararı siz verirsiniz; genç sonucu bildirim olarak görür."
     >
       {hata ? <HataKutusu hata={hata} tekrarDene={() => void oku()} /> : null}
       {isaretler === null ? null : isaretler.length === 0 ? (
         <BosDurum metin="İncelenecek bir durum yok." />
       ) : (
-        <ul className="flex flex-col divide-y divide-kenar overflow-hidden rounded-xl border border-kenar bg-card">
+        <ul className="flex flex-col gap-3">
           {isaretler.map((isaret) => {
             const etiketler = kararEtiketleri(isaret.tur);
             const notAlani = `inceleme-notu-${isaret.id}`;
             return (
-              <li key={isaret.id} className="flex flex-col gap-2 px-4 py-3">
+              <li
+                key={isaret.id}
+                className={cn(KUTU, "flex flex-col gap-2 px-5 py-4")}
+              >
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-medium text-ana">
                     {turEtiketi(isaret.tur)}

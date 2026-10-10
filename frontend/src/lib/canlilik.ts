@@ -27,10 +27,16 @@ export function turEtiketi(tur: string): string {
 
 /**
  * Takılma süreleri (gün). Kaynak backend `canlilik_kurallari.ESIKLER`; orada
- * değişirse bu cümle de değişmeli (docs/canlilik.md § 1).
+ * değişirse bu liste de değişmeli (docs/canlilik.md § 1).
  */
-export const TAKILMA_SURELERI =
-  "Takılma süreleri: öneri 7 gün, ilgiye yanıt 3 gün, plan onayı 5 gün, iş birliği 14 gün; adım, hedef tarihinden bir gün sonra.";
+export const TAKILMA_SURELERI: { ne: string; sure: string }[] = [
+  { ne: "Bakılmayan öneri", sure: "7 gün" },
+  { ne: "Yanıtsız ilgi", sure: "3 gün" },
+  { ne: "Yanıtsız genç ilgisi", sure: "5 gün" },
+  { ne: "Onaylanmayan plan", sure: "5 gün" },
+  { ne: "İlerlemeyen iş birliği", sure: "14 gün" },
+  { ne: "Gecikmiş adım", sure: "hedeften 1 gün sonra" },
+];
 
 const ROL_ADLARI: Record<string, string> = { genc: "genç", kurum: "firma" };
 

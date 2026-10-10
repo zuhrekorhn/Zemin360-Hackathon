@@ -1,7 +1,12 @@
 "use client";
 
 import { EslesmeHunisi } from "@/components/girvak/huni";
-import { SayiGrubuBolumu } from "@/components/girvak/sayi-izgarasi";
+import { IkiSutun } from "@/components/girvak/iki-sutun";
+import {
+  SayiGrubuBolumu,
+  SayiYanKutusu,
+} from "@/components/girvak/sayi-izgarasi";
+import { YanKutu } from "@/components/genc-paneli";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { HataKutusu } from "@/components/sohbet";
 import { Button } from "@/components/ui/button";
@@ -12,9 +17,12 @@ import { useYukle } from "@/lib/yukle";
 
 export default function GirvakSayilar() {
   const { veri: sayilar, hata, yenile } = useYukle(girvakSayilari);
+  const gruplar = sayilar ? sayiGruplari(sayilar) : [];
+  const hesaplar = gruplar.find((g) => g.kimlik === "hesaplar");
+  const digerleri = gruplar.filter((g) => g.kimlik !== "hesaplar");
 
   return (
-    <Sayfa>
+    <Sayfa genislik="genis">
       <p className="hidden text-sm text-muted-foreground print:block">
         Zemin360 · GİRVAK raporu · {new Date().toLocaleDateString("tr-TR")}
       </p>
@@ -26,22 +34,32 @@ export default function GirvakSayilar() {
         <HataKutusu hata={hata} tekrarDene={() => void yenile()} />
       ) : null}
       {sayilar === null && !hata ? <ListeIskeleti satir={3} /> : null}
-      {sayilar ? <EslesmeHunisi adimlar={huniAdimlari(sayilar)} /> : null}
-      {sayilar
-        ? sayiGruplari(sayilar).map((grup) => (
-            <SayiGrubuBolumu key={grup.kimlik} grup={grup} />
-          ))
-        : null}
       {sayilar ? (
-        <div className="print:hidden">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => window.print()}
-          >
-            Raporu yazdır
-          </Button>
-        </div>
+        <IkiSutun
+          yan={
+            <>
+              {hesaplar ? <SayiYanKutusu grup={hesaplar} /> : null}
+              <YanKutu baslik="Rapor" className="print:hidden">
+                <p className="text-sm text-pretty text-muted-foreground">
+                  Bu sayfayı tarih başlığıyla yazdırabilir ya da PDF olarak
+                  kaydedebilirsiniz.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => window.print()}
+                >
+                  Raporu yazdır
+                </Button>
+              </YanKutu>
+            </>
+          }
+        >
+          <EslesmeHunisi adimlar={huniAdimlari(sayilar)} />
+          {digerleri.map((grup) => (
+            <SayiGrubuBolumu key={grup.kimlik} grup={grup} />
+          ))}
+        </IkiSutun>
       ) : null}
     </Sayfa>
   );
