@@ -1390,6 +1390,9 @@ export type GirvakSayilari = {
     ilgileniliyor: number;
     kabul_edildi: number;
     reddedildi: number;
+    /** Genç ilgi gösterdi, firmanın yanıtı bekleniyor. */
+    genc_ilgilendi: number;
+    kapandi: number;
   };
   isbirligi: number;
   /** `tamamlandi` = tamamlanmış iş birliği (program hedefi: 5). */

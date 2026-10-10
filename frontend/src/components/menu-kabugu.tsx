@@ -49,11 +49,14 @@ export function MenuKabugu({
           dugme.current?.focus();
         }
       }}
-      className="sticky top-0 z-40 border-b border-kenar bg-zemin"
+      className="sticky top-0 z-40 border-b border-kenar bg-zemin print:hidden"
     >
       <nav
         aria-label="Ana menü"
-        className={cn(GENIS_KAPSAYICI, "flex h-16 items-center gap-4 lg:h-[76px]")}
+        className={cn(
+          GENIS_KAPSAYICI,
+          "flex h-16 items-center gap-4 lg:h-[76px]",
+        )}
       >
         <Link
           href="/"

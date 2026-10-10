@@ -13,6 +13,47 @@ export type SayiGrubu = {
   ogeler: SayiOgesi[];
 };
 
+export type HuniAdimi = {
+  etiket: string;
+  sayi: number;
+  /** Çubuk genişliği, ilk adıma göre (0-100). */
+  genislik: number;
+  /** Bir önceki adıma göre yüzde; ilk adımda null. */
+  oncekineGore: number | null;
+};
+
+/**
+ * Eşleşmenin yolu: önerilen → iki tarafın da ilgilendiği → açılan iş birliği →
+ * tamamlanan. Öneri sayısı bütün eşleşme durumlarının toplamıdır (reddedilen ve
+ * kapananlar dahil: "kaç öneri yapıldı").
+ */
+export function huniAdimlari(s: GirvakSayilari): HuniAdimi[] {
+  const e = s.eslesme;
+  const oneri =
+    e.onerildi +
+    e.ilgileniliyor +
+    e.genc_ilgilendi +
+    e.kabul_edildi +
+    e.reddedildi +
+    e.kapandi;
+  const adimlar = [
+    { etiket: "Önerildi", sayi: oneri },
+    { etiket: "İki taraf da ilgilendi", sayi: e.kabul_edildi },
+    { etiket: "İş birliği açıldı", sayi: s.isbirligi },
+    { etiket: "Tamamlandı", sayi: s.isbirligi_durumlari.tamamlandi },
+  ];
+  return adimlar.map((a, i) => ({
+    ...a,
+    genislik: oneri > 0 ? Math.min(100, Math.round((a.sayi / oneri) * 100)) : 0,
+    oncekineGore:
+      i === 0
+        ? null
+        : adimlar[i - 1].sayi > 0
+          ? Math.min(100, Math.round((a.sayi / adimlar[i - 1].sayi) * 100))
+          : null,
+  }));
+}
+
 export function sayiGruplari(s: GirvakSayilari): SayiGrubu[] {
   return [
     {
