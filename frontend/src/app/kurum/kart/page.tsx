@@ -7,6 +7,7 @@ import { EtiketSatiri } from "@/components/kart";
 import { FirmaKartiFormAlanlari } from "@/components/firma-karti-formu";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
 import { OnayCubugu } from "@/components/onay-cubugu";
+import { DurumEtiketi } from "@/components/panel";
 import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import {
   CevapAlani,
@@ -364,9 +365,17 @@ function KartGorunumu({
       ) : null}
 
       <article className={cn(KUTU, "flex flex-col gap-5 px-6 py-6")}>
-        <h2 className="font-heading text-xl leading-snug font-semibold text-ana">
-          {kart.firma_adi}
-        </h2>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h2 className="font-heading text-xl leading-snug font-semibold text-ana">
+            {kart.firma_adi}
+          </h2>
+          {kart.tamamlanan_isbirligi ? (
+            <DurumEtiketi
+              metin={`${kart.tamamlanan_isbirligi} tamamlanan iş birliği`}
+              baglanti
+            />
+          ) : null}
+        </div>
         <p className="text-[15px] leading-relaxed text-pretty">
           {kart.ne_yapiyoruz}
         </p>

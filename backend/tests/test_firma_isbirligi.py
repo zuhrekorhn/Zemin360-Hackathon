@@ -136,6 +136,10 @@ def test_iki_firma_plani_onaylar_tamamlar_bonusa_girer():
         sayilar = await firma_tamamlanan_isbirligi_sayilari(d.oturum, [aday.kart.id])
         assert sayilar == {aday.kart.id: 1}
 
+        # Firmanın kendi kart sayfası da rozeti taşır; ilan sahibinin kartı yok (null).
+        kart = (await istemci.get("/kurum/kart", headers=aday.baslik)).json()
+        assert kart["tamamlanan_isbirligi"] == 1
+
     senaryo(adimlar)
 
 

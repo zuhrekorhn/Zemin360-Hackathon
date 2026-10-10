@@ -22,6 +22,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.agents.eslestirme import firma_tamamlanan_isbirligi_sayilari
 from app.agents.firma_karti import profil_baglami
 from app.agents.sohbet_motoru import HizSinirHatasi, kullanici_mesaji
 from app.api.kimlik import bulunamadi, rol_gerekli
@@ -55,7 +56,7 @@ TASLAK_HAZIR_DEGIL = "Taslağınız henüz hazır değil."
 TASLAK_EKSIK = "Kartta firmanın ne yaptığı ve en az bir yetkinlik olmalı."
 
 
-def kart_yaniti(kart: FirmaKarti) -> FirmaKartiYaniti:
+def kart_yaniti(kart: FirmaKarti, tamamlanan_isbirligi: int = 0) -> FirmaKartiYaniti:
     """`kart` kurumuyla yüklenmiş olmalı."""
     return FirmaKartiYaniti(
         id=kart.id,
@@ -69,7 +70,14 @@ def kart_yaniti(kart: FirmaKarti) -> FirmaKartiYaniti:
         versiyon=kart.versiyon,
         embedding_var=kart.embedding is not None,
         olusturma_tarihi=kart.olusturma_tarihi,
+        tamamlanan_isbirligi=tamamlanan_isbirligi,
     )
+
+
+async def kartin_yaniti(oturum: AsyncSession, kart: FirmaKarti) -> FirmaKartiYaniti:
+    """Kart yanıtı + tamamlanan iş birliği sayısı (kart sayfasındaki rozet)."""
+    sayilar = await firma_tamamlanan_isbirligi_sayilari(oturum, [kart.id])
+    return kart_yaniti(kart, sayilar.get(kart.id, 0))
 
 
 @router.get("", response_model=FirmaKartiYaniti | None)
@@ -79,7 +87,7 @@ async def kartim(
 ) -> FirmaKartiYaniti | None:
     """Firmanın kartı; yoksa `null` (kart isteğe bağlı, F9: hata değil)."""
     kart = await servis.kurumun_karti(oturum, hesap.kurum.id)
-    return kart_yaniti(kart) if kart else None
+    return await kartin_yaniti(oturum, kart) if kart else None
 
 
 @router.patch("", response_model=FirmaKartiYaniti)
@@ -105,7 +113,7 @@ async def karti_duzenle(
     if not degisenler:
         await oturum.rollback()  # kilidi bırak
         kart = await servis.kurumun_karti(oturum, kurum_id)
-        return kart_yaniti(kart)
+        return await kartin_yaniti(oturum, kart)
 
     kart.versiyon += 1
     yenile = servis.embedding_yenilenmeli_mi(degisenler)
@@ -118,7 +126,7 @@ async def karti_duzenle(
     if yenile:
         arka_plan.add_task(servis.firma_kartini_hazirla, kart_id, versiyon)
     kart = await servis.kurumun_karti(oturum, kurum_id)
-    return kart_yaniti(kart)
+    return await kartin_yaniti(oturum, kart)
 
 
 # --- Sohbet (docs/kararlar.md F3) ----------------------------------------------
@@ -201,7 +209,7 @@ async def onayla(
     onceki = await _oturumun_karti(oturum, istek.oturum_id)
     if onceki is not None:
         yanit.status_code = 200
-        return kart_yaniti(onceki)
+        return await kartin_yaniti(oturum, onceki)
     if await servis.kurumun_karti(oturum, kurum_id) is not None:
         raise HTTPException(status_code=409, detail=KART_VAR)
     if not mevcut.values.get("taslak_hazir"):
@@ -227,10 +235,10 @@ async def onayla(
         if onceki is None:
             raise HTTPException(status_code=409, detail=KART_VAR) from None
         yanit.status_code = 200
-        return kart_yaniti(onceki)
+        return await kartin_yaniti(oturum, onceki)
 
     arka_plan.add_task(servis.firma_kartini_hazirla, kart_id, 1)
-    return kart_yaniti(await servis.kurumun_karti(oturum, kurum_id))
+    return await kartin_yaniti(oturum, await servis.kurumun_karti(oturum, kurum_id))
 
 
 async def _oturumun_karti(oturum: AsyncSession, oturum_id: uuid.UUID) -> FirmaKarti | None:

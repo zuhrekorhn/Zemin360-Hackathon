@@ -85,6 +85,8 @@ class FirmaKartiYaniti(BaseModel):
     # Eşleştirmeye hazır mı (arka plan hazırlığı bitti mi)?
     embedding_var: bool
     olusturma_tarihi: dt.datetime
+    # Aday olarak tamamladığı iş birliği sayısı (hesaplanır; kart sayfasında rozet).
+    tamamlanan_isbirligi: int = 0
 
 
 class FirmaKartiTaslagi(BaseModel):

@@ -309,6 +309,8 @@ export type FirmaKartiYaniti = FirmaKartiGirdisi & {
   /** Eşleştirmeye hazır mı (arka plan hazırlığı bitti mi)? */
   embedding_var: boolean;
   olusturma_tarihi: string;
+  /** Aday olarak tamamladığı iş birliği sayısı; kart sayfasında rozet. */
+  tamamlanan_isbirligi?: number;
 };
 
 export type FirmaKartiTaslagi = {
