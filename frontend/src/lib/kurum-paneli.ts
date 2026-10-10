@@ -36,6 +36,27 @@ export function kurumBekleyenleri(
   };
 }
 
+/**
+ * İhtiyaç başına tamamlanan iş birliği sayısı (iş birliği → eşleşme → ihtiyaç).
+ * İhtiyaç, bir iş birliği tamamlansa da kendiliğinden kapanmaz (daha fazla ortak
+ * gerekebilir); kart bunu söyler ve kapatmayı hatırlatır.
+ */
+export function tamamlananIsbirligiSayilari(
+  oneriler: KurumOnerisi[],
+  isbirlikleri: IsbirligiOzeti[],
+): Record<string, number> {
+  const ihtiyacBasina = new Map(
+    oneriler.map((o) => [o.eslesme_id, o.ihtiyac_karti_id]),
+  );
+  const sayilar: Record<string, number> = {};
+  for (const isbirligi of isbirlikleri) {
+    if (isbirligi.durum !== "tamamlandi") continue;
+    const ihtiyac = ihtiyacBasina.get(isbirligi.eslesme_id);
+    if (ihtiyac) sayilar[ihtiyac] = (sayilar[ihtiyac] ?? 0) + 1;
+  }
+  return sayilar;
+}
+
 export function kurumBekleyenSayisi(b: KurumBekleyenleri): number {
   return b.ilgiler.length + b.planlar.length + b.gecikenler.length;
 }

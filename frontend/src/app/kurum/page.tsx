@@ -18,7 +18,7 @@ import {
   AdayListesi,
   FirmaOzeti,
   IhtiyacKarti,
-  KapananIhtiyaclar,
+  KapaliBolum,
   IlgiGosterenKarti,
   YeniIhtiyacMenusu,
 } from "@/components/kurum-paneli";
@@ -40,6 +40,7 @@ import {
   kurumBekleyenSayisi,
   kurumBekleyenleri,
   kurumOzetCumlesi,
+  tamamlananIsbirligiSayilari,
 } from "@/lib/kurum-paneli";
 import { useOturum } from "@/lib/oturum";
 import { useSekmeBasligi } from "@/lib/sekme-basligi";
@@ -106,16 +107,30 @@ function KurumPaneliIcerigi() {
   const bekleyen = kurumBekleyenleri(oneriler ?? [], isbirlikleri ?? []);
   const bekleyenAdet = kurumBekleyenSayisi(bekleyen);
   const sayilar = ihtiyacSayilari(oneriler ?? []);
+  const tamamlananlar = tamamlananIsbirligiSayilari(
+    oneriler ?? [],
+    isbirlikleri ?? [],
+  );
   const adaySayisi = oneriler
     ? Object.values(sayilar).reduce((toplam, s) => toplam + s.aday, 0)
     : null;
   const ad = hesap.ad ?? "Firma paneli";
 
+  const surenIsbirlikleri = isbirligiSirasi(
+    (isbirlikleri ?? []).filter((i) => i.durum !== "tamamlandi"),
+  );
+  const biten = isbirligiSirasi(
+    (isbirlikleri ?? []).filter((i) => i.durum === "tamamlandi"),
+  );
+  const isbirligiSatiri = (isbirligi: (typeof surenIsbirlikleri)[number]) => (
+    <IsbirligiSatiri key={isbirligi.isbirligi_id} isbirligi={isbirligi} />
+  );
   const ihtiyacSatiri = (kart: (typeof kartlar)[number]) => (
     <IhtiyacKarti
       key={kart.id}
       kart={kart}
       sayi={sayilar[kart.id]}
+      tamamlanan={tamamlananlar[kart.id] ?? 0}
       kapatiliyor={kapatilan === kart.id}
       onDuzenle={() => setDuzenlenen(kart.id)}
       onKapatmaAc={() => setKapatilan(kart.id)}
@@ -243,9 +258,12 @@ function KurumPaneliIcerigi() {
                 </ul>
               )}
               {kapaliKartlar.length > 0 ? (
-                <KapananIhtiyaclar sayi={kapaliKartlar.length}>
+                <KapaliBolum
+                  baslik="Kapanan ihtiyaçlar"
+                  sayi={kapaliKartlar.length}
+                >
                   {kapaliKartlar.map(ihtiyacSatiri)}
-                </KapananIhtiyaclar>
+                </KapaliBolum>
               ) : null}
             </section>
           ) : null}
@@ -280,14 +298,26 @@ function KurumPaneliIcerigi() {
                 }
               />
             ) : (
-              <ul className="flex flex-col gap-4">
-                {isbirligiSirasi(isbirlikleri).map((isbirligi) => (
-                  <IsbirligiSatiri
-                    key={isbirligi.isbirligi_id}
-                    isbirligi={isbirligi}
-                  />
-                ))}
-              </ul>
+              <>
+                {surenIsbirlikleri.length > 0 ? (
+                  <ul className="flex flex-col gap-4">
+                    {surenIsbirlikleri.map(isbirligiSatiri)}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Şu an süren bir iş birliğiniz yok.
+                  </p>
+                )}
+                {biten.length > 0 ? (
+                  <KapaliBolum
+                    baslik="Tamamlanan iş birlikleri"
+                    sayi={biten.length}
+                    acik={surenIsbirlikleri.length === 0}
+                  >
+                    {biten.map(isbirligiSatiri)}
+                  </KapaliBolum>
+                ) : null}
+              </>
             )}
           </section>
         </div>

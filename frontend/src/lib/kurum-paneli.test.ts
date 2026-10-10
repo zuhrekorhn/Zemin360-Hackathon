@@ -9,6 +9,7 @@ import {
   kurumBekleyenleri,
   kurumOzetCumlesi,
   sayimMetni,
+  tamamlananIsbirligiSayilari,
 } from "@/lib/kurum-paneli";
 
 const oneri = (
@@ -145,5 +146,24 @@ describe("kurumOzetCumlesi", () => {
     expect(kurumOzetCumlesi(2, 1, 4)).toBe("Yanıtınızı bekleyen 2 iş var.");
     expect(kurumOzetCumlesi(0, 1, 4)).toBe("İhtiyaçlarınıza uyan 4 aday var.");
     expect(kurumOzetCumlesi(0, 1, 0)).toMatch(/burada/);
+  });
+});
+
+describe("tamamlananIsbirligiSayilari", () => {
+  it("yalnızca tamamlanan iş birliklerini ihtiyaç başına sayar", () => {
+    const sayilar = tamamlananIsbirligiSayilari(
+      [
+        oneri("e1", "kabul_edildi", "2026-10-01", "i1"),
+        oneri("e2", "kabul_edildi", "2026-10-02", "i1"),
+        oneri("e3", "kabul_edildi", "2026-10-03", "i2"),
+      ],
+      [
+        { ...isbirligi("a", "tamamlandi"), eslesme_id: "e1" },
+        { ...isbirligi("b", "tamamlandi"), eslesme_id: "e2" },
+        { ...isbirligi("c", "aktif"), eslesme_id: "e3" },
+        { ...isbirligi("d", "tamamlandi"), eslesme_id: "bilinmeyen" },
+      ],
+    );
+    expect(sayilar).toEqual({ i1: 2 });
   });
 });

@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { BekleyenKabi, YanKutu } from "@/components/genc-paneli";
 import { IlanKapatma } from "@/components/ilan-kapatma";
@@ -140,6 +140,7 @@ export function IlgiGosterenKarti({ oneri }: { oneri: KurumOnerisi }) {
 export function IhtiyacKarti({
   kart,
   sayi,
+  tamamlanan = 0,
   kapatiliyor,
   onDuzenle,
   onKapatmaAc,
@@ -148,6 +149,8 @@ export function IhtiyacKarti({
 }: {
   kart: IhtiyacKartiOzeti;
   sayi: IhtiyacSayilari | undefined;
+  /** Bu ihtiyaçtan tamamlanan iş birliği sayısı. */
+  tamamlanan?: number;
   kapatiliyor: boolean;
   onDuzenle: () => void;
   onKapatmaAc: () => void;
@@ -155,7 +158,13 @@ export function IhtiyacKarti({
   onKapandi: () => void;
 }) {
   const kapali = ilanKapali(kart);
-  const sayim = sayimMetni(sayi);
+  const sayimParcasi = sayimMetni(sayi);
+  const sayim =
+    tamamlanan > 0
+      ? [sayimParcasi, `${tamamlanan} tamamlanan iş birliği`]
+          .filter(Boolean)
+          .join(" · ")
+      : sayimParcasi;
   const aranan = arananEtiketi(kart.aranan);
   return (
     <li
@@ -197,6 +206,12 @@ export function IhtiyacKarti({
           <p className="line-clamp-2 text-sm leading-relaxed text-pretty text-muted-foreground">
             <span className="font-medium text-metin">Başarı ölçütü: </span>
             {kart.basari_kriteri}
+          </p>
+        ) : null}
+        {tamamlanan > 0 && !kapali ? (
+          <p className="rounded-lg bg-baglanti/[0.08] px-3 py-2 text-sm text-pretty">
+            Bu ihtiyaç için bir iş birliği tamamlandı. İhtiyaç çözüldüyse “⋯”
+            menüsünden kapatabilirsiniz.
           </p>
         ) : null}
       </div>
@@ -301,35 +316,40 @@ export function YeniIhtiyacMenusu() {
 }
 
 /**
- * Kapanan ihtiyaçlar: kapanan ilan tekrar açılmaz (docs/kararlar.md F7) ama
- * geçmişi görülebilsin. Panel yalnızca açık ihtiyaçları gösterir; kapananlar
- * varsayılan olarak kapalı bu bölümde durur.
+ * Açılır bölüm: panelde yalnızca güncel işler görünür, biten kayıtlar (kapanan
+ * ihtiyaçlar, tamamlanan iş birlikleri) başlığın arkasında durur ve geçmişe
+ * erişim korunur. `acik`: ilk durum (güncel iş kalmadıysa bitenler açık gelir).
  */
-export function KapananIhtiyaclar({
+export function KapaliBolum({
+  baslik,
   sayi,
+  acik: ilkDurum = false,
   children,
 }: {
+  baslik: string;
   sayi: number;
+  acik?: boolean;
   children: React.ReactNode;
 }) {
-  const [acik, setAcik] = useState(false);
+  const [acik, setAcik] = useState(ilkDurum);
+  const listeId = useId();
   return (
-    <section aria-label="Kapanan ihtiyaçlar" className="flex flex-col gap-4">
+    <section aria-label={baslik} className="flex flex-col gap-4">
       <button
         type="button"
         aria-expanded={acik}
-        aria-controls="kapanan-ihtiyaclar"
+        aria-controls={listeId}
         onClick={() => setAcik((onceki) => !onceki)}
         className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-muted-foreground outline-none hover:text-metin focus-visible:ring-3 focus-visible:ring-baglanti/40"
       >
-        Kapanan ihtiyaçlar ({sayi})
+        {baslik} ({sayi})
         <ChevronDown
           aria-hidden="true"
           className={cn("size-4 transition-transform", acik && "rotate-180")}
         />
       </button>
       {acik ? (
-        <ul id="kapanan-ihtiyaclar" className="flex flex-col gap-4">
+        <ul id={listeId} className="flex flex-col gap-4">
           {children}
         </ul>
       ) : null}
