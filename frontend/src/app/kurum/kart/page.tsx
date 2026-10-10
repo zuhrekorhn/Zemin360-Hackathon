@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { EtiketSatiri } from "@/components/kart";
 import { FirmaKartiFormAlanlari } from "@/components/firma-karti-formu";
 import { GirisKapisi, useGirisliHesap } from "@/components/giris-kapisi";
+import { OnayCubugu } from "@/components/onay-cubugu";
 import { Sayfa, SayfaBasligi, SayfaDurumu } from "@/components/sayfa";
 import {
   CevapAlani,
@@ -252,12 +253,20 @@ function TaslakOnayi({
         baslik="Kartınızı gözden geçirin"
         aciklama="Sohbetten çıkan kart bu. Yanlış anlaşılan bir şey varsa düzeltin; doğruysa onaylayın. Kartınız siz onaylamadan kaydedilmez."
       />
-      <form className="flex flex-col gap-5" onSubmit={onayla}>
-        <FirmaKartiFormAlanlari form={form} onDegis={setForm} />
+      <form className="flex flex-col gap-8" onSubmit={onayla}>
+        <section className={cn(KUTU, "flex flex-col gap-4 px-5 py-5")}>
+          <h2 className="font-heading text-xl font-semibold text-ana">
+            Firma kartı
+          </h2>
+          <FirmaKartiFormAlanlari form={form} onDegis={setForm} />
+        </section>
         {hata ? <HataKutusu hata={hata} /> : null}
-        <Button type="submit" size="lg" disabled={bekleniyor} className="w-fit">
-          {bekleniyor ? "Kaydediliyor…" : "Kartı onayla"}
-        </Button>
+        {/* Onay her zaman görünür: uzun formda sayfanın sonuna inmek gerekmesin. */}
+        <OnayCubugu
+          metin="Doğruysa onaylayın; kartınız kaydedilir ve iş birliği ortağı arayan firmalara aday olarak önerilir. Sonra istediğiniz zaman düzenleyebilirsiniz. E-postanız kartta görünmez."
+          etiket="Kartı onayla"
+          bekleniyor={bekleniyor}
+        />
       </form>
     </Sayfa>
   );
