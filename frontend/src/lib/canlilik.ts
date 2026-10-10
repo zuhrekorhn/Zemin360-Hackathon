@@ -48,14 +48,3 @@ export function pasifSureMetni(tur: string, gun: number): string {
     ? `hedef tarihi ${gun} gün geçti`
     : `${gun} gündür ilerleme yok`;
 }
-
-/** Hedef ilerlemesi 0-100 (hedef aşıldıysa 100'de durur; çizgi taşmasın). */
-export function hedefYuzdesi(sayi: number, hedef: number): number {
-  if (hedef <= 0) return 0;
-  return Math.min(100, Math.round((sayi / hedef) * 100));
-}
-
-/** "80 startup başvurusu" — programın kendi adıyla hedef. */
-export function hedefBasligi(hedef: number, programAdi: string): string {
-  return `${hedef} ${programAdi}`;
-}

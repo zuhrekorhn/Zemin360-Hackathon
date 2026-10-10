@@ -1402,7 +1402,6 @@ export type GirvakSayilari = {
     tamamlandi: number;
   };
   /** Programın adı + platformda ne sayıldığı (fark gizlenmez). */
-  hedefler: ProgramHedefi[];
   /** Firma akışı: kapanan ilanlar, firmanın seçtiği nedene göre. */
   kapanan_ihtiyaclar: {
     platformda_bulundu: number;
@@ -1420,14 +1419,6 @@ export type TurSayilari = {
   karsilikli_ilgi: number;
   isbirligi: number;
   tamamlanan: number;
-};
-
-export type ProgramHedefi = {
-  anahtar: "basvuru" | "kurum" | "eslesme" | "pilot";
-  program_adi: string;
-  olcum: string;
-  sayi: number;
-  hedef: number;
 };
 
 /** GİRVAK'ın firma doğrulama listesi (docs/kararlar.md F6). */

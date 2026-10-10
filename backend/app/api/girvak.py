@@ -3,8 +3,8 @@
 Firma akışı: firma doğrulaması (docs/kararlar.md F6). GİRVAK'ın
 yazabildiği tek şey doğrulama kararı.
 
-Sayılar (hesap, kart, eşleşme, iş birliği) ve program hedefleri
-(docs/canlilik.md § 7). Kişisel veri dönmez, yalnızca sayım.
+Sayılar (hesap, kart, eşleşme, iş birliği; docs/canlilik.md § 7). Kişisel veri
+dönmez, yalnızca sayım. Altı ihtiyaç alanı özeti: `girvak_ozet.py`.
 """
 
 from __future__ import annotations
@@ -33,21 +33,18 @@ from app.agents.takip_durumu import (
 from app.agents.uygunluk import gorunur_kosulu
 from app.api.kimlik import bulunamadi, rol_gerekli
 from app.core import firma_dogrulama
-from app.core.program import HEDEFLER
 from app.db.session import get_session
 from app.models.bildirim import TUR_FIRMA_DOGRULANDI
 from app.models.eslesme import Eslesme
 from app.models.hesap import ROL_GENC, ROL_GIRVAK, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
 from app.models.isbirligi import Isbirligi
-from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.girvak import (
     EslesmeKirilimi,
     EslesmeSayilari,
     FirmaDogrulamaIstegi,
-    HedefSayisi,
     HesapSayilari,
     IsbirligiSayilari,
     KapananIhtiyaclar,
@@ -100,7 +97,6 @@ async def sayilar(
             aktif=isbirlikleri.get(ISBIRLIGI_AKTIF, 0),
             tamamlandi=isbirlikleri.get(ISBIRLIGI_TAMAMLANDI, 0),
         ),
-        hedefler=await hedef_sayilari(oturum, durumlar, isbirlikleri),
         kapanan_ihtiyaclar=await kapanan_ihtiyaclar(oturum),
         kirilim=await eslesme_kirilimi(oturum),
     )
@@ -140,42 +136,6 @@ async def kapanan_ihtiyaclar(oturum: AsyncSession) -> KapananIhtiyaclar:
     )
     nedenler = {neden or "nedensiz": sayi for neden, sayi in satirlar.all()}
     return KapananIhtiyaclar(**nedenler)
-
-
-async def hedef_sayilari(
-    oturum: AsyncSession, eslesme_durumlari: dict[str, int], isbirligi_durumlari: dict[str, int]
-) -> list[HedefSayisi]:
-    """Program hedefleri, platformdaki ölçümleriyle (docs/canlilik.md § 7).
-
-    Yalnızca hesabı olan profiller sayılır (hesapsız profil programın
-    katılımcısı değil).
-    """
-    basvuru = await oturum.scalar(
-        select(func.count(func.distinct(YetenekKarti.kullanici_id)))
-        .join(Kullanici, Kullanici.id == YetenekKarti.kullanici_id)
-        .where(Kullanici.hesap_id.isnot(None))
-    )
-    kurum = await oturum.scalar(
-        select(func.count(func.distinct(IhtiyacKarti.kurum_id)))
-        .join(Kurum, Kurum.id == IhtiyacKarti.kurum_id)
-        .where(Kurum.hesap_id.isnot(None))
-    )
-    sayilar = {
-        "basvuru": basvuru,
-        "kurum": kurum,
-        "eslesme": eslesme_durumlari.get(DURUM_KABUL_EDILDI, 0),
-        "pilot": isbirligi_durumlari.get(ISBIRLIGI_TAMAMLANDI, 0),
-    }
-    return [
-        HedefSayisi(
-            anahtar=h.anahtar,
-            program_adi=h.program_adi,
-            olcum=h.olcum,
-            sayi=sayilar[h.anahtar],
-            hedef=h.hedef,
-        )
-        for h in HEDEFLER
-    ]
 
 
 # --- Firma doğrulaması (docs/kararlar.md F6) -------------------

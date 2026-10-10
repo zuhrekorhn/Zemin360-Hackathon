@@ -45,7 +45,7 @@ class TurSayilari(BaseModel):
 class EslesmeKirilimi(BaseModel):
     """Toplam sayıların eşleşme türüne göre kırılımı (docs/kararlar.md F19).
 
-    Toplamlar (`eslesme`, `isbirligi_durumlari`, hedefler) iki türü birlikte sayar.
+    Toplamlar (`eslesme`, `isbirligi_durumlari`) iki türü birlikte sayar.
     """
 
     genc_firma: TurSayilari = TurSayilari()
@@ -66,26 +66,14 @@ class KapananIhtiyaclar(BaseModel):
     nedensiz: int = 0
 
 
-class HedefSayisi(BaseModel):
-    """Program hedefi: programın adı + platformda ne sayıldığı (fark gizlenmez)."""
-
-    anahtar: str
-    program_adi: str
-    olcum: str
-    sayi: int
-    hedef: int
-
-
 class Sayilar(BaseModel):
     hesap: HesapSayilari
     yetenek_karti: int
     ihtiyac_karti: int
     eslesme: EslesmeSayilari
     isbirligi: int
-    # Duruma göre; `tamamlandi` = tamamlanmış iş birliği (program hedefi: 5).
+    # Duruma göre; `tamamlandi` = tamamlanmış iş birliği.
     isbirligi_durumlari: IsbirligiSayilari
-    # Program hedefleri (app/core/program.py), sabit sırayla.
-    hedefler: list[HedefSayisi]
     # Firma akışı: kapanan ilanlar nedenleriyle ve eşleşme türüne göre kırılım.
     kapanan_ihtiyaclar: KapananIhtiyaclar = KapananIhtiyaclar()
     kirilim: EslesmeKirilimi = EslesmeKirilimi()

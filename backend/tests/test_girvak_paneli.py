@@ -11,59 +11,12 @@ import datetime as dt
 from sqlalchemy import func, select
 
 from app.api import canlilik as canlilik_api
-from app.core.program import HEDEFLER
 from app.models.canlilik_olayi import CanlilikOlayi
-from app.models.ihtiyac_karti import IhtiyacKarti
-from app.models.yetenek_karti import YetenekKarti
-from tests.test_sahiplik import _hesap, durumlar, senaryo
-from tests.test_takip_isaret import aktif_isbirligi
+from tests.test_sahiplik import durumlar, senaryo
 
 
 def _simdi():
     return dt.datetime.now(dt.UTC)
-
-
-def test_program_hedefleri_iki_parcali_etiket_ve_olcum():
-    async def adimlar(istemci, d):
-        once = {
-            h["anahtar"]: h
-            for h in (await istemci.get("/girvak/sayilar", headers=d.girvak.baslik)).json()[
-                "hedefler"
-            ]
-        }
-        assert [h.anahtar for h in HEDEFLER] == ["basvuru", "kurum", "eslesme", "pilot"]
-        assert [once[h.anahtar]["hedef"] for h in HEDEFLER] == [80, 20, 10, 5]
-        assert once["basvuru"]["program_adi"] == "startup başvurusu"
-        assert once["basvuru"]["olcum"] == "yetenek kartı oluşturan genç"
-
-        # Kartı olmayan genç başvuru sayılmaz; kartı olan sayılır (gencin tek
-        # kartı var: yetenek_karti.kullanici_id tekil).
-        kartsiz = await _hesap(d.oturum, "genc", "Kartsız")
-        kartli = await _hesap(d.oturum, "genc", "Kartlı")
-        d.oturum.add(
-            YetenekKarti(kullanici_id=kartli.profil.id, rol_alani="r", deneyim_seviyesi="orta")
-        )
-        # İhtiyaç kartı olan kurum sayılır.
-        kurum = await _hesap(d.oturum, "kurum", "Yeni Koop")
-        d.oturum.add(IhtiyacKarti(kurum_id=kurum.profil.id, problem_tanimi="p"))
-        # Pilot: tamamlanmış iş birliği; eşleşme: kabul edilmiş.
-        isb = await aktif_isbirligi(d, adimlar=1)
-        isb.durum = "tamamlandi"
-        await d.oturum.commit()
-        assert kartsiz.profil.id  # kullanıldı
-
-        sonra = {
-            h["anahtar"]: h["sayi"]
-            for h in (await istemci.get("/girvak/sayilar", headers=d.girvak.baslik)).json()[
-                "hedefler"
-            ]
-        }
-        assert sonra["basvuru"] == once["basvuru"]["sayi"] + 1
-        assert sonra["kurum"] == once["kurum"]["sayi"] + 1
-        assert sonra["eslesme"] == once["eslesme"]["sayi"] + 1  # E1 kabul_edildi
-        assert sonra["pilot"] == once["pilot"]["sayi"] + 1
-
-    senaryo(adimlar)
 
 
 def test_pasifler_okuma_aninda_hicbir_sey_yazmaz():
