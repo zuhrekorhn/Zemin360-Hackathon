@@ -1,24 +1,25 @@
 "use client";
 
+import { AlanKartiOgesi } from "@/components/girvak/alan-karti";
 import { BekleyenlerKutusu } from "@/components/girvak/bekleyenler";
-import { HedefKarti } from "@/components/girvak/hedef-karti";
 import { PanelBolumu } from "@/components/panel";
 import { Sayfa, SayfaBasligi } from "@/components/sayfa";
 import { HataKutusu } from "@/components/sohbet";
 import { ListeIskeleti } from "@/components/ui/iskelet";
-import { girvakSayilari } from "@/lib/api";
+import { girvakOzet } from "@/lib/api";
+import { alanKartlari } from "@/lib/girvak";
 import { useYukle } from "@/lib/yukle";
 
 /**
- * GİRVAK genel bakışı (docs/canlilik.md § 7): önce sizi bekleyen kararlar, sonra
- * program hedefleri programın kendi adıyla ve platformda neyi saydığımızla; aradaki
- * fark gizlenmez. Ayrıntılar menüdeki öteki sayfalarda. Kişisel veri yalnızca ad.
+ * GİRVAK özeti (docs/canlilik.md § 7): önce sizi bekleyen kararlar, sonra
+ * programın altı ihtiyaç alanı için Zemin360'ın durumu, brifteki adlarıyla.
+ * Uydurma hedef yok; yalnızca gerçek sayılar. Kişisel veri yalnızca ad.
  */
-export default function GirvakGenelBakis() {
-  const { veri: sayilar, hata, yenile } = useYukle(girvakSayilari);
+export default function GirvakOzet() {
+  const { veri: ozet, hata, yenile } = useYukle(girvakOzet);
 
   return (
-    <Sayfa>
+    <Sayfa genislik="genis">
       <SayfaBasligi
         baslik="Özet"
         aciklama="Programın nerede olduğunu ve sizden bekleyen kararları buradan görürsünüz. Kişisel bilgi olarak yalnızca ad görünür; e-posta adresleri size hiç gösterilmez."
@@ -29,17 +30,17 @@ export default function GirvakGenelBakis() {
       {hata ? (
         <HataKutusu hata={hata} tekrarDene={() => void yenile()} />
       ) : null}
-      {sayilar === null && !hata ? <ListeIskeleti satir={3} /> : null}
+      {ozet === null && !hata ? <ListeIskeleti satir={3} /> : null}
 
-      {sayilar ? (
+      {ozet ? (
         <PanelBolumu
-          id="hedefler"
-          baslik="Program hedefleri"
-          aciklama="Hedefler programın kendi adlarıyla yazıldı. Her kartın altında Zemin360'ın bu hedef için neyi saydığı yazıyor; programın tanımıyla birebir aynı olmayabilir."
+          id="alanlar"
+          baslik="Altı ihtiyaç alanı"
+          aciklama="Programın altı ihtiyaç alanı için Zemin360'ın şu anki durumu. Her kartın altındaki bağlantı ayrıntıya götürür."
         >
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {sayilar.hedefler.map((hedef) => (
-              <HedefKarti key={hedef.anahtar} hedef={hedef} />
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {alanKartlari(ozet).map((alan) => (
+              <AlanKartiOgesi key={alan.no} alan={alan} />
             ))}
           </ul>
         </PanelBolumu>

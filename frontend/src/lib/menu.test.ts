@@ -60,11 +60,11 @@ describe("menuBaglantilari", () => {
       baglantilar: [
         { yol: "/girvak", etiket: "Özet" },
         { yol: "/girvak/kararlar", etiket: "Karar bekleyenler" },
+        { yol: "/girvak/isbirlikleri", etiket: "İş birlikleri" },
         { yol: "/girvak/canlilik", etiket: "Takılan süreçler" },
-        { yol: "/girvak/gozlem", etiket: "Sistem durumu" },
         { yol: "/girvak/sayilar", etiket: "Sayılar" },
       ],
-      ayar: null,
+      ayar: { yol: "/girvak/gozlem", etiket: "Sistem durumu" },
     });
   });
 });

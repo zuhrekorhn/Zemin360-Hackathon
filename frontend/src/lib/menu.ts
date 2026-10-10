@@ -54,10 +54,11 @@ export function menuBaglantilari(
     baglantilar: [
       { yol: panelYolu(hesap.rol), etiket: "Özet" },
       { yol: "/girvak/kararlar", etiket: "Karar bekleyenler" },
+      { yol: "/girvak/isbirlikleri", etiket: "İş birlikleri" },
       { yol: "/girvak/canlilik", etiket: "Takılan süreçler" },
-      { yol: "/girvak/gozlem", etiket: "Sistem durumu" },
       { yol: "/girvak/sayilar", etiket: "Sayılar" },
     ],
-    ayar: null,
+    // Teknik sayfa ana menüde değil, hesap menüsünde (yalnızca bakım için).
+    ayar: { yol: "/girvak/gozlem", etiket: "Sistem durumu" },
   };
 }
