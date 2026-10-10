@@ -76,6 +76,23 @@ Her kavramın **tek** adı var. "Kullanma" sütunundaki karşılıklar kullanıc
 | Plan önerisi | **plan önerisi** | Takip Ajanı'nın planı, ajandan plan | "Platform bir plan önerir" |
 | Hatırlatmalar | **hatırlatma** | Canlılık Ajanı, canlılık olayı | |
 
+### GİRVAK terimleri
+
+GİRVAK programı yöneten, teknik olmayan kişidir; hitap "siz". Panele üç soruyla girer: program nasıl
+gidiyor, benden ne bekleniyor, nerede takılma var. Her cümle iç terim içermez, her karar düğmesinin
+sonucu yazar, her sayının neyi saydığı yazar (`girvak-metin-taslagi.md`).
+
+| Kavram | Kullan | Kullanma | Not |
+|---|---|---|---|
+| Sistemin kontrol edilmesini istediği kayıt | **inceleme** | işaret, sinyal, kuyruk | Menüde "Karar bekleyenler" altında "İncelemeler" |
+| Cevapsız ya da ilerlemeden duran süreç | **takılan süreç** | pasif bağlantı, hareketsiz kayıt, canlılık | Sayfa: "Takılan süreçler" |
+| Takılanlara hatırlatma gönderen işlem | **kontrol** ("Şimdi kontrol et") | tarama, zamanlanmış görev, canlıda | |
+| E-posta adresi ile web sitesinin eşleşmesi | **e-posta adresi web sitesiyle uyuşuyor** | ipucu (tek başına), e-posta uzantısı, alan adı | İpucu yalnızca bir öneridir, karar GİRVAK'ın |
+| Dış servislerin durumu | **sistem durumu** | gözlem, servis kipi, erişilebilirlik | Kapalı servis sorun değildir |
+| İhtiyacın nasıl kapandığı | **Zemin360'ta bulundu** | platformda bulundu | |
+| Programın hedefi için sayılan şey | **Sayılan:** … | Platformda: … | Hedef programın kendi adıyla, altında Zemin360'ın ölçtüğü |
+| Zemin360'ın kendisi (GİRVAK metinlerinde) | **Zemin360** | platform | Genç ve firma metinlerindeki "platform" kullanımı değişmedi |
+
 ### Kullanıcıya hiç gösterilmeyen kelimeler
 
 ajan · pipeline · embedding · vektör · rubrik · skor · eşik · token · checkpoint · LLM · model (yapay zekâ modeli anlamında) · oturum (sohbet anlamında) · faz · HTTP kodları (404, 409, 422…) · veritabanı alan adları (`onerildi`, `kanit_bekleyen` vb.)
