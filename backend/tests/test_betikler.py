@@ -18,12 +18,13 @@ from app.core.kimlik import sifre_dogru_mu
 from app.db.base import EMBEDDING_DIM
 from app.models.hesap import Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
+from app.models.isbirligi import Isbirligi
 from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.auth import GirisIstegi
 from app.servisler import embedding as embedding_servisi
-from scripts import demo_hesaplari, yerel_sifirla
+from scripts import demo_hesaplari, demo_zenginlestir, yerel_sifirla
 from tests.veritabani import geri_alinan_oturum
 
 # --- yerel_sifirla -----------------------------------------------------------------------
@@ -251,3 +252,53 @@ def test_demo_firmalari_birbirine_uyar():
     for profil in (girisim, demo_hesaplari.KURUMSAL_PROFILI, demo_hesaplari.KURUM_PROFILI):
         assert eksik_firma_alanlari(tur=profil.tur, sektor=profil.sektor, sehir=profil.sehir) == []
     assert alan_adi_ipucu(demo_hesaplari.GIRISIM_EPOSTA, girisim.web_sitesi) == UYUSUYOR
+
+
+def test_demo_zenginlestir_kendi_kendine_yeter_isbirliklerini_kurar_tekrarda_eklemez(monkeypatch):
+    """Zenginleştirme yalnızca demo_hesaplari'na dayanır: Soğuk Lojistik hesabını kendisi açar
+    (eskiden bu hesap hiçbir betikte açılmıyordu, temiz veritabanında "hesap yok" diye duruyordu).
+    Üç iş birliği tohumu: tamamlanmış genç–firma, tamamlanmış firma–firma, gecikmiş adımlı süren.
+    Yerel veritabanında demo verisi zaten olabilir: iş birliği ve hesap varlığı doğrulanır."""
+    monkeypatch.setattr(
+        demo_zenginlestir,
+        "SOGUK_LOJISTIK_EPOSTA",
+        f"soguk-{uuid.uuid4().hex[:8]}@soguklojistik.example",
+    )
+    vektor = [0.0] * EMBEDDING_DIM
+    vektor[7] = 1.0
+
+    async def sahte_embedding(_metin, girdi_turu="document"):
+        return vektor
+
+    monkeypatch.setattr(embedding_servisi, "embedding_uret", sahte_embedding)
+
+    async def sahte_pipeline(_oturum, _ilan):
+        return []  # model çağrısı yok; sıralama gerçek veritabanı ve modelle denenir
+
+    monkeypatch.setattr(demo_zenginlestir, "pipeline_calistir", sahte_pipeline)
+
+    async def senaryo():
+        async with geri_alinan_oturum() as oturum:
+
+            @contextlib.asynccontextmanager
+            async def ayni_oturum():
+                yield oturum
+
+            monkeypatch.setattr(demo_hesaplari, "get_sessionmaker", lambda: ayni_oturum)
+            monkeypatch.setattr(demo_zenginlestir, "get_sessionmaker", lambda: ayni_oturum)
+
+            await demo_hesaplari.demo_ac("yeterince-uzun")
+            satirlar = await demo_zenginlestir.zenginlestir("yeterince-uzun")
+            assert any("Soğuk Lojistik A.Ş." in s and "eklendi" in s for s in satirlar)
+            assert sum(1 for s in satirlar if s.startswith("iş birliği")) == 3
+
+            sayi = await oturum.scalar(select(func.count()).select_from(Isbirligi))
+            assert sayi >= 3
+            durumlar = set((await oturum.scalars(select(Isbirligi.durum))).all())
+            assert {"tamamlandi", "aktif"} <= durumlar
+
+            # Tekrar çalıştırmak iş birliği eklemez (var olana dokunulmaz).
+            await demo_zenginlestir.zenginlestir("yeterince-uzun")
+            assert await oturum.scalar(select(func.count()).select_from(Isbirligi)) == sayi
+
+    asyncio.run(senaryo())

@@ -9,8 +9,14 @@ varsa atlanır, yani yeniden çalıştırmak güvenli. Önce `demo_hesaplari.py`
     .venv/Scripts/python.exe scripts/demo_zenginlestir.py
 
 Eklenenler: 3 firma kartı (soğuk zincir girişimi, e-ticaret kurumsalı, gıda
-perakende danışmanlığı), Soğuk Lojistik adına bir ortak ilanı, kooperatif adına
-ikinci bir genç ilanı ve farklı alanlardan 9 genç kartı (biri sosyal medya ilanı için).
+perakende danışmanlığı), Soğuk Lojistik firması ve adına bir ortak ilanı, kooperatif
+adına ikinci bir genç ilanı ve farklı alanlardan 9 genç kartı (biri sosyal medya
+ilanı için).
+
+İş birliği tohumu (demo hikâyesi; GİRVAK paneli ve eşleştirme bonusu için): biri
+tamamlanmış genç–firma, biri tamamlanmış firma–firma, biri gecikmiş adımı olan
+süren bir iş birliği. Tamamlanan iş birliği olan genç (Selin) aynı ilana uyan
+benzer gence (Burak) göre sıralamada yukarı çıkar: bonus farkı görünür.
 Adların hepsi kurgusal, e-postalar `.example` alan adında. Hesapların e-postası doğrulanmış açılır.
 
 Güven göstergeleri (bazı çalışmalarda) betikte elle yazılır: gerçek kanıt hattı
@@ -33,17 +39,27 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.agents.dogrulama.cekirdek import KURAL_SURUMU
+from app.agents.takip_durumu import (
+    ISBIRLIGI_AKTIF,
+    ISBIRLIGI_TAMAMLANDI,
+    MILESTONE_BEKLIYOR,
+    MILESTONE_TAMAMLANDI,
+)
+from app.agents.takip_surecleri import DENEME_ISI, PROJE, SABLONLAR, sablon_adimlari
 from app.api.auth import hesap_olustur
 from app.core.config import get_settings
 from app.core.firma_dogrulama import DOGRULANDI
 from app.core.metin import eposta_normalize
 from app.db.session import get_sessionmaker
+from app.models.eslesme import Eslesme
 from app.models.firma_karti import FirmaKarti
 from app.models.guven_skoru import GuvenSkoru
 from app.models.hesap import ROL_GENC, ROL_KURUM, Hesap
 from app.models.ihtiyac_karti import IhtiyacKarti
+from app.models.isbirligi import Isbirligi
 from app.models.kullanici import Kullanici
 from app.models.kurum import Kurum
+from app.models.milestone import Milestone
 from app.models.somut_cikti import SomutCikti
 from app.models.yetenek_karti import YetenekKarti
 from app.schemas.profil import FirmaKayitProfili, GencKayitProfili
@@ -55,7 +71,8 @@ from scripts.demo_hesaplari import ALAN, KURUM_EPOSTA, kurumun_karti, sifreyi_do
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-SOGUK_LOJISTIK_EPOSTA = "ayse@soguklojistik.example"
+SOGUK_LOJISTIK_EPOSTA = "iletisim@soguklojistik.example"
+SOGUK_LOJISTIK_ADI = "Soğuk Lojistik A.Ş."
 
 
 # --- Firmalar ---------------------------------------------------------------
@@ -176,6 +193,13 @@ def sogukluk_ilani(kurum_id) -> IhtiyacKarti:
         "uyaracak bir teknoloji ortağı arıyoruz.",
         basari_kriteri="Pilot süresince 3 araçta sıcaklık ihlallerinin tamamı 5 dakika "
         "içinde uyarıyla yakalansın.",
+        basari_olcutu={
+            "metrik": "sıcaklık ihlalinin yakalanma süresi",
+            "mevcut_deger": "saatte bir elle okuma",
+            "hedef_deger": "5 dakika içinde uyarı",
+            "sure": "pilot süresince",
+            "olcum_bilinmiyor": False,
+        },
         kisitlar="Pilot 3 araçta; sensör kurulumu kendi araç servisimizde yapılacak.",
     )
 
@@ -189,6 +213,13 @@ def kooperatif_sosyal_medya_ilani(kurum_id) -> IhtiyacKarti:
         "ve tanıtım desteği arıyoruz.",
         basari_kriteri="3 ay içinde takipçi sayısı ikiye katlansın, her ay en az 8 paylaşım "
         "yapılsın.",
+        basari_olcutu={
+            "metrik": "takipçi sayısı ve aylık paylaşım",
+            "mevcut_deger": None,
+            "hedef_deger": "takipçi iki katı, ayda en az 8 paylaşım",
+            "sure": "3 ay",
+            "olcum_bilinmiyor": False,
+        },
         kisitlar="Bütçe yok; haftada birkaç saatlik gönüllü destek yeterli.",
         sehir_tercihi="İstanbul",
         calisma_modeli="uzaktan",
@@ -506,6 +537,136 @@ def genc_profili(bolum: str | None, okul: str | None, durum: str) -> GencKayitPr
     )
 
 
+# --- İş birliği tohumu --------------------------------------------------------
+
+
+SOGUK_LOJISTIK_PROFILI = FirmaKayitProfili(
+    tur="kobi",
+    sektor="lojistik",
+    sehir="İstanbul",
+    web_sitesi="https://soguklojistik.example",
+    calisan_araligi="11-50",
+    kurulus_yili=2012,
+    tanitim="Marmara'da gıda ve ilaç dağıtımı yapan, soğutmalı araç filosu işleten bir "
+    "lojistik firması.",
+)
+
+
+def eski_gonullu_ilani(kurum_id) -> IhtiyacKarti:
+    """Kooperatifin kapanmış önceki ilanı: Selin'in tamamladığı iş birliğinin ilanı."""
+    return IhtiyacKarti(
+        kurum_id=kurum_id,
+        problem_tanimi="Kooperatifin gönüllü başvuruları kâğıt formla toplanıyor; kimin hangi "
+        "gün çalışabileceği takip edilemiyor. Başvuruları tek ekranda toplayan ve haftalık "
+        "özet çıkaran bir form ve yönetim paneli gerekiyordu.",
+        basari_kriteri="Tüm gönüllü başvuruları tek panelde toplansın, haftalık özet 10 "
+        "dakikada çıksın.",
+        basari_olcutu={
+            "metrik": "haftalık özet hazırlama süresi",
+            "mevcut_deger": None,
+            "hedef_deger": "10 dakika",
+            "sure": None,
+            "olcum_bilinmiyor": False,
+        },
+        kisitlar="Bütçe yok; yönetim paneli gönüllü koordinatörü tarafından kullanılacak.",
+        sehir_tercihi="İstanbul",
+        calisma_modeli="hibrit",
+        musaitlik_tercihi="proje_bazli",
+        durum="kapandi",
+        kapanma_nedeni="platformda_bulundu",
+        kapanma_tarihi=dt.datetime.now(dt.UTC) - dt.timedelta(days=40),
+    )
+
+
+async def _genc_karti(oturum, eposta_on_eki: str) -> YetenekKarti:
+    kart = await oturum.scalar(
+        select(YetenekKarti)
+        .join(Kullanici, Kullanici.id == YetenekKarti.kullanici_id)
+        .join(Hesap, Hesap.id == Kullanici.hesap_id)
+        .where(Hesap.email == eposta_normalize(f"{eposta_on_eki}@{ALAN}"))
+    )
+    if kart is None:
+        raise SystemExit(f"{eposta_on_eki} gencinin kartı yok; önce gençler eklenmeli.")
+    return kart
+
+
+async def _isbirligi_kur(
+    oturum,
+    *,
+    ilan: IhtiyacKarti,
+    yetenek_karti: YetenekKarti | None = None,
+    firma_karti: FirmaKarti | None = None,
+    surec: str,
+    hafta_once: int,
+    tamamlandi: bool,
+    biten_adim: int = 0,
+    gecikmis: bool = False,
+) -> str:
+    """Kabul edilmiş eşleşme + iş birliği + şablondan adımlar. Var olana dokunmaz.
+
+    Tamamlanan iş birliğinin bütün adımları iki tarafça işaretlidir. `gecikmis`:
+    ilk bitmemiş adımın hedef tarihi geçmişte (Takılan süreçler sayfasında görünür).
+    """
+    aday_kosulu = (
+        Eslesme.yetenek_karti_id == yetenek_karti.id
+        if yetenek_karti is not None
+        else Eslesme.firma_karti_id == firma_karti.id
+    )
+    if await oturum.scalar(
+        select(Eslesme.id).where(Eslesme.ihtiyac_karti_id == ilan.id, aday_kosulu)
+    ):
+        return "zaten vardı"
+    simdi = dt.datetime.now(dt.UTC)
+    baslangic = dt.date.today() - dt.timedelta(weeks=hafta_once)
+    eslesme = Eslesme(
+        ihtiyac_karti_id=ilan.id,
+        yetenek_karti_id=yetenek_karti.id if yetenek_karti is not None else None,
+        firma_karti_id=firma_karti.id if firma_karti is not None else None,
+        skor=0.7,
+        gerekce_metni="Demo verisi: iş birliği hikâyesi için elle kuruldu.",
+        uygunluk="uygun" if firma_karti is not None else None,
+        durum="kabul_edildi",
+        baslatan="kurum",
+        son_aktivite_tarihi=simdi - dt.timedelta(days=1),
+        kurum_ilgi_tarihi=simdi - dt.timedelta(weeks=hafta_once),
+    )
+    oturum.add(eslesme)
+    await oturum.flush()
+    isbirligi = Isbirligi(
+        eslesme_id=eslesme.id,
+        baslangic_tarihi=baslangic,
+        durum=ISBIRLIGI_TAMAMLANDI if tamamlandi else ISBIRLIGI_AKTIF,
+        genc_plan_onayi=simdi - dt.timedelta(weeks=hafta_once),
+        kurum_plan_onayi=simdi - dt.timedelta(weeks=hafta_once),
+        plan_onerildi_mi=True,
+        surec=surec,
+        tamamlanma_tarihi=simdi - dt.timedelta(days=3) if tamamlandi else None,
+    )
+    ilk_bekleyen_verildi = False
+    for sira, adim in enumerate(sablon_adimlari(SABLONLAR[surec], baslangic)):
+        bitti = tamamlandi or sira < biten_adim
+        hedef = adim.hedef_tarih
+        if not bitti and gecikmis and not ilk_bekleyen_verildi:
+            hedef = dt.date.today() - dt.timedelta(days=9)
+            ilk_bekleyen_verildi = True
+        isbirligi.milestonelar.append(
+            Milestone(
+                baslik=adim.baslik,
+                aciklama=adim.tamam_tanimi,
+                asama=adim.anahtar,
+                oneri=adim.oneri,
+                sira=sira,
+                hedef_tarih=hedef,
+                durum=MILESTONE_TAMAMLANDI if bitti else MILESTONE_BEKLIYOR,
+                genc_isaret=simdi if bitti else None,
+                kurum_isaret=simdi if bitti else None,
+            )
+        )
+    oturum.add(isbirligi)
+    await oturum.commit()
+    return "tamamlandı" if tamamlandi else "süren" + (", gecikmiş adım" if gecikmis else "")
+
+
 # --- Yazma ------------------------------------------------------------------
 
 
@@ -583,6 +744,20 @@ async def zenginlestir(sifre: str) -> list[str]:
                 f"{'' if gomuldu else ' — EMBEDDING YOK'}"
             )
 
+        # B0) Soğuk Lojistik: yalnızca ortak ilanı olan firma (kartı yok).
+        if not await _hesap_var_mi(oturum, SOGUK_LOJISTIK_EPOSTA):
+            await hesap_olustur(
+                oturum,
+                email=SOGUK_LOJISTIK_EPOSTA,
+                sifre=sifre,
+                rol=ROL_KURUM,
+                ad=SOGUK_LOJISTIK_ADI,
+                firma_profili=SOGUK_LOJISTIK_PROFILI,
+                kvkk_onay=True,
+                eposta_dogrulandi=True,
+            )
+            satirlar.append(f"firma  {SOGUK_LOJISTIK_ADI} (kobi, ortak ilanı sahibi): eklendi")
+
         # B) İlanlar
         soguk = await _kurum(oturum, SOGUK_LOJISTIK_EPOSTA)
         kooperatif = await _kurum(oturum, KURUM_EPOSTA)
@@ -639,9 +814,10 @@ async def zenginlestir(sifre: str) -> list[str]:
             oturum.add(kart)
             await oturum.flush()
             for cikti, tanimi in zip(kart.somut_ciktilar, tanim.ciktilar, strict=True):
-                if tanimi.gosterge is None:
-                    continue
-                orijinallik, olculebilirlik, rol, onay = tanimi.gosterge
+                # Linksiz çalışma da kendiliğinden değerlendirilir (G7): kanıt "—",
+                # sonuç ve rol beyan tavanıyla 2. Elif'in çalışmaları (demo_hesaplari)
+                # canlı doğrulama denensin diye bilerek değerlendirilmeden kalır.
+                orijinallik, olculebilirlik, rol, onay = tanimi.gosterge or (None, 2, 2, None)
                 oturum.add(
                     GuvenSkoru(
                         somut_cikti_id=cikti.id,
@@ -649,7 +825,9 @@ async def zenginlestir(sifre: str) -> list[str]:
                         sonuc_olculebilirligi=olculebilirlik,
                         rol_netligi=rol,
                         ucuncu_taraf_onayi=onay,
-                        gerekce_metni="Demo verisi: gösterge elle yazıldı.",
+                        gerekce_metni="Demo verisi: gösterge elle yazıldı."
+                        if tanimi.gosterge is not None
+                        else "Demo verisi: kanıt eklenmedi; sonuç ve rol beyana göre.",
                         kural_surumu=KURAL_SURUMU,
                         degerlendirme_tarihi=dt.datetime.now(dt.UTC),
                     )
@@ -667,6 +845,49 @@ async def zenginlestir(sifre: str) -> list[str]:
                 f"{'' if gomuldu else ' — EMBEDDING YOK'}"
             )
 
+        # D) İş birlikleri (demo hikâyesi). Eşleştirmeden ÖNCE: tamamlanan iş birliği
+        # bonusu Selin'in skoruna girsin.
+        selin = await _genc_karti(oturum, "selin.karaca")
+        defne = await _genc_karti(oturum, "defne.yalcin")
+        ayaz_kurum = await _kurum(oturum, "iletisim@ayazsensor.example")
+        ayaz = await firma_servisi.kurumun_karti(oturum, ayaz_kurum.id)
+        eski_ilan, _ = await _ilan_yoksa_ekle(oturum, eski_gonullu_ilani(kooperatif.id))
+        satirlar.append(
+            "iş birliği Selin ↔ Kooperatif gönüllü paneli (genç–firma): "
+            + await _isbirligi_kur(
+                oturum,
+                ilan=eski_ilan,
+                yetenek_karti=selin,
+                surec=PROJE,
+                hafta_once=10,
+                tamamlandi=True,
+            )
+        )
+        satirlar.append(
+            "iş birliği Ayaz Sensör ↔ Soğuk Lojistik (firma–firma pilot): "
+            + await _isbirligi_kur(
+                oturum,
+                ilan=ilan_soguk,
+                firma_karti=ayaz,
+                surec=DENEME_ISI,
+                hafta_once=12,
+                tamamlandi=True,
+            )
+        )
+        satirlar.append(
+            "iş birliği Defne ↔ Kooperatif sosyal medya (genç–firma): "
+            + await _isbirligi_kur(
+                oturum,
+                ilan=ilan_sosyal,
+                yetenek_karti=defne,
+                surec=PROJE,
+                hafta_once=5,
+                tamamlandi=False,
+                biten_adim=2,
+                gecikmis=True,
+            )
+        )
+
         # Eşleştirme: yalnızca yeni ilanlar ve kooperatifin gıda bankası ilanı (genç
         # kartları ona da aday). Anadolu Market ilanı bilerek dışarıda.
         gida_bankasi = await oturum.scalar(
@@ -683,6 +904,18 @@ async def zenginlestir(sifre: str) -> list[str]:
                 continue
             sonuc = await pipeline_calistir(oturum, ilan)
             satirlar.append(f"eşleştirme {ilan.id}: {len(sonuc)} öneri")
+            if gida_bankasi is not None and ilan.id == gida_bankasi.id:
+                sirali = await oturum.execute(
+                    select(Kullanici.ad, Eslesme.skor)
+                    .join(YetenekKarti, YetenekKarti.kullanici_id == Kullanici.id)
+                    .join(Eslesme, Eslesme.yetenek_karti_id == YetenekKarti.id)
+                    .where(Eslesme.ihtiyac_karti_id == ilan.id)
+                    .order_by(Eslesme.skor.desc())
+                )
+                satirlar.append(
+                    "  gıda bankası sıralaması (skor): "
+                    + ", ".join(f"{ad} {skor:.2f}" for ad, skor in sirali.all())
+                )
     return satirlar
 
 

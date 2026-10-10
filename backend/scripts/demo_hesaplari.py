@@ -143,9 +143,10 @@ def gencin_karti(kullanici_id) -> YetenekKarti:
         kanit_bekleyen=True,
         somut_ciktilar=[
             SomutCikti(
-                baslik="Mahalle kütüphanesi ödünç takip sistemi",
-                aciklama="400 kitabı ve 120 üyeyi takip eden web uygulaması; "
-                "gecikmiş ödünçleri gönüllülere listeliyor.",
+                baslik="Kafe zinciri için stok ve sipariş takip paneli",
+                aciklama="Üç şubeli bir kafenin günlük stok sayımını ve tedarikçi "
+                "siparişlerini Excel yerine tek ekranda toplayan, kritik stokta uyarı "
+                "veren web uygulaması.",
             ),
             SomutCikti(
                 baslik="Dernek bağış ve dağıtım kayıt sistemi",
@@ -179,6 +180,13 @@ def kurumun_karti(kurum_id) -> IhtiyacKarti:
         "çıkaran basit bir web uygulaması gerekiyor.",
         basari_kriteri="3 ay içinde tüm bağış ve dağıtımlar dijital kayıtta; aylık "
         "rapor 1 gün yerine 10 dakikada çıkıyor.",
+        basari_olcutu={
+            "metrik": "aylık rapor hazırlama süresi",
+            "mevcut_deger": "1 gün",
+            "hedef_deger": "10 dakika",
+            "sure": "3 ay",
+            "olcum_bilinmiyor": False,
+        },
         kisitlar="Bütçe yok; kayıtları giren gönüllüler teknik değil, arayüz sade olmalı.",
         sehir_tercihi="İstanbul",
         calisma_modeli="hibrit",
@@ -214,6 +222,13 @@ def kurumsalin_ilani(kurum_id) -> IhtiyacKarti:
         "şube müdürünün tahminine bırakılıyor, satış verisinden tahmin yapılmıyor. "
         "Taze ürün siparişini veriye dayandıracak bir ortak arıyoruz.",
         basari_kriteri="6 ay içinde pilot şubelerde meyve-sebze firesi %20 azalsın.",
+        basari_olcutu={
+            "metrik": "meyve-sebze fire oranı",
+            "mevcut_deger": None,
+            "hedef_deger": "%20 azalma",
+            "sure": "6 ay",
+            "olcum_bilinmiyor": False,
+        },
         kisitlar="Pilot 5 şubede; şube verisi yalnızca anonim ve toplu paylaşılabilir.",
     )
 
