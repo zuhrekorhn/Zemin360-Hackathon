@@ -75,6 +75,11 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 - [ ] Canlılık'ın firma–firma eşleşmelerini taraması (`kararlar.md` F18).
 - [ ] "Yeni iş ekle" sohbeti (`kararlar.md` G16).
 - [ ] Doğrulama değerlendirme setini 45'ten 120 vakaya çıkarmak; alanlar arası adalet.
+- [ ] **Terim tutarlılığı: "pilot uygulama".** Hackathon brifi (GİRVAK) "pilot uygulama" ve "iş birliği ve pilot
+süreçleri" diyor; firma kartında "Pilot uygulama" yazıyor ama firma–firma iş birliği planında "Deneme işi"
+(`takip_surecleri.py`, `takip.py` istemleri, `icerik-rehberi.md` § 4, `kararlar.md` T1). Tek terime çekmek
+istemlerdeki "pilot yazma" kuralını ve onu koruyan testleri de değiştirir; jüri sonrası.
+- [ ] GİRVAK paneli: hâlâ yok → incelemelerin geçmiş kararları listesi, zaman serisi grafikleri, PDF raporu.
 - [ ] Ürünleşme: canlıya alma, zamanlanmış tarama, KVKK metninin kesinleşmesi.
 
 ## Kapsam dışı
