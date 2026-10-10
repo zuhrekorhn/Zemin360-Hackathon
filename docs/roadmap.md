@@ -23,7 +23,7 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 | Sağlamlaştırma | Gemini ücretli katman, iki model katmanı ve yedek zincir, hata sözleşmesi | `architecture.md` § LLM katmanları |
 | Kimlik ve iki taraflı döngü | JWT, üç rol, paneller, karşılıklı onay, bildirimler | `kimlik-ve-dongu.md` |
 | Takip | Süreç şablonları, iki taraflı onay ve işaret, erken sonlanma, tamamlanma sinyali | `takip.md`, `kararlar.md` T1-T3 |
-| Canlılık + GİRVAK paneli | Tarama, hatırlatma, yeni fırsat, program hedefleri | `canlilik.md` |
+| Canlılık + GİRVAK paneli | Kontrol, hatırlatma, yeni fırsat; GİRVAK paneli brifteki altı ihtiyaç alanına göre (Özet, Kararlar, İş birlikleri, Takılan süreçler, Sayılar) | `canlilik.md` |
 | Genç akışı | Kayıt formu, tek kart, otomatik değerlendirme, gençten ilgi | `kararlar.md` G1-G17 |
 | Firma akışı | Firma kaydı ve profili, firma kartı, iki kapı, firma–firma eşleşme, firma doğrulaması | `kararlar.md` F1-F20 |
 | Doğrulama | Link / dosya / görsel okuma, hesap bağlama, referans, kötüye kullanım işaretleri, gözlem, ölçüm (Kanıt %56 → %96) | `dogrulama.md` |

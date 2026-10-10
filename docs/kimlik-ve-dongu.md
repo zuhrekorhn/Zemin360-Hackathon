@@ -143,11 +143,12 @@ Tablo testle birebir sabitlenmiştir (`tests/test_eslesme_durumu.py`, `tests/tes
 | `/tanimlama`, `/kurum/oneriler`, `/kurum/ilan/{id}/duzenle` | firma | İhtiyaç sohbeti (`?aranan=genc` ya da `?aranan=firma`; parametresiz adres kapıyı sorar), öneriler, ilan düzenleme |
 | `/kurum/kart`, `/kurum/profil` | firma | Firma kartı, firma profili |
 | `/isbirligi/{id}` | iki taraf, GİRVAK | Plan, onaylar, adımlar, durum özeti |
-| `/girvak` | GİRVAK | Program sayıları ve hedefler, firma doğrulama, inceleme kuyruğu, gözlem, hareketsiz bağlantılar |
+| `/girvak`, `/girvak/kararlar`, `/girvak/isbirlikleri`, `/girvak/canlilik`, `/girvak/sayilar`, `/girvak/gozlem` | GİRVAK | Özet (altı ihtiyaç alanı), kararlar (firma onayı, inceleme), iş birlikleri, takılan süreçler, sayılar, sistem durumu |
 | `/bildirimler` | herkes (girişli) | Liste, "hepsini okundu say" |
 
 **Menü** (`frontend/src/lib/menu.ts`): genç için Fırsatlar, Kartım, İş birliklerim; firma için
-Panelim, Yeni ihtiyaç, Firma kartı, İş birliklerim; GİRVAK için Panel. Bildirimler her ekranda zil ve okunmamış
+Panelim, Yeni ihtiyaç, Firma kartı, İş birliklerim; GİRVAK için Özet, Karar bekleyenler, İş birlikleri,
+Takılan süreçler, Sayılar (Sistem durumu hesap menüsünde). Bildirimler her ekranda zil ve okunmamış
 sayısı; ayar sayfası (genç "Hesabım", firma "Firma profili") ve çıkış adın altındaki hesap menüsünde.
 
 **Yönlendirme:** giriş gerektiren sayfa `GirisKapisi` ile sarılır; girişsiz açılırsa

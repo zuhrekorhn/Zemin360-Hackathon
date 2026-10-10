@@ -7,7 +7,7 @@ yorumları onlara gönderme yapar.
 
 Canlılık döngünün her aşamasında hareketsiz kalan kaydı fark eder ve ilgili kişiye kısa, kişiye
 özel bir hatırlatma bırakır. Yeni bir ihtiyaç açıldığında, kartı uzun süredir duran gençlere
-fırsatı bildirir. GİRVAK programın hedeflerini gerçek sayılarla, hareketsiz bağlantıları ve son
+fırsatı bildirir. GİRVAK programın altı ihtiyaç alanını gerçek sayılarla, takılan süreçleri ve son
 Canlılık olaylarını tek panelde görür.
 
 **Sınır:**
@@ -127,21 +127,33 @@ kapsadığını denetler.
 
 ## 7. GİRVAK paneli
 
-1. **Program hedefleri:** sayı / hedef ve ilerleme çizgisi. Hedefler, programdaki adları ve ölçüm
-   tanımları tek yerde (`app/core/program.py`); yanıtta `program_adi` ve `olcum`. Program hedefiyle
-   platformdaki ölçüm arasındaki fark gizlenmez.
+1. **Altı ihtiyaç alanı (Özet):** brifteki ihtiyaç alanları (Hackathon onboarding sunumu, 2-3. sayfa) için
+   gerçek sayılar, her kartta brifteki adla: 01 Genç Yeteneklerin Keşfi, 02 Profil ve Portfolyo
+   Doğruluğu, 03 Kurum–Kişi Eşleşmesi, 04 Yaşayan Bir Ağ, 05 İhtiyaçların Net Tanımı, 06 Şeffaf İş Birliği
+   Takibi. Sayılar `GET /girvak/ozet`'ten (`app/api/girvak_ozet.py`), cümleleri arayüz kurar
+   (`frontend/src/lib/girvak.ts`). **Uydurma hedef sayısı yok:** programın brifinde "80 başvuru, 20 kurum,
+   10 eşleşme, 5 pilot" gibi sayısal hedefler bulunmuyor; önceki sürümdeki bu rakamlar kaldırıldı (10 Eki).
 
-   | Hedef | Sayılan şey |
-   |---|---|
-   | Başvuru — 80 | En az bir yetenek kartı olan genç |
-   | Kurum — 20 | En az bir ihtiyaç kartı olan firma |
-   | Eşleşme — 10 | Karşılıklı ilgiyle açılmış eşleşme (`kabul_edildi`) |
-   | Pilot — 5 | Tamamlanmış iş birliği |
+   | Alan | Ana sayı | Altındaki cümle |
+   |---|---|---|
+   | 01 Keşif | Kart oluşturan genç | Kayıtlı genç ve en az bir fırsat gören genç |
+   | 02 Doğruluk | Değerlendirilen çalışmanın yüzdesi | Bekleyen inceleme sayısı |
+   | 03 Eşleşme | Karşılıklı ilgi | Toplam öneri |
+   | 04 Yaşayan ağ | Takılan süreç | Son 30 günde gönderilen hatırlatma (yeni fırsat bildirimi hariç) |
+   | 05 Net tanım | Tanımlanan ihtiyaç | Hedef değeri (ölçülebilir) olan ihtiyaç |
+   | 06 Takip | İş birliği | Tamamlanan; gecikmiş adım |
 
-2. **Hareketsiz bağlantılar:** eşiği aşmış kayıtlar, okuma anında aynı kurallarla; tür, taraflar,
+2. **Takılan süreçler:** eşiği aşmış kayıtlar, okuma anında aynı kurallarla; tür, taraflar,
    kaç gündür hareketsiz, son hatırlatmanın tarihi. En uzun süredir hareketsiz olan önce.
 3. **Son Canlılık olayları:** son 20 olay; tür, alıcı, mesaj, zaman.
-4. **"Taramayı şimdi çalıştır"** ve son taramanın özeti.
+4. **“Şimdi kontrol et”** ve son kontrolün özeti.
+5. **İş birlikleri:** bütün iş birlikleri (`GET /girvak/isbirlikleri`), duruma göre süzülür; taraflar ve adım
+   ilerlemesi görünür, **e-posta ve iletişim hiç dönmez**. Satırdan iş birliğinin kendi sayfasına geçilir.
+6. **Kararlar:** onay bekleyen firmalar, incelemeler ve daha önce verilen kararlar (“Şimdilik değil” dediğiniz
+   firma burada durur ve onaylanabilir).
+7. **Sayılar:** eşleşme hunisi (önerilen, karşılıklı ilgi, iş birliği, tamamlanan; adım adım yüzdeyle),
+   hesaplar, kırılım, kapanan ihtiyaçların nedenleri; **Raporu yazdır** (menü yazdırmada gizlenir).
+8. **Sistem durumu** (hesap menüsünde): dış servisler ve kanıt linklerinin açılabilirliği; teknik sayfa.
 
 Panelin diğer bölümleri: genç–firma / firma–firma kırılımlı sayılar (F19), firma doğrulama (F6),
 inceleme kuyruğu ve gözlem (`dogrulama.md` § 9, § 10.3).
@@ -153,15 +165,17 @@ inceleme kuyruğu ve gözlem (`dogrulama.md` § 9, § 10.3).
 | `POST /canlilik/tarama` | GİRVAK ya da `X-Tarama-Anahtari` | Tarama özeti; idempotent |
 | `GET /canlilik/pasifler` | GİRVAK | Okuma anında hareketsiz kayıtlar; kişisel veri yalnızca ad |
 | `GET /canlilik/olaylar` | GİRVAK | Son olaylar (varsayılan 20) |
-| `GET /girvak/sayilar` | GİRVAK | `hedefler`: `{basvuru, kurum, eslesme, pilot}`, her biri `{sayi, hedef, program_adi, olcum}` |
+| `GET /girvak/sayilar` | GİRVAK | Hesap, kart, eşleşme, iş birliği sayıları, kırılım, kapanan ihtiyaçlar |
+| `GET /girvak/ozet` | GİRVAK | Altı ihtiyaç alanı için ham sayılar (`kesif`, `dogruluk`, `eslesme`, `ag`, `tanim`, `takip`) |
+| `GET /girvak/isbirlikleri` | GİRVAK | Bütün iş birlikleri; taraflar, durum, ilerleme; e-posta yok |
 
 Genç ve firma bu uçları çağıramaz (403); hatırlatmayı bildirim olarak görür.
 
 ## 9. Kararlar
 
 1. **Tetikleyici bir uç noktadır**, uygulama içi zamanlayıcı değil (§ 4).
-2. **Hedef tanımları** § 7'deki tablo. Seçilmeyen: "başvuru" için kayıtlı her genç hesabı (kayıt
-   olup kart oluşturmayan başvuru sayılmasın).
+2. **Program hedef sayısı yok; altı ihtiyaç alanı var.** Brifte sayısal hedef bulunmadığı için hedef çubukları
+   kaldırıldı; panel, brifteki altı ihtiyaç alanının çözülüp çözülmediğini gerçek sayılarla gösterir (10 Eki).
 3. **Yeni fırsat firmanın adını söyler** (§ 2). Genç önerildiği fırsatı zaten gördüğü için (G1)
    anonimliğin gerekçesi kalmadı.
 4. **Eşikler** § 1'deki tablo; fırsatta 7 günlük yeni ihtiyaç ve 14 günlük eski kart.
@@ -170,4 +184,4 @@ Genç ve firma bu uçları çağıramaz (403); hatırlatmayı bildirim olarak g�
 
 Hatırlatmaların e-posta ya da SMS ile gönderilmesi; hatırlatma tercihleri ve sessize alma;
 davranış tahmini; Canlılık'ın bir kaydın durumunu değiştirmesi; GİRVAK'ın kullanıcı yönetimi;
-hedeflerin panelden düzenlenmesi; haftalık rapor; firma–firma eşleşmelerinin taranması (F18).
+zaman serisi / trend grafikleri; PDF dosyası üretme (yalnızca yazdır); firma–firma eşleşmelerinin taranması (F18).
