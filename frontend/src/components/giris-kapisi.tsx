@@ -17,6 +17,7 @@ import { useEffect } from "react";
 
 import { type Genislik, SayfaDurumu } from "@/components/sayfa";
 import type { MeYaniti, Rol } from "@/lib/api";
+import { cikisYeniMi } from "@/lib/cikis";
 import { useOturum } from "@/lib/oturum";
 import { panelYolu } from "@/lib/yonlendirme";
 
@@ -40,6 +41,8 @@ export function GirisKapisi({
 
   useEffect(() => {
     if (oturum.durum === "girissiz") {
+      // Bilinçli çıkışta ana sayfaya geçiş sürüyor; sonraki girişe adres bırakma.
+      if (cikisYeniMi()) return;
       const yol = window.location.pathname + window.location.search;
       router.replace(`/giris?sonra=${encodeURIComponent(yol)}`);
     } else if (oturum.durum === "girisli" && !izinli) {

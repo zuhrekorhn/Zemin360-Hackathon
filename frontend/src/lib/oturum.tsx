@@ -23,6 +23,7 @@ import {
 } from "react";
 
 import { ApiHatasi, type MeYaniti, me } from "@/lib/api";
+import { cikisiIsaretle } from "@/lib/cikis";
 import { type Hitap, hitapRolden } from "@/lib/hitap";
 import {
   TOKEN_DEGISTI,
@@ -77,6 +78,7 @@ export function OturumSaglayici({ children }: { children: React.ReactNode }) {
 
   const cikisYap = useCallback(() => {
     // tokenSil TOKEN_DEGISTI yayar; dinleyici oturumu "girissiz" yapar.
+    cikisiIsaretle(); // açık sayfanın kapısı çıkışı "girişsiz ziyaret" sanmasın (lib/cikis.ts)
     tokenSil();
   }, []);
 
