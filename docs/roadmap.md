@@ -1,9 +1,9 @@
 # Yol Haritası
 
-> **Durum (8 Eki 2026):** altı ajan, üç rol ve iki kapılı eşleşme döngüsü çalışıyor; kod, belgeler
-> ve testler birbiriyle tutarlı. Hackathon 9–11 Ekim (Kolektif House Levent): kod ve GitHub reposu
-> 10 Ekim'de jüriye gider, sunum 11 Ekim'de (5 dakika demo + 3 dakika soru). Demo yerelde
-> yapılır; canlıya alma hackathon kapsamında yok.
+> **Durum (10 Eki 2026):** altı ajan, üç rol ve iki kapılı eşleşme döngüsü çalışıyor; kod, belgeler
+> ve testler birbiriyle tutarlı, repo GitHub'da ve CI yeşil. Hackathon 9–11 Ekim (Kolektif House
+> Levent): kod ve repo 10 Ekim'de jüriye gitti, sunum 11 Ekim'de (5 dakika demo + 3 dakika soru).
+> Demo yerelde yapılır; canlıya alma hackathon kapsamında yok. Kalan işler yalnızca sunuma hazırlık.
 
 ## "Tam" ne demek
 
@@ -32,20 +32,20 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 | Güvenlik | SSRF engeli, sahiplik üçlüsü (401 / 403 / 404), istem enjeksiyonuna karşı veri etiketleri; 8 Eki incelemesi: kart onayı ve sohbet girdi sınırları, referans bekleme süresi ve kalem başına sınır, ad tek satır, kanıt metni etiketi süzülür, bildirim tekrarı, Keşif sohbeti geri yükleme | `agent-specs.md` § 4, `kimlik-ve-dongu.md` § 3 |
 | Arayüz (8 Eki) | Genç tarafı yeniden: Fırsatlar, Kartım, Hesabım, İş birliklerim, Keşif; Güçlendir paneli, kartın durumu sayımla, birincil düğme koyu yeşil | `kararlar.md` G9, G18, `design-language.md` |
 | Arayüz (9 Eki) | Firma tarafı gencin diliyle, 1. tur: Panelim iki sütun, ihtiyaç kartı ve "⋯" menüsü, aday listesi ve kartları `KUTU` yüzeyinde, uyum kelimeyle, menüde tek etkin sayfa. 2. tur: ihtiyaç düzenleme yan panelde, ihtiyaç ve firma kartı sohbetleri canlı önizlemeli, firma kartı ve profili Hesabım kalıbında; iş birliği ve GİRVAK yüzeyleri `KUTU`ya çekildi | `kararlar.md` F21 |
+| GİRVAK paneli (10 Eki) | Menü brifteki altı ihtiyaç alanına göre: Özet (`GET /girvak/ozet`), Karar bekleyenler + geçmiş kararlar, İş birlikleri (`GET /girvak/isbirlikleri`, e-postasız), Takılan süreçler, Sayılar; uydurma program hedefleri kaldırıldı; sistem durumu hesap menüsünde | `canlilik.md` § 7–9, `api-contracts.md` |
+| Demo verisi (10 Eki) | `demo_hesaplari.py` + `demo_zenginlestir.py` kendi kendine yeter: Soğuk Lojistik hesabı betikte açılır, üç iş birliği (tamamlanan genç–firma ve firma–firma, gecikmiş adımlı süren), ölçülebilir hedefli ilanlar, bonus sahnesi (Selin 0,72 > Burak 0,65); betik testi | `demo-test-rehberi.md` § 9 |
 | Metin denetimi | Hitap, sayfa içi onaylar, LLM istem dili | `icerik-rehberi.md` § 10 |
 | E-posta | Brevo / Resend gönderici, "eşleştiniz" e-postası, "E-posta yaz" | `architecture.md` |
-| Toparlama (7–8 Eki) | Katman düzeltmeleri (servisler API'den import etmiyor, tek embedding servisi), belgeler koda göre yeniden, karar kaydı, CI, katkı rehberi; plan belgeleri ve Docker / yayına alma kalıntıları silindi | `architecture.md`, `kararlar.md`, `CONTRIBUTING.md` |
+| Toparlama (7–10 Eki) | Katman düzeltmeleri, belgeler koda göre yeniden, karar kaydı, CI, katkı rehberi; plan belgeleri ve yayına alma kalıntıları silindi; README'ye teknoloji seçimleri ve model katmanı gerekçesi | `architecture.md`, `kararlar.md`, `CONTRIBUTING.md` |
 
 ## Kalan işler
 
-**Hackathona kadar:**
+**Sunuma kadar (11 Eki):**
 
-- [ ] Repoyu GitHub'a gönder; CI'ın ilk koşusunun yeşil olduğunu gör (rozet README'de).
-- [ ] Prova: demo senaryosu yerelde baştan sona en az iki kez (`demo-test-rehberi.md`).
-- [ ] Tohum veri (demo hikâyesiyle aynı): birkaç tamamlanmış ve bir adımı gecikmiş iş birliği,
-      aynı ilana uyan iki benzer genç kartı (biri tamamlanmış iş birlikli, bonus farkı görünsün),
-      tarihleri geri alınmış kayıtlar (`scripts/zamani_geri_al.py`).
-- [ ] Yedek demo videosu (LLM gecikmesine karşı).
+- [ ] Sunum ve konuşma metnini gözden geçirmek; demo akışını yerelde en az iki kez prova etmek
+      (her provadan önce `yerel_sifirla.py` + `demo_hesaplari` + `demo_zenginlestir`).
+- [ ] Yedek demo videosu (LLM gecikmesine karşı); çekilince README'ye bağlantı.
+- [ ] Sunumu PDF ya da PPTX olarak dışa aktarıp yedeklemek.
 - [ ] Elle deneme: Takip'te "Süreci sonlandır", e-postada Brevo ile gerçek gönderim.
 
 **Açık kararlar:**
@@ -78,7 +78,7 @@ Her iş aşağıdaki dört testten en az birini geçirmeye yaramalı. Yaramıyor
 süreçleri" diyor; firma kartında "Pilot uygulama" yazıyor ama firma–firma iş birliği planında "Deneme işi"
 (`takip_surecleri.py`, `takip.py` istemleri, `icerik-rehberi.md` § 4, `kararlar.md` T1). Tek terime çekmek
 istemlerdeki "pilot yazma" kuralını ve onu koruyan testleri de değiştirir; jüri sonrası.
-- [ ] GİRVAK paneli: hâlâ yok → incelemelerin geçmiş kararları listesi, zaman serisi grafikleri, PDF raporu.
+- [ ] GİRVAK paneli: zaman serisi grafikleri (rapor şimdilik tarayıcıdan yazdırılır).
 - [ ] Ürünleşme: canlıya alma, zamanlanmış tarama, KVKK metninin kesinleşmesi.
 
 ## Kapsam dışı
