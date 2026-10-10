@@ -49,9 +49,9 @@ describe("iki kapı", () => {
     expect(arananParametresi("herkes")).toBe("genc");
   });
 
-  it("kapılar tanımlama sayfasına doğru parametreyle gider", () => {
+  it("kapılar tanımlama sayfasına açık parametreyle gider (parametresiz adres kapı sorar)", () => {
     expect(KAPILAR.map((k) => [k.aranan, k.yol])).toEqual([
-      ["genc", "/tanimlama"],
+      ["genc", "/tanimlama?aranan=genc"],
       ["firma", "/tanimlama?aranan=firma"],
     ]);
   });

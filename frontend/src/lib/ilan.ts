@@ -54,7 +54,7 @@ export const KAPILAR: {
     aranan: "genc",
     baslik: "Genç yetenek bul",
     aciklama: "Bir ihtiyacınızı tanımlayın, ona uygun genç yetenekleri görün.",
-    yol: "/tanimlama",
+    yol: "/tanimlama?aranan=genc",
   },
   {
     aranan: "firma",

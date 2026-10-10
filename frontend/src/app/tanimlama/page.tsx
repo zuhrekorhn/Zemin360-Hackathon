@@ -41,7 +41,7 @@ import { isbirligiTuruEtiketi } from "@/lib/firma-karti";
 import { FIRMA_TURLERI } from "@/lib/firma-profil";
 import { hatayaCevir } from "@/lib/hata";
 import { cn } from "@/lib/utils";
-import { type Aranan, arananParametresi } from "@/lib/ilan";
+import { type Aranan, KAPILAR, arananParametresi } from "@/lib/ilan";
 import {
   CALISMA_MODELI_ETIKETLERI,
   MUSAITLIK_ETIKETLERI,
@@ -63,9 +63,52 @@ export default function TanimlamaSayfasi() {
   return (
     <GirisKapisi roller={["kurum"]}>
       <Suspense fallback={null}>
-        <TanimlamaSohbeti />
+        <TanimlamaGirisi />
       </Suspense>
     </GirisKapisi>
+  );
+}
+
+/**
+ * Kapı adreste açıkça seçilmişse sohbet başlar; seçilmemişse (üst menüdeki
+ * "Yeni ihtiyaç") önce kimi aradığı sorulur. Eskiden `/tanimlama` sessizce
+ * genç kapısını açıyordu ve firma, iş birliği ortağı kapısını bulamıyordu.
+ */
+function TanimlamaGirisi() {
+  const parametre = useSearchParams().get("aranan");
+  if (parametre === "genc" || parametre === "firma")
+    return <TanimlamaSohbeti />;
+  return <KapiSecimi />;
+}
+
+function KapiSecimi() {
+  return (
+    <Sayfa genislik="form">
+      <SayfaBasligi
+        baslik="Ne arıyorsunuz?"
+        aciklama="Önce kimi aradığınızı seçin; ardından kısa bir sohbetle ihtiyacınızı netleştireceğiz."
+      />
+      <ul className="grid gap-4 sm:grid-cols-2">
+        {KAPILAR.map((kapi) => (
+          <li key={kapi.aranan}>
+            <Link
+              href={kapi.yol}
+              className={cn(
+                KUTU,
+                "flex h-full flex-col gap-2 px-5 py-5 outline-none hover:border-ana/40 focus-visible:ring-3 focus-visible:ring-baglanti/40",
+              )}
+            >
+              <span className="font-heading text-lg font-semibold text-ana">
+                {kapi.baslik}
+              </span>
+              <span className="text-sm text-pretty text-muted-foreground">
+                {kapi.aciklama}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Sayfa>
   );
 }
 
@@ -435,7 +478,7 @@ function KayitliKart({
       ikon: UserRoundPlus,
       baslik: "Başka bir ihtiyaç",
       metin: "Farklı bir konuda ayrı bir ihtiyaç tanımlayın.",
-      href: ortak ? "/tanimlama?aranan=firma" : "/tanimlama",
+      href: ortak ? "/tanimlama?aranan=firma" : "/tanimlama?aranan=genc",
     },
   ];
 

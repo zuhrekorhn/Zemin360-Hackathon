@@ -140,7 +140,7 @@ Tablo testle birebir sabitlenmiştir (`tests/test_eslesme_durumu.py`, `tests/tes
 | `/kesif`, `/kart/{id}`, `/profil`, `/hesap-baglama/{saglayici}` | genç | Kart sohbeti; kart, çalışma tercihleri ve güven göstergesi; "Hesabım" (ad, eğitim, bağlantılar, bağlı hesaplar, KVKK); hesap bağlama dönüşü |
 | `/isbirliklerim` | genç, firma | İş birlikleri, önce süren |
 | `/kurum` | firma | İki kapı, ilanlar, öneriler, iş birliği fırsatları, iş birlikleri |
-| `/tanimlama`, `/kurum/oneriler`, `/kurum/ilan/{id}/duzenle` | firma | İhtiyaç sohbeti, öneriler, ilan düzenleme |
+| `/tanimlama`, `/kurum/oneriler`, `/kurum/ilan/{id}/duzenle` | firma | İhtiyaç sohbeti (`?aranan=genc` ya da `?aranan=firma`; parametresiz adres kapıyı sorar), öneriler, ilan düzenleme |
 | `/kurum/kart`, `/kurum/profil` | firma | Firma kartı, firma profili |
 | `/isbirligi/{id}` | iki taraf, GİRVAK | Plan, onaylar, adımlar, durum özeti |
 | `/girvak` | GİRVAK | Program sayıları ve hedefler, firma doğrulama, inceleme kuyruğu, gözlem, hareketsiz bağlantılar |
